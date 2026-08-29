@@ -7,10 +7,23 @@ const source = readFileSync(
   "utf8",
 );
 
-test("Move to Batch creates a deferred ticket thread and keeps the job on shelf", () => {
+test("Move to Batch opens the Batch composer without starting a ticket thread", () => {
   assert.match(source, /mainActionKind === "batch"[\s\S]*?addToBatch: true/);
-  assert.match(source, /executionMode: "deferred"/);
-  assert.match(source, /moveToInProgress: options\?\.addToBatch === true \? false : true/);
-  assert.match(source, /if \(options\?\.addToBatch === true\)[\s\S]*?startPolicy: "manual"/);
+  const batchBranchStart = source.indexOf('if (options?.addToBatch === true)');
+  const batchComposerStart = source.indexOf("openBatchComposer({", batchBranchStart);
+  const batchBranchReturn = source.indexOf("return;", batchComposerStart);
+  const threadRequestStart = source.indexOf("const taskRunRequest =", batchBranchStart);
+  assert.ok(batchBranchStart >= 0, "The explicit Add to Batch branch must remain present.");
+  assert.ok(batchComposerStart > batchBranchStart, "Add to Batch must open the Batch composer.");
+  assert.ok(batchBranchReturn > batchComposerStart, "The Batch branch must return after opening the composer.");
+  assert.ok(
+    threadRequestStart > batchBranchReturn,
+    "The Batch branch must return before the direct thread request is created.",
+  );
+  const batchBranchSource = source.slice(batchBranchStart, threadRequestStart);
+  assert.match(batchBranchSource, /targetKind: "project_ticket_action"/);
+  assert.match(batchBranchSource, /startPolicy: "manual"/);
+  const threadRequestSource = source.slice(threadRequestStart);
+  assert.match(threadRequestSource, /executionMode: "deferred"/);
+  assert.match(threadRequestSource, /moveToInProgress: true/);
 });
-

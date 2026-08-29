@@ -1,6 +1,7 @@
 import {
     mergeCustomSkillLists,
     normalizeNotionAuthUrl,
+    validateNotionAuthUrl,
     renderBriefingPreviewHtml,
 } from "./aios-domain.mjs";
 import { readResponseJson } from "./http-utils.mjs";
@@ -159,6 +160,14 @@ export function createAiosGateway(bindings) {
                     ...parsed,
                     authUrl: normalizedAuthUrl,
                 };
+                const validation = validateNotionAuthUrl(normalizedAuthUrl);
+                if (!validation.valid) {
+                    return sendJson(res, 502, {
+                        error: "Notion OAuth configuration is invalid.",
+                        code: "NOTION_OAUTH_CONFIGURATION_INVALID",
+                        message: validation.message,
+                    });
+                }
             }
             const responseHeaders = {
                 "Content-Type": "application/json; charset=utf-8",

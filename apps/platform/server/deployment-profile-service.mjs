@@ -314,6 +314,7 @@ export function validatePublicDeploymentProfileEnvelope(
       || profile.product.commerce.mode !== "none"
       || profile.product.commerce.entitlementSource !== "deployment_license"
       || profile.product.usage.mode !== "observability_only"
+      || !profile.capabilities.deployableResources
       || profile.capabilities.modelManagement
       || profile.capabilities.modelSelection
       || profile.capabilities.subscriptions

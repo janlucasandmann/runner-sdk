@@ -76,6 +76,8 @@ export interface PlatformFileExplorerBrowserModalProps<TItem>
   error?: ReactNode;
   emptyMessage?: ReactNode | ((context: PlatformFileExplorerEmptyContext) => ReactNode);
   content?: ReactNode;
+  /** Optional action area rendered after the browsable list. */
+  listFooter?: ReactNode;
   cancelLabel?: ReactNode;
   confirmLabel: ReactNode;
   confirmDisabled?: boolean;
@@ -125,6 +127,7 @@ export function PlatformFileExplorerBrowserModal<TItem>({
   error,
   emptyMessage = "This folder is empty",
   content,
+  listFooter,
   cancelLabel = "Cancel",
   confirmLabel,
   confirmDisabled = false,
@@ -138,9 +141,10 @@ export function PlatformFileExplorerBrowserModal<TItem>({
     contextKey: string;
     value: PlatformFileExplorerFilter;
   }>({ contextKey: filterContextKey, value: "all" });
-  const activeFilter = showFilterTabs && filterSelection.contextKey === filterContextKey
-    ? filterSelection.value
-    : "all";
+  const activeFilter =
+    showFilterTabs && filterSelection.contextKey === filterContextKey
+      ? filterSelection.value
+      : "all";
 
   const visibleItems = (() => {
     if (activeFilter === "all") return [...items];
@@ -269,18 +273,20 @@ export function PlatformFileExplorerBrowserModal<TItem>({
           {headerActions}
         </div>
       }
-      contentNavigation={showFilterTabs ? (
-        <PlatformDetailTabBar
-          className="tb-file-browser-tabs"
-          tabs={FILE_FILTER_TABS}
-          value={activeFilter}
-          onValueChange={(value) => {
-            setFilterSelection({ contextKey: filterContextKey, value });
-          }}
-          ariaLabel="File filters"
-          showDivider
-        />
-      ) : null}
+      contentNavigation={
+        showFilterTabs ? (
+          <PlatformDetailTabBar
+            className="tb-file-browser-tabs"
+            tabs={FILE_FILTER_TABS}
+            value={activeFilter}
+            onValueChange={(value) => {
+              setFilterSelection({ contextKey: filterContextKey, value });
+            }}
+            ariaLabel="File filters"
+            showDivider
+          />
+        ) : null
+      }
       mainClassName="tb-file-browser-main"
       contentFooterClassName="tb-file-browser-footer"
       footer={
@@ -322,6 +328,9 @@ export function PlatformFileExplorerBrowserModal<TItem>({
               {renderItem ? visibleItems.map((item) => renderItem(item)) : null}
             </div>
           )}
+          {listFooter != null ? (
+            <div className="tb-file-browser-list-footer">{listFooter}</div>
+          ) : null}
         </div>
       )}
     </PlatformFileExplorerModal>

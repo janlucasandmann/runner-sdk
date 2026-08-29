@@ -939,6 +939,19 @@ describe("PlatformDataTable", () => {
     ).toBe("2");
   });
 
+  it("supports a service-specific loading state without replacing the table shell", () => {
+    renderTable({
+      rows: [],
+      loading: true,
+      loadingState: <div role="status" aria-label="Loading custom resources" />,
+    });
+
+    expect(
+      screen.getByRole("status", { name: "Loading custom resources" }),
+    ).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: /Name/ })).not.toBeNull();
+  });
+
   it("loads the next increment at the bottom and renders the shared loading state", () => {
     const onLoadMore = vi.fn();
     const { container, rerender } = renderTable({

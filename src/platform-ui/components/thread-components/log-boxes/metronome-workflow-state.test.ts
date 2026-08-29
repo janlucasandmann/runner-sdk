@@ -260,7 +260,7 @@ describe("metronome workflow log state", () => {
       /\.tb-log-metronome-minimap-canvas\s*\{[^}]*padding:\s*20px/,
     );
     expect(activityCoreCss).toMatch(
-      /\.tb-log-metronome-minimap-canvas\s*\{[^}]*background-image:\s*radial-gradient\(circle,\s*rgba\(255,\s*255,\s*255,\s*0\.12\)\s*1px,\s*transparent\s*1px\)/,
+      /\.tb-log-metronome-minimap-canvas\s*\{[^}]*background-image:\s*radial-gradient\(\s*circle,\s*rgba\(255,\s*255,\s*255,\s*0\.12\)\s*1px,\s*transparent\s*1px\s*\)/,
     );
     expect(activityCoreCss).toMatch(
       /\.tb-log-metronome-minimap-canvas\s*\{[^}]*background-size:\s*18px\s+18px/,

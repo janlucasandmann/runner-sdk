@@ -40,7 +40,8 @@
             const serverPermissionSubjectType = getServerPermissionSubjectType(draftServer);
             const isFunctionServer = normalizedServerKind === "function";
             const isWebAppServer = normalizedServerKind === "web_app";
-            const isSourceDeployableServer = isWebAppServer || isFunctionServer;
+            const isApiServer = normalizedServerKind === "api";
+            const isSourceDeployableServer = isSourceDeployablePlaygroundServerKind(normalizedServerKind);
             const serverKindLabel = formatPlaygroundServerKindLabel(normalizedServerKind);
             const isAuthServer = normalizedServerKind === "auth";
             const isAgentRuntimeServer = normalizedServerKind === "agent_runtime";
@@ -1211,6 +1212,7 @@
                     + (isSourceDeployableServer ? " playground-source-server-description-section" : "")
                     + (isFunctionServer ? " playground-function-description-section" : "")
                     + (isWebAppServer ? " playground-web-app-description-section" : "")
+                    + (isApiServer ? " playground-api-description-section" : "")
                     + (isAuthServer ? " playground-auth-description-section" : "")
                     + (isAgentRuntimeServer ? " playground-agent-runtime-description-section" : "")
                     + (isSecretsServer ? " playground-secrets-description-section" : "")
@@ -1232,7 +1234,7 @@
                     className: "playground-source-server-code-identity-icon",
                     "aria-hidden": "true",
                   },
-                  React.createElement(isFunctionServer ? FunctionSquare : Globe, {
+                  React.createElement(isFunctionServer ? FunctionSquare : isApiServer ? Server : Globe, {
                     width: 24,
                     height: 24,
                     strokeWidth: 1.8,
@@ -1245,7 +1247,7 @@
                     type: "text",
                     className: "playground-source-server-code-name-input",
                     value: draftServer.name || "",
-                    placeholder: isFunctionServer ? "Untitled function" : "Untitled web app",
+                    placeholder: isFunctionServer ? "Untitled function" : isApiServer ? "Untitled API" : "Untitled web app",
                     readOnly: isServerTemplatePreview,
                     "aria-readonly": isServerTemplatePreview ? "true" : "false",
                     "aria-label": serverKindLabel + " name",
@@ -1287,6 +1289,7 @@
                     + (isSourceDeployableServer ? " playground-source-server-deployment-map" : "")
                     + (isFunctionServer ? " playground-function-deployment-map" : "")
                     + (isWebAppServer ? " playground-web-app-deployment-map" : "")
+                    + (isApiServer ? " playground-api-deployment-map" : "")
                     + (isAuthServer ? " playground-auth-deployment-map" : "")
                     + (isAgentRuntimeServer ? " playground-agent-runtime-deployment-map" : "")
                     + (isSecretsServer ? " playground-secrets-deployment-map" : "")
@@ -1527,6 +1530,41 @@
                     functionInvokeCodePreview
                   )
                 )
+              : null;
+            const functionGithubConnectorMetadata = draftServer?.metadata?.functionGithubConnector
+              && typeof draftServer.metadata.functionGithubConnector === "object"
+              && !Array.isArray(draftServer.metadata.functionGithubConnector)
+                ? draftServer.metadata.functionGithubConnector
+                : {};
+            const functionGithubRepository = functionGithubConnectorMetadata.repository
+              && typeof functionGithubConnectorMetadata.repository === "object"
+              && !Array.isArray(functionGithubConnectorMetadata.repository)
+                ? functionGithubConnectorMetadata.repository
+                : null;
+            const functionConnectorsSection = isFunctionServer
+              ? React.createElement(RunnerFunctionGithubConnectorSettings, {
+                  functionId: String(draftServer.id || "").trim(),
+                  functionName: String(draftServer.name || "").trim(),
+                  repository: functionGithubRepository,
+                  github: computerAgents?.github || null,
+                  apiBaseUrl: backendUrl,
+                  requestHeaders,
+                  automationEnvironmentId: String(
+                    draftServer.sourceEnvironmentId || preferredEnvironmentId || ""
+                  ).trim(),
+                  automationAgentOptions: (Array.isArray(agents) ? agents : [])
+                    .filter((agent) => agent?.id)
+                    .map((agent) => ({
+                      id: String(agent.id),
+                      label: String(agent.name || agent.displayName || agent.id),
+                    })),
+                  disabled: isServerTemplatePreview
+                    || serverSaveState.isSaving
+                    || !draftServer.id
+                    || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  onCreateRepository: createFunctionGithubRepository,
+                  onRepositoryChange: updateFunctionGithubConnector,
+                })
               : null;
   
             const factsSection = React.createElement(React.Fragment, null,
@@ -1800,7 +1838,7 @@
               : null;
             const customDomainSection = renderCustomDomainSection();
   
-            const isConnectableServer = normalizedServerKind === "function" || normalizedServerKind === "web_app";
+            const isConnectableServer = isSourceDeployableServer;
             const activeDatabaseBinding = getCurrentServerBindingByType("database");
             const activeAuthBinding = getCurrentServerBindingByType("auth");
             const activeAgentRuntimeBinding = getCurrentServerBindingByType("agent_runtime");
@@ -3518,6 +3556,7 @@
                   + (isSourceDeployableServer ? " is-source-deployable-settings-tab" : "")
                   + (isFunctionServer ? " is-function-settings-tab" : "")
                   + (isWebAppServer ? " is-web-app-settings-tab" : "")
+                  + (isApiServer ? " is-api-settings-tab" : "")
                   + (isAuthServer ? " is-auth-settings-tab" : "")
                   + (isSecretsServer ? " is-secrets-settings-tab" : "")
                   + (isPaymentsServer ? " is-payments-settings-tab" : "")
@@ -3526,6 +3565,7 @@
               serverDeploymentMapSection,
               isSourceDeployableServer ? null : descriptionSection,
               isFunctionServer ? functionInvokeSection : null,
+              functionConnectorsSection,
               serverSettingsResourcesTable,
               connectionsSection,
               null
@@ -4193,7 +4233,7 @@
             };
             const sourceServerDetailWorkspace = isSourceDeployableServer
               ? React.createElement(SourceDeployableServerDetailPage, {
-                  resourceKind: isFunctionServer ? "function" : "web-app",
+                  resourceKind: isFunctionServer ? "function" : isApiServer ? "api" : "web-app",
                   contentByTab: sourceServerDetailContentByTab,
                   overrideContent: serverVersionChangesState ? renderServerVersionChangesPage() : undefined,
                   sidebar: sourceServerDetailSidebar,

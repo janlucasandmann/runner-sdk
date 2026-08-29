@@ -24,6 +24,30 @@ test("GitHub API requests use the supported API contract", async () => {
   assert.equal(profile.login, "computer-agents");
 });
 
+test("GitHub API writes serialize JSON through the same trusted-host client", async () => {
+  let request = null;
+  const repository = await fetchGithubJson("/user/repos", "github-token", {
+    method: "POST",
+    body: { name: "billing-function", private: true },
+    fetchImpl: async (target, init) => {
+      request = { target: target.toString(), init };
+      return new Response(JSON.stringify({ full_name: "computer-agents/billing-function" }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  assert.equal(request.target, "https://api.github.com/user/repos");
+  assert.equal(request.init.method, "POST");
+  assert.equal(request.init.headers["Content-Type"], "application/json");
+  assert.deepEqual(JSON.parse(request.init.body), {
+    name: "billing-function",
+    private: true,
+  });
+  assert.equal(repository.full_name, "computer-agents/billing-function");
+});
+
 test("GitHub credential validation distinguishes revocation from outages", async () => {
   const invalid = await validateGithubCredential("revoked-token", {
     fetchImpl: async () => new Response(

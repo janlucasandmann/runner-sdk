@@ -19,13 +19,13 @@ const PROVIDER_SCOPE_POLICIES = Object.freeze({
     write: ["write:jira-work"],
     actions: {
       confluence_get_current_user: {
-        read: ["read:confluence-user"],
+        read: ["read:confluence-user", "read:user:confluence"],
       },
       confluence_list_spaces: {
-        read: ["read:confluence-space.summary"],
+        read: ["read:confluence-space.summary", "read:space:confluence"],
       },
       confluence_get_space: {
-        read: ["read:confluence-space.summary"],
+        read: ["read:confluence-space.summary", "read:space:confluence"],
       },
       confluence_search_content: {
         read: ["search:confluence"],
@@ -34,40 +34,42 @@ const PROVIDER_SCOPE_POLICIES = Object.freeze({
         read: [
           "read:confluence-content.all",
           "read:confluence-content.summary",
+          "read:page:confluence",
         ],
       },
       confluence_get_page_children: {
         read: [
           "read:confluence-content.all",
           "read:confluence-content.summary",
+          "read:page:confluence",
         ],
       },
       confluence_list_comments: {
-        read: ["read:confluence-content.all"],
+        read: ["read:confluence-content.all", "read:comment:confluence"],
       },
       confluence_list_attachments: {
-        read: ["read:confluence-content.all"],
+        read: ["read:confluence-content.all", "read:attachment:confluence"],
       },
       confluence_create_page: {
-        write: ["write:confluence-content"],
+        write: ["write:confluence-content", "write:page:confluence"],
       },
       confluence_update_page: {
-        write: ["write:confluence-content"],
+        write: ["write:confluence-content", "write:page:confluence"],
       },
       confluence_delete_page: {
-        write: ["write:confluence-content"],
+        write: ["write:confluence-content", "delete:page:confluence"],
       },
       confluence_add_comment: {
-        write: ["write:confluence-content"],
+        write: ["write:confluence-content", "write:comment:confluence"],
       },
       confluence_update_comment: {
-        write: ["write:confluence-content"],
+        write: ["write:confluence-content", "write:comment:confluence"],
       },
       confluence_delete_comment: {
-        write: ["write:confluence-content"],
+        write: ["write:confluence-content", "delete:comment:confluence"],
       },
       confluence_add_attachment: {
-        write: ["write:confluence-file"],
+        write: ["write:confluence-file", "write:attachment:confluence"],
       },
     },
   },

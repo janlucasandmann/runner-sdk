@@ -7,7 +7,18 @@ import {
   type Ref,
 } from "react";
 import { Search } from "lucide-react";
-import { joinPlatformPopupClassNames } from "./platform-popup.js";
+
+function joinPlatformPopupSearchHeaderClassNames(
+  ...classNames: Array<string | false | null | undefined>
+) {
+  return classNames
+    .filter(
+      (className): className is string =>
+        typeof className === "string" && Boolean(className.trim()),
+    )
+    .map((className) => className.trim())
+    .join(" ");
+}
 
 export interface PlatformPopupSearchHeaderProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
@@ -47,7 +58,7 @@ export const PlatformPopupSearchHeader = forwardRef<
 
   return (
     <div
-      className={joinPlatformPopupClassNames(
+      className={joinPlatformPopupSearchHeaderClassNames(
         "platform-popup-search-header",
         showSearchIcon && "has-search-icon",
         containerClassName,
@@ -70,7 +81,7 @@ export const PlatformPopupSearchHeader = forwardRef<
         }}
         type="search"
         autoFocus={autoFocus}
-        className={joinPlatformPopupClassNames(
+        className={joinPlatformPopupSearchHeaderClassNames(
           "platform-popup-search-header__input",
           className,
         )}

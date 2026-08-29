@@ -464,8 +464,25 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             );
           }
 
-          function renderProjectOverviewResourceNewMenuItems() {
-            const resourceTypes = projectOverviewResourceTypeFilters.filter((type) => String(type?.id || "") !== "all");
+          function renderProjectOverviewResourceNewMenuItems(searchQuery = "") {
+            const normalizedSearchQuery = String(searchQuery || "").trim().toLowerCase();
+            const resourceTypes = projectOverviewResourceTypeFilters.filter((type) => {
+              if (String(type?.id || "") === "all") {
+                return false;
+              }
+              if (!normalizedSearchQuery) {
+                return true;
+              }
+              const meta = getProjectOverviewResourceTypeMeta(type.id);
+              return [type?.label, type?.description, meta?.label, type?.id]
+                .some((value) => String(value || "").toLowerCase().includes(normalizedSearchQuery));
+            });
+            const showTemplates = !normalizedSearchQuery || "templates".includes(normalizedSearchQuery);
+            if (!resourceTypes.length && !showTemplates) {
+              return React.createElement("div", {
+                className: "platform-selector__state is-empty",
+              }, "No matching resource types.");
+            }
             return React.createElement(React.Fragment, null,
               resourceTypes.map((type) => {
                 const meta = getProjectOverviewResourceTypeMeta(type.id);
@@ -480,8 +497,10 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                   React.createElement("span", null, type.label || meta.label || type.id)
                 );
               }),
-              React.createElement("div", { className: "playground-project-resources-menu-divider" }),
-              React.createElement("button", {
+              resourceTypes.length && showTemplates
+                ? React.createElement("div", { className: "playground-project-resources-menu-divider" })
+                : null,
+              showTemplates ? React.createElement("button", {
                   type: "button",
                   className: "tb-popup-row playground-project-team-menu-item",
                   onClick: () => {
@@ -495,7 +514,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                 },
                 React.createElement(Layers, { width: 14, height: 14, strokeWidth: 1.8 }),
                 React.createElement("span", null, "Templates")
-              )
+              ) : null
             );
           }
 
@@ -1161,7 +1180,15 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                   onSelect: () => handleRemoveProjectOverviewResourceFromProject(row),
                 }],
               renderNewMenuItems: renderProjectOverviewResourceNewMenuItems,
-              newButtonLabel: "Add Resource",
+              newButtonLabel: "Resource",
+              newButtonLeading: React.createElement(Plus, {
+                width: 14,
+                height: 14,
+                strokeWidth: 1.8,
+                "aria-hidden": "true",
+              }),
+              newMenuSearchPlaceholder: "Search resources...",
+              newMenuSearchAriaLabel: "Search resource types",
               renderEmptyContent: renderProjectOverviewRecommendedTemplatesEmptyState,
               onRowOpen: openProjectOverviewResourceRow,
               searchAriaLabel: "Search project resources",

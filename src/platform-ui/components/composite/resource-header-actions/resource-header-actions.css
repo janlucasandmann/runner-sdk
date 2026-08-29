@@ -160,6 +160,10 @@
   color: #fff;
 }
 
+.platform-resource-actions-menu__metadata-copy.platform-icon-button.is-copied {
+  color: #fff;
+}
+
 .platform-resource-actions-menu__metadata-value.is-monospace {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }

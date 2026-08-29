@@ -890,6 +890,10 @@ export const METRONOME_RUNS_CSS = String.raw`
         overflow-wrap: anywhere;
       }
 
+      .tb-runner-chat .playground-metronome-run-trace-step > .tb-thread-live-work-status {
+        margin-left: 26px;
+      }
+
       .playground-metronome-run-trace-field {
         margin-left: 26px;
         display: flex;

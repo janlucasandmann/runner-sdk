@@ -224,7 +224,7 @@
             setSearchPopupQuery("");
             setServerActionsPopoverOpen(false);
             setServerResourceActionMenuState(null);
-            setServerDetailTab(["function", "web_app"].includes(selectedServerKind) ? "code" : "usage");
+            setServerDetailTab(isSourceDeployablePlaygroundServerKind(selectedServerKind) ? "code" : "usage");
             setServerUsageActivityTab("logs");
             setSourceServerSettingsTableTab("access");
             setAuthDetailTab("users");
@@ -1707,7 +1707,7 @@
 
           function getServerPermissionSubjectType(server) {
             const kind = canonicalizePlaygroundServerKind(server?.kind);
-            return ["web_app", "function", "auth", "secrets", "payments", "agent_runtime"].includes(kind)
+            return ["web_app", "function", "api", "auth", "secrets", "payments", "agent_runtime"].includes(kind)
               ? kind
               : "server";
           }

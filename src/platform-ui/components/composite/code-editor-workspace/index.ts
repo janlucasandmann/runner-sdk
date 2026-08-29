@@ -1,5 +1,6 @@
 export {
   type PlatformCodeEditorFile,
+  type PlatformCodeEditorExternalFileDrop,
   type PlatformCodeEditorFileSelectionChange,
   type PlatformCodeEditorHistoryControls,
   type PlatformCodeEditorMarkdownEditor,

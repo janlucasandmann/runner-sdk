@@ -3903,6 +3903,41 @@
               name: data?.name || file.name,
             };
           }
+
+          async function handleAtlassianFetchItems(folderId, options = {}) {
+            const requestUrl = new URL("/api/aios/jira/resources", window.location.origin);
+            requestUrl.searchParams.set("folderId", folderId || "root");
+            if (options?.product === "jira" || options?.product === "confluence") {
+              requestUrl.searchParams.set("product", options.product);
+            }
+            const response = await fetch(withConnectorCredentialId(
+              requestUrl.pathname + requestUrl.search,
+              options?.accountId,
+            ), {
+              method: "GET",
+              credentials: "include",
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              if (isUnauthorizedStatus(response.status)) {
+                setJiraStatus({ connected: false, credentials: [] });
+              }
+              throw new Error(data?.message || data?.error || "Failed to load Atlassian resources");
+            }
+            return (Array.isArray(data?.resources) ? data.resources : []).map((resource) => ({
+              id: resource.id,
+              name: resource.name,
+              path: resource.path || resource.resourceKey || resource.id,
+              parentId: resource.parentId || null,
+              isFolder: resource.isFolder === true,
+              mimeType: resource.mimeType || "application/x-atlassian-resource",
+              resourceType: resource.resourceType,
+              resourceKey: resource.resourceKey,
+              spaceKey: resource.spaceKey,
+              cloudId: resource.cloudId,
+              siteUrl: resource.siteUrl,
+            }));
+          }
   
           async function handleGithubFetchItems(folderId, options = {}) {
             const parsedFolder = parseGithubFolderId(folderId);
@@ -3995,7 +4030,41 @@
               name: branch.name,
             }));
           }
-  
+
+          async function handleGithubCreateRepository(input, options = {}) {
+            const response = await fetch(withConnectorCredentialId(
+              "/api/aios/github/repos",
+              options?.accountId,
+            ), {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(input || {}),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              if (isUnauthorizedStatus(response.status)) {
+                setGithubStatus({ connected: false });
+              }
+              throw new Error(
+                data?.message
+                || data?.error
+                || "Failed to create the GitHub repository."
+              );
+            }
+            const repo = data?.repo && typeof data.repo === "object" ? data.repo : {};
+            const repoFullName = String(repo.full_name || "").trim();
+            if (!repoFullName) {
+              throw new Error("GitHub did not return the created repository.");
+            }
+            return {
+              id: String(repo.id || "").trim(),
+              name: String(repo.name || repoFullName.split("/").pop() || "").trim(),
+              repoFullName,
+              ref: String(repo.default_branch || "main").trim() || "main",
+            };
+          }
+
           async function handleGithubFetchFileContent(file, options = {}) {
             if (!file.repoFullName || !file.path) {
               throw new Error("Missing GitHub file metadata");
@@ -4064,6 +4133,7 @@
               options?.accountId,
             ), {
               method: "GET",
+              headers: authRequestHeaders,
               credentials: "include",
             });
   
@@ -4078,7 +4148,7 @@
             const databases = data.databases || [];
             setNotionDatabases(databases);
             return databases;
-          }, []);
+          }, [authRequestHeaders]);
   
           function resetSettingsTriggerForm() {
             setSettingsTriggerForm({

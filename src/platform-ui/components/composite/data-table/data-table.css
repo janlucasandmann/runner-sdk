@@ -711,6 +711,14 @@
   color: #ff8f8f;
 }
 
+.platform-data-table__state.has-custom-loading-state {
+  padding: 0;
+}
+
+.platform-data-table__state.has-custom-loading-state > .platform-loading-state {
+  min-height: 100%;
+}
+
 .platform-data-table__footer {
   flex: 0 0 auto;
   padding: 12px 21px;

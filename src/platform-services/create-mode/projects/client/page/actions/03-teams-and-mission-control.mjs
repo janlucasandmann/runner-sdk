@@ -1170,6 +1170,12 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
               }
             } catch {}
           }
+          const resolvedProjectOverrides = typeof options.projectOverrides === "function"
+            ? options.projectOverrides(baseProject)
+            : options.projectOverrides;
+          const resolvedMetadataOverrides = typeof options.metadataOverrides === "function"
+            ? options.metadataOverrides(baseProject)
+            : options.metadataOverrides;
           const refreshedBaseMissionControl = getPlaygroundProjectMissionControlRecord(baseProject);
           const normalizedMissionControlRecord = normalizePlaygroundProjectMissionControlRecord({
             ...refreshedBaseMissionControl,
@@ -1209,12 +1215,12 @@ export const PROJECTS_ACTIONS_03_FRAGMENT = `            leadUserId: normalizedP
           }
           const nextProjectRecord = normalizePlaygroundProjectRecord({
             ...baseProject,
-            ...(options.projectOverrides && typeof options.projectOverrides === "object" ? options.projectOverrides : {}),
+            ...(resolvedProjectOverrides && typeof resolvedProjectOverrides === "object" ? resolvedProjectOverrides : {}),
             missionControl: normalizedMissionControlRecord,
           });
           const savePayload = buildPlaygroundProjectSavePayload(nextProjectRecord, {
             missionControl: normalizedMissionControlRecord,
-            ...(options.metadataOverrides && typeof options.metadataOverrides === "object" ? options.metadataOverrides : {}),
+            ...(resolvedMetadataOverrides && typeof resolvedMetadataOverrides === "object" ? resolvedMetadataOverrides : {}),
           });
           if (!options.quiet) {
             setMissionControlSaveState({

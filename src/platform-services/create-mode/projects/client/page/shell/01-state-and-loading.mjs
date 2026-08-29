@@ -254,6 +254,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         const projectDraftWallpaperIdRef = useRef("");
         const projectDraftUseCardBackgroundAsWallpaperRef = useRef(true);
         const projectDescriptionTextareaRef = useRef(null);
+        const projectInitialGoalEditorRef = useRef(null);
         const [isProjectDescriptionEditing, setIsProjectDescriptionEditing] = useState(false);
         const [projectDescriptionHistory, setProjectDescriptionHistory] = useState({ past: [], future: [] });
         const projectDescriptionEditingRef = useRef(false);
@@ -981,6 +982,8 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           github: [],
           googleDrive: [],
           oneDrive: [],
+          notion: [],
+          atlassian: [],
         });
         const [taskConnectorBrowserGithubBranchByRepo, setTaskConnectorBrowserGithubBranchByRepo] = useState({});
         const [taskConnectorBrowserSelectedNotionId, setTaskConnectorBrowserSelectedNotionId] = useState("");
@@ -988,28 +991,33 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           github: [],
           googleDrive: [],
           oneDrive: [],
+          atlassian: [],
         });
         const [taskConnectorBrowserLoadedFolderIds, setTaskConnectorBrowserLoadedFolderIds] = useState({
           github: [],
           googleDrive: [],
           oneDrive: [],
+          atlassian: [],
         });
         const [taskConnectorBrowserLoadingFolderIds, setTaskConnectorBrowserLoadingFolderIds] = useState({
           github: [],
           googleDrive: [],
           oneDrive: [],
+          atlassian: [],
         });
         const [taskConnectorBrowserLoadingState, setTaskConnectorBrowserLoadingState] = useState({
           github: false,
           googleDrive: false,
           oneDrive: false,
           notion: false,
+          atlassian: false,
         });
         const [taskConnectorBrowserErrors, setTaskConnectorBrowserErrors] = useState({
           github: "",
           googleDrive: "",
           oneDrive: "",
           notion: "",
+          atlassian: "",
         });
         const [taskConnectorBrowserNotionDatabases, setTaskConnectorBrowserNotionDatabases] = useState([]);
         const [taskConnectorBrowserNotionDatabasesLoaded, setTaskConnectorBrowserNotionDatabasesLoaded] = useState(false);
@@ -1894,6 +1902,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           googleDrive: computerAgents?.googleDrive || null,
           oneDrive: computerAgents?.oneDrive || null,
           notion: computerAgents?.notion || null,
+          atlassian: computerAgents?.atlassian || null,
         }), [computerAgents]);
 
         const taskConnectorBrowserCurrentEntry = useMemo(() => {
@@ -1910,6 +1919,13 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           || projectConnectorBrowserActiveRef.current
           || taskConnectorBrowserMode === "project"
           || isProjectComposerConnectorBrowserContext;
+        const taskConnectorBrowserAtlassianProduct = taskConnectorBrowserCurrentSource === "atlassian"
+          && (projectConnectorBrowserDialog?.atlassianProduct === "jira" || projectConnectorBrowserDialog?.atlassianProduct === "confluence")
+            ? projectConnectorBrowserDialog.atlassianProduct
+            : "";
+        const taskConnectorBrowserAtlassianResourceType = taskConnectorBrowserAtlassianProduct
+          ? taskConnectorBrowserAtlassianProduct + (taskConnectorBrowserAtlassianProduct === "jira" ? "_project" : "_space")
+          : "";
 
         useEffect(() => {
           console.info("[connector-debug] connector browser state", {
@@ -1946,13 +1962,18 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 
         const taskConnectorBrowserItems = useMemo(() => {
           if (taskConnectorBrowserCurrentKey === "notion") {
-            return notionDatabasesToPlaygroundConnectorItems(taskConnectorBrowserNotionDatabases);
+            return notionDatabasesToPlaygroundConnectorItems(
+              taskConnectorBrowserNotionDatabases,
+              { includeWorkspace: !isProjectConnectorBrowserContext }
+            );
           }
           return taskConnectorBrowserItemsBySource[taskConnectorBrowserCurrentKey] || [];
-        }, [taskConnectorBrowserCurrentKey, taskConnectorBrowserItemsBySource, taskConnectorBrowserNotionDatabases]);
+        }, [isProjectConnectorBrowserContext, taskConnectorBrowserCurrentKey, taskConnectorBrowserItemsBySource, taskConnectorBrowserNotionDatabases]);
 
         const taskConnectorBrowserSelectedFileIds = taskConnectorBrowserCurrentKey === "notion"
-          ? (taskConnectorBrowserSelectedNotionId ? [taskConnectorBrowserSelectedNotionId] : [])
+          ? (isProjectConnectorBrowserContext
+              ? (taskConnectorBrowserSelectedIds.notion || []).filter((id) => id !== "__entire_workspace__")
+              : (taskConnectorBrowserSelectedNotionId ? [taskConnectorBrowserSelectedNotionId] : []))
           : (taskConnectorBrowserSelectedIds[taskConnectorBrowserCurrentKey] || []);
 
         const taskConnectorBrowserPath = useMemo(() => {
@@ -1968,8 +1989,11 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
         ]);
 
         const taskConnectorBrowserVisibleItems = useMemo(() => {
+          if (taskConnectorBrowserAtlassianResourceType) {
+            return taskConnectorBrowserItems.filter((item) => item?.resourceType === taskConnectorBrowserAtlassianResourceType);
+          }
           return fileItemsForParent(taskConnectorBrowserItems, taskConnectorBrowserCurrentFolderId);
-        }, [taskConnectorBrowserCurrentFolderId, taskConnectorBrowserItems]);
+        }, [taskConnectorBrowserAtlassianResourceType, taskConnectorBrowserCurrentFolderId, taskConnectorBrowserItems]);
 
         const taskConnectorBrowserFilteredItems = useMemo(() => {
           const searchValue = taskConnectorBrowserSearchQuery.trim().toLowerCase();
@@ -2004,17 +2028,38 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
           );
         }, [taskConnectorBrowserCurrentSelection, taskConnectorBrowserItems, taskConnectorBrowserSelectedFileIds]);
 
+        const taskConnectorBrowserVisibleSelectedItems = useMemo(() => {
+          if (!taskConnectorBrowserAtlassianResourceType) {
+            return taskConnectorBrowserSelectedItems;
+          }
+          return taskConnectorBrowserSelectedItems.filter((item) => item?.resourceType === taskConnectorBrowserAtlassianResourceType);
+        }, [taskConnectorBrowserAtlassianResourceType, taskConnectorBrowserSelectedItems]);
+
+        const taskConnectorBrowserVisibleSelectedIds = useMemo(
+          () => taskConnectorBrowserVisibleSelectedItems.map((item) => item.id).filter(Boolean),
+          [taskConnectorBrowserVisibleSelectedItems]
+        );
+
         const taskConnectorBrowserSelectedLabel = useMemo(() => {
           if (taskConnectorBrowserCurrentSource === "notion" && taskConnectorBrowserSelectedItems.length > 0) {
             return taskConnectorBrowserSelectedItems[0]?.id === "__entire_workspace__"
               ? "workspace"
               : taskConnectorBrowserSelectedItems.length + " " + (taskConnectorBrowserSelectedItems.length === 1 ? "database" : "databases");
           }
+          if (taskConnectorBrowserCurrentSource === "atlassian") {
+            if (taskConnectorBrowserAtlassianProduct === "jira") {
+              return taskConnectorBrowserVisibleSelectedItems.length + " " + (taskConnectorBrowserVisibleSelectedItems.length === 1 ? "project" : "projects");
+            }
+            if (taskConnectorBrowserAtlassianProduct === "confluence") {
+              return taskConnectorBrowserVisibleSelectedItems.length + " " + (taskConnectorBrowserVisibleSelectedItems.length === 1 ? "space" : "spaces");
+            }
+            return taskConnectorBrowserSelectedItems.length + " " + (taskConnectorBrowserSelectedItems.length === 1 ? "resource" : "resources");
+          }
           if (taskConnectorBrowserSelectedItems.length === 1) {
             return taskConnectorBrowserSelectedItems[0].isFolder ? "1 item" : "1 file";
           }
           return taskConnectorBrowserSelectedItems.length + " " + (taskConnectorBrowserSelectedItems.length === 1 ? "file" : "files");
-        }, [taskConnectorBrowserCurrentSource, taskConnectorBrowserSelectedItems]);
+        }, [taskConnectorBrowserAtlassianProduct, taskConnectorBrowserCurrentSource, taskConnectorBrowserSelectedItems, taskConnectorBrowserVisibleSelectedItems]);
 
         const taskEnvironmentFilePickerExpandedSet = useMemo(() => {
           return new Set(taskEnvironmentFilePickerExpandedFolders);

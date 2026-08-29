@@ -326,39 +326,43 @@ const TOOL_DEFINITIONS = Object.freeze([
     "confluence_get_page",
     "Get a Confluence page including its body and version.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       pageId: string("Confluence page ID."),
       bodyFormat: string("Requested body format.", {
         enum: ["storage", "atlas_doc_format", "view"],
       }),
       includeLabels: boolean("Include page labels."),
       includeProperties: boolean("Include content properties."),
-    }, ["pageId"]),
+    }, ["spaceId", "pageId"]),
   ),
   tool(
     "confluence_get_page_children",
     "List child pages beneath a Confluence page.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       pageId: string("Parent Confluence page ID."),
       ...CURSOR_PAGINATION,
-    }, ["pageId"]),
+    }, ["spaceId", "pageId"]),
   ),
   tool(
     "confluence_list_comments",
     "List footer or inline comments on Confluence content.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       contentId: string("Confluence content or page ID."),
       commentType: string("Comment type.", { enum: ["footer", "inline"] }),
       ...CURSOR_PAGINATION,
-    }, ["contentId"]),
+    }, ["spaceId", "contentId"]),
   ),
   tool(
     "confluence_list_attachments",
     "List files attached to Confluence content.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       contentId: string("Confluence content or page ID."),
       filename: string("Optional filename filter."),
       ...CURSOR_PAGINATION,
-    }, ["contentId"]),
+    }, ["spaceId", "contentId"]),
   ),
   tool(
     "confluence_create_page",
@@ -378,6 +382,7 @@ const TOOL_DEFINITIONS = Object.freeze([
     "confluence_update_page",
     "Update a Confluence page body, title, or status.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       pageId: string("Confluence page ID."),
       title: string("Updated page title."),
       body: string("Updated page body."),
@@ -387,20 +392,22 @@ const TOOL_DEFINITIONS = Object.freeze([
       versionNumber: number("Current version plus one.", { minimum: 2 }),
       versionMessage: string("Version message."),
       status: string("Page status.", { enum: ["current", "draft"] }),
-    }, ["pageId", "title", "body", "versionNumber"]),
+    }, ["spaceId", "pageId", "title", "body", "versionNumber"]),
   ),
   tool(
     "confluence_delete_page",
     "Move a Confluence page to trash or permanently purge it.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       pageId: string("Confluence page ID."),
       purge: boolean("Permanently purge eligible content."),
-    }, ["pageId"]),
+    }, ["spaceId", "pageId"]),
   ),
   tool(
     "confluence_add_comment",
     "Add a footer or inline comment to Confluence content.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       contentId: string("Confluence content or page ID."),
       body: string("Comment body."),
       bodyRepresentation: string("Body representation.", {
@@ -408,37 +415,40 @@ const TOOL_DEFINITIONS = Object.freeze([
       }),
       commentType: string("Comment type.", { enum: ["footer", "inline"] }),
       inlineProperties: object("Inline comment selection metadata."),
-    }, ["contentId", "body"]),
+    }, ["spaceId", "contentId", "body"]),
   ),
   tool(
     "confluence_update_comment",
     "Update an existing Confluence comment.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       commentId: string("Confluence comment ID."),
       body: string("Updated comment body."),
       bodyRepresentation: string("Body representation.", {
         enum: ["storage", "atlas_doc_format"],
       }),
       versionNumber: number("Current version plus one.", { minimum: 2 }),
-    }, ["commentId", "body", "versionNumber"]),
+    }, ["spaceId", "commentId", "body", "versionNumber"]),
   ),
   tool(
     "confluence_delete_comment",
     "Delete a Confluence footer or inline comment.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       commentId: string("Confluence comment ID."),
       commentType: string("Comment type.", { enum: ["footer", "inline"] }),
-    }, ["commentId"]),
+    }, ["spaceId", "commentId"]),
   ),
   tool(
     "confluence_add_attachment",
     "Upload a workspace file attachment to Confluence content. This requires a file-transfer capable runtime.",
     input({
+      spaceId: string("Confluence space ID used to enforce project-scoped access."),
       contentId: string("Confluence content or page ID."),
       filePath: string("Workspace file path to upload."),
       filename: string("Optional destination filename."),
       comment: string("Optional attachment comment."),
-    }, ["contentId", "filePath"]),
+    }, ["spaceId", "contentId", "filePath"]),
   ),
 ]);
 

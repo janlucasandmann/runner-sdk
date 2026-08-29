@@ -30,6 +30,27 @@ describe("PlatformPopup", () => {
     expect(screen.getByText("S").tagName).toBe("KBD");
   });
 
+  it("renders the shared search header as a first-class popup option", () => {
+    const { container } = render(
+      <PlatformPopup
+        open
+        trigger={<button type="button">Open</button>}
+        searchHeader={{
+          "aria-label": "Search resources",
+          placeholder: "Search resources...",
+        }}
+      >
+        <button type="button">Database</button>
+      </PlatformPopup>,
+    );
+
+    const searchHeader = container.querySelector(".platform-popup__search-header");
+    expect(searchHeader).not.toBeNull();
+    expect(searchHeader?.contains(
+      screen.getByRole("searchbox", { name: "Search resources" }),
+    )).toBe(true);
+  });
+
   it("keeps the trigger mounted while the controlled popup is closed", () => {
     const { container } = render(
       <PlatformPopup open={false} trigger={<button type="button">Open</button>}>

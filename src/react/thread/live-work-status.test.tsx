@@ -24,18 +24,20 @@ describe("RunnerThreadLiveWorkStatus", () => {
     )).toBe("Working...");
   });
 
-  it("renders the standard live loader as one non-disclosure status row", () => {
+  it("renders the shared spinner and optional workflow-node context", () => {
     const html = renderToStaticMarkup(
       <RunnerThreadLiveWorkStatus
         backendUrl=""
         threadId="thread-1"
         enabled={false}
         fallbackLabel="Inspecting project context"
+        contextLabel="Analyze evidence"
       />,
     );
 
     expect(html).toContain("tb-thread-live-work-status");
-    expect(html).toContain("tb-log-inline-status-dot-loader");
+    expect(html).toContain('src="/img/spinner.svg"');
+    expect(html).toContain("Analyze evidence");
     expect(html).toContain("Inspecting project context");
     expect(html).not.toContain("aria-expanded");
   });

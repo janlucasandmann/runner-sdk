@@ -158,6 +158,20 @@
     "./platform-ui/components/composite/emoji-picker/styles.css": {
       "default": "./dist/platform-ui/components/composite/emoji-picker/emoji-picker.css"
     },
+    "./platform-ui/components/composite/github-automations": {
+      "types": "./dist/platform-ui/components/composite/github-automations/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/github-automations/index.js"
+    },
+    "./platform-ui/components/composite/github-automations/styles.css": {
+      "default": "./dist/platform-ui/components/composite/github-automations/github-automations.css"
+    },
+    "./platform-ui/components/composite/connector-configuration": {
+      "types": "./dist/platform-ui/components/composite/connector-configuration/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/connector-configuration/index.js"
+    },
+    "./platform-ui/components/composite/connector-configuration/styles.css": {
+      "default": "./dist/platform-ui/components/composite/connector-configuration/connector-configuration.css"
+    },
     "./platform-ui/components/composite/attachments": {
       "types": "./dist/platform-ui/components/composite/attachments/index.d.ts",
       "default": "./dist/platform-ui/components/composite/attachments/index.js"
@@ -541,7 +555,7 @@
     "projects-service-test": "node ./src/platform-services/create-mode/projects/projects-service-test.mjs",
     "projects-delivery-control-test": "node ./src/platform-services/create-mode/projects/server/delivery-control-routes.test.mjs && vitest run src/platform-services/create-mode/projects/client/delivery/project-delivery-workspace.test.tsx",
     "prompts-service-test": "node ./src/platform-services/configure-mode/prompts/prompts-service-test.mjs",
-    "knowledge-service-test": "node ./src/platform-services/configure-mode/knowledge/knowledge-service-test.mjs && vitest run ./src/platform-services/configure-mode/knowledge/client/api/knowledge-api.test.ts ./src/platform-services/configure-mode/knowledge/client/page/knowledge-overview-page.test.tsx ./src/platform-services/configure-mode/knowledge/client/page/knowledge-library-create-modal.test.tsx ./src/platform-services/configure-mode/knowledge/client/page/knowledge-library-detail-page.test.tsx",
+    "knowledge-service-test": "node ./src/platform-services/configure-mode/knowledge/knowledge-service-test.mjs && vitest run ./src/platform-services/configure-mode/knowledge/client/api/knowledge-api.test.ts ./src/platform-services/configure-mode/knowledge/client/page/knowledge-overview-page.test.tsx ./src/platform-services/configure-mode/knowledge/client/page/knowledge-library-cover.test.tsx ./src/platform-services/configure-mode/knowledge/client/page/knowledge-library-cover-crop-modal.test.tsx ./src/platform-services/configure-mode/knowledge/client/page/knowledge-library-create-modal.test.tsx ./src/platform-services/configure-mode/knowledge/client/page/knowledge-library-detail-page.test.tsx",
     "teams-service-test": "node ./src/platform-services/configure-mode/teams/teams-service-test.mjs",
     "tests-service-test": "node ./src/platform-services/configure-mode/tests/tests-service-test.mjs && node --test ./src/platform-services/configure-mode/tests/server/runtime.test.mjs && vitest run ./src/platform-services/configure-mode/tests/client/page/test-plan-create-modal.test.tsx",
     "thread-domain-test": "npm run build && node ./tests/thread-domain.test.mjs",
@@ -573,6 +587,7 @@
     "smoke": "npm run build && node ./tests/smoke.test.mjs",
     "platform:asset-test": "node ./apps/platform/server/platform-assets.test.mjs",
     "platform:identity-test": "node --test ./apps/platform/server/identity/*.test.mjs ./apps/platform/server/platform-config.test.mjs",
+    "platform:deployable-app-gateway-test": "node --test ./apps/platform/server/gateway/deployable-app-gateway.test.mjs ./apps/platform/server/routes/deployable-app-routes.test.mjs",
     "platform:development-asset-test": "node ./apps/platform/server/platform-development-assets.test.mjs && node ./apps/platform/development/vite-base.test.mjs && node ./apps/platform/development/runner-chat-css-hmr.test.mjs && node ./apps/platform/development/backend-reload-policy.test.mjs",
     "platform:legacy-template-test": "node ./apps/platform/client/legacy/source-template.test.mjs",
     "platform:legacy-source-test": "node ./src/platform-services/legacy-browser-source.test.mjs",
@@ -599,7 +614,11 @@
     "@monaco-editor/react": "^4.7.0",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "3.28.0",
+    "@tiptap/extension-collaboration": "3.28.0",
+    "@tiptap/extension-drag-handle": "3.28.0",
+    "@tiptap/extension-drag-handle-react": "3.28.0",
     "@tiptap/extension-image": "3.28.0",
+    "@tiptap/extension-node-range": "3.28.0",
     "@tiptap/extension-placeholder": "3.28.0",
     "@tiptap/extension-table": "3.28.0",
     "@tiptap/extension-task-item": "3.28.0",
@@ -608,6 +627,7 @@
     "@tiptap/pm": "3.28.0",
     "@tiptap/react": "3.28.0",
     "@tiptap/starter-kit": "3.28.0",
+    "@tiptap/y-tiptap": "3.0.9",
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "docx-preview": "^0.3.7",
@@ -625,7 +645,9 @@
     "remark-gfm": "^4.0.1",
     "unist-util-visit": "^5.0.0",
     "ws": "^8.21.1",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "y-protocols": "1.0.7",
+    "yjs": "13.6.32"
   },
   "overrides": {
     "monaco-editor": {

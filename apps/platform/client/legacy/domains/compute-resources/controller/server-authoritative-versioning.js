@@ -1,6 +1,5 @@
           function isAuthoritativelyVersionedServer(serverRecord = draftServer) {
-            const kind = canonicalizePlaygroundServerKind(serverRecord?.kind);
-            return kind === "web_app" || kind === "function";
+            return isSourceDeployablePlaygroundServerKind(serverRecord?.kind);
           }
 
           function getServerVersionApiOptions(serverId, options = {}) {
@@ -741,7 +740,7 @@
             const resourceLabel = formatPlaygroundServerKindLabel(normalizedServerKind).toLowerCase();
             if (
               !draftServer
-              || !["function", "web_app"].includes(normalizedServerKind)
+              || !isSourceDeployablePlaygroundServerKind(normalizedServerKind)
               || !serverId
               || serverId === PLAYGROUND_SERVER_DRAFT_ID
               || serverSaveState.isSaving

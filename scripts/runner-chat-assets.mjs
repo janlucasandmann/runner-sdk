@@ -754,6 +754,42 @@ const distPlatformComponentsModalCssPath = path.join(
   "modal",
   "modal.css",
 );
+const platformConnectorConfigurationCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "connector-configuration",
+  "connector-configuration.css",
+);
+const distPlatformConnectorConfigurationCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "connector-configuration",
+  "connector-configuration.css",
+);
+const platformGitHubAutomationsCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "github-automations",
+  "github-automations.css",
+);
+const distPlatformGitHubAutomationsCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "github-automations",
+  "github-automations.css",
+);
 const platformGlobalSearchModalCssPath = path.join(
   packageRoot,
   "src",
@@ -1011,6 +1047,8 @@ async function copy() {
     platformSwitchCssText,
     platformToggleCssText,
     platformModalCssText,
+    platformConnectorConfigurationCssText,
+    platformGitHubAutomationsCssText,
     platformGlobalSearchModalCssText,
     platformPlanGateModalCssText,
     platformHomePageCssText,
@@ -1069,6 +1107,8 @@ async function copy() {
     fs.readFile(platformSwitchCssPath, "utf8"),
     fs.readFile(platformToggleCssPath, "utf8"),
     fs.readFile(platformModalCssPath, "utf8"),
+    fs.readFile(platformConnectorConfigurationCssPath, "utf8"),
+    fs.readFile(platformGitHubAutomationsCssPath, "utf8"),
     fs.readFile(platformGlobalSearchModalCssPath, "utf8"),
     fs.readFile(platformPlanGateModalCssPath, "utf8"),
     fs.readFile(platformHomePageCssPath, "utf8"),
@@ -1403,6 +1443,22 @@ async function copy() {
   await fs.writeFile(
     distPlatformComponentsModalCssPath,
     platformModalCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformConnectorConfigurationCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformConnectorConfigurationCssPath,
+    platformConnectorConfigurationCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformGitHubAutomationsCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformGitHubAutomationsCssPath,
+    platformGitHubAutomationsCssText,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformGlobalSearchModalCssPath), {

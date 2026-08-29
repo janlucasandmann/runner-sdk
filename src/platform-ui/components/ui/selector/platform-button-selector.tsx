@@ -14,6 +14,7 @@ import {
 } from "react";
 import {
   PlatformPopup,
+  type PlatformPopupSearchHeaderProps,
   type PlatformPopupVariant,
 } from "../../composite/popup/index.js";
 import {
@@ -52,6 +53,7 @@ export interface PlatformButtonSelectorProps {
   popupWidth?: CSSProperties["width"];
   popupMaxWidth?: CSSProperties["maxWidth"];
   popupMaxHeight?: CSSProperties["maxHeight"];
+  popupSearch?: PlatformPopupSearchHeaderProps | null | false;
   matchTriggerWidth?: boolean;
   fullWidth?: boolean;
   className?: string;
@@ -116,6 +118,7 @@ export const PlatformButtonSelector = forwardRef<
     popupWidth,
     popupMaxWidth,
     popupMaxHeight = "min(320px, calc(100vh - 32px))",
+    popupSearch = null,
     matchTriggerWidth = false,
     fullWidth = false,
     className = "",
@@ -376,6 +379,7 @@ export const PlatformButtonSelector = forwardRef<
       portal
       placement={popupAlignment === "right" ? "bottom-end" : "bottom-start"}
       portalMatchAnchorWidth={matchTriggerWidth}
+      searchHeader={popupSearch}
       trigger={trigger}
     >
       {children}

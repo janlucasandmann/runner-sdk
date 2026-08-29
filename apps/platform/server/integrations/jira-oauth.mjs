@@ -29,6 +29,9 @@ const JIRA_PROVIDER = "jira";
 const JIRA_AUTHORIZE_URL = "https://auth.atlassian.com/authorize";
 const JIRA_TOKEN_URL = "https://auth.atlassian.com/oauth/token";
 const JIRA_API_BASE = "https://api.atlassian.com";
+const JIRA_CONFLUENCE_CLASSIC_SPACE_SCOPE = "read:confluence-space.summary";
+const JIRA_CONFLUENCE_GRANULAR_SPACE_SCOPE = "read:space:confluence";
+const JIRA_CONFLUENCE_SEARCH_SCOPE = "search:confluence";
 const JIRA_DEFAULT_SCOPE =
   "offline_access read:jira-work write:jira-work read:jira-user read:confluence-content.all read:confluence-content.summary read:confluence-space.summary read:confluence-user search:confluence write:confluence-content write:confluence-file";
 const JIRA_ENCRYPTION_KEYS = [
@@ -93,6 +96,12 @@ export async function handleJiraApiRequest({
         allowedOrigins,
       });
     }
+    if (req.method === "GET" && pathname === "/api/jira/resources") {
+      return await handleJiraResources(req, res, {
+        envFileCandidates,
+        allowedOrigins,
+      });
+    }
     if (req.method === "POST" && pathname === "/api/jira/disconnect") {
       return await handleJiraDisconnect(req, res, {
         envFileCandidates,
@@ -118,6 +127,28 @@ export async function handleJiraApiRequest({
         allowedOrigins,
       );
     }
+    if (error?.code === "jira_reauthorization_required") {
+      return sendConnectorJson(
+        req,
+        res,
+        428,
+        {
+          error: "Atlassian authorization update required",
+          code: error.code,
+          message: error instanceof Error
+            ? error.message
+            : "Update Atlassian permissions to load Confluence spaces.",
+          reauthorizationRequired: true,
+          missingScopes: Array.isArray(error?.missingScopes)
+            ? error.missingScopes
+            : [
+                JIRA_CONFLUENCE_CLASSIC_SPACE_SCOPE,
+                JIRA_CONFLUENCE_SEARCH_SCOPE,
+              ],
+        },
+        allowedOrigins,
+      );
+    }
     if (error?.code === "unauthorized") {
       return sendConnectorJson(
         req,
@@ -138,6 +169,175 @@ export async function handleJiraApiRequest({
       allowedOrigins,
     );
   }
+}
+
+async function handleJiraResources(
+  req,
+  res,
+  { envFileCandidates, allowedOrigins },
+) {
+  const user = await verifyConnectorRequestUser(req, envFileCandidates);
+  const credential = await loadValidJiraCredential({
+    uid: user.uid,
+    credentialId: getConnectorRequestSearchParam(req, "credentialId"),
+    envFileCandidates,
+  });
+  if (!credential?.token?.accessToken) {
+    return sendConnectorJson(
+      req,
+      res,
+      401,
+      { error: "Atlassian is not connected." },
+      allowedOrigins,
+    );
+  }
+
+  let cloudId = normalizeJiraCloudId(credential.token.cloudId);
+  let siteName = String(credential.token.siteName || "Atlassian").trim() || "Atlassian";
+  let siteUrl = String(credential.token.siteUrl || "").trim();
+  if (!cloudId) {
+    const sites = await fetchJiraAccessibleResources(credential.token.accessToken);
+    const site = sites[0];
+    cloudId = normalizeJiraCloudId(site?.id);
+    siteName = String(site?.name || siteName).trim() || siteName;
+    siteUrl = String(site?.url || siteUrl).trim();
+  }
+  if (!cloudId) {
+    return sendConnectorJson(
+      req,
+      res,
+      409,
+      { error: "The Atlassian connection has no accessible cloud site." },
+      allowedOrigins,
+    );
+  }
+
+  const folderId = String(
+    getConnectorRequestSearchParam(req, "folderId") || "root",
+  ).trim() || "root";
+  const requestedProduct = normalizeAtlassianResourceProduct(
+    getConnectorRequestSearchParam(req, "product"),
+  );
+  const jiraFolderId = `atlassian:jira:${cloudId}`;
+  const confluenceFolderId = `atlassian:confluence:${cloudId}`;
+  let resources;
+  if (folderId === "root" && requestedProduct === "jira") {
+    resources = await buildJiraProjectResources({
+      accessToken: credential.token.accessToken,
+      cloudId,
+      parentId: null,
+      siteUrl,
+    });
+  } else if (folderId === "root" && requestedProduct === "confluence") {
+    resources = await buildConfluenceSpaceResources({
+      accessToken: credential.token.accessToken,
+      scope: credential.token.scope,
+      cloudId,
+      parentId: null,
+      siteUrl,
+    });
+  } else if (folderId === "root") {
+    resources = [
+      {
+        id: jiraFolderId,
+        name: `${siteName} · Jira`,
+        path: "Jira",
+        parentId: null,
+        isFolder: true,
+        mimeType: "application/x-atlassian-jira",
+        resourceType: "jira_container",
+        cloudId,
+        siteUrl,
+      },
+      {
+        id: confluenceFolderId,
+        name: `${siteName} · Confluence`,
+        path: "Confluence",
+        parentId: null,
+        isFolder: true,
+        mimeType: "application/x-atlassian-confluence",
+        resourceType: "confluence_container",
+        cloudId,
+        siteUrl,
+      },
+    ];
+  } else if (folderId === jiraFolderId) {
+    resources = await buildJiraProjectResources({
+      accessToken: credential.token.accessToken,
+      cloudId,
+      parentId: jiraFolderId,
+      siteUrl,
+    });
+  } else if (folderId === confluenceFolderId) {
+    resources = await buildConfluenceSpaceResources({
+      accessToken: credential.token.accessToken,
+      scope: credential.token.scope,
+      cloudId,
+      parentId: confluenceFolderId,
+      siteUrl,
+    });
+  } else {
+    resources = [];
+  }
+
+  return sendConnectorJson(
+    req,
+    res,
+    200,
+    { resources },
+    allowedOrigins,
+  );
+}
+
+function normalizeAtlassianResourceProduct(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "jira" || normalized === "confluence"
+    ? normalized
+    : "";
+}
+
+async function buildJiraProjectResources({
+  accessToken,
+  cloudId,
+  parentId,
+  siteUrl,
+}) {
+  const projects = await fetchJiraProjects(accessToken, cloudId);
+  return projects.map((project) => ({
+    id: `atlassian:jira-project:${cloudId}:${project.id || project.key}`,
+    name: project.name || project.key || "Untitled Jira project",
+    path: project.key || project.id,
+    parentId,
+    isFolder: false,
+    mimeType: "application/x-atlassian-jira-project",
+    resourceType: "jira_project",
+    resourceKey: project.key,
+    cloudId,
+    siteUrl,
+  }));
+}
+
+async function buildConfluenceSpaceResources({
+  accessToken,
+  scope,
+  cloudId,
+  parentId,
+  siteUrl,
+}) {
+  const spaces = await fetchConfluenceSpaces(accessToken, cloudId, { scope });
+  return spaces.map((space) => ({
+    id: `atlassian:confluence-space:${cloudId}:${space.id || space.key}`,
+    name: space.name || space.key || "Untitled Confluence space",
+    path: space.key || space.id,
+    parentId,
+    isFolder: false,
+    mimeType: "application/x-atlassian-confluence-space",
+    resourceType: "confluence_space",
+    resourceKey: space.id || space.key,
+    spaceKey: space.key || "",
+    cloudId,
+    siteUrl,
+  }));
 }
 
 function normalizeJiraApiPath(pathname) {
@@ -173,6 +373,11 @@ async function handleJiraLogin(
     platformOrigin,
   );
   const state = randomBytes(24).toString("base64url");
+  // Jira and Confluence deliberately share one Atlassian credential. Keep the
+  // baseline on Atlassian's recommended classic scopes: an OAuth app rejects
+  // an authorization URL as invalid when it requests granular scopes that
+  // were not enabled for that client in the Developer Console.
+  const requestedScope = normalizeJiraScope(body?.scope);
   await saveConnectorOAuthState(
     state,
     {
@@ -198,7 +403,7 @@ async function handleJiraLogin(
         clientId: configuration.clientId,
         redirectUri: configuration.redirectUri,
         state,
-        scope: normalizeJiraScope(body?.scope),
+        scope: requestedScope,
       }),
       state,
       uid: user.uid,
@@ -287,6 +492,12 @@ async function handleJiraCallback(
     if (!site?.id) {
       throw new Error("The Atlassian account does not expose an accessible cloud site.");
     }
+    const grantedScope = mergeJiraScopes(
+      token?.scope,
+      sites
+        .filter((candidate) => candidate.id === site.id)
+        .flatMap((candidate) => candidate.scopes || []),
+    );
     const profile = await fetchJiraProfile(token.access_token, site.id);
     const normalizedProfile = sanitizeJiraProfile(profile, site);
     await saveConnectorCredential({
@@ -297,7 +508,10 @@ async function handleJiraCallback(
       organizationId: state.organizationId,
       identity: getJiraIdentity(normalizedProfile),
       profile: normalizedProfile,
-      token: normalizeJiraToken(token, {
+      token: normalizeJiraToken({
+        ...token,
+        scope: grantedScope,
+      }, {
         cloudId: site.id,
         siteName: site.name,
         siteUrl: site.url,
@@ -418,6 +632,9 @@ async function handleJiraUser(
         scope: activeCredential.token.scope || "",
         tokenType: activeCredential.token.tokenType || "bearer",
         expiresAt: activeCredential.token.expiresAt ?? null,
+        capabilities: buildJiraAuthorizationCapabilities(
+          activeCredential.token.scope,
+        ),
       },
       allowedOrigins,
     );
@@ -731,6 +948,196 @@ async function fetchJiraAccessibleResources(accessToken) {
     : [];
 }
 
+async function fetchJiraProjects(accessToken, cloudId) {
+  const projects = [];
+  let startAt = 0;
+  for (let page = 0; page < 10; page += 1) {
+    const url = new URL(
+      `${JIRA_API_BASE}/ex/jira/${encodeURIComponent(cloudId)}/rest/api/3/project/search`,
+    );
+    url.searchParams.set("startAt", String(startAt));
+    url.searchParams.set("maxResults", "100");
+    url.searchParams.set("orderBy", "name");
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(
+        payload?.errorMessages?.[0]
+        || payload?.message
+        || "Unable to load Jira projects.",
+      );
+      error.status = response.status;
+      throw error;
+    }
+    const values = Array.isArray(payload?.values) ? payload.values : [];
+    projects.push(...values.map((project) => ({
+      id: String(project?.id || "").trim(),
+      key: String(project?.key || "").trim(),
+      name: String(project?.name || "").trim(),
+    })).filter((project) => project.id || project.key));
+    startAt += values.length;
+    if (values.length === 0 || payload?.isLast === true || startAt >= Number(payload?.total || 0)) break;
+  }
+  return projects;
+}
+
+export async function fetchConfluenceSpaces(
+  accessToken,
+  cloudId,
+  { scope = "" } = {},
+) {
+  const granted = new Set(splitJiraScopes(scope));
+  const scopeIsKnown = granted.size > 0;
+  const canUseGranularCatalog = granted.has(
+    JIRA_CONFLUENCE_GRANULAR_SPACE_SCOPE,
+  );
+  if (!scopeIsKnown || canUseGranularCatalog) {
+    try {
+      return await fetchConfluenceSpacesV2(accessToken, cloudId);
+    } catch (error) {
+      if (error?.status !== 401 && error?.status !== 403) throw error;
+    }
+  }
+
+  // Existing shared Atlassian grants use the recommended classic Confluence
+  // scopes. The v2 spaces endpoint accepts only the granular space scope, so
+  // discover spaces through the classic-scope CQL catalog before asking the
+  // user to reconnect. This preserves the Jira + Confluence connection that
+  // worked before the product-specific explorer split.
+  try {
+    return await fetchConfluenceSpacesFromSearch(accessToken, cloudId);
+  } catch (error) {
+    if (error?.status === 401 || error?.status === 403) {
+      throw createJiraReauthorizationRequiredError();
+    }
+    throw error;
+  }
+}
+
+function createJiraReauthorizationRequiredError() {
+  const error = new Error(
+    "Reconnect Atlassian to restore access to Confluence spaces for this shared Jira and Confluence account.",
+  );
+  error.code = "jira_reauthorization_required";
+  error.status = 428;
+  error.missingScopes = [
+    JIRA_CONFLUENCE_CLASSIC_SPACE_SCOPE,
+    JIRA_CONFLUENCE_SEARCH_SCOPE,
+  ];
+  return error;
+}
+
+async function fetchConfluenceSpacesV2(accessToken, cloudId) {
+  const spaces = [];
+  let nextUrl = new URL(
+    `${JIRA_API_BASE}/ex/confluence/${encodeURIComponent(cloudId)}/wiki/api/v2/spaces`,
+  );
+  nextUrl.searchParams.set("limit", "100");
+  nextUrl.searchParams.set("type", "global");
+  for (let page = 0; page < 10 && nextUrl; page += 1) {
+    const response = await fetch(nextUrl, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(
+        payload?.errors?.[0]?.title
+        || payload?.message
+        || "Unable to load Confluence spaces.",
+      );
+      error.status = response.status;
+      throw error;
+    }
+    const values = Array.isArray(payload?.results) ? payload.results : [];
+    spaces.push(...values.map((space) => ({
+      id: String(space?.id || "").trim(),
+      key: String(space?.key || "").trim(),
+      name: String(space?.name || "").trim(),
+    })).filter((space) => space.id || space.key));
+    const next = String(payload?._links?.next || "").trim();
+    nextUrl = next
+      ? buildConfluenceApiPaginationUrl(next, cloudId, nextUrl)
+      : null;
+  }
+  return dedupeConfluenceSpaces(spaces);
+}
+
+async function fetchConfluenceSpacesFromSearch(accessToken, cloudId) {
+  const spaces = [];
+  let nextUrl = new URL(
+    `${JIRA_API_BASE}/ex/confluence/${encodeURIComponent(cloudId)}/wiki/rest/api/search`,
+  );
+  nextUrl.searchParams.set("cql", "type in (page, blogpost)");
+  nextUrl.searchParams.set("limit", "100");
+  nextUrl.searchParams.set("includeArchivedSpaces", "false");
+  for (let page = 0; page < 20 && nextUrl; page += 1) {
+    const response = await fetch(nextUrl, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(
+        payload?.message
+        || payload?.errors?.[0]?.title
+        || "Unable to load Confluence spaces.",
+      );
+      error.status = response.status;
+      throw error;
+    }
+    const values = Array.isArray(payload?.results) ? payload.results : [];
+    spaces.push(...values.flatMap((result) => {
+      const space = result?.space || result?.content?.space;
+      const id = String(space?.id || "").trim();
+      const key = String(space?.key || "").trim();
+      const name = String(space?.name || "").trim();
+      return id || key ? [{ id, key, name }] : [];
+    }));
+    const next = String(payload?._links?.next || "").trim();
+    nextUrl = next
+      ? buildConfluenceApiPaginationUrl(next, cloudId, nextUrl)
+      : null;
+  }
+  return dedupeConfluenceSpaces(spaces);
+}
+
+function buildConfluenceApiPaginationUrl(next, cloudId, currentUrl) {
+  const parsed = new URL(next, currentUrl);
+  const apiPrefix = `/ex/confluence/${encodeURIComponent(cloudId)}`;
+  if (parsed.origin === JIRA_API_BASE && parsed.pathname.startsWith(apiPrefix)) {
+    return parsed;
+  }
+  const rebased = new URL(`${JIRA_API_BASE}${apiPrefix}${parsed.pathname}`);
+  rebased.search = parsed.search;
+  return rebased;
+}
+
+function dedupeConfluenceSpaces(spaces) {
+  const byIdentity = new Map();
+  (Array.isArray(spaces) ? spaces : []).forEach((space) => {
+    const id = String(space?.id || "").trim();
+    const key = String(space?.key || "").trim();
+    const identity = id || key;
+    if (!identity) return;
+    byIdentity.set(identity, {
+      id,
+      key,
+      name: String(space?.name || "").trim(),
+    });
+  });
+  return Array.from(byIdentity.values());
+}
+
 async function fetchJiraProfile(accessToken, cloudId) {
   const response = await fetch(
     `${JIRA_API_BASE}/ex/jira/${encodeURIComponent(cloudId)}/rest/api/3/myself`,
@@ -806,8 +1213,38 @@ function normalizeJiraCloudId(value) {
 }
 
 function normalizeJiraScope(value) {
-  const normalized = String(value || "").trim();
-  return normalized || JIRA_DEFAULT_SCOPE;
+  return mergeJiraScopes(JIRA_DEFAULT_SCOPE, value);
+}
+
+function splitJiraScopes(value) {
+  const values = Array.isArray(value) ? value : [value];
+  return values
+    .flatMap((candidate) => String(candidate || "").split(/[\s,]+/))
+    .map((scope) => scope.trim())
+    .filter(Boolean);
+}
+
+function mergeJiraScopes(...values) {
+  return [...new Set(values.flatMap(splitJiraScopes))].join(" ");
+}
+
+export function buildJiraAuthorizationCapabilities(scope) {
+  const granted = new Set(splitJiraScopes(scope));
+  const hasConfluenceSpaces = granted.has(JIRA_CONFLUENCE_GRANULAR_SPACE_SCOPE)
+    || (
+      granted.has(JIRA_CONFLUENCE_CLASSIC_SPACE_SCOPE)
+      && granted.has(JIRA_CONFLUENCE_SEARCH_SCOPE)
+    );
+  return {
+    jira: granted.has("read:jira-work"),
+    confluence: hasConfluenceSpaces,
+    missingScopes: hasConfluenceSpaces
+      ? []
+      : [
+          JIRA_CONFLUENCE_CLASSIC_SPACE_SCOPE,
+          JIRA_CONFLUENCE_SEARCH_SCOPE,
+        ],
+  };
 }
 
 function getJiraIdentity(profile) {

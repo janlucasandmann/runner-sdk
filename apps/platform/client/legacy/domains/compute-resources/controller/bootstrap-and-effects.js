@@ -78,6 +78,7 @@
           const developResourceCreationModalKinds = [
             "web_app",
             "function",
+            "api",
             "database",
             "auth",
             "secrets",
@@ -639,7 +640,7 @@
             rollingBackDeploymentId: "",
           });
           const [serverDetailTab, setServerDetailTab] = useState(() =>
-            ["function", "web_app"].includes(canonicalizePlaygroundServerKind(embeddedServerKind))
+            isSourceDeployablePlaygroundServerKind(embeddedServerKind)
               ? "code"
               : "usage"
           );
@@ -1613,8 +1614,8 @@
               ? (selectedDatabaseId ? "database" : "server")
               : "computer";
             const isSourceDeployableResourcesDetail = selectedResourcesDetailType === "server"
-              && ["function", "web_app"].includes(
-                canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind)
+              && isSourceDeployablePlaygroundServerKind(
+                draftServer?.kind || normalizedEmbeddedServerKind
               );
             const isAuthenticationResourcesDetail = selectedResourcesDetailType === "server"
               && canonicalizePlaygroundServerKind(draftServer?.kind || normalizedEmbeddedServerKind) === "auth";

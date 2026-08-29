@@ -7,7 +7,7 @@ import {
 } from "@tiptap/core";
 import { visit } from "unist-util-visit";
 
-export type PlatformInstructionsEditorTextAlignment = "left" | "center" | "right";
+export type PlatformInstructionsEditorTextAlignment = "left" | "center" | "right" | "justify";
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -36,12 +36,12 @@ declare module "@tiptap/core" {
 }
 
 const TEXT_ALIGNMENT_MARKER =
-  /(?:^|\s)(?:<!--\s*computer-agents:text-align=(left|center|right)\s*-->|&lt;!--\s*computer-agents:text-align=(left|center|right)\s*--&gt;)\s*$/i;
+  /(?:^|\s)(?:<!--\s*computer-agents:text-align=(left|center|right|justify)\s*-->|&lt;!--\s*computer-agents:text-align=(left|center|right|justify)\s*--&gt;)\s*$/i;
 const EMPTY_PARAGRAPH_MARKDOWN = "&nbsp;";
 const NBSP_CHAR = "\u00A0";
 
 function normalizeTextAlignment(value: unknown): PlatformInstructionsEditorTextAlignment {
-  return value === "center" || value === "right" ? value : "left";
+  return value === "center" || value === "right" || value === "justify" ? value : "left";
 }
 
 function stripTextAlignmentMarker(value: unknown): {
@@ -270,7 +270,7 @@ export const PlatformInstructionsEditorTextAlign = Extension.create<PlatformText
   addOptions() {
     return {
       types: ["heading", "paragraph"],
-      alignments: ["left", "center", "right"],
+      alignments: ["left", "center", "right", "justify"],
       defaultAlignment: "left",
     };
   },
@@ -316,6 +316,7 @@ export const PlatformInstructionsEditorTextAlign = Extension.create<PlatformText
       "Mod-Shift-l": () => this.editor.commands.setTextAlign("left"),
       "Mod-Shift-e": () => this.editor.commands.setTextAlign("center"),
       "Mod-Shift-r": () => this.editor.commands.setTextAlign("right"),
+      "Mod-Shift-j": () => this.editor.commands.setTextAlign("justify"),
     };
   },
 });

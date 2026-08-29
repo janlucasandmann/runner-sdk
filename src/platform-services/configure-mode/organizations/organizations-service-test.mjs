@@ -18,6 +18,7 @@ assert.deepEqual(Object.keys(ORGANIZATIONS_STYLE_FRAGMENTS), [
   "general",
   "members",
   "subscription",
+  "appliance",
 ]);
 assert.match(
   ORGANIZATIONS_STYLE_FRAGMENTS.accessControl,
@@ -37,6 +38,7 @@ assert.match(
   ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
   /\.playground-organization-subscription-progress-value/,
 );
+assert.match(ORGANIZATIONS_STYLE_FRAGMENTS.appliance, /\.platform-appliance-overview/);
 assert.match(
   ORGANIZATIONS_STYLE_FRAGMENTS.subscription,
   /\.playground-organization-subscription-plan-name \{[\s\S]*?font-weight:\s*400;/,
@@ -215,6 +217,7 @@ assert.deepEqual(Object.keys(pageFragments), [
   "identityAndBilling",
   "identityAccess",
   "members",
+  "appliance",
   "rolesAndView",
 ]);
 assert.match(pageFragments.setup, /function renderOrganizationPage/);
@@ -266,6 +269,7 @@ assert.doesNotMatch(pageFragments.members, /organizationMemberRoleFilter/);
 assert.match(pageFragments.members, /pagination:/);
 assert.match(pageFragments.identityAccess, /PLAYGROUND_ORGANIZATION_HEADER/);
 assert.match(pageFragments.members, /const renderMembers/);
+assert.match(pageFragments.appliance, /const renderApplianceOverviewPage = \(\) =>/);
 assert.doesNotMatch(pageFragments.members, /normalizeOrganizationTableSortDirection/);
 assert.match(
   ORGANIZATIONS_RUNTIME_SCRIPT_FRAGMENTS.loading,

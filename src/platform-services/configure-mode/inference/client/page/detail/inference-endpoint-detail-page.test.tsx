@@ -202,7 +202,7 @@ describe("InferenceEndpointDetailPage", () => {
     await user.click(screen.getByRole("button", {
       name: "Add teams with inference endpoint access options",
     }));
-    await user.click(screen.getByRole("menuitem", { name: "Research" }));
+    await user.click(screen.getByRole("menuitem", { name: "Research Admin" }));
     expect(onAddTeamShare).toHaveBeenCalledOnce();
     expect(onAccessMetadataChange).toHaveBeenCalledOnce();
 

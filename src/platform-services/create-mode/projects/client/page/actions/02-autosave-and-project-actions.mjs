@@ -777,6 +777,25 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             });
 
             if (!isEditMode) {
+              try {
+                const knowledgeResource = await ensurePlaygroundProjectKnowledgeResource(committedProject, {
+                  attempts: 3,
+                  returnProject: true,
+                });
+                if (knowledgeResource?.project?.id) {
+                  committedProject = commitLocalProjectRecord(knowledgeResource.project, {
+                    summary: knowledgeResource.project.summary || committedProject.summary,
+                    environments: savedProjectEnvironments,
+                    recentThreads: [],
+                    threads: [],
+                    selectImmediately: false,
+                  });
+                }
+              } catch (error) {
+                // The project is already durable. Keep creation usable and let
+                // selected-project reconciliation retry this idempotent link.
+                console.warn("[project knowledge] Failed to attach the Strategy Knowledge resource during project creation.", error);
+              }
               await applyPlaygroundProjectInitialSetup(committedProject, projectBlueprint, savedProjectEnvironments);
               const persistedOwnerUserId = String(
                 savedProject.ownerUserId
@@ -1097,7 +1116,21 @@ export const PROJECTS_ACTIONS_02_FRAGMENT = `                status: normalized.
             ? selectedEnvironmentRecord
             : null;
           const environmentId = getProjectOverviewEnvironmentId(selectedEnvironment) || requestedEnvironmentId;
-          const currentEnvironmentId = String(getProjectOverviewSidebarEnvironmentValue() || "").trim();
+          const currentProject = getActiveProjectOverviewRecord();
+          const currentProjectMetadata = currentProject.metadata && typeof currentProject.metadata === "object" && !Array.isArray(currentProject.metadata)
+            ? currentProject.metadata
+            : {};
+          const currentEnvironmentId = String(
+            currentProject.defaultEnvironmentId
+              || currentProjectMetadata.defaultEnvironmentId
+              || activeProjectAttachmentEnvironmentId
+              || projectComposerDefaultEnvironmentId
+              || getProjectOverviewEnvironmentId(
+                projectComposerAvailableEnvironments.find((environment) => environment?.isDefault),
+              )
+              || getProjectOverviewEnvironmentId(projectComposerAvailableEnvironments[0])
+              || ""
+          ).trim();
           const nextEnvironment = selectedEnvironment || projectComposerAvailableEnvironments.find(
             (environment) => getProjectOverviewEnvironmentId(environment) === environmentId,
           );

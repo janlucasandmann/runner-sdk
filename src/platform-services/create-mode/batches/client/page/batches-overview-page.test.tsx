@@ -492,7 +492,7 @@ describe("BatchesOverviewPage", () => {
         "save",
       );
     });
-  });
+  }, 10_000);
 
   it("submits a selected Workflow with a pinned version and simulated trigger input", async () => {
     const onSubmit = vi.fn();

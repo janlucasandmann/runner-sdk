@@ -1,10 +1,17 @@
 import { ChevronRight, LibraryBig, Plus, Trash2 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
+import {
+  createPlatformProjectIdentityFallback,
+  getPlatformProjectReferenceFromKnowledgeMetadata,
+  PlatformProjectIdentityIcon,
+  type PlatformProjectIdentity,
+} from "../../../../../platform-resources/projects/index.js";
 import type {
   PlatformDataTableAction,
   PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
+import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformPageHero } from "../../../../../platform-ui/components/composite/page-hero/index.js";
 import {
   ResourceOverviewIdentityCell,
@@ -18,6 +25,7 @@ export interface KnowledgeOverviewPageProps {
   loading?: boolean;
   error?: string;
   controlsPortalId?: string;
+  projectIdentitiesById?: Readonly<Record<string, PlatformProjectIdentity>>;
   onOpen: (library: KnowledgeLibrary) => void;
   onCreate: () => void;
   onDelete: (libraries: readonly KnowledgeLibrary[]) => void;
@@ -43,6 +51,7 @@ export function KnowledgeOverviewPage({
   loading = false,
   error = "",
   controlsPortalId,
+  projectIdentitiesById = {},
   onOpen,
   onCreate,
   onDelete,
@@ -54,19 +63,41 @@ export function KnowledgeOverviewPage({
       accessor: "name",
       sortable: true,
       width: "minmax(320px, 1.5fr)",
-      cell: ({ row }) => (
-        <div className="resource-overview-identity is-catalog knowledge-overview-identity">
-          <span className="resource-overview-identity__visual is-skill" aria-hidden="true">
-            <LibraryBig width={16} height={16} strokeWidth={1.8} />
-          </span>
-          <span className="resource-overview-identity__copy">
-            <span className="resource-overview-identity__title">{row.name}</span>
-            {row.description ? (
-              <span className="resource-overview-identity__description">{row.description}</span>
-            ) : null}
-          </span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const projectReference = getPlatformProjectReferenceFromKnowledgeMetadata(row.metadata);
+        const projectIdentity = projectReference
+          ? projectIdentitiesById[projectReference.projectId]
+            || createPlatformProjectIdentityFallback(projectReference)
+          : null;
+        const projectVisualStyle = projectIdentity ? ({
+          "--knowledge-project-icon-color": projectIdentity.color,
+        } as CSSProperties) : undefined;
+        return (
+          <div className="resource-overview-identity is-catalog knowledge-overview-identity">
+            <span
+              className={`resource-overview-identity__visual is-skill${projectIdentity ? " is-project-linked" : ""}`}
+              style={projectVisualStyle}
+              aria-hidden="true"
+            >
+              {projectIdentity ? (
+                <PlatformProjectIdentityIcon
+                  icon={projectIdentity.icon}
+                  size={16}
+                  strokeWidth={1.8}
+                />
+              ) : (
+                <LibraryBig width={16} height={16} strokeWidth={1.8} />
+              )}
+            </span>
+            <span className="resource-overview-identity__copy">
+              <span className="resource-overview-identity__title">{row.name}</span>
+              {row.description ? (
+                <span className="resource-overview-identity__description">{row.description}</span>
+              ) : null}
+            </span>
+          </div>
+        );
+      },
     },
     {
       id: "documents",
@@ -107,7 +138,7 @@ export function KnowledgeOverviewPage({
       width: "minmax(140px, 0.55fr)",
       cell: ({ row }) => <ResourceOverviewValue>{formatTimestamp(row.updatedAt)}</ResourceOverviewValue>,
     },
-  ], []);
+  ], [projectIdentitiesById]);
 
   return (
     <ResourceOverviewPage<KnowledgeLibrary>
@@ -161,6 +192,12 @@ export function KnowledgeOverviewPage({
         onRowActivate: onOpen,
         getRowAriaLabel: (library) => library.name,
         loading,
+        loadingState: (
+          <PlatformLoadingState
+            centered
+            message="Loading Knowledge libraries…"
+          />
+        ),
         error: error || undefined,
         emptyState: (
           <PlatformEmptyState

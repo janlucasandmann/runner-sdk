@@ -26,6 +26,31 @@ export function normalizeNotionAuthUrl(authUrl, callbackUri) {
   }
 }
 
+export function validateNotionAuthUrl(authUrl) {
+  if (!authUrl) {
+    return { valid: false, message: "The Notion authorization URL is missing." };
+  }
+  try {
+    const parsed = new URL(authUrl);
+    const clientId = String(parsed.searchParams.get("client_id") || "").trim();
+    const redirectUri = String(parsed.searchParams.get("redirect_uri") || "").trim();
+    if (parsed.protocol !== "https:" || parsed.hostname !== "api.notion.com") {
+      return { valid: false, message: "The Notion authorization URL has an unexpected origin." };
+    }
+    if (!clientId || /\s/.test(clientId) || clientId.length < 16) {
+      return { valid: false, message: "The Notion authorization URL has a missing or invalid client ID." };
+    }
+    if (!redirectUri) {
+      return { valid: false, message: "The Notion authorization URL has no redirect URI." };
+    }
+    new URL(redirectUri);
+    return { valid: true, message: "" };
+  }
+  catch {
+    return { valid: false, message: "The Notion authorization URL is invalid." };
+  }
+}
+
 export function normalizeCustomSkillRecord(skill) {
   if (!skill || typeof skill !== "object") return null;
   const codeFiles = Array.isArray(skill.codeFiles)

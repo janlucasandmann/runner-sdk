@@ -107,10 +107,7 @@ export function PlatformFileExplorerModal({
       onClose={onClose}
     >
       <PlatformModalSplitLayout
-        className={joinClassNames(
-          "platform-file-explorer",
-          !showSidebar && "has-no-sidebar",
-        )}
+        className={joinClassNames("platform-file-explorer", !showSidebar && "has-no-sidebar")}
         onPointerDownCapture={(event) => {
           if (preview == null || !onPreviewClose) return;
           const target = event.target;
@@ -162,15 +159,6 @@ export function PlatformFileExplorerModal({
             <div className="platform-file-explorer__content-header-layout">
               <div className="platform-file-explorer__content-header-row">
                 <div className="platform-file-explorer__content-header-copy">{contentHeader}</div>
-                <PlatformIconButton
-                  type="button"
-                  size="compact"
-                  className="platform-file-explorer__close"
-                  aria-label={closeButtonLabel}
-                  onClick={() => onClose("close-button")}
-                >
-                  <X aria-hidden="true" strokeWidth={2} />
-                </PlatformIconButton>
               </div>
               {contentNavigation != null ? (
                 <div

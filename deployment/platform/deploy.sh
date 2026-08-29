@@ -127,7 +127,11 @@ for public_file in \
     echo "Warning: optional platform asset missing: web/hosting/public/${public_file}" >&2
   fi
 done
-cp "repos/runner-web-sdk/img/camark.svg" "${TMP_BUILD_DIR}/web/hosting/public/img/camark.svg"
+for public_file in camark.svg spinner.svg; do
+  cp \
+    "repos/runner-web-sdk/img/${public_file}" \
+    "${TMP_BUILD_DIR}/web/hosting/public/img/${public_file}"
+done
 mkdir -p "${TMP_BUILD_DIR}/web/hosting/public/img/agent-profile-pics"
 for public_file in \
   assistantastro-1.webp \

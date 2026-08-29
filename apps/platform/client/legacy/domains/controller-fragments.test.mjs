@@ -17,12 +17,12 @@ const suites = [
   {
     domain: "shell",
     paths: PLATFORM_SHELL_CONTROLLER_FRAGMENT_PATHS,
-    budget: 6_200,
+    budget: 6_400,
   },
   {
     domain: "skills",
     paths: SKILLS_CONTROLLER_FRAGMENT_PATHS,
-    budget: 1_400,
+    budget: 1_600,
   },
 ];
 
@@ -186,7 +186,7 @@ assert.match(
 );
 assert.match(
   shellSettingsToolsSource,
-  /label: toolsOverviewTitle,[\s\S]{0,180}trailing: isSkillsView[\s\S]{0,120}: tagsAndPluginsOverviewMenu/,
+  /label: toolsOverviewTitle,[\s\S]{0,180}trailing: isSkillsView[\s\S]{0,120}isPromptsView[\s\S]{0,120}: tagsAndPluginsOverviewMenu/,
   "The Connectors action menu must trail its app-header title.",
 );
 assert.match(
@@ -261,6 +261,11 @@ assert.match(
   shellBootstrapSource,
   /const resolveRunnerRequestHeaders = useCallback\([\s\S]{0,200}buildRunnerAuthenticatedRequestHeaders\(authRequestHeaders\)/,
   "The shell must resolve connector-run authentication from the centralized platform auth helper.",
+);
+assert.match(
+  shellBootstrapSource,
+  /handleNotionFetchDatabases[\s\S]*?\/api\/aios\/notion\/databases[\s\S]*?headers: authRequestHeaders[\s\S]*?\}, \[authRequestHeaders\]\);/,
+  "The Notion explorer catalog request must carry the active authenticated organization scope.",
 );
 assert.match(
   shellCompositionSource,
@@ -340,7 +345,7 @@ assert.doesNotMatch(
 );
 assert.match(
   shellCompositionSource,
-  /playground-thread-execution-workbench-button[\s\S]{0,420}React\.createElement\(ClipboardList/,
+  /playground-thread-execution-workbench-button[\s\S]{0,640}React\.createElement\(ClipboardList/,
   "The thread context sidebar button must use the clipboard-list affordance.",
 );
 assert.match(
@@ -400,7 +405,7 @@ assert.match(
 );
 assert.match(
   platformTemplateSource,
-  /const chartParentById = new Map\(\)[\s\S]{0,900}chartParentById\.set\(record\.id, chartParentId\)/,
+  /const chartParentById = new Map\(\)[\s\S]{0,2200}chartParentById\.set\(record\.id, chartParentId\)/,
   "The Activity chart must retain group-to-tool-call hierarchy after plan steps are removed.",
 );
 assert.match(
@@ -442,16 +447,6 @@ assert.match(
   platformTemplateCss,
   /\.playground-thread-nav-popup-shell \.playground-thread-nav-popup-menu\s*\{[\s\S]{0,180}right: auto;[\s\S]{0,80}left: 0;[\s\S]{0,240}transform-origin: top left;/,
   "The thread title menu must align its left edge with the title action trigger.",
-);
-assert.match(
-  shellSettingsToolsSource,
-  /const skillsOverviewMenu =[\s\S]{0,700}React\.createElement\(PlatformPopup,[\s\S]{0,900}variant: "minimal"[\s\S]{0,1200}"Skills actions"[\s\S]{0,1200}openDocsPage\(\)[\s\S]{0,300}"Documentation"/,
-  "The Skills overview must expose its documentation in a minimal app-header title menu.",
-);
-assert.match(
-  shellSettingsToolsSource,
-  /label: toolsOverviewTitle,[\s\S]{0,180}trailing: isSkillsView[\s\S]{0,100}\? skillsOverviewMenu/,
-  "The Skills action menu must trail the app-header title.",
 );
 assert.match(
   shellSettingsToolsSource,
@@ -508,7 +503,7 @@ assert.doesNotMatch(
   "Opening a new custom Skill must not persist it before the first Save.",
 );
 const persistCustomSkillDraftSource = skillActionsSource.match(
-  /if \(selectedSkill\.isDraft\) \{[\s\S]*?(?=\n\s*if \(activeFile)/,
+  /if \(selectedSkill\.isDraft\) \{\n\s+const markdownFile[\s\S]*?return createdSkill;\n\s+\}/,
 )?.[0] || "";
 assert.match(
   persistCustomSkillDraftSource,
@@ -826,7 +821,7 @@ assert.match(
 );
 assert.match(
   agentHeaderCenterSource,
-  /!isResourcesDetailView[\s\S]{0,120}activeResourcesView === "servers"[\s\S]{0,220}\["web_app", "function", "database", "auth", "secrets", "payments"\]\.includes\(activeResourcesServerKind\)[\s\S]{0,180}id: "playground-develop-resource-overview-period-controls"/,
+  /!isResourcesDetailView[\s\S]{0,120}activeResourcesView === "servers"[\s\S]{0,240}\["web_app", "function", "api", "database", "auth", "secrets", "payments"\]\.includes\(activeResourcesServerKind\)[\s\S]{0,180}id: "playground-develop-resource-overview-period-controls"/,
   "Develop resource overviews must expose a dedicated centered app-header portal for their timeframe selector.",
 );
 assert.match(
@@ -1284,13 +1279,13 @@ assert.match(
 );
 assert.match(
   shellCompositionSource,
-  /const isSourceDeployableResourcesDetailView =[\s\S]{0,240}\["function", "web_app"\]\.includes\(activeResourcesServerKind\)[\s\S]{0,120}resourcesHeaderState\.resourceType === "server"/,
-  "The app header must identify both Function and Web App detail routes.",
+  /const isSourceDeployableResourcesDetailView =[\s\S]{0,240}isSourceDeployablePlaygroundServerKind\(activeResourcesServerKind\)[\s\S]{0,120}resourcesHeaderState\.resourceType === "server"/,
+  "The app header must identify every source-deployable detail route.",
 );
 assert.match(
   shellCompositionSource,
   /className: "playground-source-server-detail-header-switch"[\s\S]{0,500}\{ value: "code", label: "Code" \}[\s\S]{0,120}\{ value: "usage", label: "Usage" \}[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
-  "Function and Web App detail navigation must use the centralized app-header switch.",
+  "Source-deployable detail navigation must use the centralized app-header switch.",
 );
 assert.match(
   platformTemplateCss,

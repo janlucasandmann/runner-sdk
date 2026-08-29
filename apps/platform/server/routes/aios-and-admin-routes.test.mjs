@@ -68,4 +68,35 @@ assert.equal(
 );
 assert.equal(applianceOverviewRequests, 1);
 
+for (const [method, pathname, expectedUpstreamPath] of [
+    [
+        "GET",
+        "/api/aios/notion/strategy-sync?projectId=project-1&databaseId=database-1",
+        "/api/notion/strategy-sync?projectId=project-1&databaseId=database-1",
+    ],
+    [
+        "GET",
+        "/api/aios/notion/strategy-sync?libraryId=library-1&databaseId=database-1",
+        "/api/notion/strategy-sync?libraryId=library-1&databaseId=database-1",
+    ],
+    ["PUT", "/api/aios/notion/strategy-sync", "/api/notion/strategy-sync"],
+    [
+        "GET",
+        "/api/aios/confluence/strategy-sync?libraryId=library-1&spaceId=space-1",
+        "/api/confluence/strategy-sync?libraryId=library-1&spaceId=space-1",
+    ],
+    ["PUT", "/api/aios/confluence/strategy-sync", "/api/confluence/strategy-sync"],
+]) {
+    const handled = handleRoute(
+        { method },
+        {},
+        new URL(`http://localhost${pathname}`),
+    );
+    assert.equal(handled, true);
+    assert.deepEqual(proxiedRequests.pop(), {
+        upstreamPath: expectedUpstreamPath,
+        method,
+    });
+}
+
 console.log("aiOS project skill proxy route contracts passed.");

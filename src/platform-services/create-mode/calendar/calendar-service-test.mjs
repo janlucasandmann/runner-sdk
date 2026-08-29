@@ -257,6 +257,11 @@ assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /activeScheduleWork
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /playground-tasks-schedule-workflow-parameters/);
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /"aria-label": "Parameters"/);
 assert.doesNotMatch(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /className: "playground-tasks-detail-facts playground-tasks-schedule-workflow-parameters"/);
+assert.doesNotMatch(
+  CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar,
+  /taskDetailActionsRef/,
+  "The schedule detail header must not reference the removed task-detail actions ref.",
+);
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /updateScheduleDraft\(\(current\) => \{[\s\S]*?workflowId: workflow\.id/);
 assert.match(CALENDAR_PROJECTS_PAGE_ACTION_FRAGMENTS.draftUpdates, /setScheduleHasUnsavedChanges\(true\)/);
 assert.match(CALENDAR_PROJECTS_PAGE_VIEW_FRAGMENTS.calendar, /renderComposerInput: \(\{ contract, value, disabled \}\) => React\.createElement\(PlatformInstructionsEditor/);

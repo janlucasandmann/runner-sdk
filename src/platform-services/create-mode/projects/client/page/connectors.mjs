@@ -166,6 +166,9 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             if (Object.prototype.hasOwnProperty.call(patch, "createPullRequests")) {
               nextItem.createPullRequests = patch.createPullRequests !== false;
             }
+            if (Object.prototype.hasOwnProperty.call(patch, "forcePushCommits")) {
+              nextItem.forcePushCommits = patch.forcePushCommits === true;
+            }
             return nextItem;
           });
           const nextSelection = buildPlaygroundTaskConnectorSelection(
@@ -176,6 +179,113 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           return persistProjectConnectorSelection("github", nextSelection, baseProject, {
             prepareGithub: Boolean(nextRef),
           });
+        }
+
+        async function updateProjectNotionDatabaseSettings(projectRecord, databaseId, patch = {}) {
+          const normalizedDatabaseId = String(databaseId || "").trim();
+          const baseProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const currentSelection = normalizePlaygroundTaskConnectorSelection("notion", getDraftTaskConnectorSelection("notion", baseProject));
+          if (!baseProject?.id || !normalizedDatabaseId || !currentSelection) {
+            return null;
+          }
+          const nextItems = currentSelection.items.map((item) => {
+            if (String(item?.id || "").trim() !== normalizedDatabaseId) return item;
+            return {
+              ...item,
+              ...(Object.prototype.hasOwnProperty.call(patch, "strategyKnowledgeSyncEnabled")
+                ? { strategyKnowledgeSyncEnabled: patch.strategyKnowledgeSyncEnabled === true }
+                : {}),
+              ...(Object.prototype.hasOwnProperty.call(patch, "strategyKnowledgeSyncToNotionEnabled")
+                ? { strategyKnowledgeSyncToNotionEnabled: patch.strategyKnowledgeSyncToNotionEnabled === true }
+                : {}),
+              ...(Object.prototype.hasOwnProperty.call(patch, "strategyKnowledgeSyncFromNotionEnabled")
+                ? { strategyKnowledgeSyncFromNotionEnabled: patch.strategyKnowledgeSyncFromNotionEnabled === true }
+                : {}),
+            };
+          });
+          const nextSelection = buildPlaygroundTaskConnectorSelection(
+            "notion",
+            nextItems,
+            currentSelection.selectedIds
+          );
+          return persistProjectConnectorSelection("notion", nextSelection, baseProject);
+        }
+
+        async function updateProjectConfluenceSpaceSettings(projectRecord, resourceId, patch = {}) {
+          const normalizedResourceId = String(resourceId || "").trim();
+          const baseProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const currentSelection = normalizePlaygroundTaskConnectorSelection("atlassian", getDraftTaskConnectorSelection("atlassian", baseProject));
+          if (!baseProject?.id || !normalizedResourceId || !currentSelection) {
+            return null;
+          }
+          const nextItems = currentSelection.items.map((item) => {
+            if (String(item?.id || "").trim() !== normalizedResourceId) return item;
+            return {
+              ...item,
+              ...(Object.prototype.hasOwnProperty.call(patch, "strategyKnowledgeSyncEnabled")
+                ? { strategyKnowledgeSyncEnabled: patch.strategyKnowledgeSyncEnabled === true }
+                : {}),
+              ...(Object.prototype.hasOwnProperty.call(patch, "strategyKnowledgeSyncToConfluenceEnabled")
+                ? { strategyKnowledgeSyncToConfluenceEnabled: patch.strategyKnowledgeSyncToConfluenceEnabled === true }
+                : {}),
+              ...(Object.prototype.hasOwnProperty.call(patch, "strategyKnowledgeSyncFromConfluenceEnabled")
+                ? { strategyKnowledgeSyncFromConfluenceEnabled: patch.strategyKnowledgeSyncFromConfluenceEnabled === true }
+                : {}),
+            };
+          });
+          const nextSelection = buildPlaygroundTaskConnectorSelection(
+            "atlassian",
+            nextItems,
+            currentSelection.selectedIds
+          );
+          return persistProjectConnectorSelection("atlassian", nextSelection, baseProject);
+        }
+
+        async function disconnectProjectConnectorResource(projectRecord, source, resourceId) {
+          const connectorKey = getPlaygroundTaskConnectorKey(source);
+          const normalizedResourceId = String(resourceId || "").trim();
+          const baseProject = normalizePlaygroundProjectRecord(projectRecord || selectedProject || buildPlaygroundDefaultProjectDraft());
+          const currentSelection = normalizePlaygroundTaskConnectorSelection(
+            source,
+            getDraftTaskConnectorSelection(source, baseProject)
+          );
+          if (!connectorKey || !baseProject?.id || !normalizedResourceId || !currentSelection) {
+            return null;
+          }
+
+          const removedIds = new Set();
+          const nextItems = currentSelection.items.filter((item) => {
+            const shouldRemove = connectorKey === "github"
+              ? String(item?.repoFullName || "").trim() === normalizedResourceId
+              : String(item?.id || "").trim() === normalizedResourceId;
+            if (shouldRemove && item?.id) removedIds.add(String(item.id));
+            return !shouldRemove;
+          });
+          const nextSelectedIds = currentSelection.selectedIds.filter((id) => !removedIds.has(String(id)));
+          const nextSelection = buildPlaygroundTaskConnectorSelection(
+            source,
+            nextItems,
+            nextSelectedIds
+          );
+          const result = await persistProjectConnectorSelection(source, nextSelection, baseProject, {
+            prepareGithub: false,
+          });
+
+          setTaskConnectorBrowserSelectedIds((current) => ({
+            ...current,
+            [connectorKey]: nextSelection?.selectedIds || [],
+          }));
+          if (connectorKey === "github") {
+            setTaskConnectorBrowserGithubBranchByRepo((current) => {
+              const next = { ...current };
+              delete next[normalizedResourceId];
+              return next;
+            });
+          }
+          if (connectorKey === "notion" && taskConnectorBrowserSelectedNotionId === normalizedResourceId) {
+            setTaskConnectorBrowserSelectedNotionId(nextSelection?.selectedIds?.[0] || "");
+          }
+          return result;
         }
 
         useEffect(() => {
@@ -217,6 +327,8 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             github: connectors.github?.selectedIds || connectors.github?.items?.map((item) => item.id) || [],
             googleDrive: connectors.googleDrive?.selectedIds || connectors.googleDrive?.items?.map((item) => item.id) || [],
             oneDrive: connectors.oneDrive?.selectedIds || connectors.oneDrive?.items?.map((item) => item.id) || [],
+            notion: connectors.notion?.selectedIds || connectors.notion?.items?.map((item) => item.id) || [],
+            atlassian: connectors.atlassian?.selectedIds || connectors.atlassian?.items?.map((item) => item.id) || [],
           });
           const nextGithubBranches = {};
           (Array.isArray(connectors.github?.items) ? connectors.github.items : []).forEach((item) => {
@@ -285,7 +397,9 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           const normalizedSource = getPlaygroundTaskConnectorSource(nextSource) || "github";
           const connectorKey = getPlaygroundTaskConnectorKey(normalizedSource);
           if (connectorKey === "notion") {
-            setTaskConnectorBrowserNotionDatabases([]);
+            // Keep persisted project selections visible while refreshing the
+            // catalog. Clearing them here made Manage appear empty before the
+            // request completed and permanently hid them after a failed load.
             setTaskConnectorBrowserNotionDatabasesLoaded(false);
             setTaskConnectorBrowserErrors((current) => ({
               ...current,
@@ -488,6 +602,10 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             token: String(options?.token || "") || Date.now().toString(36) + Math.random().toString(36).slice(2),
             projectId: requestedProjectId,
             source: normalizedSource,
+            atlassianProduct: normalizedSource === "atlassian"
+              && (options?.atlassianProduct === "jira" || options?.atlassianProduct === "confluence")
+                ? options.atlassianProduct
+                : "",
           });
           window.setTimeout(() => {
             const portalCount = typeof document !== "undefined"
@@ -618,6 +736,7 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
                     ...candidate,
                     branchPrefix: typeof item?.branchPrefix === "string" ? item.branchPrefix : candidate?.branchPrefix,
                     createPullRequests: typeof item?.createPullRequests === "boolean" ? item.createPullRequests : candidate?.createPullRequests,
+                    forcePushCommits: typeof item?.forcePushCommits === "boolean" ? item.forcePushCommits : candidate?.forcePushCommits,
                     id: nextRootId,
                     ref: normalizedBranch,
                   }
@@ -653,6 +772,19 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           );
         }
 
+        function handleTaskConnectorBrowserItemSelection(item) {
+          if (taskConnectorBrowserCurrentSource === "notion") {
+            if (isProjectConnectorBrowserContext) {
+              toggleTaskConnectorBrowserSelectedId("notion", item.id);
+            } else {
+              setTaskConnectorBrowserSelectedNotionId((current) => current === item.id ? "" : item.id);
+            }
+            return;
+          }
+
+          toggleTaskConnectorBrowserSelectedId(taskConnectorBrowserCurrentKey, item.id);
+        }
+
         function handleTaskConnectorBrowserItemClick(item) {
           setTaskConnectorBrowserPreviewId(item.id);
           if (item.isFolder) {
@@ -660,12 +792,7 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
             return;
           }
 
-          if (taskConnectorBrowserCurrentSource === "notion") {
-            setTaskConnectorBrowserSelectedNotionId((current) => current === item.id ? "" : item.id);
-            return;
-          }
-
-          toggleTaskConnectorBrowserSelectedId(taskConnectorBrowserCurrentKey, item.id);
+          handleTaskConnectorBrowserItemSelection(item);
         }
 
         async function handleApplyTaskConnectorSelection() {
@@ -684,7 +811,9 @@ export const PROJECTS_PAGE_CONNECTORS_SCRIPT = `        function getProjectConne
           const connectorRecord = isProjectConnectorMode ? projectConnectorRecord : (isCalendarScheduleDetailMode ? scheduleDraft : draftTask);
           const currentSelection = getDraftTaskConnectorSelection(taskConnectorBrowserCurrentSource, connectorRecord);
           const selectedIds = taskConnectorBrowserCurrentSource === "notion"
-            ? (taskConnectorBrowserSelectedNotionId ? [taskConnectorBrowserSelectedNotionId] : [])
+            ? (isProjectConnectorMode
+                ? (taskConnectorBrowserSelectedIds.notion || []).filter((id) => id !== "__entire_workspace__")
+                : (taskConnectorBrowserSelectedNotionId ? [taskConnectorBrowserSelectedNotionId] : []))
             : (taskConnectorBrowserSelectedIds[taskConnectorBrowserCurrentKey] || []);
           const selectedItems = resolvePlaygroundTaskConnectorSelectedItems(
             taskConnectorBrowserItems,
@@ -1823,7 +1952,7 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
                     className: "tb-file-browser-check" + (isSelected ? " selected" : ""),
                     onClick: (event) => {
                       event.stopPropagation();
-                      handleTaskConnectorBrowserItemClick(displayItem);
+                      handleTaskConnectorBrowserItemSelection(displayItem);
                     },
                   },
                     isSelected ? React.createElement(Check, { className: "tb-file-browser-check-icon", strokeWidth: 2.2 }) : null
@@ -2252,8 +2381,11 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
               ? getProjectConnectorCredentialBinding(projectConnectorRecord, source)
               : { credentialId: "" };
             const defaultAccount = accounts.find((account) => account?.isDefault) || accounts[0] || null;
+            const boundCredentialId = binding.credentialId === "__organization_default__"
+              ? ""
+              : binding.credentialId;
             const selectedAccountId = String(
-              binding.credentialId
+              boundCredentialId
               || taskConnectorBrowserAccountIdsBySource[source]
               || defaultAccount?.id
               || ""
@@ -2285,6 +2417,9 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
                   ...connectorBrowserPayload,
                   source,
                 },
+                // Upgrade the selected connection in place so OAuth does not
+                // return to an explorer that still points at a stale grant.
+                ...(selectedAccountId ? { credentialId: selectedAccountId } : {}),
                 projectComposerMode,
                 projectDraft: isProjectComposerConnectorMode ? projectDraft : undefined,
               }),
@@ -2297,6 +2432,7 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
             notion: buildCentralizedConnectorConnection("notion"),
             "one-drive": buildCentralizedConnectorConnection("one-drive"),
             github: buildCentralizedConnectorConnection("github"),
+            atlassian: buildCentralizedConnectorConnection("atlassian"),
           };
           const centralizedEnvironments = isProjectConnectorMode
             ? (activeProjectAttachmentEnvironment ? [activeProjectAttachmentEnvironment] : [])
@@ -2315,6 +2451,7 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
               open: true,
               apiKeyPromptOpen: false,
               source: taskConnectorBrowserCurrentSource,
+              resourceScope: taskConnectorBrowserAtlassianProduct || undefined,
               showSourceSidebar: !isPersistedProjectConnectorMode,
               showFilterTabs: !isPersistedProjectConnectorMode,
               searchQuery: taskConnectorBrowserSearchQuery,
@@ -2354,9 +2491,22 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
               previewKind: taskConnectorBrowserPreviewState.kind || null,
               isPreviewLoading: taskConnectorBrowserPreviewState.status === "loading",
               renderPreviewIcon: (item) => renderTaskConnectorBrowserItemIcon(item),
-              selectedItemCount: taskConnectorBrowserSelectedFileIds.length,
+              selectedItemCount: taskConnectorBrowserVisibleSelectedIds.length,
               selectedItemLabel: taskConnectorBrowserSelectedLabel || (
-                taskConnectorBrowserCurrentSource === "notion" ? "Database" : "Files"
+                taskConnectorBrowserCurrentSource === "notion"
+                  ? "Database"
+                  : taskConnectorBrowserCurrentSource === "atlassian"
+                  ? taskConnectorBrowserAtlassianProduct === "jira"
+                    ? "Projects"
+                    : taskConnectorBrowserAtlassianProduct === "confluence"
+                      ? "Spaces"
+                      : "Resources"
+                  : "Files"
+              ),
+              allowEmptySelection: Boolean(
+                taskConnectorBrowserAtlassianResourceType
+                && (taskConnectorBrowserCurrentSelection?.items || [])
+                  .some((item) => item?.resourceType === taskConnectorBrowserAtlassianResourceType)
               ),
               isAttaching: taskAttachmentTransferState.isProcessing,
               onAttach: handleApplyTaskConnectorSelection,

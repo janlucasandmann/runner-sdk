@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { PlatformProjectIdentityIcon } from "../../../../../platform-resources/projects/index.js";
 import { PlatformDetailTabBar } from "../../../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import { PlatformPopup } from "../../../../../platform-ui/components/composite/popup/index.js";
 import { PlatformSearch } from "../../../../../platform-ui/components/ui/search/index.js";
@@ -179,13 +180,6 @@ function joinClassNames(
     .join(" ");
 }
 
-function getProjectEmoji(icon: string) {
-  const normalizedIcon = String(icon || "").trim();
-  return normalizedIcon.startsWith("emoji:")
-    ? normalizedIcon.slice("emoji:".length).trim()
-    : "";
-}
-
 function normalizeProjectColor(value: string, fallback: string) {
   const normalizedValue = String(value || "").trim();
   return /^#[0-9a-f]{6}$/i.test(normalizedValue) ? normalizedValue : fallback;
@@ -200,24 +194,17 @@ function ProjectIdentityGlyph({
   iconOptions: readonly ProjectIconPickerOption[];
   size: number;
 }) {
-  const emoji = getProjectEmoji(icon);
-  if (emoji) {
-    return (
-      <span
-        className="platform-project-icon-picker__emoji"
-        style={{ fontSize: Math.max(12, size - 2) }}
-        aria-hidden="true"
-      >
-        {emoji}
-      </span>
-    );
-  }
-  const selectedOption =
-    iconOptions.find((option) => option.id === icon) || iconOptions[0];
-  const Icon = selectedOption?.icon;
-  return Icon ? (
-    <Icon width={size} height={size} strokeWidth={1.8} aria-hidden="true" />
-  ) : null;
+  return (
+    <PlatformProjectIdentityIcon
+      icon={icon}
+      iconOptions={iconOptions}
+      size={size}
+      strokeWidth={1.8}
+      className={String(icon || "").trim().startsWith("emoji:")
+        ? "platform-project-icon-picker__emoji"
+        : undefined}
+    />
+  );
 }
 
 export function ProjectIconPicker({

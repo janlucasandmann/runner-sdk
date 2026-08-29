@@ -6,7 +6,6 @@ import {
   selectRunnerThreadRunWorkingLabel,
   type RunnerThreadProjection,
 } from "../../thread/index.js";
-import { DotLoader } from "../../platform-ui/components/ui/dot-loader/index.js";
 import { useRunnerThreadProjection } from "./use-runner-thread-projection.js";
 
 export interface RunnerThreadLiveWorkStatusProps {
@@ -17,6 +16,7 @@ export interface RunnerThreadLiveWorkStatusProps {
   enabled?: boolean;
   fallbackLabel?: string;
   headers?: HeadersInit;
+  contextLabel?: string;
   onClick?: () => void;
   organizationId?: string;
   threadId: string;
@@ -47,6 +47,7 @@ export function RunnerThreadLiveWorkStatus({
   enabled = true,
   fallbackLabel = "",
   headers,
+  contextLabel = "",
   onClick,
   organizationId,
   threadId,
@@ -67,6 +68,7 @@ export function RunnerThreadLiveWorkStatus({
     liveThread.projection,
     fallbackLabel,
   );
+  const normalizedContextLabel = contextLabel.trim();
   const sharedProps = {
     className: `tb-work-header is-static tb-thread-live-work-status${className ? ` ${className}` : ""}`,
   };
@@ -76,14 +78,19 @@ export function RunnerThreadLiveWorkStatus({
         className="tb-log-inline-status-spinner-slot tb-work-status-loader"
         aria-hidden="true"
       >
-        <DotLoader
-          dotCount={9}
-          dotSize={3}
-          gap={2}
-          className="tb-log-inline-status-dot-loader"
+        <img
+          className="tb-log-inline-status-spinner tb-thread-live-work-spinner"
+          src="/img/spinner.svg"
+          alt=""
         />
       </span>
       <span className="tb-work-label-copy" aria-live="polite">
+        {normalizedContextLabel ? (
+          <>
+            <span className="tb-thread-live-work-context">{normalizedContextLabel}</span>
+            <span className="tb-thread-live-work-separator" aria-hidden="true"> · </span>
+          </>
+        ) : null}
         {headline}
       </span>
     </span>

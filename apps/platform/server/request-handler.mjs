@@ -6,9 +6,11 @@ import { createServiceRoutes } from "./routes/service-routes.mjs";
 import { createThreadRoutes } from "./routes/thread-routes.mjs";
 import { createIdentityRoutes } from "./routes/identity-routes.mjs";
 import { createPublicApiRoutes } from "./routes/public-api-routes.mjs";
+import { createDeployableAppRoutes } from "./routes/deployable-app-routes.mjs";
 
 export function createPlatformRequestHandler(bindings) {
   const router = createRequestRouter([
+    createDeployableAppRoutes(bindings),
     createIdentityRoutes(bindings),
     createServiceRoutes(bindings),
     createPublicApiRoutes(bindings),

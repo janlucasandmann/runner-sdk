@@ -11,6 +11,9 @@
 - one active-file header instead of persistent editor tabs;
 - file multi-selection through the shared `PlatformCheckbox` primitive;
 - hierarchical file and folder rows with drag-and-drop moves into folders or back to the root;
+- operating-system file drops into the sidebar through the resource-owned
+  `onExternalFilesDrop` persistence adapter, with centralized drop feedback and
+  the shared `PlatformLoadingState` spinner while persistence is pending;
 - single-file rename/delete and multi-file delete menus through the shared minimal `PlatformPopup`;
 - centered file-loading feedback through the shared `PlatformLoadingState`;
 - nested-file disclosure and optional sidebar actions;
@@ -25,7 +28,12 @@ The caller remains responsible for file data, editor implementation, draft
 state, and persistence. Pass `markdownEditor` with the active file value and
 change handler to enable rich Markdown editing for `.md`, `.markdown`,
 `.mdown`, `.mkd`, and `.mkdn` files; other files continue to render `editor`.
-Use `variant="full-screen"` when the workspace should occupy the complete width and height exposed by its content container.
+Use `variant="full-screen"` when the workspace should occupy the complete width and height exposed by its content container. Use
+`variant="minimalistic-ui"` for resource-detail pages: it presents a flat,
+full-height file rail and editor with a shared top content offset, and
+intentionally removes the active-file editor header. Pass
+`markdownEditor.bodyTitle` to render a document title inside the scrollable
+editor body instead of restoring that header.
 
 ```tsx
 <PlatformCodeEditorWorkspace
@@ -36,6 +44,7 @@ Use `variant="full-screen"` when the workspace should occupy the complete width 
   onFileRename={renameFile}
   onFilesDelete={deleteFiles}
   onFilesMove={moveFiles}
+  onExternalFilesDrop={({ files }) => importFiles(files)}
   onCreateFile={createFile}
   onUploadFiles={uploadFiles}
   onCreateFolder={createFolder}

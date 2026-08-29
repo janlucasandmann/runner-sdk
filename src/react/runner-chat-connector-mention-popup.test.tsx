@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RunnerChat } from "./runner-chat.js";
 
 const connector = {
@@ -37,12 +37,35 @@ const githubConnector = {
   connected: true,
 };
 
+const originalImageDecodeDescriptor = Object.getOwnPropertyDescriptor(
+  HTMLImageElement.prototype,
+  "decode",
+);
+
+beforeEach(() => {
+  Object.defineProperty(HTMLImageElement.prototype, "decode", {
+    configurable: true,
+    value: () => Promise.resolve(),
+  });
+});
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  if (originalImageDecodeDescriptor) {
+    Object.defineProperty(
+      HTMLImageElement.prototype,
+      "decode",
+      originalImageDecodeDescriptor,
+    );
+  } else {
+    delete (HTMLImageElement.prototype as HTMLImageElement & {
+      decode?: () => Promise<void>;
+    }).decode;
+  }
 });
 
-function renderConnectorMentionPopup(threadId?: string) {
+async function renderConnectorMentionPopup(threadId?: string) {
   render(
     <RunnerChat
       backendUrl=""
@@ -55,11 +78,11 @@ function renderConnectorMentionPopup(threadId?: string) {
     />,
   );
 
-  fireEvent.change(screen.getByRole("textbox"), {
+  fireEvent.change(await screen.findByRole("textbox"), {
     target: { value: "@", selectionStart: 1 },
   });
 
-  return screen.getByRole("listbox", { name: "Connectors" });
+  return screen.findByRole("listbox", { name: "Connectors" });
 }
 
 describe("RunnerChat connector mention popup", () => {
@@ -92,12 +115,12 @@ describe("RunnerChat connector mention popup", () => {
     );
   });
 
-  it("uses the minimal popup below the composer on the initial Home page", () => {
-    const popup = renderConnectorMentionPopup();
+  it("uses the minimal popup below the composer on the initial Home page", async () => {
+    const popup = await renderConnectorMentionPopup();
 
     expect(popup.getAttribute("data-platform-popup-variant")).toBe("minimal");
     expect(popup.getAttribute("data-platform-popup-animation")).toBe("down-in");
-    expect(popup.getAttribute("data-connector-mention-placement")).toBe("bottom");
+    expect(popup.getAttribute("data-composer-suggestion-placement")).toBe("bottom");
     expect(popup.classList.contains("is-placement-bottom")).toBe(true);
     expect(popup.parentElement?.classList.contains("task-input-box")).toBe(true);
     expect(
@@ -112,17 +135,17 @@ describe("RunnerChat connector mention popup", () => {
     ).not.toBeNull();
   });
 
-  it("opens the minimal popup above the composer on a thread details page", () => {
-    const popup = renderConnectorMentionPopup("thread-123");
+  it("opens the minimal popup above the composer on a thread details page", async () => {
+    const popup = await renderConnectorMentionPopup("thread-123");
 
     expect(popup.getAttribute("data-platform-popup-variant")).toBe("minimal");
     expect(popup.getAttribute("data-platform-popup-animation")).toBe("up-in");
-    expect(popup.getAttribute("data-connector-mention-placement")).toBe("top");
+    expect(popup.getAttribute("data-composer-suggestion-placement")).toBe("top");
     expect(popup.classList.contains("is-placement-top")).toBe(true);
   });
 
   it("renders a selected connector inline with the textarea", async () => {
-    const popup = renderConnectorMentionPopup();
+    const popup = await renderConnectorMentionPopup();
     fireEvent.click(popup.querySelector('[role="option"]') as HTMLButtonElement);
 
     const selectedConnectors = await screen.findByRole("group", {

@@ -467,7 +467,140 @@
               return null;
             }
           }
-  
+
+          async function updateFunctionGithubConnector(repository) {
+            if (!draftServer || canonicalizePlaygroundServerKind(draftServer.kind) !== "function") {
+              throw new Error("Select a Function before configuring its GitHub connector.");
+            }
+            if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+              throw new Error("Save this Function before configuring its GitHub connector.");
+            }
+
+            const metadata = draftServer.metadata && typeof draftServer.metadata === "object" && !Array.isArray(draftServer.metadata)
+              ? JSON.parse(JSON.stringify(draftServer.metadata))
+              : {};
+            const normalizedRepository = repository && typeof repository === "object"
+              ? {
+                  id: String(repository.id || "").trim(),
+                  name: String(repository.name || "").trim(),
+                  repoFullName: String(repository.repoFullName || "").trim(),
+                  ref: String(repository.ref || "main").trim() || "main",
+                  accountId: String(repository.accountId || "").trim(),
+                  branchPrefix: String(repository.branchPrefix ?? "computer-agents/").trim(),
+                  createPullRequests: repository.createPullRequests !== false,
+                  forcePushCommits: repository.forcePushCommits === true,
+                }
+              : null;
+            if (normalizedRepository && !/^[^/\s]+\/[^/\s]+$/.test(normalizedRepository.repoFullName)) {
+              throw new Error("Choose a valid GitHub repository.");
+            }
+
+            if (normalizedRepository) {
+              metadata.functionGithubConnector = {
+                schemaVersion: "1",
+                repository: normalizedRepository,
+              };
+            } else {
+              delete metadata.functionGithubConnector;
+            }
+            const nextServer = normalizePlaygroundServerRecord({
+              ...draftServer,
+              sourceType: normalizedRepository
+                ? "git"
+                : draftServer.sourceType === "git"
+                  ? "manual"
+                  : draftServer.sourceType,
+              metadata,
+            });
+            setDraftServer(nextServer);
+            setServerSaveState({ isSaving: true, error: "", message: "" });
+
+            try {
+              const savedServer = await persistServerRecord(nextServer);
+              if (!savedServer) throw new Error("Function connector save failed.");
+              serverEditorDirtyRef.current = false;
+              upsertLocalServerRecord(savedServer);
+              setDraftServer(savedServer);
+              setServerSaveState({ isSaving: false, error: "", message: "" });
+              return savedServer;
+            } catch (error) {
+              setDraftServer(draftServer);
+              setServerSaveState({
+                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to save the Function connector.",
+                message: "",
+              });
+              throw error;
+            }
+          }
+
+          async function createFunctionGithubRepository(options = {}) {
+            if (!draftServer || canonicalizePlaygroundServerKind(draftServer.kind) !== "function") {
+              throw new Error("Select a Function before creating its GitHub repository.");
+            }
+            if (!draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID) {
+              throw new Error("Save this Function before creating its GitHub repository.");
+            }
+            const createRepository = computerAgents?.github?.createRepository;
+            if (typeof createRepository !== "function") {
+              throw new Error("GitHub repository creation is unavailable. Reconnect GitHub and try again.");
+            }
+
+            const snapshot = await captureCurrentServerVersionSnapshot(draftServer);
+            const sourceFiles = normalizePlaygroundServerVersionSourceFiles(snapshot?.sourceFiles)
+              .filter((entry) => entry && !entry.isFolder && normalizeHistoryPath(entry.path));
+            const sourceFileContents = normalizePlaygroundServerVersionSourceFileContents(
+              snapshot?.sourceFileContents
+            );
+            const missingPaths = sourceFiles
+              .map((entry) => normalizeHistoryPath(entry.path))
+              .filter((filePath) => !Object.prototype.hasOwnProperty.call(sourceFileContents, filePath));
+            if (missingPaths.length > 0) {
+              throw new Error(
+                "Load the complete Function source before creating its repository. Missing: "
+                + missingPaths.slice(0, 3).join(", ")
+                + (missingPaths.length > 3 ? "…" : "")
+              );
+            }
+            const files = sourceFiles.length > 0
+              ? sourceFiles.map((entry) => {
+                  const filePath = normalizeHistoryPath(entry.path);
+                  return { path: filePath, content: sourceFileContents[filePath] };
+                })
+              : [
+                  {
+                    path: PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH,
+                    content: PLAYGROUND_DEFAULT_FUNCTION_SOURCE_CONTENT,
+                  },
+                  {
+                    path: PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_PATH,
+                    content: PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_CONTENT,
+                  },
+                ];
+            const functionName = String(options?.name || draftServer.name || "Computer Agents Function").trim();
+            const createdRepository = await createRepository({
+              name: functionName,
+              description: String(draftServer.description || "").trim()
+                || "Source for the " + functionName + " Computer Agents Function.",
+              functionId: String(draftServer.id || "").trim(),
+              private: true,
+              commitMessage: "Initialize " + functionName + " Function source",
+              files,
+            }, {
+              accountId: String(options?.accountId || "").trim() || undefined,
+            });
+            return {
+              id: String(createdRepository?.id || "").trim(),
+              name: String(createdRepository?.name || "").trim(),
+              repoFullName: String(createdRepository?.repoFullName || "").trim(),
+              ref: String(createdRepository?.ref || "main").trim() || "main",
+              accountId: String(options?.accountId || "").trim(),
+              branchPrefix: "computer-agents/",
+              createPullRequests: true,
+              forcePushCommits: false,
+            };
+          }
+
           function closeServerRenameDialog() {
             setServerRenameState(null);
             setServerRenameValue("");
@@ -2970,6 +3103,27 @@
               openFallbackValue: PLAYGROUND_DEFAULT_WEB_APP_SOURCE_CONTENT,
             });
           }
+
+          async function createDefaultApiSourceFiles(serverId, options = {}) {
+            return createDefaultServerSourceFiles(serverId, [
+              {
+                path: PLAYGROUND_DEFAULT_API_SOURCE_PATH,
+                content: PLAYGROUND_DEFAULT_API_SOURCE_CONTENT,
+              },
+              {
+                path: PLAYGROUND_DEFAULT_API_PACKAGE_PATH,
+                content: PLAYGROUND_DEFAULT_API_PACKAGE_CONTENT,
+              },
+            ], {
+              ...options,
+              kind: "api",
+              progressMessage: "Creating API starter files...",
+              successMessage: "Created API starter files",
+              errorMessage: "Failed to create default API files.",
+              openPath: PLAYGROUND_DEFAULT_API_SOURCE_PATH,
+              openFallbackValue: PLAYGROUND_DEFAULT_API_SOURCE_CONTENT,
+            });
+          }
   
           function buildMaterializedServerFromTemplatePreview(previewServer) {
             const now = new Date().toISOString();
@@ -3868,6 +4022,8 @@
                 await createDefaultFunctionSourceFile(savedServer.id, { openSource: false });
               } else if (composerKind === "web_app") {
                 await createDefaultWebAppSourceFiles(savedServer.id, { openSource: false });
+              } else if (composerKind === "api") {
+                await createDefaultApiSourceFiles(savedServer.id, { openSource: false });
               }
               closeServerComposer();
             } catch (error) {

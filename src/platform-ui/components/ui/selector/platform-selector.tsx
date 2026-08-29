@@ -14,6 +14,7 @@ import {
 } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { PlatformPopup } from "../../composite/popup/platform-popup.js";
+import type { PlatformPopupSearchHeaderProps } from "../../composite/popup/platform-popup-search-header.js";
 
 export type PlatformSelectorAlignment = "start" | "end";
 export type PlatformSelectorPopupAlignment = "left" | "right";
@@ -47,6 +48,7 @@ export interface PlatformSelectorProps<TValue extends string = string>
   loading?: boolean;
   loadingContent?: ReactNode;
   emptyContent?: ReactNode;
+  popupSearch?: PlatformPopupSearchHeaderProps | null | false;
   popupHeader?: ReactNode;
   popupHeaderClassName?: string;
   popupContent?: ReactNode;
@@ -95,6 +97,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   loading = false,
   loadingContent = "Loading options...",
   emptyContent = "No options available.",
+  popupSearch = null,
   popupHeader = null,
   popupHeaderClassName = "",
   popupContent = null,
@@ -201,7 +204,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
     if (!resolvedOpen || loading || hasCustomPopupContent) return undefined;
     const timeout = window.setTimeout(() => {
       const searchInput = popupRef.current?.querySelector<HTMLInputElement>(
-        ".platform-selector__popup-header input[type='search']:not(:disabled)",
+        ".platform-popup__search-header input[type='search']:not(:disabled), .platform-selector__popup-header input[type='search']:not(:disabled)",
       );
       if (searchInput) {
         searchInput.focus({ preventScroll: true });
@@ -251,7 +254,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
       surfaceRef={popupRef}
       surfaceClassName={joinPlatformSelectorClassNames(
         "platform-selector__popup",
-        Boolean(popupHeader) && "has-popup-header",
+        Boolean(popupSearch || popupHeader) && "has-popup-header",
         hasCustomPopupContent && "has-custom-content",
         popupClassName,
       )}
@@ -274,6 +277,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
           ? popupMatchTriggerWidth === "exact" ? "exact" : true
           : false
       }
+      searchHeader={popupSearch}
       trigger={
         <button
           type="button"

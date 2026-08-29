@@ -105,6 +105,9 @@ export interface RunnerChatExternalRunRequest {
     repoFullName: string;
     repoName: string;
     branch: string;
+    branchPrefix?: string;
+    createPullRequests?: boolean;
+    forcePushCommits?: boolean;
   } | null;
   enabledSkills?: Record<string, unknown> | null;
   connectors?: Record<string, unknown> | null;
@@ -143,6 +146,9 @@ export interface RunnerChatComposerSubmitPayload {
     repoFullName: string;
     repoName: string;
     branch: string;
+    branchPrefix?: string;
+    createPullRequests?: boolean;
+    forcePushCommits?: boolean;
   } | null;
   enabledSkills?: Record<string, unknown> | null;
   connectors?: Record<string, unknown> | null;
@@ -219,6 +225,27 @@ export interface RunnerChatConnectorFetchOptions {
   accountId?: string;
 }
 
+export interface RunnerChatGithubRepositorySourceFile {
+  path: string;
+  content: string;
+}
+
+export interface RunnerChatGithubRepositoryCreateInput {
+  name: string;
+  description?: string;
+  functionId?: string;
+  private?: boolean;
+  commitMessage?: string;
+  files: RunnerChatGithubRepositorySourceFile[];
+}
+
+export interface RunnerChatGithubRepositoryCreateResult {
+  id?: string;
+  name: string;
+  repoFullName: string;
+  ref: string;
+}
+
 export interface RunnerChatGithubConfig {
   connected?: boolean;
   accounts?: RunnerChatConnectorAccount[];
@@ -242,6 +269,10 @@ export interface RunnerChatGithubConfig {
     repoFullName: string,
     options?: RunnerChatConnectorFetchOptions,
   ) => Promise<RunnerChatOption[]>;
+  createRepository?: (
+    input: RunnerChatGithubRepositoryCreateInput,
+    options?: RunnerChatConnectorFetchOptions,
+  ) => Promise<RunnerChatGithubRepositoryCreateResult>;
   fetchFileContent?: (
     file: RunnerChatFileNode,
     options?: RunnerChatConnectorFetchOptions,
@@ -580,6 +611,9 @@ export interface RunnerChatProps {
       repoFullName: string;
       repoName: string;
       branch: string;
+      branchPrefix?: string;
+      createPullRequests?: boolean;
+      forcePushCommits?: boolean;
     } | null;
     enabledSkills?: Record<string, unknown> | null;
     connectors?: Record<string, unknown> | null;

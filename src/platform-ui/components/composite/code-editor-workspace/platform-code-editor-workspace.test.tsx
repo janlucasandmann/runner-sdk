@@ -209,6 +209,49 @@ describe("PlatformCodeEditorWorkspace", () => {
     await waitFor(() => expect(upload).toHaveBeenCalledWith([file]));
   });
 
+  it("imports operating-system files dropped into the centralized sidebar", async () => {
+    let finishImport: (() => void) | undefined;
+    const onExternalFilesDrop = vi.fn(() => new Promise<void>((resolve) => {
+      finishImport = resolve;
+    }));
+    const { container } = render(
+      <PlatformCodeEditorWorkspace
+        files={[{ id: "README.md", label: "README.md" }]}
+        onExternalFilesDrop={onExternalFilesDrop}
+      />,
+    );
+    const sidebar = container.querySelector(
+      ".platform-code-editor-workspace__sidebar",
+    ) as HTMLElement;
+    const image = new File(["image"], "diagram.png", { type: "image/png" });
+    const document = new File(["# Guide"], "guide.md", { type: "text/markdown" });
+    const dataTransfer = {
+      files: [image, document],
+      items: [
+        { kind: "file", type: "image/png" },
+        { kind: "file", type: "text/markdown" },
+      ],
+      types: ["Files"],
+      dropEffect: "none",
+    };
+
+    fireEvent.dragOver(sidebar, { dataTransfer });
+    expect(screen.getByRole("status").textContent).toContain("Drop files to add");
+    expect(sidebar.classList.contains("is-external-file-drop-target")).toBe(true);
+
+    fireEvent.drop(sidebar, { dataTransfer });
+    await waitFor(() => expect(onExternalFilesDrop).toHaveBeenCalledWith({
+      files: [image, document],
+      destinationFolder: null,
+    }));
+    const pendingState = screen.getByRole("status", { name: "Adding files…" });
+    expect(
+      pendingState.querySelector(".platform-loading-state__spinner")?.getAttribute("src"),
+    ).toBe("/img/spinner.svg");
+    finishImport?.();
+    await waitFor(() => expect(screen.queryByRole("status")).toBeNull());
+  });
+
   it("moves file creation into the Files header and keeps nested file disclosures", () => {
     const onCreateFile = vi.fn();
     const onUploadFiles = vi.fn();
@@ -560,6 +603,53 @@ describe("PlatformCodeEditorWorkspace", () => {
     expect(workspace?.getAttribute("data-platform-code-editor-workspace-variant")).toBe(
       "full-screen",
     );
+  });
+
+  it("exposes a minimalistic resource-detail variant without an editor header", () => {
+    const { container } = render(
+      <PlatformCodeEditorWorkspace
+        files={[{ id: "guide.md", label: "Guide", editorMode: "markdown" }]}
+        activeFileId="guide.md"
+        variant="minimalistic-ui"
+        markdownEditor={{
+          bodyTitle: "Guide title",
+          value: "# Guide",
+          onChange: () => undefined,
+          ariaLabel: "Guide content",
+        }}
+      />,
+    );
+    const workspace = container.querySelector(".platform-code-editor-workspace");
+
+    expect(workspace?.classList.contains("is-minimalistic-ui")).toBe(true);
+    expect(workspace?.getAttribute("data-platform-code-editor-workspace-variant")).toBe(
+      "minimalistic-ui",
+    );
+    expect(container.querySelector(".platform-code-editor-workspace__sidebar")).not.toBeNull();
+    expect(container.querySelector(".platform-instructions-editor__header")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Guide title" })).not.toBeNull();
+    expect(screen.getByRole("textbox", { name: "Guide content" })).not.toBeNull();
+  });
+
+  it("reserves the editor gutter when the Markdown surface uses block controls", () => {
+    const { container } = render(
+      <PlatformCodeEditorWorkspace
+        files={[{ id: "guide.md", label: "Guide", editorMode: "markdown" }]}
+        activeFileId="guide.md"
+        variant="minimalistic-ui"
+        markdownEditor={{
+          value: "# Guide",
+          onChange: () => undefined,
+          ariaLabel: "Block editor content",
+          variant: "block-editor",
+        }}
+      />,
+    );
+
+    expect(
+      container.querySelector(".platform-code-editor-workspace__editor")
+        ?.classList.contains("is-block-editor"),
+    ).toBe(true);
   });
 
   it("isolates editor shortcuts without cancelling Backspace or Delete", () => {

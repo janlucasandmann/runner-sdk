@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  handleGithubRepositoryCreate,
   handleGithubRepositories,
   handleGithubRepositoryDetail,
 } from "./github-repository-api.mjs";
@@ -81,6 +82,102 @@ test("repository listing clamps pagination and filters returned repositories", a
     "Bearer github-token",
   );
   assert.deepEqual(loadedCredentials, [["user-1", [], "credential-work"]]);
+});
+
+test("Function repository creation commits the complete source tree on main", async () => {
+  let blobIndex = 0;
+  const fixture = createDependencies({
+    fetchImpl: async (url, init) => {
+      fixture.calls.push({ url, init });
+      const pathname = new URL(url).pathname;
+      if (pathname === "/user/repos") {
+        return createJsonResponse({
+          id: 42,
+          name: "billing-function",
+          full_name: "computer-agents/billing-function",
+          owner: { login: "computer-agents" },
+          default_branch: "main",
+        }, 201);
+      }
+      if (pathname.endsWith("/git/blobs")) {
+        blobIndex += 1;
+        return createJsonResponse({ sha: `blob-${blobIndex}` }, 201);
+      }
+      if (pathname.endsWith("/git/trees")) {
+        return createJsonResponse({ sha: "tree-1" }, 201);
+      }
+      if (pathname.endsWith("/git/commits")) {
+        return createJsonResponse({ sha: "commit-1" }, 201);
+      }
+      if (pathname.endsWith("/git/refs/heads/main")) {
+        return createJsonResponse({ ref: "refs/heads/main" }, 201);
+      }
+      if (pathname === "/repos/computer-agents/billing-function") {
+        return createJsonResponse({ default_branch: "main" });
+      }
+      return createJsonResponse({ message: "Not found" }, 404);
+    },
+  });
+
+  const result = await handleGithubRepositoryCreate({
+    ...fixture.dependencies,
+    url: new URL("https://platform.example/api/github/repos?credentialId=credential-work"),
+    body: {
+      name: "Billing Function",
+      description: "Processes billing events.",
+      functionId: "function_billing1234",
+      files: [
+        { path: "index.js", content: "export default () => 'ok';" },
+        { path: "package.json", content: "{\"type\":\"module\"}" },
+      ],
+    },
+  });
+
+  assert.equal(result.status, 201);
+  assert.equal(result.payload.repo.full_name, "computer-agents/billing-function");
+  assert.equal(result.payload.repo.default_branch, "main");
+  assert.equal(result.payload.seededFileCount, 2);
+  const createRequest = fixture.calls.find(({ url }) => new URL(url).pathname === "/user/repos");
+  assert.deepEqual(JSON.parse(createRequest.init.body), {
+    name: "billing-function",
+    description: "Processes billing events.",
+    private: true,
+    auto_init: true,
+  });
+  const blobRequests = fixture.calls.filter(({ url }) => new URL(url).pathname.endsWith("/git/blobs"));
+  assert.equal(blobRequests.length, 2);
+  assert.deepEqual(
+    blobRequests.map(({ init }) => Buffer.from(JSON.parse(init.body).content, "base64").toString("utf8")),
+    ["export default () => 'ok';", "{\"type\":\"module\"}"],
+  );
+  const treeRequest = fixture.calls.find(({ url }) => new URL(url).pathname.endsWith("/git/trees"));
+  assert.deepEqual(JSON.parse(treeRequest.init.body).tree, [
+    { path: "index.js", mode: "100644", type: "blob", sha: "blob-1" },
+    { path: "package.json", mode: "100644", type: "blob", sha: "blob-2" },
+  ]);
+  const refRequest = fixture.calls.find(({ url }) =>
+    new URL(url).pathname.endsWith("/git/refs/heads/main"));
+  assert.equal(refRequest.init.method, "PATCH");
+  assert.deepEqual(JSON.parse(refRequest.init.body), {
+    sha: "commit-1",
+    force: true,
+  });
+});
+
+test("Function repository creation rejects unsafe source paths before contacting GitHub", async () => {
+  const fixture = createDependencies();
+  const result = await handleGithubRepositoryCreate({
+    ...fixture.dependencies,
+    url: new URL("https://platform.example/api/github/repos"),
+    body: {
+      name: "Unsafe Function",
+      files: [{ path: "../secret.txt", content: "secret" }],
+    },
+  });
+
+  assert.equal(result.status, 400);
+  assert.match(result.payload.error, /safe relative path/i);
+  assert.equal(fixture.calls.length, 0);
 });
 
 test("repository detail normalizes README content and sorts directories first", async () => {

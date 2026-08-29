@@ -69,6 +69,16 @@ callback URL in `ATLASSIAN_OAUTH_REDIRECT_URI`. The equivalent
 start when either client credential is missing so users never enter a provider
 flow that cannot complete.
 
+Jira and Confluence use the same stored Atlassian credential. The authorization
+request intentionally uses Atlassian's recommended classic scopes so it stays
+compatible with the scopes enabled for the shared OAuth client. Space discovery
+prefers the Confluence v2 catalog when a grant includes the granular
+`read:space:confluence` scope, then falls back to the classic-scope CQL catalog
+(`read:confluence-space.summary` plus `search:confluence`). Do not add granular
+scopes to the authorization URL without first enabling them for the OAuth app
+in the Atlassian Developer Console; Atlassian rejects such requests before the
+consent screen.
+
 ## Dropbox authorization and runtime contract
 
 Dropbox uses the registry-driven OAuth 2.0 authorization-code flow with S256

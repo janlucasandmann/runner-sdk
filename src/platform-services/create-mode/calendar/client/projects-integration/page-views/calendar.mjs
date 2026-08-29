@@ -774,7 +774,6 @@ export const CALENDAR_PROJECTS_PAGE_CALENDAR_VIEW_SCRIPT = `
                   React.createElement("div", { className: "playground-content-nav-center" }),
                   React.createElement("div", {
                     className: "playground-content-nav-right playground-tasks-detail-navbar-actions",
-                    ref: taskDetailActionsRef,
                   },
                   React.createElement(PlatformPopup, {
                       open: taskDetailPopover === "menu",

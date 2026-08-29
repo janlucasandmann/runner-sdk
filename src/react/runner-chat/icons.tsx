@@ -186,6 +186,18 @@ export function IconNotion({ className }: RunnerChatIconProps) {
   );
 }
 
+export function IconAtlassian({ className }: RunnerChatIconProps) {
+  return (
+    <img
+      className={className}
+      src="/img/plugins/atlassian.svg"
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+    />
+  );
+}
+
 export function IconClock({ className }: RunnerChatIconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">

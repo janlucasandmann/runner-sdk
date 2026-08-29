@@ -781,9 +781,17 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             const selectedAccountId = String(
               taskConnectorBrowserAccountIdsBySource[source] || ""
             ).trim();
+            const requestOptions = {
+              ...(selectedAccountId ? { accountId: selectedAccountId } : {}),
+              ...(
+                options?.product === "jira" || options?.product === "confluence"
+                  ? { product: options.product }
+                  : {}
+              ),
+            };
             const items = await connectorConfig.fetchItems(
               normalizedFolderId,
-              selectedAccountId ? { accountId: selectedAccountId } : undefined
+              Object.keys(requestOptions).length > 0 ? requestOptions : undefined
             );
             const normalizedItems = (Array.isArray(items) ? items : [])
               .map((item) => normalizePlaygroundTaskConnectorItem(item))
@@ -800,6 +808,16 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             }));
             return normalizedItems;
           } catch (error) {
+            // A failed request is still settled. Without this marker the
+            // explorer effect immediately polls the same folder again after
+            // loading flips back to false. Reopening Manage clears the marker
+            // and remains the explicit retry boundary.
+            setTaskConnectorBrowserLoadedFolderIds((current) => ({
+              ...current,
+              [connectorKey]: (current[connectorKey] || []).includes(normalizedFolderId)
+                ? current[connectorKey] || []
+                : (current[connectorKey] || []).concat(normalizedFolderId),
+            }));
             setTaskConnectorBrowserErrors((current) => ({
               ...current,
               [connectorKey]: error instanceof Error ? error.message : "Failed to load connector files.",
@@ -860,8 +878,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             setTaskConnectorBrowserNotionDatabasesLoaded(true);
             return normalizedDatabases;
           } catch (error) {
-            setTaskConnectorBrowserNotionDatabases([]);
-            setTaskConnectorBrowserNotionDatabasesLoaded(false);
+            // Mark this automatic load attempt as complete even when it fails.
+            // The browser is reset when Manage is opened again, so the user can
+            // retry deliberately without the effect immediately starting an
+            // unbounded request/spinner loop. Keep persisted selections so a
+            // transient catalog failure never empties the explorer.
+            setTaskConnectorBrowserNotionDatabasesLoaded(true);
             setTaskConnectorBrowserErrors((current) => ({
               ...current,
               notion: error instanceof Error ? error.message : "Failed to load Notion databases.",
@@ -1227,6 +1249,14 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
               description: "Reference workspace docs and databases while planning delivery.",
               statusLabel: taskConnectorConfigByKey.notion ? "Available" : "Not configured",
               isActive: Boolean(taskConnectorConfigByKey.notion),
+            },
+            {
+              id: "atlassian",
+              label: "Atlassian",
+              logoUrl: PLAYGROUND_ATLASSIAN_LOGO_URL,
+              description: "Scope Jira projects and Confluence spaces to project work.",
+              statusLabel: taskConnectorConfigByKey.atlassian ? "Available" : "Not configured",
+              isActive: Boolean(taskConnectorConfigByKey.atlassian),
             },
           ];
           return items.filter((item) => {

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 import { PlatformPopup } from "../popup/index.js";
@@ -7,6 +7,7 @@ import type { InstructionsEditorToolbarMenuOption } from "./platform-instruction
 export interface InstructionsEditorSlashCommandOption extends InstructionsEditorToolbarMenuOption {
   group: string;
   keywords?: string[];
+  menuHint?: string;
 }
 
 export interface InstructionsEditorSlashMenuAnchor {
@@ -39,6 +40,7 @@ const INSTRUCTIONS_EDITOR_SLASH_COMMAND_SHORTCUTS: Record<string, string> = {
   "align-left": "⌘ ⇧ L",
   "align-center": "⌘ ⇧ E",
   "align-right": "⌘ ⇧ R",
+  "align-justify": "⌘ ⇧ J",
   "bullet-list": "⌘ ⇧ 8",
   "ordered-list": "⌘ ⇧ 7",
   "task-list": "⌘ ⇧ 9",
@@ -48,6 +50,14 @@ const INSTRUCTIONS_EDITOR_SLASH_COMMAND_SHORTCUTS: Record<string, string> = {
   table: "⇧ ⌥ T",
   divider: "⌘ ⇧ D",
 };
+
+interface InstructionsEditorSlashCommandGroup {
+  label: string;
+  options: Array<{
+    option: InstructionsEditorSlashCommandOption;
+    index: number;
+  }>;
+}
 
 export function filterInstructionsEditorSlashCommands(
   options: InstructionsEditorSlashCommandOption[],
@@ -76,13 +86,25 @@ export function PlatformInstructionsEditorSlashMenu({
   onDismiss,
 }: InstructionsEditorSlashMenuProps) {
   const surfaceRef = useRef<HTMLDivElement | null>(null);
+  const groupedOptions = useMemo(
+    () =>
+      options.reduce<InstructionsEditorSlashCommandGroup[]>((groups, option, index) => {
+        const currentGroup = groups.at(-1);
+        if (currentGroup?.label === option.group) {
+          currentGroup.options.push({ option, index });
+        } else {
+          groups.push({ label: option.group, options: [{ option, index }] });
+        }
+        return groups;
+      }, []),
+    [options],
+  );
 
   useEffect(() => {
     if (!open || typeof window === "undefined") return undefined;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target;
-      if (target instanceof Node && surfaceRef.current?.contains(target))
-        return;
+      if (target instanceof Node && surfaceRef.current?.contains(target)) return;
       onDismiss();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -136,18 +158,19 @@ export function PlatformInstructionsEditorSlashMenu({
       portalCollisionPadding={12}
       trigger={<span aria-hidden="true" />}
     >
-      {options.length > 0 ? (
-        options.map((option, index) => {
-          const previousGroup = index > 0 ? options[index - 1]?.group : "";
-          return (
-            <Fragment key={option.id}>
-              {index > 0 && previousGroup !== option.group ? (
-                <div
-                  className="platform-instructions-editor__slash-divider"
-                  aria-hidden="true"
-                />
-              ) : null}
+      <div className="platform-instructions-editor__slash-scroll-region">
+        {groupedOptions.length > 0 ? (
+          groupedOptions.map((group) => (
+            <section
+              key={group.label}
+              className="platform-instructions-editor__slash-group"
+              aria-label={group.label}
+            >
+              <div className="platform-instructions-editor__slash-group-title">{group.label}</div>
+              <div className="platform-instructions-editor__slash-group-options">
+                {group.options.map(({ option, index }) => (
               <button
+                    key={option.id}
                 type="button"
                 role="menuitem"
                 className={`tb-popup-row platform-instructions-editor__slash-option${index === activeIndex ? " is-selected" : ""}`}
@@ -166,21 +189,29 @@ export function PlatformInstructionsEditorSlashMenu({
                   className="platform-instructions-editor__slash-shortcut"
                   aria-hidden="true"
                 >
-                  {INSTRUCTIONS_EDITOR_SLASH_COMMAND_SHORTCUTS[option.id]}
+                      {option.menuHint || INSTRUCTIONS_EDITOR_SLASH_COMMAND_SHORTCUTS[option.id]}
                 </span>
               </button>
-            </Fragment>
-          );
-        })
-      ) : (
-        <div className="platform-instructions-editor__slash-empty">
-          No matching commands
+                ))}
         </div>
+            </section>
+          ))
+        ) : (
+          <div className="platform-instructions-editor__slash-empty">No matching commands</div>
       )}
+      </div>
+      <button
+        type="button"
+        className="platform-instructions-editor__slash-footer"
+        aria-label="Close menu with Escape"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={onDismiss}
+      >
+        <span>Close menu</span>
+        <kbd>Esc</kbd>
+      </button>
     </PlatformPopup>
   );
 
-  return typeof document === "undefined"
-    ? popup
-    : createPortal(popup, document.body);
+  return typeof document === "undefined" ? popup : createPortal(popup, document.body);
 }

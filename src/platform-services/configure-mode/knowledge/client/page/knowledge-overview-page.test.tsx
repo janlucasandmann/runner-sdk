@@ -16,12 +16,26 @@ const library = {
   id: "library-1",
   name: "Product handbook",
   description: "Shared product conventions and decisions.",
+  homeDocumentId: "",
+  creatorId: "user-1",
+  creatorUserId: "user-1",
   creatorName: "Jane Doe",
+  creatorEmail: "jane@example.com",
   creatorAvatarUrl: "/jane.png",
+  ownerId: "user-1",
+  ownerUserId: "user-1",
+  ownerName: "Jane Doe",
+  ownerEmail: "jane@example.com",
+  ownerAvatarUrl: "/jane.png",
+  createdAt: "2026-08-17T08:00:00.000Z",
   updatedAt: "2026-08-17T08:00:00.000Z",
+  currentVersionId: "version-3",
   currentVersionNumber: 3,
+  publishedVersionId: "",
+  metadata: {},
+  permissionSet: null,
   documents: [],
-} as KnowledgeLibrary;
+} satisfies KnowledgeLibrary;
 
 describe("KnowledgeOverviewPage", () => {
   it("persists the signed-in creator and owner identity on new libraries", () => {
@@ -147,6 +161,64 @@ describe("KnowledgeOverviewPage", () => {
 
     expect(screen.getByText("No knowledge libraries available.")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Create library" })).not.toBeNull();
+  });
+
+  it("centers the centralized loading indicator in the table body", () => {
+    const { container } = render(
+      <KnowledgeOverviewPage
+        libraries={[]}
+        loading
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    const loadingState = screen.getByRole("status", {
+      name: "Loading Knowledge libraries…",
+    });
+    expect(loadingState.classList.contains("platform-loading-state")).toBe(true);
+    expect(loadingState.classList.contains("is-centered")).toBe(true);
+    expect(
+      container.querySelector(
+        '.platform-data-table__state.has-custom-loading-state img[src="/img/spinner.svg"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("renders the current project icon for every project-linked library", () => {
+    const { container } = render(
+      <KnowledgeOverviewPage
+        libraries={[{
+          ...library,
+          metadata: {
+            purpose: "project_knowledge",
+            projectId: "project-1",
+            projectIcon: "rocket",
+            projectColor: "#5f6bdc",
+          },
+        }]}
+        projectIdentitiesById={{
+          "project-1": {
+            id: "project-1",
+            name: "Current project",
+            icon: "telescope",
+            color: "#8d83ff",
+            projectType: "research_knowledge",
+          },
+        }}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(
+      container.querySelector("[data-platform-project-icon='telescope']"),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(".knowledge-overview-identity .is-project-linked"),
+    ).not.toBeNull();
   });
 
   it("separates libraries created by the viewer from libraries shared with them", () => {

@@ -1031,7 +1031,6 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   + (boardDraggingTaskId === task.id ? " is-dragging" : ""),
                 style: getPlaygroundTaskColorStyle(task.taskColor),
                 ticketActionMenu: ({ closeMenu }) => renderProjectTicketPreviewContextMenu(task, { closeMenu }),
-                onTicketActionMenuOpen: () => handleSelectTask(task.id),
                 onTicketDeleteRequest: () => void handleDeleteTask(task.id),
                 ticketDeleteShortcutDisabled: saveState.isSaving || Boolean(taskDeleteDialogState),
                 onClick: () => openProjectTaskDetailScreen(task.id),
@@ -1373,6 +1372,23 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                   void handleMissionControlSetupSubmit();
                 }
               },
+              onKeyDown: (event) => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (
+                  event.key !== "Enter"
+                  || !(event.metaKey || event.ctrlKey)
+                  || event.shiftKey
+                  || event.altKey
+                  || event.repeat
+                  || !target?.closest(".playground-mission-control-instructions")
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                if (canRunMissionControl) {
+                  event.currentTarget?.requestSubmit?.();
+                }
+              },
             },
             footer: React.createElement(React.Fragment, null,
               React.createElement(PlatformSecondaryButton, {
@@ -1382,14 +1398,9 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
                 onClick: () => closeMissionControlSetupModal(),
               }, "Cancel"),
               React.createElement(PlatformPrimaryButton, {
-                type: "button",
+                type: "submit",
                 size: "medium",
                 disabled: !canRunMissionControl,
-                onClick: () => {
-                  if (canRunMissionControl) {
-                    void handleMissionControlSetupSubmit();
-                  }
-                },
               }, missionControlSetupSubmitting ? "Starting..." : "Run Mission Control")
             )
           }, renderMissionControlSetupView());
@@ -2450,6 +2461,7 @@ export const PROJECTS_VIEWS_03_FRAGMENT = `	                  agents: backlogCom
             isEmpty = false,
             buttonContent = null,
             popupClassName = "",
+            popupSearch = null,
             popupHeader = null,
             popupHeaderClassName = "",
             popupContent = null,

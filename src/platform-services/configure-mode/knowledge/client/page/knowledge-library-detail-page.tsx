@@ -1,24 +1,25 @@
-import {
-  Bookmark,
-  Copy,
-  LibraryBig,
-  Send,
-  SquarePen,
-  Trash2,
-  UsersRound,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Bookmark, Copy, LibraryBig, Send, SquarePen, Trash2, UsersRound } from "lucide-react";
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   buildPlatformTeamAccessMetadata,
   getPlatformSharedTeamIds,
 } from "../../../../../platform-resources/access-control/index.js";
 import {
-  PlatformCodeEditorWorkspace,
+  type PlatformProjectIdentity,
+  PlatformProjectIdentityIcon,
+} from "../../../../../platform-resources/projects/index.js";
+import {
   type PlatformCodeEditorFile,
+  PlatformCodeEditorWorkspace,
 } from "../../../../../platform-ui/components/composite/code-editor-workspace/index.js";
 import { PlatformDeploymentMap } from "../../../../../platform-ui/components/composite/deployment-map/index.js";
 import { PlatformDiffViewer } from "../../../../../platform-ui/components/composite/diff-viewer/index.js";
+import {
+  serializePlatformInstructionsEditorFileMarkdown,
+  serializePlatformInstructionsEditorImageMarkdown,
+} from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
+import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import type { PlatformOwnerOption } from "../../../../../platform-ui/components/composite/owner-selector/index.js";
 import {
@@ -33,23 +34,22 @@ import {
   PlatformResourceActionsInformation,
   PlatformResourceActionsMenu,
   PlatformResourceHeaderActions,
-  PlatformResourceVersionLabel,
   PlatformResourceVersionHistoryMenuItem,
+  PlatformResourceVersionLabel,
 } from "../../../../../platform-ui/components/composite/resource-header-actions/index.js";
 import {
-  PlatformVersionHistorySidebar,
-  PlatformVersionChangesPage,
-  PlatformVersionSaveDialog,
   type PlatformVersionChangesFile,
+  PlatformVersionChangesPage,
+  PlatformVersionHistorySidebar,
   type PlatformVersionSaveDetails,
+  PlatformVersionSaveDialog,
 } from "../../../../../platform-ui/components/composite/versioning/index.js";
-import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformPrimaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/checkbox/index.js";
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
 import { MarkdownResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
-import type { KnowledgeApi } from "../api/index.js";
+import type { KnowledgeApi, KnowledgeEditorAttachment } from "../api/index.js";
 import type {
   KnowledgeDocument,
   KnowledgeLibrary,
@@ -57,15 +57,27 @@ import type {
 } from "../domain/index.js";
 import {
   KnowledgeAccessSettings,
-  normalizeKnowledgeAccessTeam,
   type KnowledgeAccessTeam,
+  normalizeKnowledgeAccessTeam,
 } from "./knowledge-access-settings.js";
+import { KnowledgeConnectorSettings } from "./knowledge-connector-settings.js";
+import {
+  DEFAULT_KNOWLEDGE_LIBRARY_COVER,
+  KnowledgeLibraryAddCoverButton,
+  KnowledgeLibraryCover,
+  type KnowledgeLibraryCoverValue,
+  readKnowledgeLibraryCover,
+  withKnowledgeLibraryCoverMetadata,
+} from "./knowledge-library-cover.js";
 
 type KnowledgeDetailTab = "general" | "settings";
 
 export interface KnowledgeLibraryDetailPageProps {
   library: KnowledgeLibrary;
+  relatedProjectIdentity?: PlatformProjectIdentity | null;
   api: KnowledgeApi;
+  backendUrl?: string;
+  requestHeaders?: Readonly<Record<string, string>>;
   controlsPortalId?: string;
   sectionControlsPortalId?: string;
   titleActionsPortalId?: string;
@@ -93,13 +105,18 @@ interface KnowledgeDocumentDraft {
 }
 
 function createDocumentDrafts(documents: readonly KnowledgeDocument[]) {
-  return Object.fromEntries(documents.map((document) => [document.id, {
-    title: document.title,
-    markdown: document.markdown,
-    initialTitle: document.title,
-    initialMarkdown: document.markdown,
-    revisionId: document.revisionId,
-  } satisfies KnowledgeDocumentDraft]));
+  return Object.fromEntries(
+    documents.map((document) => [
+      document.id,
+      {
+        title: document.title,
+        markdown: document.markdown,
+        initialTitle: document.title,
+        initialMarkdown: document.markdown,
+        revisionId: document.revisionId,
+      } satisfies KnowledgeDocumentDraft,
+    ]),
+  );
 }
 
 function usePortalTarget(id?: string) {
@@ -126,7 +143,9 @@ interface KnowledgeVersionChangesState {
 function formatTimestamp(value: string) {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return "—";
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(timestamp));
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
+    new Date(timestamp),
+  );
 }
 
 function buildWholeFileDiff(filePath: string, before: string, after: string) {
@@ -149,6 +168,141 @@ function buildWholeFileDiff(filePath: string, before: string, after: string) {
   };
 }
 
+const KNOWLEDGE_TEXT_FILE_PATTERN =
+  /\.(?:md|markdown|mdown|mkd|mkdn|txt|text|csv|tsv|json|jsonl|ya?ml|toml|xml|html?|css|s[ac]ss|less|jsx?|tsx?|mjs|cjs|py|rb|php|go|rs|java|kt|kts|swift|c|cc|cpp|cxx|h|hh|hpp|hxx|sh|bash|zsh|fish|ps1|sql|graphql|gql|ini|conf|config|env|log|tex|rtf)$/i;
+const KNOWLEDGE_IMAGE_FILE_PATTERN = /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico|tiff?)$/i;
+const KNOWLEDGE_CONVERTIBLE_FILE_PATTERN =
+  /\.(?:pdf|docx?|docm|odt|rtf|xlsx?|xlsm|xlsb|ods|pptx?|pptm|odp|epub)$/i;
+
+function isKnowledgeTextFile(file: File) {
+  const mimeType = String(file.type || "")
+    .trim()
+    .toLowerCase();
+  return (
+    mimeType.startsWith("text/") ||
+    mimeType === "application/json" ||
+    mimeType === "application/ld+json" ||
+    mimeType === "application/xml" ||
+    mimeType === "application/yaml" ||
+    mimeType === "application/x-yaml" ||
+    mimeType === "application/toml" ||
+    mimeType === "application/javascript" ||
+    mimeType === "application/x-javascript" ||
+    mimeType === "application/rtf" ||
+    KNOWLEDGE_TEXT_FILE_PATTERN.test(file.name)
+  );
+}
+
+function isKnowledgeImageFile(file: File) {
+  return (
+    String(file.type || "")
+      .trim()
+      .toLowerCase()
+      .startsWith("image/") || KNOWLEDGE_IMAGE_FILE_PATTERN.test(file.name)
+  );
+}
+
+function isKnowledgeConvertibleFile(file: File) {
+  return KNOWLEDGE_CONVERTIBLE_FILE_PATTERN.test(file.name);
+}
+
+function readKnowledgeTextFile(file: File): Promise<string> {
+  if (typeof file.text === "function") return file.text();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(reader.error || new Error(`Failed to read ${file.name}.`));
+    reader.readAsText(file);
+  });
+}
+
+function uniqueKnowledgeImportTitle(fileName: string, usedTitles: Set<string>) {
+  const originalTitle = String(fileName || "").trim() || "Imported document";
+  if (!usedTitles.has(originalTitle.toLowerCase())) {
+    usedTitles.add(originalTitle.toLowerCase());
+    return originalTitle;
+  }
+  const extensionIndex = originalTitle.lastIndexOf(".");
+  const hasExtension = extensionIndex > 0;
+  const stem = hasExtension ? originalTitle.slice(0, extensionIndex) : originalTitle;
+  const extension = hasExtension ? originalTitle.slice(extensionIndex) : "";
+  let suffix = 2;
+  let candidate = `${stem} (${suffix})${extension}`;
+  while (usedTitles.has(candidate.toLowerCase())) {
+    suffix += 1;
+    candidate = `${stem} (${suffix})${extension}`;
+  }
+  usedTitles.add(candidate.toLowerCase());
+  return candidate;
+}
+
+function markdownImportTitle(fileName: string) {
+  const normalized = String(fileName || "").trim() || "Imported document";
+  const extensionIndex = normalized.lastIndexOf(".");
+  return `${extensionIndex > 0 ? normalized.slice(0, extensionIndex) : normalized}.md`;
+}
+
+function attachmentProvenance(attachment: KnowledgeEditorAttachment) {
+  return {
+    attachmentId: attachment.attachmentId,
+    src: attachment.src,
+    name: attachment.name,
+    mimeType: attachment.mimeType,
+    size: attachment.size,
+  };
+}
+
+async function buildDroppedKnowledgeDocument(file: File, api: KnowledgeApi) {
+  const provenance = {
+    sourceKind: "local_file_drop",
+    sourceFile: {
+      name: file.name || "Imported document",
+      mimeType: file.type || "application/octet-stream",
+      size: file.size,
+      lastModified: file.lastModified || null,
+    },
+  };
+  if (isKnowledgeConvertibleFile(file)) {
+    const parsed = await api.parseEditorDocument(file);
+    const [attachment] = await api.uploadEditorAttachments([file]);
+    if (!attachment) throw new Error(`Failed to retain ${file.name || "the source document"}.`);
+    return {
+      title: markdownImportTitle(file.name),
+      markdown: parsed.markdown,
+      summary: `Imported and converted from ${file.name || "a source document"}.`,
+      provenance: {
+        ...provenance,
+        sourceAttachment: attachmentProvenance(attachment),
+        conversion: parsed.conversion,
+        parserMetadata: parsed.metadata,
+      },
+    };
+  }
+  if (isKnowledgeTextFile(file)) {
+    return {
+      markdown: (await readKnowledgeTextFile(file)).replace(/^\uFEFF/, ""),
+      provenance,
+    };
+  }
+  const [attachment] = await api.uploadEditorAttachments([file]);
+  if (!attachment) throw new Error(`Failed to upload ${file.name || "the dropped file"}.`);
+  const markdown = isKnowledgeImageFile(file)
+    ? serializePlatformInstructionsEditorImageMarkdown({
+        ...attachment,
+        alt: attachment.name,
+        displaySize: "big",
+      })
+    : serializePlatformInstructionsEditorFileMarkdown(attachment);
+  if (!markdown) throw new Error(`Failed to add ${file.name || "the dropped file"}.`);
+  return {
+    markdown,
+    provenance: {
+      ...provenance,
+      sourceAttachment: attachmentProvenance(attachment),
+    },
+  };
+}
+
 function buildKnowledgeVersionDiffFiles(
   leftVersion: KnowledgeLibraryVersion | null,
   rightVersion: KnowledgeLibraryVersion | null,
@@ -157,14 +311,22 @@ function buildKnowledgeVersionDiffFiles(
 ): PlatformVersionChangesFile[] {
   if (!leftVersion || !rightVersion) return [];
   const files: PlatformVersionChangesFile[] = [];
-  const leftMetadata = JSON.stringify({
-    name: leftVersion.name || "",
-    description: leftVersion.description || "",
-  }, null, 2);
-  const rightMetadata = JSON.stringify({
-    name: rightVersion.name || "",
-    description: rightVersion.description || "",
-  }, null, 2);
+  const leftMetadata = JSON.stringify(
+    {
+      name: leftVersion.name || "",
+      description: leftVersion.description || "",
+    },
+    null,
+    2,
+  );
+  const rightMetadata = JSON.stringify(
+    {
+      name: rightVersion.name || "",
+      description: rightVersion.description || "",
+    },
+    null,
+    2,
+  );
   if (leftMetadata !== rightMetadata) {
     files.push({
       id: "knowledge-library-metadata",
@@ -179,15 +341,11 @@ function buildKnowledgeVersionDiffFiles(
   documentIds.forEach((documentId) => {
     const leftDocument = leftById.get(documentId);
     const rightDocument = rightById.get(documentId);
-    const before = leftDocument
-      ? `# ${leftDocument.title}\n\n${leftDocument.markdown}`
-      : "";
-    const after = rightDocument
-      ? `# ${rightDocument.title}\n\n${rightDocument.markdown}`
-      : "";
+    const before = leftDocument ? `# ${leftDocument.title}\n\n${leftDocument.markdown}` : "";
+    const after = rightDocument ? `# ${rightDocument.title}\n\n${rightDocument.markdown}` : "";
     if (before === after) return;
     const title = rightDocument?.title || leftDocument?.title || "document";
-    const filePath = `${title.replace(/[\\/:*?\"<>|]/g, "-") || "document"}.md`;
+    const filePath = `${title.replace(/[\\/:*?"<>|]/g, "-") || "document"}.md`;
     files.push({
       id: documentId,
       label: filePath,
@@ -206,7 +364,7 @@ interface KnowledgeOwnerIdentity {
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
+    ? (value as Record<string, unknown>)
     : {};
 }
 
@@ -246,9 +404,60 @@ function normalizeOwnerCandidate(value: unknown): KnowledgeOwnerIdentity | null 
   };
 }
 
+function getKnowledgeIdentityKeys(identity: KnowledgeOwnerIdentity): string[] {
+  return [
+    ...new Set(
+      [identity.id, identity.email]
+        .map((value) =>
+          String(value || "")
+            .trim()
+            .toLowerCase(),
+        )
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function hasTrustedKnowledgeIdentityName(identity: KnowledgeOwnerIdentity): boolean {
+  const name = String(identity.name || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const email = String(identity.email || "")
+    .trim()
+    .toLowerCase();
+  return (
+    Boolean(name) &&
+    !name.includes("@") &&
+    !["unknown", "unknown user", "you", "me", "current user"].includes(name.toLowerCase()) &&
+    (!email || name.toLowerCase() !== email)
+  );
+}
+
+function resolveKnowledgeIdentity(
+  identity: KnowledgeOwnerIdentity,
+  candidates: readonly KnowledgeOwnerIdentity[],
+): KnowledgeOwnerIdentity {
+  const identityKeys = new Set(getKnowledgeIdentityKeys(identity));
+  const candidate = candidates.find((entry) =>
+    getKnowledgeIdentityKeys(entry).some((key) => identityKeys.has(key)),
+  );
+  if (!candidate) return identity;
+  return {
+    ...identity,
+    name: hasTrustedKnowledgeIdentityName(candidate)
+      ? candidate.name
+      : identity.name || candidate.name,
+    email: candidate.email || identity.email,
+    avatarUrl: candidate.avatarUrl || identity.avatarUrl,
+  };
+}
+
 export function KnowledgeLibraryDetailPage({
   library,
+  relatedProjectIdentity = null,
   api,
+  backendUrl = "",
+  requestHeaders = {},
   controlsPortalId,
   sectionControlsPortalId,
   titleActionsPortalId,
@@ -273,6 +482,10 @@ export function KnowledgeLibraryDetailPage({
   const [activeTab, setActiveTab] = useState<KnowledgeDetailTab>("general");
   const [name, setName] = useState(library.name);
   const [description, setDescription] = useState(library.description);
+  const [cover, setCover] = useState<KnowledgeLibraryCoverValue | null>(() =>
+    readKnowledgeLibraryCover(library.metadata),
+  );
+  const [coverBusy, setCoverBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -280,7 +493,8 @@ export function KnowledgeLibraryDetailPage({
   const [saveInitialMode, setSaveInitialMode] = useState<"current" | "new">("new");
   const [saveError, setSaveError] = useState("");
   const [versionsOpen, setVersionsOpen] = useState(false);
-  const [versionChangesState, setVersionChangesState] = useState<KnowledgeVersionChangesState | null>(null);
+  const [versionChangesState, setVersionChangesState] =
+    useState<KnowledgeVersionChangesState | null>(null);
   const [versionChangesDocuments, setVersionChangesDocuments] = useState<{
     left: KnowledgeDocument[];
     right: KnowledgeDocument[];
@@ -297,19 +511,21 @@ export function KnowledgeLibraryDetailPage({
   const [viewedVersionId, setViewedVersionId] = useState(library.currentVersionId);
   const [viewedDocuments, setViewedDocuments] = useState<KnowledgeDocument[] | null>(null);
   const currentDocuments = useMemo(
-    () => (viewedDocuments || library.documents || [])
-      .filter((document) => !document.archived)
-      .sort((left, right) => (
-        Number(left.sortOrder || 0) - Number(right.sortOrder || 0)
-        || left.title.localeCompare(right.title)
-      )),
+    () =>
+      (viewedDocuments || library.documents || [])
+        .filter((document) => !document.archived)
+        .sort(
+          (left, right) =>
+            Number(left.sortOrder || 0) - Number(right.sortOrder || 0) ||
+            left.title.localeCompare(right.title),
+        ),
     [library.documents, viewedDocuments],
   );
   const [activeDocumentId, setActiveDocumentId] = useState(
     library.homeDocumentId || currentDocuments[0]?.id || "",
   );
-  const [documentDrafts, setDocumentDrafts] = useState<Record<string, KnowledgeDocumentDraft>>(
-    () => createDocumentDrafts(currentDocuments),
+  const [documentDrafts, setDocumentDrafts] = useState<Record<string, KnowledgeDocumentDraft>>(() =>
+    createDocumentDrafts(currentDocuments),
   );
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<Set<string>>(new Set());
   const [archiveDocuments, setArchiveDocuments] = useState<KnowledgeDocument[]>([]);
@@ -317,6 +533,9 @@ export function KnowledgeLibraryDetailPage({
   const [ownerSelectorOpen, setOwnerSelectorOpen] = useState(false);
   const [ownerCandidatesLoading, setOwnerCandidatesLoading] = useState(false);
   const [ownerCandidates, setOwnerCandidates] = useState<KnowledgeOwnerIdentity[]>([]);
+  const ownerCandidatesRequestRef = useRef<Promise<KnowledgeOwnerIdentity[]> | null>(null);
+  const ownerCandidatesLoadGenerationRef = useRef(0);
+  const ownerCandidatesLoadedOrganizationRef = useRef("");
   const [workspaceTeamMembersById, setWorkspaceTeamMembersById] = useState<
     Record<string, readonly unknown[]>
   >({});
@@ -343,6 +562,9 @@ export function KnowledgeLibraryDetailPage({
     setDeleteConfirmationOpen(false);
     setOwnerSelectorOpen(false);
     setOwnerCandidates([]);
+    ownerCandidatesRequestRef.current = null;
+    ownerCandidatesLoadGenerationRef.current += 1;
+    ownerCandidatesLoadedOrganizationRef.current = "";
     setVersionsOpen(false);
     setVersionChangesState(null);
     setVersionChangesDocuments({ left: [], right: [] });
@@ -350,8 +572,15 @@ export function KnowledgeLibraryDetailPage({
   }, [library.id, library.name, library.description, library.currentVersionId]);
 
   useEffect(() => {
+    setCover(readKnowledgeLibraryCover(library.metadata));
+  }, [library.id, library.metadata]);
+
+  useEffect(() => {
     setOwnerSelectorOpen(false);
     setOwnerCandidates([]);
+    ownerCandidatesRequestRef.current = null;
+    ownerCandidatesLoadGenerationRef.current += 1;
+    ownerCandidatesLoadedOrganizationRef.current = "";
   }, [activeOrganizationId]);
 
   useEffect(() => {
@@ -369,26 +598,29 @@ export function KnowledgeLibraryDetailPage({
     workspaceTeamMemberRequestsRef.current.delete(teamId);
   }, [workspaceTeamMembers, workspaceTeamMembersTeamId, workspaceTeamsLoading]);
 
-  const requestWorkspaceTeamMembers = useCallback((teamId: string) => {
-    const normalizedTeamId = String(teamId || "").trim();
-    if (
-      !normalizedTeamId
-      || Object.prototype.hasOwnProperty.call(workspaceTeamMembersById, normalizedTeamId)
-      || workspaceTeamMemberRequestsRef.current.has(normalizedTeamId)
-      || !onWorkspaceTeamMembersRequest
-    ) {
-      return;
-    }
-    workspaceTeamMemberRequestsRef.current.add(normalizedTeamId);
-    void Promise.resolve(onWorkspaceTeamMembersRequest(normalizedTeamId)).catch(() => {
-      workspaceTeamMemberRequestsRef.current.delete(normalizedTeamId);
-      setWorkspaceTeamMembersById((current) => (
-        Object.prototype.hasOwnProperty.call(current, normalizedTeamId)
-          ? current
-          : { ...current, [normalizedTeamId]: [] }
-      ));
-    });
-  }, [onWorkspaceTeamMembersRequest, workspaceTeamMembersById]);
+  const requestWorkspaceTeamMembers = useCallback(
+    (teamId: string) => {
+      const normalizedTeamId = String(teamId || "").trim();
+      if (
+        !normalizedTeamId ||
+        Object.hasOwn(workspaceTeamMembersById, normalizedTeamId) ||
+        workspaceTeamMemberRequestsRef.current.has(normalizedTeamId) ||
+        !onWorkspaceTeamMembersRequest
+      ) {
+        return;
+      }
+      workspaceTeamMemberRequestsRef.current.add(normalizedTeamId);
+      void Promise.resolve(onWorkspaceTeamMembersRequest(normalizedTeamId)).catch(() => {
+        workspaceTeamMemberRequestsRef.current.delete(normalizedTeamId);
+        setWorkspaceTeamMembersById((current) =>
+          Object.hasOwn(current, normalizedTeamId)
+            ? current
+            : { ...current, [normalizedTeamId]: [] },
+        );
+      });
+    },
+    [onWorkspaceTeamMembersRequest, workspaceTeamMembersById],
+  );
 
   useEffect(() => {
     onVersionsSidebarOpenChange?.(versionsOpen);
@@ -408,38 +640,50 @@ export function KnowledgeLibraryDetailPage({
     });
     setActiveDocumentId((current) => {
       if (currentDocuments.some((document) => document.id === current)) return current;
-      return currentDocuments.find((document) => document.id === library.homeDocumentId)?.id
-        || currentDocuments[0]?.id
-        || "";
+      return (
+        currentDocuments.find((document) => document.id === library.homeDocumentId)?.id ||
+        currentDocuments[0]?.id ||
+        ""
+      );
     });
-    setSelectedDocumentIds((current) => new Set(
-      [...current].filter((documentId) => (
-        documentId !== library.homeDocumentId
-        && currentDocuments.some((document) => document.id === documentId)
-      )),
-    ));
+    setSelectedDocumentIds(
+      (current) =>
+        new Set(
+          [...current].filter(
+            (documentId) =>
+              documentId !== library.homeDocumentId &&
+              currentDocuments.some((document) => document.id === documentId),
+          ),
+        ),
+    );
   }, [documentRevisionSignature, library.homeDocumentId, viewedVersionId]);
 
   useEffect(() => {
     if (
-      activeTab === "settings"
-      && workspaceTeams.length === 0
-      && !workspaceTeamsLoading
-      && teamsRequestedForOrganizationRef.current !== activeOrganizationId
+      activeTab === "settings" &&
+      workspaceTeams.length === 0 &&
+      !workspaceTeamsLoading &&
+      teamsRequestedForOrganizationRef.current !== activeOrganizationId
     ) {
       teamsRequestedForOrganizationRef.current = activeOrganizationId;
       onWorkspaceTeamsRequest?.();
     }
   }, [activeTab, onWorkspaceTeamsRequest, workspaceTeams.length, workspaceTeamsLoading]);
 
-  const identityDirty = !isHistorical
-    && (name.trim() !== library.name || description !== library.description);
-  const dirtyDocuments = useMemo(() => currentDocuments.filter((document) => {
-    const draft = documentDrafts[document.id];
-    return !isHistorical
-      && Boolean(draft)
-      && (draft.title.trim() !== draft.initialTitle || draft.markdown !== draft.initialMarkdown);
-  }), [currentDocuments, documentDrafts, isHistorical]);
+  const identityDirty =
+    !isHistorical && (name.trim() !== library.name || description !== library.description);
+  const dirtyDocuments = useMemo(
+    () =>
+      currentDocuments.filter((document) => {
+        const draft = documentDrafts[document.id];
+        return (
+          !isHistorical &&
+          Boolean(draft) &&
+          (draft.title.trim() !== draft.initialTitle || draft.markdown !== draft.initialMarkdown)
+        );
+      }),
+    [currentDocuments, documentDrafts, isHistorical],
+  );
   const hasInvalidDocumentTitle = currentDocuments.some((document) => {
     const draft = documentDrafts[document.id];
     return Boolean(draft && !draft.title.trim());
@@ -447,15 +691,19 @@ export function KnowledgeLibraryDetailPage({
   const dirty = identityDirty || dirtyDocuments.length > 0;
 
   const versions = useMemo(
-    () => [...(library.versions || [])].sort((left, right) => (
-      Number(left.versionNumber || left.number || 0) - Number(right.versionNumber || right.number || 0)
-    )),
+    () =>
+      [...(library.versions || [])].sort(
+        (left, right) =>
+          Number(left.versionNumber || left.number || 0) -
+          Number(right.versionNumber || right.number || 0),
+      ),
     [library.versions],
   );
   const latestVersion = versions[versions.length - 1] || null;
-  const viewedVersion = versions.find((version) => version.id === viewedVersionId)
-    || versions.find((version) => version.id === library.currentVersionId)
-    || latestVersion;
+  const viewedVersion =
+    versions.find((version) => version.id === viewedVersionId) ||
+    versions.find((version) => version.id === library.currentVersionId) ||
+    latestVersion;
   const latestVersionNumber = Math.max(
     Number(library.currentVersionNumber || 1),
     ...versions.map((version) => Number(version.versionNumber || version.number || 0)),
@@ -464,23 +712,26 @@ export function KnowledgeLibraryDetailPage({
     viewedVersion?.versionNumber || viewedVersion?.number || library.currentVersionNumber || 1,
   );
   const nextVersionNumber = latestVersionNumber + 1;
-  const versionSelectorOptions = useMemo(() => [...versions].reverse().map((version) => {
-    const number = Number(version.versionNumber || version.number || 1);
-    return {
-      value: version.id,
-      label: `v${number}${number === latestVersionNumber ? " · Latest" : ""}`,
-    };
-  }), [latestVersionNumber, versions]);
+  const versionSelectorOptions = useMemo(
+    () =>
+      [...versions].reverse().map((version) => {
+        const number = Number(version.versionNumber || version.number || 1);
+        return {
+          value: version.id,
+          label: `v${number}${number === latestVersionNumber ? " · Latest" : ""}`,
+        };
+      }),
+    [latestVersionNumber, versions],
+  );
 
   const openVersionChanges = useCallback(() => {
-    const target = versions.find((version) => version.id === viewedVersionId)
-      || versions[versions.length - 1]
-      || null;
+    const target =
+      versions.find((version) => version.id === viewedVersionId) ||
+      versions[versions.length - 1] ||
+      null;
     if (!target) return;
     const targetIndex = versions.findIndex((version) => version.id === target.id);
-    const base = targetIndex > 0
-      ? versions[targetIndex - 1]
-      : versions[targetIndex + 1] || target;
+    const base = targetIndex > 0 ? versions[targetIndex - 1] : versions[targetIndex + 1] || target;
     setVersionChangesState({
       leftVersionId: base.id,
       rightVersionId: target.id,
@@ -506,17 +757,22 @@ export function KnowledgeLibraryDetailPage({
     void Promise.all([
       loadSnapshot(versionChangesState.leftVersionId),
       loadSnapshot(versionChangesState.rightVersionId),
-    ]).then(([left, right]) => {
-      if (!cancelled) setVersionChangesDocuments({ left, right });
-    }).catch((nextError) => {
-      if (!cancelled) {
-        setVersionChangesError(
-          nextError instanceof Error ? nextError.message : "Failed to compare Knowledge versions.",
-        );
-      }
-    }).finally(() => {
-      if (!cancelled) setVersionChangesLoading(false);
-    });
+    ])
+      .then(([left, right]) => {
+        if (!cancelled) setVersionChangesDocuments({ left, right });
+      })
+      .catch((nextError) => {
+        if (!cancelled) {
+          setVersionChangesError(
+            nextError instanceof Error
+              ? nextError.message
+              : "Failed to compare Knowledge versions.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setVersionChangesLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -528,33 +784,96 @@ export function KnowledgeLibraryDetailPage({
   const rightComparedVersion = versionChangesState
     ? versions.find((version) => version.id === versionChangesState.rightVersionId) || null
     : null;
-  const versionChangesFiles = useMemo(() => buildKnowledgeVersionDiffFiles(
-    leftComparedVersion,
-    rightComparedVersion,
-    versionChangesDocuments.left,
-    versionChangesDocuments.right,
-  ), [leftComparedVersion, rightComparedVersion, versionChangesDocuments.left, versionChangesDocuments.right]);
+  const versionChangesFiles = useMemo(
+    () =>
+      buildKnowledgeVersionDiffFiles(
+        leftComparedVersion,
+        rightComparedVersion,
+        versionChangesDocuments.left,
+        versionChangesDocuments.right,
+      ),
+    [
+      leftComparedVersion,
+      rightComparedVersion,
+      versionChangesDocuments.left,
+      versionChangesDocuments.right,
+    ],
+  );
   const sharedTeamIds = useMemo(
     () => new Set(getPlatformSharedTeamIds(library.metadata)),
     [library.metadata],
   );
-  const ownerCandidateTeamIds = useMemo(
-    () => [...sharedTeamIds].filter(Boolean),
-    [sharedTeamIds],
-  );
+  const ownerCandidateTeamIds = useMemo(() => [...sharedTeamIds].filter(Boolean), [sharedTeamIds]);
   const ownerMissingTeamIds = useMemo(
-    () => ownerCandidateTeamIds.filter((teamId) => (
-      !Object.prototype.hasOwnProperty.call(workspaceTeamMembersById, teamId)
-    )),
+    () =>
+      ownerCandidateTeamIds.filter((teamId) => !Object.hasOwn(workspaceTeamMembersById, teamId)),
     [ownerCandidateTeamIds, workspaceTeamMembersById],
   );
   const teamOwnerCandidates = useMemo(
-    () => ownerCandidateTeamIds
-      .flatMap((teamId) => workspaceTeamMembersById[teamId] || [])
-      .map(normalizeOwnerCandidate)
-      .filter((candidate): candidate is KnowledgeOwnerIdentity => Boolean(candidate)),
+    () =>
+      ownerCandidateTeamIds
+        .flatMap((teamId) => workspaceTeamMembersById[teamId] || [])
+        .map(normalizeOwnerCandidate)
+        .filter((candidate): candidate is KnowledgeOwnerIdentity => Boolean(candidate)),
     [ownerCandidateTeamIds, workspaceTeamMembersById],
   );
+
+  const loadOrganizationOwnerCandidates = useCallback(
+    async (surfaceError = false): Promise<KnowledgeOwnerIdentity[]> => {
+      if (!activeOrganizationId) return [];
+      if (ownerCandidates.length > 0) return ownerCandidates;
+      if (!surfaceError && ownerCandidatesLoadedOrganizationRef.current === activeOrganizationId)
+        return ownerCandidates;
+      if (ownerCandidatesRequestRef.current) return ownerCandidatesRequestRef.current;
+      const generation = ownerCandidatesLoadGenerationRef.current;
+      setOwnerCandidatesLoading(true);
+      const request = api
+        .listOrganizationMembers(activeOrganizationId)
+        .then((members) =>
+          members
+            .map(normalizeOwnerCandidate)
+            .filter((candidate): candidate is KnowledgeOwnerIdentity => Boolean(candidate)),
+        );
+      ownerCandidatesRequestRef.current = request;
+      try {
+        const candidates = await request;
+        if (ownerCandidatesLoadGenerationRef.current === generation) {
+          ownerCandidatesLoadedOrganizationRef.current = activeOrganizationId;
+          setOwnerCandidates(candidates);
+        }
+        return candidates;
+      } catch (nextError) {
+        if (ownerCandidatesLoadGenerationRef.current === generation) {
+          ownerCandidatesLoadedOrganizationRef.current = activeOrganizationId;
+        }
+        if (surfaceError && ownerCandidatesLoadGenerationRef.current === generation) {
+          setError(
+            nextError instanceof Error ? nextError.message : "Failed to load organization members.",
+          );
+        }
+        return [];
+      } finally {
+        if (ownerCandidatesRequestRef.current === request) {
+          ownerCandidatesRequestRef.current = null;
+        }
+        if (ownerCandidatesLoadGenerationRef.current === generation) {
+          setOwnerCandidatesLoading(false);
+        }
+      }
+    },
+    [activeOrganizationId, api, ownerCandidates],
+  );
+
+  useEffect(() => {
+    if (
+      activeTab !== "settings" ||
+      !activeOrganizationId ||
+      ownerCandidates.length > 0 ||
+      ownerCandidatesLoadedOrganizationRef.current === activeOrganizationId
+    )
+      return;
+    void loadOrganizationOwnerCandidates();
+  }, [activeOrganizationId, activeTab, loadOrganizationOwnerCandidates, ownerCandidates.length]);
 
   useEffect(() => {
     if (!ownerSelectorOpen || ownerMissingTeamIds.length === 0) return;
@@ -562,18 +881,19 @@ export function KnowledgeLibraryDetailPage({
   }, [ownerMissingTeamIds, ownerSelectorOpen, requestWorkspaceTeamMembers]);
 
   const shareTeams = useMemo<PlatformResourceShareTeam[]>(
-    () => workspaceTeams
-      .map(normalizeKnowledgeAccessTeam)
-      .filter((team): team is KnowledgeAccessTeam => Boolean(team))
-      .filter((team) => ["admin", "owner"].includes(team.roleId))
-      .map((team) => ({
-        id: team.id,
-        name: team.name,
-        description: team.description,
-        roleLabel: team.roleLabel,
-        profileImageUrl: team.profileImageUrl,
-        shared: sharedTeamIds.has(team.id),
-      })),
+    () =>
+      workspaceTeams
+        .map(normalizeKnowledgeAccessTeam)
+        .filter((team): team is KnowledgeAccessTeam => Boolean(team))
+        .filter((team) => ["admin", "owner"].includes(team.roleId))
+        .map((team) => ({
+          id: team.id,
+          name: team.name,
+          description: team.description,
+          roleLabel: team.roleLabel,
+          profileImageUrl: team.profileImageUrl,
+          shared: sharedTeamIds.has(team.id),
+        })),
     [sharedTeamIds, workspaceTeams],
   );
 
@@ -610,58 +930,89 @@ export function KnowledgeLibraryDetailPage({
       });
     });
     return changes;
-  }, [description, dirtyDocuments, documentDrafts, identityDirty, library.description, library.name, name]);
+  }, [
+    description,
+    dirtyDocuments,
+    documentDrafts,
+    identityDirty,
+    library.description,
+    library.name,
+    name,
+  ]);
 
-  const openSaveDialog = useCallback((initialMode: "current" | "new" = "new") => {
-    if (busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical) return;
-    setSaveError("");
-    setSaveInitialMode(initialMode);
-    setSaveDialogKey((current) => current + 1);
-    setSaveDialogOpen(true);
-  }, [busy, dirty, hasInvalidDocumentTitle, isHistorical, name]);
+  const openSaveDialog = useCallback(
+    (initialMode: "current" | "new" = "new") => {
+      if (busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical) return;
+      setSaveError("");
+      setSaveInitialMode(initialMode);
+      setSaveDialogKey((current) => current + 1);
+      setSaveDialogOpen(true);
+    },
+    [busy, dirty, hasInvalidDocumentTitle, isHistorical, name],
+  );
 
-  const save = useCallback(async (details: PlatformVersionSaveDetails) => {
-    if (busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical) {
-      throw new Error("There are no valid Knowledge changes to save.");
-    }
-    setBusy(true);
-    setError("");
-    setSaveError("");
-    try {
-      if (identityDirty) {
-        onLibraryChange(await api.updateLibrary(library.id, {
-          name: name.trim(),
-          description,
-        }));
+  const save = useCallback(
+    async (details: PlatformVersionSaveDetails) => {
+      if (busy || !dirty || !name.trim() || hasInvalidDocumentTitle || isHistorical) {
+        throw new Error("There are no valid Knowledge changes to save.");
       }
-      for (const document of dirtyDocuments) {
-        const draft = documentDrafts[document.id];
-        if (!draft?.title.trim()) continue;
-        const result = await api.updateDocument(library.id, document.id, {
-          title: draft.title.trim(),
-          markdown: draft.markdown,
-          baseRevisionId: draft.revisionId,
-        });
-        onLibraryChange(result.library);
+      setBusy(true);
+      setError("");
+      setSaveError("");
+      try {
+        if (identityDirty) {
+          onLibraryChange(
+            await api.updateLibrary(library.id, {
+              name: name.trim(),
+              description,
+            }),
+          );
+        }
+        for (const document of dirtyDocuments) {
+          const draft = documentDrafts[document.id];
+          if (!draft?.title.trim()) continue;
+          const result = await api.updateDocument(library.id, document.id, {
+            title: draft.title.trim(),
+            markdown: draft.markdown,
+            baseRevisionId: draft.revisionId,
+          });
+          onLibraryChange(result.library);
+        }
+        if (details.mode === "new") {
+          onLibraryChange(
+            await api.createVersion(library.id, {
+              description: details.description,
+            }),
+          );
+        }
+        await onReload();
+        setSaveDialogOpen(false);
+      } catch (nextError) {
+        const normalizedError =
+          nextError instanceof Error ? nextError : new Error("Failed to save Knowledge changes.");
+        setError(normalizedError.message);
+        setSaveError(normalizedError.message);
+        throw normalizedError;
+      } finally {
+        setBusy(false);
       }
-      if (details.mode === "new") {
-        onLibraryChange(await api.createVersion(library.id, {
-          description: details.description,
-        }));
-      }
-      await onReload();
-      setSaveDialogOpen(false);
-    } catch (nextError) {
-      const normalizedError = nextError instanceof Error
-        ? nextError
-        : new Error("Failed to save Knowledge changes.");
-      setError(normalizedError.message);
-      setSaveError(normalizedError.message);
-      throw normalizedError;
-    } finally {
-      setBusy(false);
-    }
-  }, [api, busy, description, dirty, dirtyDocuments, documentDrafts, hasInvalidDocumentTitle, identityDirty, isHistorical, library.id, name, onLibraryChange, onReload]);
+    },
+    [
+      api,
+      busy,
+      description,
+      dirty,
+      dirtyDocuments,
+      documentDrafts,
+      hasInvalidDocumentTitle,
+      identityDirty,
+      isHistorical,
+      library.id,
+      name,
+      onLibraryChange,
+      onReload,
+    ],
+  );
 
   useEffect(() => {
     const handleSave = (event: KeyboardEvent) => {
@@ -688,9 +1039,9 @@ export function KnowledgeLibraryDetailPage({
     const requestedTeamIds = new Set(
       teamIds.map((teamId) => String(teamId || "").trim()).filter(Boolean),
     );
-    const teamsToShare = shareTeams.filter((team) => (
-      requestedTeamIds.has(team.id) && !team.shared && !team.disabled
-    ));
+    const teamsToShare = shareTeams.filter(
+      (team) => requestedTeamIds.has(team.id) && !team.shared && !team.disabled,
+    );
     if (teamsToShare.length === 0) {
       setShareError("Choose at least one team first.");
       return;
@@ -722,18 +1073,22 @@ export function KnowledgeLibraryDetailPage({
       createdShares.forEach(({ teamId, shareId }) => {
         nextShareIds[teamId] = shareId;
       });
-      onLibraryChange(await api.updateLibrary(library.id, {
-        metadata: {
-          ...nextMetadata,
-          teamAccessShareIds: nextShareIds,
-        },
-      }));
+      onLibraryChange(
+        await api.updateLibrary(library.id, {
+          metadata: {
+            ...nextMetadata,
+            teamAccessShareIds: nextShareIds,
+          },
+        }),
+      );
       setSelectedShareTeamIds([]);
       setShareModalOpen(false);
     } catch (nextError) {
-      await Promise.all(createdShares.map(({ teamId, shareId }) => (
-        api.removeTeamShare(teamId, shareId).catch(() => undefined)
-      )));
+      await Promise.all(
+        createdShares.map(({ teamId, shareId }) =>
+          api.removeTeamShare(teamId, shareId).catch(() => undefined),
+        ),
+      );
       setShareError(
         nextError instanceof Error
           ? nextError.message
@@ -778,53 +1133,66 @@ export function KnowledgeLibraryDetailPage({
     }
   }
 
-  const workspaceFiles = useMemo<PlatformCodeEditorFile[]>(() => currentDocuments.map((document) => {
-    const draft = documentDrafts[document.id];
-    const title = draft?.title || document.title;
-    return {
-      id: document.id,
-      label: title,
-      tabLabel: title,
-      editorMode: "markdown",
-      dirty: Boolean(
-        draft
-        && (draft.title.trim() !== draft.initialTitle || draft.markdown !== draft.initialMarkdown)
-      ),
-      ariaLabel: title,
-      searchText: `${title} ${document.summary}`,
-      selectable: !isHistorical,
-      renameDisabled: isHistorical,
-      deleteDisabled: isHistorical || dirty || document.id === library.homeDocumentId,
-      moveDisabled: true,
-    };
-  }), [currentDocuments, dirty, documentDrafts, isHistorical, library.homeDocumentId]);
-  const activeDocument = currentDocuments.find((document) => document.id === activeDocumentId) || null;
+  const workspaceFiles = useMemo<PlatformCodeEditorFile[]>(
+    () =>
+      currentDocuments.map((document) => {
+        const draft = documentDrafts[document.id];
+        const title = draft?.title || document.title;
+        return {
+          id: document.id,
+          label: title,
+          tabLabel: title,
+          editorMode: "markdown",
+          dirty: Boolean(
+            draft &&
+              (draft.title.trim() !== draft.initialTitle ||
+                draft.markdown !== draft.initialMarkdown),
+          ),
+          ariaLabel: title,
+          searchText: `${title} ${document.summary}`,
+          selectable: !isHistorical,
+          renameDisabled: isHistorical,
+          deleteDisabled: isHistorical || dirty || document.id === library.homeDocumentId,
+          moveDisabled: true,
+        };
+      }),
+    [currentDocuments, dirty, documentDrafts, isHistorical, library.homeDocumentId],
+  );
+  const activeDocument =
+    currentDocuments.find((document) => document.id === activeDocumentId) || null;
   const activeDocumentDraft = activeDocument ? documentDrafts[activeDocument.id] : null;
   const selectableDocumentIds = currentDocuments
     .filter((document) => document.id !== library.homeDocumentId)
     .map((document) => document.id);
-  const allDocumentsSelected = selectableDocumentIds.length > 0
-    && selectableDocumentIds.every((documentId) => selectedDocumentIds.has(documentId));
-  const someDocumentsSelected = !allDocumentsSelected
-    && selectableDocumentIds.some((documentId) => selectedDocumentIds.has(documentId));
+  const allDocumentsSelected =
+    selectableDocumentIds.length > 0 &&
+    selectableDocumentIds.every((documentId) => selectedDocumentIds.has(documentId));
+  const someDocumentsSelected =
+    !allDocumentsSelected &&
+    selectableDocumentIds.some((documentId) => selectedDocumentIds.has(documentId));
 
-  const updateActiveDocumentDraft = useCallback((update: Partial<Pick<KnowledgeDocumentDraft, "title" | "markdown">>) => {
-    if (!activeDocument || isHistorical) return;
-    setDocumentDrafts((current) => {
-      const draft = current[activeDocument.id];
-      if (!draft) return current;
-      return {
-        ...current,
-        [activeDocument.id]: { ...draft, ...update },
-      };
-    });
-  }, [activeDocument, isHistorical]);
+  const updateActiveDocumentDraft = useCallback(
+    (update: Partial<Pick<KnowledgeDocumentDraft, "title" | "markdown">>) => {
+      if (!activeDocument || isHistorical) return;
+      setDocumentDrafts((current) => {
+        const draft = current[activeDocument.id];
+        if (!draft) return current;
+        return {
+          ...current,
+          [activeDocument.id]: { ...draft, ...update },
+        };
+      });
+    },
+    [activeDocument, isHistorical],
+  );
 
   const createDocument = useCallback(async () => {
     if (busy || isHistorical) return;
-    const existingTitles = new Set(currentDocuments.map((document) => (
-      documentDrafts[document.id]?.title || document.title
-    ).trim().toLowerCase()));
+    const existingTitles = new Set(
+      currentDocuments.map((document) =>
+        (documentDrafts[document.id]?.title || document.title).trim().toLowerCase(),
+      ),
+    );
     let title = "Untitled document";
     let suffix = 2;
     while (existingTitles.has(title.toLowerCase())) {
@@ -840,8 +1208,9 @@ export function KnowledgeLibraryDetailPage({
         sortOrder: currentDocuments.length,
       });
       const documents = [
-        ...(result.library.documents || library.documents || [])
-          .filter((document) => document.id !== result.document.id),
+        ...(result.library.documents || library.documents || []).filter(
+          (document) => document.id !== result.document.id,
+        ),
         result.document,
       ];
       onLibraryChange({
@@ -859,37 +1228,105 @@ export function KnowledgeLibraryDetailPage({
     }
   }, [api, busy, currentDocuments, documentDrafts, isHistorical, library, onLibraryChange]);
 
-  const requestDocumentRename = useCallback((file: PlatformCodeEditorFile, nextTitle: string) => {
-    if (isHistorical) return;
-    setActiveDocumentId(file.id);
-    setDocumentDrafts((current) => {
-      const draft = current[file.id];
-      if (!draft) return current;
-      return {
-        ...current,
-        [file.id]: {
-          ...draft,
-          title: nextTitle,
-        },
+  const importDroppedDocuments = useCallback(
+    async ({ files }: { files: readonly File[] }) => {
+      if (busy || isHistorical || files.length === 0) return;
+      const usedTitles = new Set(
+        currentDocuments.map((document) =>
+          (documentDrafts[document.id]?.title || document.title).trim().toLowerCase(),
+        ),
+      );
+      const importedDocuments: KnowledgeDocument[] = [];
+      let latestLibrary = library;
+      const commitImportedDocuments = () => {
+        if (importedDocuments.length === 0) return;
+        const documentsById = new Map<string, KnowledgeDocument>();
+        currentDocuments.forEach((document) => documentsById.set(document.id, document));
+        (latestLibrary.documents || []).forEach((document) =>
+          documentsById.set(document.id, document),
+        );
+        importedDocuments.forEach((document) => documentsById.set(document.id, document));
+        const nextDocuments = [...documentsById.values()].sort(
+          (left, right) =>
+            left.sortOrder - right.sortOrder || left.title.localeCompare(right.title),
+        );
+        onLibraryChange({
+          ...library,
+          ...latestLibrary,
+          documents: nextDocuments,
+          versions: latestLibrary.versions || library.versions,
+        });
+        setActiveDocumentId(importedDocuments[importedDocuments.length - 1].id);
       };
-    });
-  }, [isHistorical]);
+      setBusy(true);
+      setError("");
+      try {
+        for (const [index, file] of files.entries()) {
+          const imported = await buildDroppedKnowledgeDocument(file, api);
+          const title = uniqueKnowledgeImportTitle(imported.title || file.name, usedTitles);
+          const result = await api.createDocument(library.id, {
+            title,
+            markdown: imported.markdown,
+            summary: imported.summary || `Imported from ${file.name || title}.`,
+            sortOrder: currentDocuments.length + index,
+            provenance: imported.provenance,
+          });
+          importedDocuments.push(result.document);
+          latestLibrary = result.library;
+        }
+        commitImportedDocuments();
+      } catch (nextError) {
+        commitImportedDocuments();
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : "Failed to add the dropped files to this Knowledge library.",
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [api, busy, currentDocuments, documentDrafts, isHistorical, library, onLibraryChange],
+  );
 
-  const requestDocumentArchive = useCallback((files: readonly PlatformCodeEditorFile[]) => {
-    if (isHistorical) return;
-    const targets = files
-      .map((file) => currentDocuments.find((document) => document.id === file.id))
-      .filter((document): document is KnowledgeDocument => (
-        Boolean(document) && document?.id !== library.homeDocumentId
-      ));
-    if (targets.length > 0) setArchiveDocuments(targets);
-  }, [currentDocuments, dirty, isHistorical, library.homeDocumentId]);
+  const requestDocumentRename = useCallback(
+    (file: PlatformCodeEditorFile, nextTitle: string) => {
+      if (isHistorical) return;
+      setActiveDocumentId(file.id);
+      setDocumentDrafts((current) => {
+        const draft = current[file.id];
+        if (!draft) return current;
+        return {
+          ...current,
+          [file.id]: {
+            ...draft,
+            title: nextTitle,
+          },
+        };
+      });
+    },
+    [isHistorical],
+  );
+
+  const requestDocumentArchive = useCallback(
+    (files: readonly PlatformCodeEditorFile[]) => {
+      if (isHistorical) return;
+      const targets = files
+        .map((file) => currentDocuments.find((document) => document.id === file.id))
+        .filter(
+          (document): document is KnowledgeDocument =>
+            Boolean(document) && document?.id !== library.homeDocumentId,
+        );
+      if (targets.length > 0) setArchiveDocuments(targets);
+    },
+    [currentDocuments, dirty, isHistorical, library.homeDocumentId],
+  );
 
   const sectionSwitch = (
     <PlatformSwitch
       value={activeTab}
       options={[
-        { value: "general", label: "General" },
+        { value: "general", label: "Library" },
         { value: "settings", label: "Settings" },
       ]}
       onValueChange={(value) => setActiveTab(value === "settings" ? "settings" : "general")}
@@ -916,11 +1353,13 @@ export function KnowledgeLibraryDetailPage({
         shortcutActions={{
           share: {
             onInvoke: openShareModal,
-            disabled: dirty || isHistorical || shareModalOpen || renameModalOpen || deleteConfirmationOpen,
+            disabled:
+              dirty || isHistorical || shareModalOpen || renameModalOpen || deleteConfirmationOpen,
           },
           rename: {
             onInvoke: openRenameModal,
-            disabled: dirty || isHistorical || shareModalOpen || renameModalOpen || deleteConfirmationOpen,
+            disabled:
+              dirty || isHistorical || shareModalOpen || renameModalOpen || deleteConfirmationOpen,
           },
           delete: {
             onInvoke: () => setDeleteConfirmationOpen(true),
@@ -956,11 +1395,13 @@ export function KnowledgeLibraryDetailPage({
           label="Share"
           shortcut="share"
           disabled={dirty || isHistorical}
-          title={dirty
-            ? "Save Knowledge changes before sharing."
-            : isHistorical
-              ? "Return to the current version before sharing."
-              : undefined}
+          title={
+            dirty
+              ? "Save Knowledge changes before sharing."
+              : isHistorical
+                ? "Return to the current version before sharing."
+                : undefined
+          }
           onClick={openShareModal}
         />
         <PlatformResourceActionMenuItem
@@ -974,11 +1415,13 @@ export function KnowledgeLibraryDetailPage({
           label="Rename"
           shortcut="rename"
           disabled={dirty || isHistorical}
-          title={dirty
-            ? "Save Knowledge changes before renaming."
-            : isHistorical
-              ? "Return to the current version before renaming."
-              : undefined}
+          title={
+            dirty
+              ? "Save Knowledge changes before renaming."
+              : isHistorical
+                ? "Return to the current version before renaming."
+                : undefined
+          }
           onClick={openRenameModal}
         />
         <PlatformResourceActionMenuItem
@@ -1009,7 +1452,24 @@ export function KnowledgeLibraryDetailPage({
     email: library.ownerEmail || "",
     avatarUrl: library.ownerAvatarUrl || "",
   };
-  const ownerOptions = useMemo<PlatformOwnerOption<string, { identity: KnowledgeOwnerIdentity }>[]>(() => {
+  const metadataCreator = normalizeOwnerCandidate(asRecord(library.metadata).creator);
+  const creatorIdentity = resolveKnowledgeIdentity(
+    {
+      id: library.creatorId || library.creatorUserId || metadataCreator?.id || library.creatorEmail,
+      name: library.creatorName || metadataCreator?.name || library.creatorEmail || "Unknown user",
+      email: library.creatorEmail || metadataCreator?.email || "",
+      avatarUrl: library.creatorAvatarUrl || metadataCreator?.avatarUrl || "",
+    },
+    [
+      ownerIdentity,
+      ...(metadataCreator ? [metadataCreator] : []),
+      ...ownerCandidates,
+      ...teamOwnerCandidates,
+    ],
+  );
+  const ownerOptions = useMemo<
+    PlatformOwnerOption<string, { identity: KnowledgeOwnerIdentity }>[]
+  >(() => {
     const byId = new Map<string, KnowledgeOwnerIdentity>();
     [ownerIdentity, ...ownerCandidates, ...teamOwnerCandidates].forEach((candidate) => {
       const key = String(candidate.id || candidate.email || "").trim();
@@ -1022,77 +1482,107 @@ export function KnowledgeLibraryDetailPage({
       avatarUrl: candidate.avatarUrl,
       data: { identity: candidate },
     }));
-  }, [ownerCandidates, ownerIdentity.avatarUrl, ownerIdentity.email, ownerIdentity.id, ownerIdentity.name, teamOwnerCandidates]);
+  }, [
+    ownerCandidates,
+    ownerIdentity.avatarUrl,
+    ownerIdentity.email,
+    ownerIdentity.id,
+    ownerIdentity.name,
+    teamOwnerCandidates,
+  ]);
 
-  const openOwnerSelector = useCallback(async (open: boolean) => {
-    if (!open) {
-      setOwnerSelectorOpen(false);
-      return;
-    }
-    if (busy || dirty || !activeOrganizationId) return;
-    setOwnerSelectorOpen(true);
-    if (ownerCandidates.length > 0 || ownerCandidatesLoading) return;
-    setOwnerCandidatesLoading(true);
-    try {
-      setOwnerCandidates(
-        (await api.listOrganizationMembers(activeOrganizationId))
-          .map(normalizeOwnerCandidate)
-          .filter((candidate): candidate is KnowledgeOwnerIdentity => Boolean(candidate)),
-      );
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Failed to load organization members.");
-    } finally {
-      setOwnerCandidatesLoading(false);
-    }
-  }, [activeOrganizationId, api, busy, dirty, ownerCandidates.length, ownerCandidatesLoading]);
+  const openOwnerSelector = useCallback(
+    async (open: boolean) => {
+      if (!open) {
+        setOwnerSelectorOpen(false);
+        return;
+      }
+      if (busy || dirty || !activeOrganizationId) return;
+      setOwnerSelectorOpen(true);
+      await loadOrganizationOwnerCandidates(true);
+    },
+    [activeOrganizationId, busy, dirty, loadOrganizationOwnerCandidates],
+  );
 
-  const transferOwner = useCallback(async (
-    _value: string,
-    option: PlatformOwnerOption<string, { identity: KnowledgeOwnerIdentity }>,
-  ) => {
-    const nextOwner = option.data?.identity;
-    if (!nextOwner || busy || dirty) return;
-    setBusy(true);
-    setError("");
-    try {
-      onLibraryChange(await api.updateLibrary(library.id, {
-        metadata: {
-          ...library.metadata,
-          owner: {
-            id: nextOwner.id,
-            userId: nextOwner.id,
-            name: nextOwner.name,
-            email: nextOwner.email,
-            avatarUrl: nextOwner.avatarUrl,
-          },
-          ownerId: nextOwner.id,
-          ownerUserId: nextOwner.id,
-          ownerName: nextOwner.name,
-          ownerEmail: nextOwner.email,
-          ownerAvatarUrl: nextOwner.avatarUrl,
-        },
-        permissionSet: library.permissionSet,
-      }));
-      setOwnerSelectorOpen(false);
-    } catch (nextError) {
-      const normalized = nextError instanceof Error ? nextError : new Error("Failed to transfer ownership.");
-      setError(normalized.message);
-      throw normalized;
-    } finally {
-      setBusy(false);
-    }
-  }, [api, busy, dirty, library.id, library.metadata, library.permissionSet, onLibraryChange]);
+  const transferOwner = useCallback(
+    async (
+      _value: string,
+      option: PlatformOwnerOption<string, { identity: KnowledgeOwnerIdentity }>,
+    ) => {
+      const nextOwner = option.data?.identity;
+      if (!nextOwner || busy || dirty) return;
+      setBusy(true);
+      setError("");
+      try {
+        onLibraryChange(
+          await api.updateLibrary(library.id, {
+            metadata: {
+              ...library.metadata,
+              owner: {
+                id: nextOwner.id,
+                userId: nextOwner.id,
+                name: nextOwner.name,
+                email: nextOwner.email,
+                avatarUrl: nextOwner.avatarUrl,
+              },
+              ownerId: nextOwner.id,
+              ownerUserId: nextOwner.id,
+              ownerName: nextOwner.name,
+              ownerEmail: nextOwner.email,
+              ownerAvatarUrl: nextOwner.avatarUrl,
+            },
+            permissionSet: library.permissionSet,
+          }),
+        );
+        setOwnerSelectorOpen(false);
+      } catch (nextError) {
+        const normalized =
+          nextError instanceof Error ? nextError : new Error("Failed to transfer ownership.");
+        setError(normalized.message);
+        throw normalized;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [api, busy, dirty, library.id, library.metadata, library.permissionSet, onLibraryChange],
+  );
+
+  const persistCover = useCallback(
+    async (nextCover: KnowledgeLibraryCoverValue | null) => {
+      if (coverBusy || isHistorical) return;
+      const previousCover = cover;
+      setCover(nextCover);
+      setCoverBusy(true);
+      setError("");
+      try {
+        const nextLibrary = await api.updateLibrary(library.id, {
+          metadata: withKnowledgeLibraryCoverMetadata(library.metadata, nextCover),
+        });
+        setCover(readKnowledgeLibraryCover(nextLibrary.metadata) || nextCover);
+        onLibraryChange(nextLibrary);
+      } catch (nextError) {
+        setCover(previousCover);
+        const normalized =
+          nextError instanceof Error
+            ? nextError
+            : new Error("Failed to update the Knowledge library cover.");
+        setError(normalized.message);
+        throw normalized;
+      } finally {
+        setCoverBusy(false);
+      }
+    },
+    [api, cover, coverBusy, isHistorical, library.id, library.metadata, onLibraryChange],
+  );
 
   const sidebar = (
     <PlatformResourceDetailSidebar
-      attributes={[
-        { id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) },
-      ]}
+      attributes={[{ id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) }]}
       creator={{
-        value: library.creatorId,
-        name: library.creatorName,
-        email: library.creatorEmail,
-        avatarUrl: library.creatorAvatarUrl,
+        value: creatorIdentity.id,
+        name: creatorIdentity.name,
+        email: creatorIdentity.email,
+        avatarUrl: creatorIdentity.avatarUrl,
       }}
       owner={{
         value: ownerIdentity.id,
@@ -1114,26 +1604,49 @@ export function KnowledgeLibraryDetailPage({
         loading: ownerCandidatesLoading || (ownerSelectorOpen && ownerMissingTeamIds.length > 0),
         title: dirty ? "Save Knowledge changes before changing the owner." : undefined,
       }}
-      primaryAction={onStartThread ? (
-        <PlatformPrimaryButton
-          className="knowledge-detail-page__start-thread-button"
-          fullWidth
-          size="small"
-          onClick={() => onStartThread(library)}
-        >
-          <Send width={14} height={14} aria-hidden="true" />
-          Start Thread
-        </PlatformPrimaryButton>
-      ) : null}
+      primaryAction={
+        onStartThread ? (
+          <PlatformPrimaryButton
+            className="knowledge-detail-page__start-thread-button"
+            fullWidth
+            size="small"
+            onClick={() => onStartThread(library)}
+          >
+            <Send width={14} height={14} aria-hidden="true" />
+            Start Thread
+          </PlatformPrimaryButton>
+        ) : null
+      }
       className="knowledge-detail-page__settings-sidebar"
       propertiesClassName="knowledge-detail-page__settings-sidebar-properties"
     />
   );
 
   const identitySection = (
-    <section className="skill-detail-page__identity knowledge-library-identity" aria-label="Knowledge library identity">
-      <span className="knowledge-library-identity__icon" aria-hidden="true">
-        <LibraryBig width={24} height={24} strokeWidth={1.7} />
+    <section
+      className="skill-detail-page__identity knowledge-library-identity"
+      aria-label="Knowledge library identity"
+    >
+      <span
+        className={`knowledge-library-identity__icon${relatedProjectIdentity ? " is-project-linked" : ""}`}
+        style={
+          relatedProjectIdentity
+            ? ({
+                "--knowledge-project-icon-color": relatedProjectIdentity.color,
+              } as CSSProperties)
+            : undefined
+        }
+        aria-hidden="true"
+      >
+        {relatedProjectIdentity ? (
+          <PlatformProjectIdentityIcon
+            icon={relatedProjectIdentity.icon}
+            size={24}
+            strokeWidth={1.8}
+          />
+        ) : (
+          <LibraryBig width={24} height={24} strokeWidth={1.7} />
+        )}
       </span>
       <div className="skill-detail-page__identity-copy">
         <input
@@ -1158,94 +1671,141 @@ export function KnowledgeLibraryDetailPage({
   );
 
   const documentWorkspace = (
-    <PlatformCodeEditorWorkspace
-      className="knowledge-detail-page__document-workspace"
-      ariaLabel={`${library.name} document editor`}
-      variant="full-screen"
-      sidebarTitle={(
-        <span className="knowledge-document-workspace__sidebar-heading">
-          <PlatformCheckbox
-            className="knowledge-document-workspace__select-all"
-            checked={allDocumentsSelected}
-            indeterminate={someDocumentsSelected}
-            disabled={isHistorical || selectableDocumentIds.length === 0}
-            aria-label={allDocumentsSelected ? "Deselect all documents" : "Select all documents"}
-            onClick={() => setSelectedDocumentIds(
-              allDocumentsSelected ? new Set() : new Set(selectableDocumentIds),
-            )}
-          />
-          <span>Documents</span>
-        </span>
-      )}
-      files={workspaceFiles}
-      activeFileId={activeDocumentId}
-      onFileSelect={setActiveDocumentId}
-      selectedFileIds={selectedDocumentIds}
-      onFileSelectionChange={({ selectedIds }) => setSelectedDocumentIds(new Set(
-        [...selectedIds].filter((documentId) => documentId !== library.homeDocumentId),
-      ))}
-      onFileRename={isHistorical ? undefined : requestDocumentRename}
-      onFilesDelete={isHistorical ? undefined : requestDocumentArchive}
-      onCreateFile={isHistorical ? undefined : createDocument}
-      createFileLabel="Create Document"
-      createFileButtonLabel="Add document"
-      fileCreationDisabled={busy || isHistorical}
-      emptyFiles="No Knowledge documents yet."
-      emptyEditor="Select a document to start editing."
-      markdownEditor={activeDocument && activeDocumentDraft ? {
-        value: activeDocumentDraft.markdown,
-        onChange: (markdown) => updateActiveDocumentDraft({ markdown }),
-        title: (
-          <input
-            className="knowledge-document-workspace__title-input"
-            value={activeDocumentDraft.title}
-            readOnly={isHistorical}
-            aria-label="Knowledge document title"
-            placeholder="Untitled document"
-            onChange={(event) => updateActiveDocumentDraft({ title: event.currentTarget.value })}
-          />
-        ),
-        placeholder: "Write durable knowledge for people and agents.",
-        ariaLabel: `${activeDocumentDraft.title || "Knowledge document"} content`,
-        readOnly: isHistorical,
-        historyKey: `${activeDocument.id}:${activeDocumentDraft.revisionId}`,
-        contentVariant: "file-enabled",
-        fileUpload: {
-          upload: (files) => api.uploadEditorAttachments(files),
-          resolvePreviewSource: (file, signal) => api.resolveEditorAttachmentPreview(file, signal),
-          accept: "*/*",
-          disabled: busy || isHistorical,
-        },
-        className: "knowledge-document-workspace__editor",
-      } : undefined}
-    />
+    <div className={`knowledge-detail-page__library-workspace${cover ? " has-cover" : ""}`}>
+      {cover ? (
+        <KnowledgeLibraryCover
+          cover={cover}
+          backendUrl={backendUrl}
+          requestHeaders={requestHeaders}
+          disabled={busy || coverBusy || isHistorical}
+          onUpload={(files) => api.uploadEditorAttachments(files)}
+          onChange={persistCover}
+        />
+      ) : null}
+      <PlatformCodeEditorWorkspace
+        className="knowledge-detail-page__document-workspace"
+        ariaLabel={`${library.name} document editor`}
+        variant="minimalistic-ui"
+        sidebarTitle={
+          <span className="knowledge-document-workspace__sidebar-heading">
+            <PlatformCheckbox
+              className="knowledge-document-workspace__select-all"
+              checked={allDocumentsSelected}
+              indeterminate={someDocumentsSelected}
+              disabled={isHistorical || selectableDocumentIds.length === 0}
+              aria-label={allDocumentsSelected ? "Deselect all documents" : "Select all documents"}
+              onClick={() =>
+                setSelectedDocumentIds(
+                  allDocumentsSelected ? new Set() : new Set(selectableDocumentIds),
+                )
+              }
+            />
+            <span>Documents</span>
+          </span>
+        }
+        files={workspaceFiles}
+        activeFileId={activeDocumentId}
+        onFileSelect={setActiveDocumentId}
+        selectedFileIds={selectedDocumentIds}
+        onFileSelectionChange={({ selectedIds }) =>
+          setSelectedDocumentIds(
+            new Set([...selectedIds].filter((documentId) => documentId !== library.homeDocumentId)),
+          )
+        }
+        onFileRename={isHistorical ? undefined : requestDocumentRename}
+        onFilesDelete={isHistorical ? undefined : requestDocumentArchive}
+        onExternalFilesDrop={isHistorical ? undefined : importDroppedDocuments}
+        onCreateFile={isHistorical ? undefined : createDocument}
+        createFileLabel="Create Document"
+        createFileButtonLabel="Add document"
+        fileCreationDisabled={busy || isHistorical}
+        emptyFiles="No Knowledge documents yet."
+        emptyEditor="Select a document to start editing."
+        markdownEditor={
+          activeDocument && activeDocumentDraft
+            ? {
+                bodyTitle: (
+                  <div className="knowledge-document-workspace__body-title">
+                    <input
+                      className="knowledge-document-workspace__body-title-input"
+                      value={activeDocumentDraft.title}
+                      readOnly={isHistorical}
+                      aria-label="Knowledge document title"
+                      onChange={(event) =>
+                        updateActiveDocumentDraft({
+                          title: event.currentTarget.value,
+                        })
+                      }
+                    />
+                    {!cover && !isHistorical ? (
+                      <KnowledgeLibraryAddCoverButton
+                        disabled={busy || coverBusy}
+                        onAdd={() => void persistCover(DEFAULT_KNOWLEDGE_LIBRARY_COVER)}
+                      />
+                    ) : null}
+                  </div>
+                ),
+                value: activeDocumentDraft.markdown,
+                onChange: (markdown) => updateActiveDocumentDraft({ markdown }),
+                placeholder: "Write durable knowledge for people and agents.",
+                ariaLabel: `${activeDocumentDraft.title || "Knowledge document"} content`,
+                readOnly: isHistorical,
+                historyKey: `${activeDocument.id}:${activeDocumentDraft.revisionId}`,
+                variant: "block-editor",
+                contentVariant: "file-enabled",
+                fileUpload: {
+                  upload: (files) => api.uploadEditorAttachments(files),
+                  resolvePreviewSource: (file, signal) =>
+                    api.resolveEditorAttachmentPreview(file, signal),
+                  accept: "*/*",
+                  disabled: busy || isHistorical,
+                },
+                className: "knowledge-document-workspace__editor",
+              }
+            : undefined
+        }
+      />
+    </div>
   );
 
   const settings = (
-    <div className="playground-server-detail-content knowledge-detail-page__settings-content">
-      <div
-        className={`playground-server-settings-tab is-function-settings-tab knowledge-settings-layout${accessDetailOpen ? " is-access-detail-view" : ""}`}
-      >
-        {!accessDetailOpen ? (
-          <PlatformDeploymentMap
-            key="knowledge-storage-map"
-            className="knowledge-detail-page__storage-map"
-            regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
-            title="Location"
+    <>
+      <div className="knowledge-detail-page__settings-header">{identitySection}</div>
+      <div className="playground-server-detail-content knowledge-detail-page__settings-content">
+        <div
+          className={`playground-server-settings-tab is-function-settings-tab knowledge-settings-layout${accessDetailOpen ? " is-access-detail-view" : ""}`}
+        >
+          {!accessDetailOpen ? (
+            <>
+              <PlatformDeploymentMap
+                key="knowledge-storage-map"
+                className="knowledge-detail-page__storage-map"
+                regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
+                title="Location"
+              />
+              <KnowledgeConnectorSettings
+                key="knowledge-connector-settings"
+                library={library}
+                api={api}
+                requestHeaders={requestHeaders}
+                activeOrganizationId={activeOrganizationId}
+                onLibraryChange={onLibraryChange}
+              />
+            </>
+          ) : null}
+          <KnowledgeAccessSettings
+            key="knowledge-access-settings"
+            library={library}
+            api={api}
+            workspaceTeams={workspaceTeams}
+            workspaceTeamMembersById={workspaceTeamMembersById}
+            onWorkspaceTeamMembersRequest={requestWorkspaceTeamMembers}
+            onLibraryChange={onLibraryChange}
+            onPermissionDetailOpenChange={setAccessDetailOpen}
           />
-        ) : null}
-        <KnowledgeAccessSettings
-          key="knowledge-access-settings"
-          library={library}
-          api={api}
-          workspaceTeams={workspaceTeams}
-          workspaceTeamMembersById={workspaceTeamMembersById}
-          onWorkspaceTeamMembersRequest={requestWorkspaceTeamMembers}
-          onLibraryChange={onLibraryChange}
-          onPermissionDetailOpenChange={setAccessDetailOpen}
-        />
+        </div>
       </div>
-    </div>
+    </>
   );
   const saveActionPortal = controlsPortal || (!titleActionsPortalId ? actionsPortal : null);
   const detailSurface = versionChangesState ? (
@@ -1264,19 +1824,29 @@ export function KnowledgeLibraryDetailPage({
           leftSelector={{
             value: versionChangesState.leftVersionId,
             options: versionSelectorOptions,
-            onValueChange: (value) => setVersionChangesState((current) => current ? {
-              ...current,
-              leftVersionId: value,
-            } : current),
+            onValueChange: (value) =>
+              setVersionChangesState((current) =>
+                current
+                  ? {
+                      ...current,
+                      leftVersionId: value,
+                    }
+                  : current,
+              ),
             ariaLabel: "Select base Knowledge version",
           }}
           rightSelector={{
             value: versionChangesState.rightVersionId,
             options: versionSelectorOptions,
-            onValueChange: (value) => setVersionChangesState((current) => current ? {
-              ...current,
-              rightVersionId: value,
-            } : current),
+            onValueChange: (value) =>
+              setVersionChangesState((current) =>
+                current
+                  ? {
+                      ...current,
+                      rightVersionId: value,
+                    }
+                  : current,
+              ),
             ariaLabel: "Select target Knowledge version",
           }}
           onBack={() => setVersionChangesState(null)}
@@ -1289,8 +1859,13 @@ export function KnowledgeLibraryDetailPage({
   ) : (
     <MarkdownResourceDetailPage
       activeTab={activeTab === "settings" ? "settings" : "code"}
-      metadata={identitySection}
-      notice={error ? <p className="knowledge-inline-error" role="alert">{error}</p> : null}
+      notice={
+        error ? (
+          <p className="knowledge-inline-error" role="alert">
+            {error}
+          </p>
+        ) : null
+      }
       code={documentWorkspace}
       settings={settings}
       sidebar={accessDetailOpen ? null : sidebar}
@@ -1395,9 +1970,11 @@ export function KnowledgeLibraryDetailPage({
             setDeleteConfirmationOpen(false);
             onLibraryDeleted?.(library.id);
           } catch (nextError) {
-            setError(nextError instanceof Error
-              ? nextError.message
-              : "Failed to delete the Knowledge library.");
+            setError(
+              nextError instanceof Error
+                ? nextError.message
+                : "Failed to delete the Knowledge library.",
+            );
           } finally {
             setBusy(false);
           }
@@ -1406,11 +1983,13 @@ export function KnowledgeLibraryDetailPage({
       <PlatformConfirmationModal
         open={archiveDocuments.length > 0}
         title={archiveDocuments.length > 1 ? "Archive documents?" : "Archive document?"}
-        description={archiveDocuments.length > 1
-          ? `${archiveDocuments.length} documents will be removed from the current draft. Published versions remain immutable.`
-          : archiveDocuments[0]
-            ? `“${archiveDocuments[0].title}” will be removed from the current draft. Published versions remain immutable.`
-            : ""}
+        description={
+          archiveDocuments.length > 1
+            ? `${archiveDocuments.length} documents will be removed from the current draft. Published versions remain immutable.`
+            : archiveDocuments[0]
+              ? `“${archiveDocuments[0].title}” will be removed from the current draft. Published versions remain immutable.`
+              : ""
+        }
         confirmLabel={archiveDocuments.length > 1 ? "Archive Documents" : "Archive"}
         tone="destructive"
         onCancel={() => !busy && setArchiveDocuments([])}
@@ -1425,13 +2004,17 @@ export function KnowledgeLibraryDetailPage({
             setArchiveDocuments([]);
             await onReload();
           } catch (nextError) {
-            setError(nextError instanceof Error ? nextError.message : "Failed to archive the Knowledge document.");
+            setError(
+              nextError instanceof Error
+                ? nextError.message
+                : "Failed to archive the Knowledge document.",
+            );
           } finally {
             setBusy(false);
           }
         }}
       />
-      {(!versionsDrawerPortalId || versionsPortal) ? (
+      {!versionsDrawerPortalId || versionsPortal ? (
         <PlatformVersionHistorySidebar<KnowledgeLibraryVersion>
           open={versionsOpen}
           title="Version history"

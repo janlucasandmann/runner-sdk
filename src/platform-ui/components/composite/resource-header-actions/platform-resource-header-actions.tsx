@@ -1,4 +1,4 @@
-import { ChevronRight, Copy, Ellipsis, History, Info } from "lucide-react";
+import { Check, ChevronRight, Copy, Ellipsis, History, Info } from "lucide-react";
 import {
   type ButtonHTMLAttributes,
   createContext,
@@ -532,46 +532,83 @@ export function PlatformResourceActionsMetadata({
   items,
   className = "",
 }: PlatformResourceActionsMetadataProps) {
+  const [copiedItemId, setCopiedItemId] = useState("");
+  const copiedStateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (copiedStateTimerRef.current !== null) {
+      clearTimeout(copiedStateTimerRef.current);
+    }
+  }, []);
+
+  const copyItemValue = async (item: PlatformResourceActionsMetadataItem) => {
+    if (
+      typeof navigator === "undefined"
+      || typeof navigator.clipboard?.writeText !== "function"
+    ) return;
+
+    try {
+      await navigator.clipboard.writeText(item.copyValue || "");
+    } catch {
+      return;
+    }
+
+    if (copiedStateTimerRef.current !== null) {
+      clearTimeout(copiedStateTimerRef.current);
+    }
+    setCopiedItemId(item.id);
+    copiedStateTimerRef.current = setTimeout(() => {
+      copiedStateTimerRef.current = null;
+      setCopiedItemId((currentItemId) => currentItemId === item.id ? "" : currentItemId);
+    }, 1600);
+  };
+
   return (
     <div className={joinClassNames("platform-resource-actions-menu__metadata", className)}>
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className={joinClassNames(
-            "platform-resource-actions-menu__metadata-row",
-            String(item.id || "").trim().toLowerCase() === "id" && "is-resource-id",
-          )}
-        >
-          <span className="platform-resource-actions-menu__metadata-label">{item.label}</span>
-          <span className="platform-resource-actions-menu__metadata-content">
-            <span
-              className={joinClassNames(
-                "platform-resource-actions-menu__metadata-value",
-                item.monospace && "is-monospace",
-                item.copyValue && "is-copyable",
-              )}
-              title={item.title}
-            >
-              {item.value}
-            </span>
-            {item.copyValue ? (
-              <PlatformIconButton
-                type="button"
-                size="compact"
-                className="platform-resource-actions-menu__metadata-copy"
-                aria-label={item.copyAriaLabel || `Copy ${String(item.label || "value")}`}
-                title={item.copyAriaLabel || `Copy ${String(item.label || "value")}`}
-                onClick={() => {
-                  const copyPromise = navigator.clipboard?.writeText(item.copyValue || "");
-                  if (copyPromise) void copyPromise.catch(() => undefined);
-                }}
+      {items.map((item) => {
+        const copyLabel = item.copyAriaLabel || `Copy ${String(item.label || "value")}`;
+        const itemWasCopied = copiedItemId === item.id;
+        return (
+          <div
+            key={item.id}
+            className={joinClassNames(
+              "platform-resource-actions-menu__metadata-row",
+              String(item.id || "").trim().toLowerCase() === "id" && "is-resource-id",
+            )}
+          >
+            <span className="platform-resource-actions-menu__metadata-label">{item.label}</span>
+            <span className="platform-resource-actions-menu__metadata-content">
+              <span
+                className={joinClassNames(
+                  "platform-resource-actions-menu__metadata-value",
+                  item.monospace && "is-monospace",
+                  item.copyValue && "is-copyable",
+                )}
+                title={item.title}
               >
-                <Copy width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
-              </PlatformIconButton>
-            ) : null}
-          </span>
-        </div>
-      ))}
+                {item.value}
+              </span>
+              {item.copyValue ? (
+                <PlatformIconButton
+                  type="button"
+                  size="compact"
+                  className={joinClassNames(
+                    "platform-resource-actions-menu__metadata-copy",
+                    itemWasCopied && "is-copied",
+                  )}
+                  aria-label={itemWasCopied ? "Copied" : copyLabel}
+                  title={itemWasCopied ? "Copied" : copyLabel}
+                  onClick={() => void copyItemValue(item)}
+                >
+                  {itemWasCopied
+                    ? <Check width={13} height={13} strokeWidth={1.8} aria-hidden="true" />
+                    : <Copy width={13} height={13} strokeWidth={1.8} aria-hidden="true" />}
+                </PlatformIconButton>
+              ) : null}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

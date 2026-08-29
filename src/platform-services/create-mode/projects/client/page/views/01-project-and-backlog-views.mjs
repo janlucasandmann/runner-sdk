@@ -1341,6 +1341,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
               historyKey: "project-create-goal",
               variant: "minimalistic-ui",
               contentVariant: "text",
+              editorRef: projectInitialGoalEditorRef,
               className: "playground-project-create-modal__description-editor",
             });
           }
@@ -1506,6 +1507,7 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
               popupAlignment: "right",
               fullWidth: true,
               emptyContent: options.emptyContent || "No options available.",
+              popupSearch: options.popupSearch || null,
               popupHeader: options.popupHeader || null,
               popupHeaderClassName: options.popupHeaderClassName || "",
               optionClassName: options.optionClassName || "",
@@ -1551,14 +1553,39 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
 
           function renderProjectComposerProperties() {
             const currentStatusValue = normalizePlaygroundProjectStatus(projectDraft.status || projectDraft.metadata?.status || "backlog");
-            const statusOptions = PLAYGROUND_PROJECT_STATUS_OPTIONS.map((option) => ({
+            const normalizedStatusSearchQuery = String(projectOverviewSidebarStatusSearchQuery || "").trim().toLowerCase();
+            const statusOptions = PLAYGROUND_PROJECT_STATUS_OPTIONS.map((option, index) => ({
               ...option,
               selected: option.id === currentStatusValue,
+              shortcut: String(index + 1),
             }));
+            const visibleStatusOptions = statusOptions.filter((option) => (
+              !normalizedStatusSearchQuery
+              || option.label.toLowerCase().includes(normalizedStatusSearchQuery)
+            ));
             const currentStatusOption = statusOptions.find((option) => option.selected) || statusOptions[0];
             const currentPriorityValue = PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === projectDraft.priority)
               ? projectDraft.priority
               : "medium";
+            const normalizedPrioritySearchQuery = String(projectOverviewSidebarPrioritySearchQuery || "").trim().toLowerCase();
+            const priorityOptions = PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option, index) => ({
+              ...option,
+              shortcut: String(index + 1),
+            }));
+            const visiblePriorityOptions = priorityOptions.filter((option) => (
+              !normalizedPrioritySearchQuery
+              || option.label.toLowerCase().includes(normalizedPrioritySearchQuery)
+            ));
+            const normalizedComputerSearchQuery = String(projectOverviewSidebarComputerSearchQuery || "").trim().toLowerCase();
+            const visibleComputerOptions = projectComposerAvailableEnvironments.filter((environment) => {
+              if (!normalizedComputerSearchQuery) {
+                return true;
+              }
+              return String(environment?.name || environment?.label || "Computer")
+                .trim()
+                .toLowerCase()
+                .includes(normalizedComputerSearchQuery);
+            });
             return React.createElement("div", {
                 className: "playground-tasks-detail-facts is-centralized-sidebar-content playground-project-create-modal__properties",
               },
@@ -1573,15 +1600,31 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
                     renderProjectComposerStatusContent(currentStatusOption),
                     {
                       ariaLabel: "Project status",
+                      popupClassName: "playground-tasks-detail-status-selector-popup playground-project-overview-status-selector-popup",
+                      popupSearch: {
+                        value: projectOverviewSidebarStatusSearchQuery,
+                        onChange: (event) => setProjectOverviewSidebarStatusSearchQuery(event.target.value),
+                        placeholder: "Change status...",
+                        shortcut: "S",
+                        autoFocus: projectOverviewSidebarPropertyPopover === "create-project-status",
+                        "aria-label": "Search project statuses",
+                      },
+                      emptyContent: "No matching statuses.",
+                      onOpenChange: (nextOpen) => {
+                        if (!nextOpen) {
+                          setProjectOverviewSidebarStatusSearchQuery("");
+                        }
+                      },
                       onValueChange: (nextStatus) => updateProjectComposerProperty(
                         "status",
                         normalizePlaygroundProjectStatus(nextStatus)
                       ),
-                      options: statusOptions.map((option) => createProjectComposerSidebarSelectorOption({
+                      options: visibleStatusOptions.map((option) => createProjectComposerSidebarSelectorOption({
                         id: option.id,
                         label: option.label,
                         selected: option.selected,
                         icon: renderProjectComposerStatusIcon(option),
+                        trailing: option.shortcut,
                       })),
                     }
                   ),
@@ -1594,17 +1637,33 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
                     renderPlaygroundTaskPriorityLabel(currentPriorityValue),
                     {
                       ariaLabel: "Project priority",
+                      popupClassName: "playground-tasks-detail-priority-selector-popup playground-project-overview-priority-selector-popup",
+                      popupSearch: {
+                        value: projectOverviewSidebarPrioritySearchQuery,
+                        onChange: (event) => setProjectOverviewSidebarPrioritySearchQuery(event.target.value),
+                        placeholder: "Change priority...",
+                        shortcut: "P",
+                        autoFocus: projectOverviewSidebarPropertyPopover === "create-project-priority",
+                        "aria-label": "Search project priorities",
+                      },
+                      emptyContent: "No matching priorities.",
+                      onOpenChange: (nextOpen) => {
+                        if (!nextOpen) {
+                          setProjectOverviewSidebarPrioritySearchQuery("");
+                        }
+                      },
                       onValueChange: (nextPriority) => updateProjectComposerProperty(
                         "priority",
                         PLAYGROUND_TASK_PRIORITY_OPTIONS.some((option) => option.id === nextPriority)
                           ? nextPriority
                           : "medium"
                       ),
-                      options: PLAYGROUND_TASK_PRIORITY_OPTIONS.map((option) => createProjectComposerSidebarSelectorOption({
+                      options: visiblePriorityOptions.map((option) => createProjectComposerSidebarSelectorOption({
                         id: option.id,
                         label: option.label,
                         selected: option.id === currentPriorityValue,
                         icon: renderPlaygroundTaskPriorityIcon(option.id),
+                        trailing: option.shortcut,
                       })),
                     }
                   ),
@@ -1620,12 +1679,26 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
                     ),
                     {
                       ariaLabel: "Project computer",
-                      emptyContent: "No computers available.",
+                      popupSearch: {
+                        value: projectOverviewSidebarComputerSearchQuery,
+                        onChange: (event) => setProjectOverviewSidebarComputerSearchQuery(event.target.value),
+                        placeholder: "Change computer...",
+                        autoFocus: projectOverviewSidebarPropertyPopover === "create-project-computer",
+                        "aria-label": "Search project computers",
+                      },
+                      emptyContent: normalizedComputerSearchQuery
+                        ? "No matching computers."
+                        : "No computers available.",
+                      onOpenChange: (nextOpen) => {
+                        if (!nextOpen) {
+                          setProjectOverviewSidebarComputerSearchQuery("");
+                        }
+                      },
                       onValueChange: (nextEnvironmentId) => {
                         updateProjectComposerProperty("defaultEnvironmentId", nextEnvironmentId || null);
                         setProjectAttachmentTransferState((current) => ({ ...current, error: "" }));
                       },
-                      options: projectComposerAvailableEnvironments.map((environment) => createProjectComposerSidebarSelectorOption({
+                      options: visibleComputerOptions.map((environment) => createProjectComposerSidebarSelectorOption({
                         id: environment.id,
                         label: environment.name + (environment.isDefault ? " (Default)" : ""),
                         description: environment.isDefault ? "Default computer" : "",
@@ -1905,6 +1978,23 @@ export const PROJECTS_VIEWS_01_FRAGMENT = `        function getPlaygroundTaskTyp
 	                  autoComplete: "off",
 	                  disabled: projectSaveState.isSaving,
 	                  onChange: (event) => updateProjectDraftName(event.target.value),
+	                  onKeyDown: (event) => {
+	                    if (
+	                      event.key !== "Tab"
+	                      || event.shiftKey
+	                      || event.metaKey
+	                      || event.ctrlKey
+	                      || event.altKey
+	                    ) {
+	                      return;
+	                    }
+	                    const goalEditor = projectInitialGoalEditorRef.current;
+	                    if (!goalEditor) {
+	                      return;
+	                    }
+	                    event.preventDefault();
+	                    goalEditor.focus({ preventScroll: true });
+	                  },
 	                },
 	                as: "form",
 	                size: "large",

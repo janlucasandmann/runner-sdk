@@ -134,6 +134,7 @@ describe("GitHub connector capability catalog", () => {
         capability.access === "read-only" ? "ring_1" : "ring_3",
       );
       expect(action?.subjectTypes, actionId).toEqual([
+        "agent",
         "github_plugin",
         "github_plugin_team_role",
       ]);

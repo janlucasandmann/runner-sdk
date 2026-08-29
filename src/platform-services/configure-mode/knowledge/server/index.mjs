@@ -18,7 +18,7 @@ function buildUpstreamPath(url) {
 
 /** Deployment-neutral proxy for the authoritative Knowledge control API. */
 export function createKnowledgeService(adapters = {}) {
-  ["proxyUpstreamGet", "proxyUpstreamJsonRequest"]
+  ["proxyUpstreamGet", "proxyUpstreamJsonRequest", "proxyUpstreamRawRequest"]
     .forEach((name) => assertAdapter(adapters, name));
 
   return Object.freeze({
@@ -32,6 +32,9 @@ export function createKnowledgeService(adapters = {}) {
       const upstreamPath = buildUpstreamPath(url);
       if (req.method === "GET") {
         void adapters.proxyUpstreamGet(req, res, upstreamPath);
+      } else if (req.method === "POST" && url.pathname === `${KNOWLEDGE_PATH}/parse`) {
+        // Preserve the browser-generated multipart boundary and file bytes.
+        void adapters.proxyUpstreamRawRequest(req, res, upstreamPath, req.method);
       } else {
         void adapters.proxyUpstreamJsonRequest(req, res, upstreamPath, req.method);
       }
@@ -39,4 +42,3 @@ export function createKnowledgeService(adapters = {}) {
     },
   });
 }
-

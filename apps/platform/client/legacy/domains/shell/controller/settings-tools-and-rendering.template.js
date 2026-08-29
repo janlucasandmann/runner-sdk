@@ -4671,48 +4671,6 @@
                   )
                 )
                 : null;
-            const skillsOverviewMenu =
-              isSkillsView && !isSkillsDetailView
-                ? React.createElement(PlatformPopup, {
-                    open: pluginsNavPopover === "skills-menu",
-                    rootRef: pluginsNavActionsRef,
-                    rootClassName: "playground-tasks-toolbar-popup-shell playground-tags-plugins-title-actions playground-skills-title-actions",
-                    surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tags-plugins-title-menu playground-skills-title-menu",
-                    surfaceProps: {
-                      role: "menu",
-                      "aria-label": "Skills actions",
-                      width: 220,
-                    },
-                    animation: "down-in",
-                    variant: "minimal",
-                    trigger: React.createElement(PlatformIconButton, {
-                      type: "button",
-                      size: "compact",
-                      active: pluginsNavPopover === "skills-menu",
-                      title: "Skills actions",
-                      "aria-label": "Skills actions",
-                      "aria-haspopup": "menu",
-                      "aria-expanded": pluginsNavPopover === "skills-menu" ? "true" : "false",
-                      onClick: () => setPluginsNavPopover((current) =>
-                        current === "skills-menu" ? "" : "skills-menu"
-                      ),
-                    }, React.createElement(Ellipsis, { width: 14, height: 14, strokeWidth: 1.8 })),
-                  },
-                  React.createElement("button", {
-                    type: "button",
-                    role: "menuitem",
-                    className: "tb-popup-row",
-                    onClick: () => {
-                      setPluginsNavPopover("");
-                      openDocsPage();
-                    },
-                  },
-                    React.createElement(BookOpen, { className: "tb-popup-icon", width: 14, height: 14, strokeWidth: 1.8 }),
-                    React.createElement("span", { className: "tb-popup-label" }, "Documentation")
-                  )
-                )
-                : null;
-  
             return renderAppHeader({
               pathItems: isPluginsDetailView
                 ? [

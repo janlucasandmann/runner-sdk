@@ -20,7 +20,7 @@ assert.deepEqual(
 );
 assert.equal(
   createHash("sha256").update(SKILLS_PAGE_SCRIPT).digest("hex"),
-  "2a9ddc4d76c6ff15fed9478ae5289a0d46e9a72354eae118fd1164c5a19cf782",
+  "6e0aadbcbe6414c3055090cfbfaac4682ac8a556543f207c406772ee617ab208",
   "The Skills fragment composition must remain byte-compatible with the reviewed controller.",
 );
 

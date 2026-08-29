@@ -15,6 +15,122 @@ export const PROJECTS_SHELL_05_FRAGMENT = `        function getPlaygroundProject
           ).trim();
         }
 
+        function normalizePlaygroundProjectLinkedResourceType(value) {
+          const normalized = String(value || "").trim().toLowerCase().replace(/[\\s-]+/g, "_");
+          if (["knowledge", "knowledges", "library", "libraries", "knowledge_library", "knowledge_libraries"].includes(normalized)) {
+            return "knowledge";
+          }
+          if (normalized === "prompts") return "prompt";
+          if (normalized === "evaluations") return "evaluation";
+          return normalized.replace(/s$/, "");
+        }
+
+        function getPlaygroundProjectLinkedResources(projectRecord) {
+          const metadata = projectRecord?.metadata && typeof projectRecord.metadata === "object" && !Array.isArray(projectRecord.metadata)
+            ? projectRecord.metadata
+            : {};
+          return Array.isArray(metadata.linkedResources)
+            ? metadata.linkedResources.filter((resource) => resource && typeof resource === "object" && !Array.isArray(resource))
+            : [];
+        }
+
+        function isPlaygroundProjectStrategyKnowledgeResource(resource, libraryId = "") {
+          if (!resource || typeof resource !== "object" || Array.isArray(resource)) {
+            return false;
+          }
+          const resourceId = String(resource.id || resource.resourceId || resource.libraryId || "").trim();
+          const normalizedLibraryId = String(libraryId || "").trim();
+          if (normalizePlaygroundProjectLinkedResourceType(resource.type || resource.resourceType) !== "knowledge") {
+            return false;
+          }
+          if (normalizedLibraryId && resourceId === normalizedLibraryId) {
+            return true;
+          }
+          const metadata = resource.metadata && typeof resource.metadata === "object" && !Array.isArray(resource.metadata)
+            ? resource.metadata
+            : {};
+          return resource.isStrategyKnowledge === true
+            || ["project_knowledge", "project_strategy_and_documentation"].includes(String(metadata.purpose || resource.purpose || "").trim());
+        }
+
+        function buildPlaygroundProjectKnowledgeLinkedResource(projectRecord, library, existingResource = null) {
+          const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
+          const libraryId = String(library?.id || "").trim();
+          if (!libraryId) {
+            return null;
+          }
+          const libraryMetadata = library?.metadata && typeof library.metadata === "object" && !Array.isArray(library.metadata)
+            ? library.metadata
+            : {};
+          const title = String(library?.name || library?.title || existingResource?.name || existingResource?.title || "Project Strategy").trim()
+            || "Project Strategy";
+          const description = String(
+            library?.description
+            || existingResource?.description
+            || "Project strategy and durable documentation"
+          ).trim();
+          return {
+            ...(existingResource && typeof existingResource === "object" && !Array.isArray(existingResource) ? existingResource : {}),
+            id: libraryId,
+            resourceId: libraryId,
+            libraryId,
+            type: "knowledge",
+            resourceType: "knowledge",
+            name: title,
+            title,
+            description,
+            status: "Strategy",
+            currentVersionNumber: Number(library?.currentVersionNumber || existingResource?.currentVersionNumber || 0),
+            createdAt: String(library?.createdAt || existingResource?.createdAt || "").trim(),
+            updatedAt: String(library?.updatedAt || existingResource?.updatedAt || library?.createdAt || "").trim(),
+            linkedAt: String(existingResource?.linkedAt || new Date().toISOString()).trim(),
+            isStrategyKnowledge: true,
+            metadata: {
+              ...libraryMetadata,
+              schemaVersion: "computer_agents_project_knowledge_v1",
+              projectId: String(normalizedProject.id || libraryMetadata.projectId || "").trim(),
+              projectName: String(normalizedProject.name || libraryMetadata.projectName || "Project").trim() || "Project",
+              purpose: "project_knowledge",
+              managedBy: String(libraryMetadata.managedBy || "mission_control").trim() || "mission_control",
+            },
+          };
+        }
+
+        function reconcilePlaygroundProjectKnowledgeLinkedResources(projectRecord, library) {
+          const libraryId = String(library?.id || "").trim();
+          if (!libraryId) {
+            return getPlaygroundProjectLinkedResources(projectRecord);
+          }
+          const currentResources = getPlaygroundProjectLinkedResources(projectRecord);
+          const existingResource = currentResources.find((resource) => (
+            String(resource.id || resource.resourceId || resource.libraryId || "").trim() === libraryId
+            && normalizePlaygroundProjectLinkedResourceType(resource.type || resource.resourceType) === "knowledge"
+          )) || currentResources.find((resource) => isPlaygroundProjectStrategyKnowledgeResource(resource));
+          const linkedResource = buildPlaygroundProjectKnowledgeLinkedResource(projectRecord, library, existingResource);
+          return currentResources
+            .filter((resource) => !isPlaygroundProjectStrategyKnowledgeResource(resource, libraryId))
+            .concat(linkedResource ? [linkedResource] : []);
+        }
+
+        function hasPlaygroundProjectKnowledgeResourceLink(projectRecord, library = null) {
+          const libraryId = String(library?.id || getPlaygroundProjectKnowledgeLibraryId(projectRecord) || "").trim();
+          if (!libraryId || getPlaygroundProjectKnowledgeLibraryId(projectRecord) !== libraryId) {
+            return false;
+          }
+          const metadata = projectRecord?.metadata && typeof projectRecord.metadata === "object" && !Array.isArray(projectRecord.metadata)
+            ? projectRecord.metadata
+            : {};
+          const knowledge = metadata.knowledge && typeof metadata.knowledge === "object" && !Array.isArray(metadata.knowledge)
+            ? metadata.knowledge
+            : {};
+          return String(metadata.knowledgeLibraryId || "").trim() === libraryId
+            && String(knowledge.libraryId || "").trim() === libraryId
+            && getPlaygroundProjectLinkedResources(projectRecord).some((resource) => (
+              String(resource.id || resource.resourceId || resource.libraryId || "").trim() === libraryId
+              && normalizePlaygroundProjectLinkedResourceType(resource.type || resource.resourceType) === "knowledge"
+            ));
+        }
+
         function normalizePlaygroundProjectKnowledgeDocumentKind(value) {
           const normalized = String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
           const aliases = {
@@ -194,27 +310,27 @@ export const PROJECTS_SHELL_05_FRAGMENT = `        function getPlaygroundProject
             purpose: "project_knowledge",
             updatedAt: new Date().toISOString(),
           };
-          const currentMissionControl = getPlaygroundProjectMissionControlRecord(normalizedProject);
           const updatedProject = await persistProjectMissionControlRecord(normalizedProject.id, {
-            ...currentMissionControl,
             knowledgeLibraryId: knowledgeMetadata.libraryId,
             knowledgeLibraryName: knowledgeMetadata.libraryName,
             updatedAt: new Date().toISOString(),
           }, {
             quiet: true,
-            refreshBaseProject: false,
+            refreshBaseProject: true,
             projectOverrides: {
               knowledgeLibraryId: knowledgeMetadata.libraryId,
             },
-            metadataOverrides: {
+            metadataOverrides: (baseProject) => ({
               knowledgeLibraryId: knowledgeMetadata.libraryId,
+              knowledgeLibraryName: knowledgeMetadata.libraryName,
               knowledge: knowledgeMetadata,
-            },
+              linkedResources: reconcilePlaygroundProjectKnowledgeLinkedResources(baseProject, library),
+            }),
           });
           return updatedProject?.id ? normalizePlaygroundProjectRecord(updatedProject) : normalizedProject;
         }
 
-        async function ensurePlaygroundProjectKnowledgeLibrary(projectRecord) {
+        async function ensurePlaygroundProjectKnowledgeLibrary(projectRecord, options = {}) {
           const normalizedProject = normalizePlaygroundProjectRecord(projectRecord);
           const projectId = String(normalizedProject.id || "").trim();
           if (!projectId) {
@@ -222,7 +338,8 @@ export const PROJECTS_SHELL_05_FRAGMENT = `        function getPlaygroundProject
           }
           const pending = projectKnowledgeLibraryEnsurePromisesRef.current.get(projectId);
           if (pending) {
-            return pending;
+            const pendingResult = await pending;
+            return options.returnProject === true ? pendingResult : pendingResult.library;
           }
           const promise = (async () => {
             let library = await findPlaygroundProjectKnowledgeLibrary(projectRecord);
@@ -241,6 +358,9 @@ export const PROJECTS_SHELL_05_FRAGMENT = `        function getPlaygroundProject
                       schemaVersion: "computer_agents_project_knowledge_v1",
                       projectId,
                       projectName,
+                      projectIcon: getPlaygroundProjectIconId(normalizedProject.icon),
+                      projectColor: String(normalizedProject.color || "#79d0ff").trim() || "#79d0ff",
+                      projectType: String(normalizedProject.projectType || normalizedProject.type || "blank").trim() || "blank",
                       purpose: "project_knowledge",
                       managedBy: "mission_control",
                     },
@@ -253,20 +373,90 @@ export const PROJECTS_SHELL_05_FRAGMENT = `        function getPlaygroundProject
             if (!library?.id) {
               throw new Error("The project Knowledge library could not be prepared.");
             }
-            if (getPlaygroundProjectKnowledgeLibraryId(projectRecord) !== String(library.id)) {
-              await linkPlaygroundProjectKnowledgeLibrary(normalizedProject, library);
+            let linkedProject = normalizedProject;
+            if (!hasPlaygroundProjectKnowledgeResourceLink(projectRecord, library)) {
+              linkedProject = await linkPlaygroundProjectKnowledgeLibrary(normalizedProject, library);
             }
-            return getPlaygroundKnowledgeLibrary(library.id).catch(() => library);
+            const refreshedLibrary = await getPlaygroundKnowledgeLibrary(library.id).catch(() => library);
+            return {
+              library: refreshedLibrary,
+              project: linkedProject,
+            };
           })();
           projectKnowledgeLibraryEnsurePromisesRef.current.set(projectId, promise);
           try {
-            return await promise;
+            const result = await promise;
+            return options.returnProject === true ? result : result.library;
           } finally {
             if (projectKnowledgeLibraryEnsurePromisesRef.current.get(projectId) === promise) {
               projectKnowledgeLibraryEnsurePromisesRef.current.delete(projectId);
             }
           }
         }
+
+        async function ensurePlaygroundProjectKnowledgeResource(projectRecord, options = {}) {
+          const attemptCount = Math.max(1, Math.min(4, Math.round(Number(options.attempts) || 1)));
+          let lastError = null;
+          for (let attempt = 0; attempt < attemptCount; attempt += 1) {
+            try {
+              return await ensurePlaygroundProjectKnowledgeLibrary(projectRecord, {
+                returnProject: options.returnProject === true,
+              });
+            } catch (error) {
+              lastError = error;
+              if (attempt + 1 >= attemptCount) {
+                break;
+              }
+              await new Promise((resolve) => window.setTimeout(resolve, 150 * Math.pow(2, attempt)));
+            }
+          }
+          throw lastError || new Error("The project Knowledge library could not be prepared.");
+        }
+
+        const selectedProjectKnowledgeResourceSignature = (() => {
+          if (!selectedProject?.id) {
+            return "";
+          }
+          const metadata = selectedProject.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
+            ? selectedProject.metadata
+            : {};
+          const knowledge = metadata.knowledge && typeof metadata.knowledge === "object" && !Array.isArray(metadata.knowledge)
+            ? metadata.knowledge
+            : {};
+          const strategyResourceIds = getPlaygroundProjectLinkedResources(selectedProject)
+            .filter((resource) => isPlaygroundProjectStrategyKnowledgeResource(resource))
+            .map((resource) => String(resource.id || resource.resourceId || resource.libraryId || "").trim())
+            .filter(Boolean)
+            .sort();
+          return [
+            String(selectedProject.id || "").trim(),
+            getPlaygroundProjectKnowledgeLibraryId(selectedProject),
+            String(metadata.knowledgeLibraryId || "").trim(),
+            String(knowledge.libraryId || "").trim(),
+            strategyResourceIds.join(","),
+          ].join("|");
+        })();
+
+        useEffect(() => {
+          if (!selectedProject?.id || !isPlaygroundProjectDetailRecord(selectedProject)) {
+            return undefined;
+          }
+          if (hasPlaygroundProjectKnowledgeResourceLink(selectedProject)) {
+            return undefined;
+          }
+          let cancelled = false;
+          void ensurePlaygroundProjectKnowledgeResource(selectedProject, {
+            attempts: 2,
+            returnProject: true,
+          }).catch((error) => {
+            if (!cancelled) {
+              console.warn("[project knowledge] Failed to reconcile the Strategy Knowledge resource.", error);
+            }
+          });
+          return () => {
+            cancelled = true;
+          };
+        }, [backendUrl, requestHeadersKey, selectedProject?.id, selectedProjectKnowledgeResourceSignature]);
 
         function buildPlaygroundProjectKnowledgeContext(library, source = "project") {
           const libraryId = String(library?.id || "").trim();

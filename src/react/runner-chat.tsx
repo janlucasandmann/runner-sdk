@@ -9140,7 +9140,12 @@ export function RunnerChat({
         environments={availableEnvironments}
         selectedEnvironmentId={selectedEnvironmentId}
         onEnvironmentSelect={handleWorkspaceFileBrowserEnvironmentSelect}
-        onSourceChange={switchFileBrowserSource}
+        onSourceChange={(source) => {
+          // Atlassian resource selection is currently exposed from project
+          // settings. The regular thread attachment browser keeps its
+          // existing source contract and therefore never advertises it.
+          if (source !== "atlassian") switchFileBrowserSource(source);
+        }}
         connections={{
           "google-drive": {
             connected: googleDriveConnected,
@@ -9174,6 +9179,7 @@ export function RunnerChat({
             onConnect: githubConfig?.onConnect,
             onDisconnect: githubConfig?.onDisconnect,
           },
+          atlassian: { connected: false },
         }}
         authSource={
           showGoogleDriveAuthScreen

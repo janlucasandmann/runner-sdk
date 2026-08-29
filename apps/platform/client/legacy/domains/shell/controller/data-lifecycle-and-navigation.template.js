@@ -459,6 +459,7 @@
                 onDisconnect: handleGithubAuthDisconnect,
                 fetchItems: handleGithubFetchItems,
                 fetchBranches: handleGithubFetchBranches,
+                createRepository: handleGithubCreateRepository,
                 fetchFileContent: handleGithubFetchFileContent,
               },
               notion: {
@@ -488,6 +489,14 @@
                 fetchItems: handleOneDriveFetchItems,
                 fetchFileContent: handleOneDriveFetchFileContent,
               },
+              atlassian: {
+                connected: jiraStatus.connected,
+                accounts: buildDemoConnectorAccounts(jiraStatus, "Atlassian"),
+                rootLabel: "Atlassian",
+                onConnect: handleJiraAuthConnect,
+                onDisconnect: handleJiraAuthDisconnect,
+                fetchItems: handleAtlassianFetchItems,
+              },
               workspace: {
                 items: [
                   { id: "ws_file_runner", name: "src/react/runner-chat.tsx", mimeType: "text/typescript" },
@@ -514,6 +523,8 @@
             googleDriveStatus.credentials,
             googleDriveStatus.defaultCredentialId,
             jiraStatus.connected,
+            jiraStatus.credentials,
+            jiraStatus.defaultCredentialId,
             notionDatabases,
             notionStatus.connected,
             notionStatus.credentials,
@@ -3435,7 +3446,7 @@
 
           function normalizeProjectResourceNavigationOrigin(resourceType, resource, projectOrigin = {}) {
             const normalizedResourceType = String(resourceType || "").trim();
-            if (!["prompt", "knowledge", "evaluation", "metronome", "web_app", "function", "database"].includes(normalizedResourceType)) {
+            if (!["prompt", "knowledge", "evaluation", "metronome", "web_app", "function", "api", "database"].includes(normalizedResourceType)) {
               return null;
             }
             const resourceId = String(

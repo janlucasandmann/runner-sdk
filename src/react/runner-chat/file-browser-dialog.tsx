@@ -12,6 +12,7 @@ import {
 import { PlatformSelector } from "../../platform-ui/components/ui/selector/index.js";
 import { getBrowserFileType } from "./attachment-utils.js";
 import {
+  IconAtlassian,
   IconFolderPlus,
   IconGithub,
   IconGoogleDrive,
@@ -19,19 +20,20 @@ import {
   IconNotion,
   IconOneDrive,
 } from "./icons.js";
+import type { RunnerChatConnectorAccount } from "./public-types.js";
 import {
   formatBrowserFileDate,
   formatBrowserFileSize,
   type RunnerChatFileNode,
 } from "./workspace-files.js";
-import type { RunnerChatConnectorAccount } from "./public-types.js";
 
 export type RunnerFileBrowserSource =
   | "workspace"
   | "google-drive"
   | "notion"
   | "one-drive"
-  | "github";
+  | "github"
+  | "atlassian";
 
 type RunnerFileBrowserIntegrationSource = Exclude<RunnerFileBrowserSource, "workspace">;
 
@@ -53,6 +55,8 @@ export interface RunnerFileBrowserDialogProps {
   open: boolean;
   apiKeyPromptOpen: boolean;
   source: RunnerFileBrowserSource;
+  /** Narrows a shared provider catalog to the product being configured. */
+  resourceScope?: "jira" | "confluence";
   /** Keeps the shared explorer chrome while allowing scoped flows to omit source navigation. */
   showSourceSidebar?: boolean;
   /** Keeps scoped explorer flows focused by omitting the file-type filter strip. */
@@ -79,6 +83,8 @@ export interface RunnerFileBrowserDialogProps {
   showGoogleDrivePickerPrompt: boolean;
   items: RunnerChatFileNode[];
   renderItem: (item: RunnerChatFileNode) => ReactNode;
+  /** Optional scoped action area rendered at the bottom of the resource list. */
+  listFooter?: ReactNode;
   previewItem: RunnerChatFileNode | null;
   previewContent: string | null;
   previewKind: "image" | "video" | "text" | null;
@@ -86,6 +92,8 @@ export interface RunnerFileBrowserDialogProps {
   renderPreviewIcon: (item: RunnerChatFileNode) => ReactNode;
   selectedItemCount: number;
   selectedItemLabel: string;
+  /** Allows a scoped Manage flow to persist removal of its final selected resource. */
+  allowEmptySelection?: boolean;
   isAttaching: boolean;
   onAttach: () => void | Promise<void>;
   onPreviewClose: () => void;
@@ -98,6 +106,7 @@ const SOURCE_LABELS: Record<RunnerFileBrowserIntegrationSource, string> = {
   notion: "Notion",
   "one-drive": "OneDrive",
   github: "GitHub",
+  atlassian: "Atlassian",
 };
 
 function RunnerFileBrowserSourceIcon({
@@ -110,6 +119,7 @@ function RunnerFileBrowserSourceIcon({
   if (source === "google-drive") return <IconGoogleDrive className={className} />;
   if (source === "notion") return <IconNotion className={className} />;
   if (source === "one-drive") return <IconOneDrive className={className} />;
+  if (source === "atlassian") return <IconAtlassian className={className} />;
   return <IconGithub className={className} />;
 }
 
@@ -117,6 +127,7 @@ function getFileBrowserAuthCopy(source: RunnerFileBrowserIntegrationSource): str
   if (source === "google-drive") return "Connect your Google Drive to browse and attach files.";
   if (source === "notion") return "Connect your Notion workspace to browse and select databases.";
   if (source === "one-drive") return "Connect your OneDrive to browse and attach files.";
+  if (source === "atlassian") return "Connect Atlassian to select the Jira projects and Confluence spaces available to this project.";
   return "Connect your GitHub to browse and attach repository files.";
 }
 
@@ -155,6 +166,7 @@ export function RunnerFileBrowserDialog({
   open,
   apiKeyPromptOpen,
   source,
+  resourceScope,
   showSourceSidebar = true,
   showFilterTabs = true,
   searchQuery,
@@ -179,6 +191,7 @@ export function RunnerFileBrowserDialog({
   showGoogleDrivePickerPrompt,
   items,
   renderItem,
+  listFooter,
   previewItem,
   previewContent,
   previewKind,
@@ -186,6 +199,7 @@ export function RunnerFileBrowserDialog({
   renderPreviewIcon,
   selectedItemCount,
   selectedItemLabel,
+  allowEmptySelection = false,
   isAttaching,
   onAttach,
   onPreviewClose,
@@ -237,13 +251,22 @@ export function RunnerFileBrowserDialog({
         label: crumb.name,
         onSelect: () => onBreadcrumbSelect(index),
       }));
-  const actionVerb = source === "notion" ? "Use" : "Attach";
-  const defaultSelectionLabel = source === "notion" ? "Database" : "Files";
+  const usesScopedResources = source === "notion" || source === "atlassian";
+  const actionVerb = usesScopedResources ? "Use" : "Attach";
+  const defaultSelectionLabel = source === "notion"
+    ? "Database"
+    : source === "atlassian"
+      ? resourceScope === "jira"
+        ? "Projects"
+        : resourceScope === "confluence"
+          ? "Spaces"
+          : "Resources"
+      : "Files";
   const filterContextKey = `${source}:${selectedEnvironmentId || ""}:${path
     .map((entry) => `${entry.id || "root"}:${entry.name}`)
     .join("/")}`;
   const authenticatedIntegrationSources = (
-    ["google-drive", "notion", "one-drive", "github"] as const
+    ["google-drive", "notion", "one-drive", "github", "atlassian"] as const
   ).filter((integrationSource) => connections[integrationSource].connected);
   const sourceGroups: PlatformFileExplorerSourceGroup[] = [
     {
@@ -273,6 +296,14 @@ export function RunnerFileBrowserDialog({
       })),
     },
   ];
+  const requiresAtlassianReauthorization = source === "atlassian"
+    && typeof error === "string"
+    && error.toLowerCase().includes("atlassian")
+    && (
+      error.toLowerCase().includes("permission")
+      || error.toLowerCase().includes("authorization")
+      || error.toLowerCase().includes("reconnect")
+    );
   const customContent = authSource ? (
     <div className="tb-file-browser-auth-screen">
       <div className="tb-file-browser-auth-card">
@@ -283,6 +314,19 @@ export function RunnerFileBrowserDialog({
         <p className="tb-file-browser-auth-copy">{getFileBrowserAuthCopy(authSource)}</p>
         <PlatformPrimaryButton type="button" onClick={connections[authSource].onConnect}>
           Connect {SOURCE_LABELS[authSource]}
+        </PlatformPrimaryButton>
+      </div>
+    </div>
+  ) : requiresAtlassianReauthorization ? (
+    <div className="tb-file-browser-auth-screen">
+      <div className="tb-file-browser-auth-card">
+        <div className="tb-file-browser-auth-icon-wrap">
+          <IconAtlassian className="tb-file-browser-auth-icon" />
+        </div>
+        <h3 className="tb-file-browser-auth-title">Update Atlassian permissions</h3>
+        <p className="tb-file-browser-auth-copy">{error}</p>
+        <PlatformPrimaryButton type="button" onClick={selectedConnection?.onConnect}>
+          Update permissions
         </PlatformPrimaryButton>
       </div>
     </div>
@@ -399,7 +443,15 @@ export function RunnerFileBrowserDialog({
                 breadcrumbs={headerBreadcrumbs}
                 searchQuery={searchQuery}
                 onSearchQueryChange={onSearchQueryChange}
-                searchPlaceholder={source === "notion" ? "Search Databases" : "Search Files"}
+                searchPlaceholder={source === "notion"
+                  ? "Search Databases"
+                  : source === "atlassian"
+                    ? resourceScope === "jira"
+                      ? "Search Jira projects"
+                      : resourceScope === "confluence"
+                        ? "Search Confluence spaces"
+                        : "Search Jira and Confluence"
+                    : "Search Files"}
                 onBack={onBack}
                 onForward={onForward}
                 canGoBack={historyIndex > 0}
@@ -417,6 +469,7 @@ export function RunnerFileBrowserDialog({
                 filterContextKey={filterContextKey}
                 items={items}
                 renderItem={renderItem}
+                listFooter={listFooter}
                 getItemKind={(item) => {
                   if (item.isFolder) return "folder";
                   const kind = getBrowserFileType(item.mimeType, item.name);
@@ -425,7 +478,17 @@ export function RunnerFileBrowserDialog({
                 }}
                 getItemTimestamp={(item) => item.modifiedTime || item.createdTime}
                 loading={loading}
-                loadingMessage={`Loading ${sourceLabel} ${source === "notion" ? "databases" : "files"}...`}
+                loadingMessage={`Loading ${sourceLabel} ${
+                  source === "notion"
+                    ? "databases"
+                    : source === "atlassian"
+                      ? resourceScope === "jira"
+                        ? "projects"
+                        : resourceScope === "confluence"
+                          ? "spaces"
+                          : "resources"
+                      : "files"
+                }...`}
                 error={error}
                 emptyMessage={({ activeFilter, hasSearchQuery }) =>
                   hasSearchQuery
@@ -438,7 +501,13 @@ export function RunnerFileBrowserDialog({
                           ? "No PDFs in this folder"
                           : source === "notion"
                             ? "No Notion databases found"
-                            : "This folder is empty"
+                            : source === "atlassian"
+                              ? resourceScope === "jira"
+                                ? "No Jira projects found"
+                                : resourceScope === "confluence"
+                                  ? "No Confluence spaces found"
+                                  : "No Jira projects or Confluence spaces found"
+                              : "This folder is empty"
                 }
                 content={customContent}
                 preview={preview}
@@ -456,7 +525,7 @@ export function RunnerFileBrowserDialog({
                     </span>
                   </span>
                 }
-                confirmDisabled={selectedItemCount === 0 || isAttaching}
+                confirmDisabled={(!allowEmptySelection && selectedItemCount === 0) || isAttaching}
                 onCancel={onClose}
                 onConfirm={onAttach}
               />

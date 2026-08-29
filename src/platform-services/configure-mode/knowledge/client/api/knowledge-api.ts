@@ -168,6 +168,22 @@ export interface KnowledgeEditorAttachment {
   metadata: Record<string, unknown>;
 }
 
+export interface KnowledgeParsedDocument {
+  object: "knowledge.document_parse";
+  markdown: string;
+  provider: "firecrawl";
+  metadata: Record<string, unknown>;
+  conversion: {
+    provider: "firecrawl";
+    format: "markdown";
+    convertedAt: string;
+    zeroDataRetention: boolean;
+    pdfMode: "auto" | null;
+    pageMarkers: boolean;
+    creditsUsed: number | null;
+  };
+}
+
 async function readResponse<T>(response: Response, fallback: string): Promise<T> {
   const raw = await response.text().catch(() => "");
   let payload: unknown = {};
@@ -459,6 +475,27 @@ export class KnowledgeApi {
         metadata: attachment,
       };
     }));
+  }
+
+  async parseEditorDocument(file: File): Promise<KnowledgeParsedDocument> {
+    if (!this.baseUrl) throw new KnowledgeApiError("Knowledge backend is unavailable.", 503);
+    const body = new FormData();
+    body.append("file", file, file.name || "document");
+    const headers = { ...this.headers };
+    Object.keys(headers).forEach((key) => {
+      if (key.toLowerCase() === "content-type") delete headers[key];
+    });
+    const response = await fetch(`${this.baseUrl}/knowledge/parse`, {
+      method: "POST",
+      body,
+      credentials: "include",
+      cache: "no-store",
+      headers,
+    });
+    return readResponse<KnowledgeParsedDocument>(
+      response,
+      "Failed to convert the Knowledge document to Markdown.",
+    );
   }
 
   async resolveEditorAttachmentPreview(

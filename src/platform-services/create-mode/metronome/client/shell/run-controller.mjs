@@ -170,6 +170,10 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               return thread;
             })
             .filter(Boolean);
+          const mergedTimelineThreads = mergeMetronomeThreadLifecycleRecordLists(
+            Array.isArray(output.threads) ? output.threads : [],
+            timelineThreads,
+          );
           return {
             ...fallbackRun,
             ...run,
@@ -183,10 +187,8 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               ...fallbackOutput,
               ...output,
               steps: enrichedRunSteps,
-              threads: Array.isArray(output.threads) && output.threads.length
-                ? output.threads
-                : timelineThreads.length
-                  ? timelineThreads
+              threads: mergedTimelineThreads.length
+                ? mergedTimelineThreads
                 : Array.isArray(fallbackOutput.threads)
                   ? fallbackOutput.threads
                   : [],
@@ -223,16 +225,38 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             if (!finalById.has(String(index))) finalById.set(String(index), step);
           });
           return safeRows.map((row, index) => {
-            const output = row?.output && typeof row.output === "object" && !Array.isArray(row.output) ? row.output : {};
-            const input = row?.input && typeof row.input === "object" && !Array.isArray(row.input) ? row.input : {};
+            const rowOutput = row?.output && typeof row.output === "object" && !Array.isArray(row.output) ? row.output : {};
+            const rowInput = row?.input && typeof row.input === "object" && !Array.isArray(row.input) ? row.input : {};
             const metadata = row?.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata) ? row.metadata : {};
             const rawStepId = String(row?.id || row?.stepId || row?.step_id || "").trim();
             const localStepId = stripMetronomeRunStepPrefix(rawStepId, runId);
-            const nodeId = String(row?.nodeId || row?.node_id || output.nodeId || output.node_id || "").trim();
+            const nodeId = String(row?.nodeId || row?.node_id || rowOutput.nodeId || rowOutput.node_id || "").trim();
             const finalStep = (localStepId && finalById.get(localStepId))
               || finalById.get(String(index))
               || (nodeId ? finalByNodeId.get(nodeId) : null)
               || null;
+            const finalOutput = finalStep?.output && typeof finalStep.output === "object" && !Array.isArray(finalStep.output)
+              ? finalStep.output
+              : {};
+            const finalInput = finalStep?.input && typeof finalStep.input === "object" && !Array.isArray(finalStep.input)
+              ? finalStep.input
+              : {};
+            const getStepOutputThread = (value) => {
+              const safeValue = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+              const thread = safeValue.thread || safeValue.threadRecord || safeValue.thread_record;
+              return thread && typeof thread === "object" && !Array.isArray(thread) ? thread : null;
+            };
+            const finalOutputThread = getStepOutputThread(finalOutput);
+            const rowOutputThread = getStepOutputThread(rowOutput);
+            const mergedOutputThread = finalOutputThread || rowOutputThread
+              ? mergeMetronomeThreadLifecycleRecords(finalOutputThread || {}, rowOutputThread || {})
+              : null;
+            const output = {
+              ...finalOutput,
+              ...rowOutput,
+              ...(mergedOutputThread ? { thread: mergedOutputThread } : {}),
+            };
+            const input = { ...finalInput, ...rowInput };
             const kind = String(row?.nodeType || row?.node_type || finalStep?.kind || finalStep?.nodeType || "action").trim().toLowerCase();
             const summary = String(
               row?.error
@@ -265,6 +289,17 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               || finalStep?.selected_edge_id
               || ""
             ).trim();
+            const startedAt = row?.startedAt || row?.started_at || finalStep?.startedAt || finalStep?.started_at || "";
+            const completedAt = row?.completedAt || row?.completed_at || finalStep?.completedAt || finalStep?.completed_at || "";
+            const lifecycle = resolveMetronomeThreadLifecycle([
+              { record: finalStep || {}, source: "final-step", priority: 100 },
+              { record: output, source: "step-output", priority: 200 },
+              { record: row || {}, source: "timeline-row", priority: 300 },
+              { record: mergedOutputThread || {}, source: "output-thread", priority: 400 },
+            ], {
+              nodeId: nodeId || String(finalStep?.nodeId || finalStep?.node_id || "").trim(),
+              startedAt,
+            });
             return {
               ...(finalStep && typeof finalStep === "object" && !Array.isArray(finalStep) ? finalStep : {}),
               id: localStepId || rawStepId || "timeline-step-" + index,
@@ -274,15 +309,15 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               selectedEdgeId,
               kind,
               label,
-              status: String(row?.status || finalStep?.status || "completed").trim() || "completed",
+              status: lifecycle.status || String(row?.status || finalStep?.status || "").trim(),
               summary,
               branchId: output.branchId || output.branch_id || finalStep?.branchId || finalStep?.branch_id || null,
               branchLabel: output.branchLabel || output.branch_label || finalStep?.branchLabel || finalStep?.branch_label || null,
               branchRule: output.branchRule || output.branch_rule || finalStep?.branchRule || finalStep?.branch_rule || null,
               branchMatched: typeof output.branchMatched === "boolean" ? output.branchMatched : finalStep?.branchMatched,
               branchReason: output.branchReason || output.branch_reason || finalStep?.branchReason || finalStep?.branch_reason || "",
-              startedAt: row?.startedAt || row?.started_at || finalStep?.startedAt || finalStep?.started_at || "",
-              completedAt: row?.completedAt || row?.completed_at || finalStep?.completedAt || finalStep?.completed_at || "",
+              startedAt,
+              completedAt,
               input,
               output,
               metadata,
@@ -429,6 +464,25 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           );
         }
 
+        function expandMetronomeSidebarRunGroup(entry) {
+          const workflowId = String(entry?.metronomeId || entry?.workflowId || "").trim();
+          const runId = String(entry?.runId || entry?.workflowRunId || "").trim();
+          const key = String(entry?.key || getSidebarMetronomeRunGroupKey({ metronomeId: workflowId, runId }) || "").trim();
+          if (!workflowId || !runId || !key) {
+            return;
+          }
+          setCollapsedMetronomeRunGroups((current) => ({
+            ...(current && typeof current === "object" ? current : {}),
+            [key]: false,
+          }));
+          void loadMetronomeSidebarRunThreads({
+            ...entry,
+            key,
+            metronomeId: workflowId,
+            runId,
+          });
+        }
+
         function openMetronomeRunTraceThread(entry) {
           const workflowId = String(entry?.metronomeId || "").trim();
           const runId = String(entry?.runId || "").trim();
@@ -436,6 +490,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           if (!workflowId || !runId || !key) {
             return;
           }
+          expandMetronomeSidebarRunGroup(entry);
           const syntheticThreadId = createMetronomeRunTraceThreadId(key);
           setAccountMenuOpen(false);
           setSidebarWorkspaceMode("work");
@@ -478,7 +533,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             run: buildFallbackMetronomeRunTraceRun(entry),
             error: "",
           });
-          setMetronomeRunTraceWorkExpanded(false);
+          setMetronomeRunTraceWorkExpanded(true);
           setMetronomeRunActivitySearchQuery("");
           setMetronomeRunActivityTimeRange(null);
           setMetronomeRunActivityChartHeight(null);
@@ -487,18 +542,33 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
         }
 
         function mergeMetronomeRunEntryThreads(...threadGroups) {
-          const merged = [];
-          const seen = new Set();
-          threadGroups.flat().forEach((thread) => {
-            const normalizedThread = normalizeThreadItem(thread || {});
-            const threadId = String(normalizedThread?.id || "").trim();
-            if (!threadId || seen.has(threadId)) {
+          return mergeMetronomeThreadLifecycleRecordLists(...threadGroups)
+            .map((thread) => normalizeThreadItem(thread || {}))
+            .sort(compareThreadsByRecent);
+        }
+
+        function mergeMetronomeChildThreadsIntoRealThreads(current, incomingThreads) {
+          const existingById = new Map(
+            (Array.isArray(current) ? current : [])
+              .map((thread) => [String(thread?.id || "").trim(), thread])
+              .filter(([threadId]) => Boolean(threadId))
+          );
+          let didChange = false;
+          (Array.isArray(incomingThreads) ? incomingThreads : []).forEach((thread) => {
+            const threadId = String(thread?.id || "").trim();
+            if (!threadId || privateThreadIdsRef.current.has(threadId) || isPrivateThreadRecord(thread)) {
               return;
             }
-            seen.add(threadId);
-            merged.push(normalizedThread);
+            const existing = existingById.get(threadId) || null;
+            const merged = normalizeThreadItem(
+              existing ? mergeMetronomeThreadLifecycleRecords(existing, thread) : thread
+            );
+            if (!existing || JSON.stringify(existing) !== JSON.stringify(merged)) {
+              didChange = true;
+              existingById.set(threadId, merged);
+            }
           });
-          return merged.sort(compareThreadsByRecent);
+          return didChange ? normalizeThreadList(Array.from(existingById.values())) : current;
         }
 
         function buildOptimisticMetronomeRunThread(payload) {
@@ -736,14 +806,17 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
 
           const currentLoadStatus = String(metronomeSidebarRunThreadLoadStateByKey?.[key]?.status || "idle").trim();
           const shouldRefreshActiveRun = isActiveMetronomeRunStatus(entry?.status);
+          const isBackgroundRefresh = options?.background === true;
           if (currentLoadStatus === "loading" || (currentLoadStatus === "loaded" && !options?.force && !shouldRefreshActiveRun)) {
             return Array.isArray(entry?.threads) ? entry.threads : [];
           }
 
-          setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
-            ...(current && typeof current === "object" ? current : {}),
-            [key]: { status: "loading", error: "" },
-          }));
+          if (!isBackgroundRefresh) {
+            setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
+              ...(current && typeof current === "object" ? current : {}),
+              [key]: { status: "loading", error: "" },
+            }));
+          }
 
           const selection = {
             key,
@@ -769,16 +842,18 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
                 },
                 12000
               ),
-              fetchJsonWithTimeout(
-                proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId),
-                {
-                  method: "GET",
-                  credentials: "include",
-                  cache: "no-store",
-                  headers: authRequestHeaders,
-                },
-                8000
-              ).catch(() => null),
+              isBackgroundRefresh
+                ? Promise.resolve(null)
+                : fetchJsonWithTimeout(
+                    proxyBackendBase + "/metronomes/" + encodeURIComponent(workflowId),
+                    {
+                      method: "GET",
+                      credentials: "include",
+                      cache: "no-store",
+                      headers: authRequestHeaders,
+                    },
+                    8000
+                  ).catch(() => null),
             ]);
             const { response, data } = timelineResponse;
             if (!response.ok) {
@@ -797,22 +872,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             const run = normalizeMetronomeRunTraceResponse(data, selection, workflow);
             const threads = collectMetronomeRunTraceChildThreads(run, selection);
             if (threads.length) {
-              setRealThreads((current) => {
-                const existingById = new Map((Array.isArray(current) ? current : []).map((thread) => [String(thread?.id || "").trim(), thread]));
-                let didChange = false;
-                threads.forEach((thread) => {
-                  const threadId = String(thread?.id || "").trim();
-                  if (!threadId || privateThreadIdsRef.current.has(threadId) || isPrivateThreadRecord(thread)) {
-                    return;
-                  }
-                  const existing = existingById.get(threadId) || null;
-                  if (!existing || JSON.stringify(existing) !== JSON.stringify(thread)) {
-                    didChange = true;
-                    existingById.set(threadId, existing ? normalizeThreadItem({ ...existing, ...thread }) : thread);
-                  }
-                });
-                return didChange ? normalizeThreadList(Array.from(existingById.values())) : current;
-              });
+              setRealThreads((current) => mergeMetronomeChildThreadsIntoRealThreads(current, threads));
             }
 
             const latestThread = threads.reduce((latest, thread) => (
@@ -841,13 +901,15 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             }));
             return threads;
           } catch (error) {
-            setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
-              ...(current && typeof current === "object" ? current : {}),
-              [key]: {
-                status: "error",
-                error: error instanceof Error ? error.message : "Failed to load run threads.",
-              },
-            }));
+            if (!isBackgroundRefresh) {
+              setMetronomeSidebarRunThreadLoadStateByKey((current) => ({
+                ...(current && typeof current === "object" ? current : {}),
+                [key]: {
+                  status: "error",
+                  error: error instanceof Error ? error.message : "Failed to load run threads.",
+                },
+              }));
+            }
             return [];
           }
         }
@@ -974,6 +1036,55 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           void loadRecentMetronomeSidebarRuns();
           return undefined;
         }, [activePage, hasDemoAccess, hasRealAccess, loadRecentMetronomeSidebarRuns]);
+
+        const expandedActiveMetronomeRunPollEntries = Object.values(
+          optimisticMetronomeRunEntries && typeof optimisticMetronomeRunEntries === "object"
+            ? optimisticMetronomeRunEntries
+            : {}
+        ).filter((entry) => {
+          const key = String(entry?.key || "").trim();
+          return key
+            && collapsedMetronomeRunGroups[key] === false
+            && isActiveMetronomeRunStatus(entry?.status)
+            && !(
+              activePage === "thread"
+              && key === String(metronomeRunTraceSelection?.key || "").trim()
+            );
+        });
+        const expandedActiveMetronomeRunPollSignature = expandedActiveMetronomeRunPollEntries
+          .map((entry) => [entry.key, entry.status].join(":"))
+          .sort()
+          .join("|");
+
+        useEffect(() => {
+          if (!hasRealAccess || !expandedActiveMetronomeRunPollSignature) {
+            return undefined;
+          }
+          let cancelled = false;
+          let timer = null;
+          const entries = expandedActiveMetronomeRunPollEntries.slice();
+          const schedule = (delayMs) => {
+            if (cancelled) return;
+            timer = setTimeout(poll, delayMs);
+          };
+          const poll = async () => {
+            await Promise.allSettled(entries.map((entry) => loadMetronomeSidebarRunThreads(entry, {
+              force: true,
+              background: true,
+            })));
+            schedule(document.visibilityState === "hidden" ? 10000 : 1000);
+          };
+          schedule(250);
+          return () => {
+            cancelled = true;
+            if (timer) clearTimeout(timer);
+          };
+        }, [
+          expandedActiveMetronomeRunPollSignature,
+          hasRealAccess,
+          proxyBackendBase,
+          requestHeadersSignature,
+        ]);
 
         useEffect(() => {
           function handleMetronomeRunUpserted(event) {
@@ -1155,14 +1266,14 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             const startedAt = Date.parse(String(run?.startedAt || run?.createdAt || ""));
             const elapsedMs = Number.isFinite(startedAt) ? Math.max(0, Date.now() - startedAt) : 0;
             const delayMs = failed
-              ? 15000
+              ? 5000
               : document.visibilityState === "hidden"
-                ? 30000
-                : elapsedMs >= 10 * 60 * 1000
-                  ? 15000
-                  : elapsedMs >= 60 * 1000
-                    ? 10000
-                    : 5000;
+                ? 10000
+                : elapsedMs >= 60 * 60 * 1000
+                  ? 5000
+                  : elapsedMs >= 10 * 60 * 1000
+                    ? 2500
+                    : 1000;
             reloadTimer = setTimeout(loadRunTrace, delayMs);
           };
           const loadRunTrace = async () => {
@@ -1215,22 +1326,7 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
               });
               const nextTraceThreads = collectMetronomeRunTraceChildThreads(nextRun, selection);
               if (nextTraceThreads.length) {
-                setRealThreads((current) => {
-                  const existingById = new Map((Array.isArray(current) ? current : []).map((thread) => [String(thread?.id || "").trim(), thread]));
-                  let didChange = false;
-                  nextTraceThreads.forEach((thread) => {
-                    const threadId = String(thread?.id || "").trim();
-                    if (!threadId || privateThreadIdsRef.current.has(threadId) || isPrivateThreadRecord(thread)) {
-                      return;
-                    }
-                    const existing = existingById.get(threadId) || null;
-                    if (!existing || JSON.stringify(existing) !== JSON.stringify(thread)) {
-                      didChange = true;
-                      existingById.set(threadId, existing ? normalizeThreadItem({ ...existing, ...thread }) : thread);
-                    }
-                  });
-                  return didChange ? normalizeThreadList(Array.from(existingById.values())) : current;
-                });
+                setRealThreads((current) => mergeMetronomeChildThreadsIntoRealThreads(current, nextTraceThreads));
               }
               setOptimisticMetronomeRunEntries((current) => {
                 const existing = current && typeof current === "object" ? current[key] : null;

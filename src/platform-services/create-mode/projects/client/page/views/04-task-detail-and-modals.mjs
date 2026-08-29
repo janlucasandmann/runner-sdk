@@ -44,6 +44,7 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
               popupAlignment: "right",
               fullWidth: true,
               emptyContent,
+              popupSearch,
               popupHeader,
               popupHeaderClassName,
               popupContent,
@@ -1005,29 +1006,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             const selectedTaskDetailVerifier = activeTaskLoop?.verifierAgentId
               ? taskDetailVerifierAgents.find((agent) => agent.id === activeTaskLoop.verifierAgentId) || null
               : null;
-            const latestTaskAgentSession = selectedTaskAgentSessions[0] || null;
-            const latestTaskAgentSessionState = String(latestTaskAgentSession?.state || "").trim().toLowerCase();
-            const taskAgentSessionPresentation = latestTaskAgentSession
-              ? latestTaskAgentSessionState === "completed"
-                ? { label: "Completed", variant: "green" }
-                : latestTaskAgentSessionState === "failed"
-                  ? { label: "Failed", variant: "red" }
-                  : latestTaskAgentSessionState === "canceled"
-                    ? { label: "Canceled", variant: "gray" }
-                    : latestTaskAgentSessionState === "stale"
-                      ? { label: "Stale", variant: "gray" }
-                      : latestTaskAgentSessionState === "awaiting_input"
-                        ? { label: "Needs input", variant: "yellow" }
-                        : latestTaskAgentSessionState === "queued"
-                          ? { label: "Queued", variant: "blue" }
-                          : { label: "Running", variant: "blue" }
-              : null;
-            const latestTaskAgentSessionThread = latestTaskAgentSession
-              ? selectedTaskThreads.find((thread) => (
-                  String(thread?.id || "").trim()
-                  === String(latestTaskAgentSession?.threadId || latestTaskAgentSession?.thread_id || "").trim()
-                )) || null
-              : null;
             function renderTaskDetailTypeBadge(taskType) {
               const normalizedTaskType = normalizePlaygroundTaskType(taskType);
               const TaskTypeIcon = normalizedTaskType === "subtask"
@@ -1068,15 +1046,14 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                       disabled: isTaskConfigLocked,
                       buttonContent: renderPlaygroundTaskStatusValue(activeTaskStatus, "playground-tasks-detail-status-value"),
                       popupClassName: "playground-tasks-detail-status-selector-popup",
-                      popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                      popupSearch: {
                         value: taskDetailStatusSearchQuery,
                         onChange: (event) => setTaskDetailStatusSearchQuery(event.target.value),
                         placeholder: "Change status...",
                         shortcut: "S",
                         autoFocus: taskDetailSelectPopover === "status",
                         "aria-label": "Search ticket statuses",
-                      }),
-                      popupHeaderClassName: "is-search-header",
+                      },
                       emptyContent: "No matching statuses.",
                       options: taskDetailStatusOptions.map((option) =>
                         createTaskDetailSelectorOption({
@@ -1159,15 +1136,14 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                               : React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, activeTaskTypeLabel)
                           ),
                         popupClassName: "playground-tasks-detail-type-selector-popup",
-                        popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                        popupSearch: {
                           value: taskDetailTypeSearchQuery,
                           onChange: (event) => setTaskDetailTypeSearchQuery(event.target.value),
                           placeholder: "Change type...",
                           shortcut: "T",
                           autoFocus: taskDetailSelectPopover === "type",
                           "aria-label": "Search ticket types",
-                        }),
-                        popupHeaderClassName: "is-search-header",
+                        },
                         emptyContent: "No matching ticket types.",
                         options: taskDetailTypeOptions.map((option) =>
                           createTaskDetailSelectorOption({
@@ -1199,15 +1175,14 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                         )
                       ),
                       popupClassName: "playground-tasks-detail-priority-selector-popup",
-                      popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                      popupSearch: {
                         value: taskDetailPrioritySearchQuery,
                         onChange: (event) => setTaskDetailPrioritySearchQuery(event.target.value),
                         placeholder: "Change priority...",
                         shortcut: "P",
                         autoFocus: taskDetailSelectPopover === "priority",
                         "aria-label": "Search ticket priorities",
-                      }),
-                      popupHeaderClassName: "is-search-header",
+                      },
                       emptyContent: "No matching priorities.",
                       options: taskDetailPriorityOptions.map((option) =>
                         createTaskDetailSelectorOption({

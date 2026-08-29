@@ -85,7 +85,9 @@ export function createAppSidebarThreadListScript(options = {}) {
             // the narrow moment after a worker has transitioned to running.
             // Background Threads are inserted optimistically as queued, and
             // must already look active without requiring the user to open them.
-            const isRunning = isRunningThreadDisplayStatus(safeThread?.status);
+            const isRunning = metronomeChild
+              ? resolveMetronomeThreadLifecycle([{ record: safeThread, source: "sidebar-thread" }]).isRunning
+              : isRunningThreadDisplayStatus(safeThread?.status);
             const needsPermissionAttention = isPendingPermissionThreadDisplayStatus(safeThread?.status) || permissionAttentionThreadIds.has(safeThreadId);
             const canManageThread = hasRealAccess && isRealThreadId(safeThreadId);
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === safeThreadId;
@@ -176,7 +178,9 @@ export function createAppSidebarThreadListScript(options = {}) {
             const fallbackMetronomeMeta = options?.metronomeChild ? getThreadMetronomeMetadata(fallbackThread) : null;
             const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
             const fallbackMetaText = threadMetaLabel(fallbackThread);
-            const fallbackIsRunning = isRunningThreadDisplayStatus(fallbackThread?.status);
+            const fallbackIsRunning = options?.metronomeChild
+              ? resolveMetronomeThreadLifecycle([{ record: fallbackThread, source: "sidebar-thread" }]).isRunning
+              : isRunningThreadDisplayStatus(fallbackThread?.status);
             const {
               taskTicketNumber,
               displayThreadTitle: fallbackRawDisplayThreadTitle,

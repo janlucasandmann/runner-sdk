@@ -27,12 +27,16 @@ import {
   type PlatformInstructionsEditorChangeContext,
   type PlatformInstructionsEditorContentVariant,
   type PlatformInstructionsEditorFileUpload,
+  type PlatformInstructionsEditorVariant,
 } from "../instructions-editor/index.js";
 import { PlatformCheckbox } from "../../ui/checkbox/index.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 
 export type PlatformCodeEditorStatusTone = "default" | "success" | "error" | "loading";
-export type PlatformCodeEditorWorkspaceVariant = "default" | "full-screen";
+export type PlatformCodeEditorWorkspaceVariant =
+  | "default"
+  | "full-screen"
+  | "minimalistic-ui";
 
 export interface PlatformCodeEditorFile {
   id: string;
@@ -70,6 +74,11 @@ export interface PlatformCodeEditorFileMove {
   destinationFolder: PlatformCodeEditorFile | null;
 }
 
+export interface PlatformCodeEditorExternalFileDrop {
+  files: readonly File[];
+  destinationFolder: PlatformCodeEditorFile | null;
+}
+
 export interface PlatformCodeEditorHistoryControls {
   onUndo?: MouseEventHandler<HTMLButtonElement>;
   onRedo?: MouseEventHandler<HTMLButtonElement>;
@@ -85,10 +94,15 @@ export interface PlatformCodeEditorMarkdownEditor {
   ) => void;
   /** Overrides the active file label in the Markdown editor header. */
   title?: ReactNode;
+  /** Overrides the title rendered inside the Markdown editor body. */
+  bodyTitle?: ReactNode;
   placeholder?: string;
   ariaLabel?: string;
   readOnly?: boolean;
+  showHeader?: boolean;
   historyKey?: string | number;
+  /** Selects the centralized Markdown editor presentation and interaction model. */
+  variant?: PlatformInstructionsEditorVariant;
   contentVariant?: PlatformInstructionsEditorContentVariant;
   fileUpload?: PlatformInstructionsEditorFileUpload;
   autoFocus?: boolean;
@@ -109,6 +123,14 @@ export interface PlatformCodeEditorWorkspaceProps {
   ) => void | Promise<void>;
   onFilesDelete?: (files: readonly PlatformCodeEditorFile[]) => void | Promise<void>;
   onFilesMove?: (move: PlatformCodeEditorFileMove) => void | Promise<void>;
+  /**
+   * Imports files dragged from the operating system into the file sidebar.
+   * The workspace owns drop detection and feedback; the resource adapter owns
+   * validation and persistence.
+   */
+  onExternalFilesDrop?: (
+    drop: PlatformCodeEditorExternalFileDrop,
+  ) => void | Promise<void>;
   /**
    * Return the created file (or its id) to open its inline label editor as
    * soon as it appears in the controlled `files` collection.
@@ -254,6 +276,7 @@ export function PlatformCodeEditorWorkspace({
   onFileRename,
   onFilesDelete,
   onFilesMove,
+  onExternalFilesDrop,
   onCreateFile,
   createFileLabel = "Create File",
   createFileButtonLabel = "Add file",
@@ -288,6 +311,8 @@ export function PlatformCodeEditorWorkspace({
   const [createdFileId, setCreatedFileId] = useState("");
   const [draggedFileIds, setDraggedFileIds] = useState<readonly string[]>([]);
   const [dropTargetId, setDropTargetId] = useState<string | null | undefined>(undefined);
+  const [externalFileDragging, setExternalFileDragging] = useState(false);
+  const [externalFileDropPending, setExternalFileDropPending] = useState(false);
   const [fileMenu, setFileMenu] = useState<{
     fileId: string;
     x: number;
@@ -313,12 +338,15 @@ export function PlatformCodeEditorWorkspace({
   const fileSelectionEnabled = Boolean(onFilesDelete);
   const fileMoveEnabled = Boolean(onFilesMove);
   const fileCreationMenuEnabled = Boolean(onCreateFile || onUploadFiles);
-  const creationControlsDisabled = fileCreationDisabled || isLoadingFiles;
+  const creationControlsDisabled = fileCreationDisabled
+    || isLoadingFiles
+    || externalFileDropPending;
   const activeFile = fileById.get(activeFileId);
   const activeFileTitle = activeFile?.tabLabel ?? activeFile?.label ?? activeFile?.id ?? "";
   const markdownEditorActive = Boolean(
     markdownEditor && isPlatformCodeEditorMarkdownFile(activeFile),
   );
+  const editorHeaderVisible = variant !== "minimalistic-ui";
   const draggedFiles = useMemo(
     () => draggedFileIds
       .map((fileId) => fileById.get(fileId))
@@ -618,6 +646,51 @@ export function PlatformCodeEditorWorkspace({
     onFilesMove,
     runFileAction,
   ]);
+  const isExternalFileTransfer = useCallback((event: ReactDragEvent<HTMLElement>) => {
+    const transfer = event.dataTransfer;
+    if (!transfer) return false;
+    const types = Array.from(transfer.types || [], (type) => String(type));
+    if (types.includes(PLATFORM_CODE_EDITOR_FILE_DRAG_TYPE)) return false;
+    return types.includes("Files") || (transfer.files?.length || 0) > 0;
+  }, []);
+  const dragExternalFilesOverSidebar = useCallback((event: ReactDragEvent<HTMLElement>) => {
+    if (!onExternalFilesDrop || creationControlsDisabled || !isExternalFileTransfer(event)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "copy";
+    setExternalFileDragging(true);
+  }, [creationControlsDisabled, isExternalFileTransfer, onExternalFilesDrop]);
+  const leaveExternalFileSidebar = useCallback((event: ReactDragEvent<HTMLElement>) => {
+    if (!externalFileDragging) return;
+    const nextTarget = event.relatedTarget as Node | null;
+    if (nextTarget && event.currentTarget.contains(nextTarget)) return;
+    setExternalFileDragging(false);
+  }, [externalFileDragging]);
+  const dropExternalFilesInSidebar = useCallback(async (
+    event: ReactDragEvent<HTMLElement>,
+  ) => {
+    if (!onExternalFilesDrop || creationControlsDisabled || !isExternalFileTransfer(event)) {
+      return;
+    }
+    const droppedFiles = Array.from(event.dataTransfer.files || []);
+    if (droppedFiles.length === 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setExternalFileDragging(false);
+    setExternalFileDropPending(true);
+    try {
+      await onExternalFilesDrop({
+        files: droppedFiles,
+        destinationFolder: null,
+      });
+    } catch (error) {
+      console.error("[PlatformCodeEditorWorkspace] External file import failed", error);
+    } finally {
+      setExternalFileDropPending(false);
+    }
+  }, [creationControlsDisabled, isExternalFileTransfer, onExternalFilesDrop]);
   const fileMenuPopup = typeof document !== "undefined" && document.body
     ? createPortal(
         <PlatformPopup
@@ -743,6 +816,7 @@ export function PlatformCodeEditorWorkspace({
       className={joinClassNames(
         "platform-code-editor-workspace",
         variant === "full-screen" && "is-full-screen",
+        variant === "minimalistic-ui" && "is-minimalistic-ui",
         sidebarHidden && "is-sidebar-hidden",
         className,
       )}
@@ -755,7 +829,18 @@ export function PlatformCodeEditorWorkspace({
       onKeyDown={stopEditorKeyboardPropagation}
       onKeyUp={stopEditorKeyboardPropagation}
     >
-      {!sidebarHidden ? <aside className="platform-code-editor-workspace__sidebar">
+      {!sidebarHidden ? <aside
+        className={joinClassNames(
+          "platform-code-editor-workspace__sidebar",
+          externalFileDragging && "is-external-file-drop-target",
+          externalFileDropPending && "is-external-file-drop-pending",
+        )}
+        aria-busy={externalFileDropPending || undefined}
+        onDragEnter={dragExternalFilesOverSidebar}
+        onDragOver={dragExternalFilesOverSidebar}
+        onDragLeave={leaveExternalFileSidebar}
+        onDrop={(event) => void dropExternalFilesInSidebar(event)}
+      >
         <div
           className={joinClassNames(
             "platform-code-editor-workspace__sidebar-header",
@@ -948,12 +1033,33 @@ export function PlatformCodeEditorWorkspace({
             </div>
           )}
         </div>
+        {externalFileDragging || externalFileDropPending ? (
+          <div
+            className="platform-code-editor-workspace__external-file-drop-feedback"
+            role={externalFileDropPending ? undefined : "status"}
+            aria-live="polite"
+          >
+            {externalFileDropPending ? (
+              <PlatformLoadingState
+                as="span"
+                className="platform-code-editor-workspace__external-file-drop-spinner"
+                message="Adding files…"
+              />
+            ) : (
+              <ArrowUpFromLine aria-hidden="true" />
+            )}
+            <span>{externalFileDropPending ? "Adding files…" : "Drop files to add"}</span>
+          </div>
+        ) : null}
       </aside> : null}
 
       <div
         className={joinClassNames(
           "platform-code-editor-workspace__editor",
           markdownEditorActive && "is-markdown",
+          markdownEditorActive
+            && markdownEditor?.variant === "block-editor"
+            && "is-block-editor",
         )}
       >
         {markdownEditorActive && markdownEditor ? (
@@ -961,6 +1067,7 @@ export function PlatformCodeEditorWorkspace({
             value={markdownEditor.value}
             onChange={markdownEditor.onChange}
             title={markdownEditor.title ?? activeFileTitle}
+            bodyTitle={markdownEditor.bodyTitle}
             placeholder={markdownEditor.placeholder || "Write Markdown..."}
             ariaLabel={
               markdownEditor.ariaLabel
@@ -968,8 +1075,9 @@ export function PlatformCodeEditorWorkspace({
             }
             readOnly={markdownEditor.readOnly}
             stickyHeader={false}
+            showHeader={markdownEditor.showHeader ?? editorHeaderVisible}
             historyKey={markdownEditor.historyKey ?? activeFile?.id ?? "markdown"}
-            variant="minimalistic-ui"
+            variant={markdownEditor.variant ?? "minimalistic-ui"}
             contentVariant={markdownEditor.contentVariant}
             fileUpload={markdownEditor.fileUpload}
             autoFocus={markdownEditor.autoFocus}
@@ -980,7 +1088,7 @@ export function PlatformCodeEditorWorkspace({
           />
         ) : (
           <>
-            <div className="platform-code-editor-workspace__editor-header">
+            {editorHeaderVisible ? <div className="platform-code-editor-workspace__editor-header">
               <span className="platform-code-editor-workspace__editor-title">
                 {activeFileTitle}
               </span>
@@ -989,7 +1097,7 @@ export function PlatformCodeEditorWorkspace({
                   {renderHistoryControls(historyControls)}
                 </div>
               ) : null}
-            </div>
+            </div> : null}
             <div className="platform-code-editor-workspace__editor-body">
               {editor ? editor : (
                 <div className="platform-code-editor-workspace__empty is-editor">{emptyEditor}</div>

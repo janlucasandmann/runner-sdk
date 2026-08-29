@@ -25,6 +25,7 @@ describe("RunnerFileBrowserDialog", () => {
           notion: { connected: false },
           "one-drive": { connected: false },
           github: { connected: false },
+          atlassian: { connected: false },
         }}
         authSource={null}
         path={[{ id: null, name: "Default Computer" }]}
@@ -84,6 +85,7 @@ describe("RunnerFileBrowserDialog", () => {
     expect(screen.queryByRole("button", { name: /Notion/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /OneDrive/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /GitHub/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Atlassian/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /GitLab/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /SharePoint/ })).toBeNull();
     expect(
@@ -128,6 +130,7 @@ describe("RunnerFileBrowserDialog", () => {
             selectedAccountId: "personal",
             onAccountChange,
           },
+          atlassian: { connected: false },
         }}
         authSource={null}
         path={[{ id: null, name: "Repositories" }]}
@@ -166,5 +169,120 @@ describe("RunnerFileBrowserDialog", () => {
     expect(screen.getByRole("option", { name: /work@example\.com/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("option", { name: /work@example\.com/i }));
     expect(onAccountChange).toHaveBeenCalledWith("work");
+  });
+
+  it("uses product-specific copy for a scoped Confluence selection", () => {
+    render(
+      <RunnerFileBrowserDialog
+        open
+        apiKeyPromptOpen={false}
+        source="atlassian"
+        resourceScope="confluence"
+        showSourceSidebar={false}
+        showFilterTabs={false}
+        searchQuery=""
+        onSearchQueryChange={vi.fn()}
+        environments={[]}
+        selectedEnvironmentId={null}
+        onEnvironmentSelect={vi.fn()}
+        onSourceChange={vi.fn()}
+        connections={{
+          "google-drive": { connected: false },
+          notion: { connected: false },
+          "one-drive": { connected: false },
+          github: { connected: false },
+          atlassian: { connected: true },
+        }}
+        authSource={null}
+        path={[{ id: null, name: "Atlassian" }]}
+        historyIndex={0}
+        historyLength={1}
+        onBack={vi.fn()}
+        onForward={vi.fn()}
+        onBreadcrumbSelect={vi.fn()}
+        googleDriveItemCount={0}
+        isGoogleDrivePickerLoading={false}
+        loading={false}
+        error={null}
+        showGoogleDrivePickerPrompt={false}
+        items={[]}
+        renderItem={() => null}
+        previewItem={null}
+        previewContent={null}
+        previewKind={null}
+        isPreviewLoading={false}
+        renderPreviewIcon={() => null}
+        selectedItemCount={1}
+        selectedItemLabel="1 space"
+        isAttaching={false}
+        onAttach={vi.fn()}
+        onPreviewClose={vi.fn()}
+        onClose={vi.fn()}
+        onApiKeyPromptClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("searchbox", { name: "Search Confluence spaces" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Use 1 space/i })).toBeTruthy();
+    expect(screen.queryByText("No Jira projects or Confluence spaces found")).toBeNull();
+    expect(screen.getByText("No Confluence spaces found")).toBeTruthy();
+  });
+
+  it("offers a single explicit Atlassian reauthorization action for a legacy grant", () => {
+    const onConnect = vi.fn();
+    render(
+      <RunnerFileBrowserDialog
+        open
+        apiKeyPromptOpen={false}
+        source="atlassian"
+        resourceScope="confluence"
+        showSourceSidebar={false}
+        showFilterTabs={false}
+        searchQuery=""
+        onSearchQueryChange={vi.fn()}
+        environments={[]}
+        selectedEnvironmentId={null}
+        onEnvironmentSelect={vi.fn()}
+        onSourceChange={vi.fn()}
+        connections={{
+          "google-drive": { connected: false },
+          notion: { connected: false },
+          "one-drive": { connected: false },
+          github: { connected: false },
+          atlassian: { connected: true, onConnect },
+        }}
+        authSource={null}
+        path={[{ id: null, name: "Atlassian" }]}
+        historyIndex={0}
+        historyLength={1}
+        onBack={vi.fn()}
+        onForward={vi.fn()}
+        onBreadcrumbSelect={vi.fn()}
+        googleDriveItemCount={0}
+        isGoogleDrivePickerLoading={false}
+        loading={false}
+        error="Reconnect Atlassian to load Confluence spaces."
+        showGoogleDrivePickerPrompt={false}
+        items={[]}
+        renderItem={() => null}
+        previewItem={null}
+        previewContent={null}
+        previewKind={null}
+        isPreviewLoading={false}
+        renderPreviewIcon={() => null}
+        selectedItemCount={0}
+        selectedItemLabel="0 spaces"
+        isAttaching={false}
+        onAttach={vi.fn()}
+        onPreviewClose={vi.fn()}
+        onClose={vi.fn()}
+        onApiKeyPromptClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Update Atlassian permissions" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Update permissions" }));
+    expect(onConnect).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("No Confluence spaces found")).toBeNull();
   });
 });

@@ -287,6 +287,7 @@ export function createPlatformServices({
     knowledgeService: createKnowledgeService({
       proxyUpstreamGet,
       proxyUpstreamJsonRequest,
+      proxyUpstreamRawRequest,
     }),
     marketplaceService: createMarketplaceService({
       sendJson,

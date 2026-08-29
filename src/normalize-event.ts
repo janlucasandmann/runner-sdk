@@ -1,4 +1,5 @@
 import { RunnerEventHandleResult, RunnerLog, RunnerUsage, RawRunnerEvent } from "./types.js";
+import { isPlausibleRunnerFileChangePath } from "./thread/file-change-path.js";
 
 type TimeProvider = () => number;
 const RUNNER_COST_CT_PER_DOLLAR = 100;
@@ -465,10 +466,27 @@ export class RunnerEventNormalizer {
     }
 
     if (itemType === "file_change") {
-      const changes = this.asObjectArray(item.changes).filter((change) => !isBrowserArtifactPath(this.asString(change.path)));
+      const metadata = this.asObject(item.metadata);
+      const changes = this.asObjectArray(item.changes).filter((change) => {
+        const filePath = this.asString(change.path);
+        return !isBrowserArtifactPath(filePath) && isPlausibleRunnerFileChangePath(filePath);
+      });
       const filePaths = changes.map((change) => this.asString(change.path)).filter(Boolean);
       if (filePaths.length === 0) {
-        return { logs: [] };
+        const command = this.asString(metadata?.command);
+        return {
+          logs: command
+            ? [
+                {
+                  time: this.formatElapsed(),
+                  message: `Executed: ${command}`,
+                  type: "info",
+                  eventType: "command_execution",
+                  metadata: this.mergeMetadata(metadata, { command }),
+                },
+              ]
+            : [],
+        };
       }
       const changeKinds = changes.map((change) => this.asChangeKind(change.kind)).filter(Boolean) as Array<
         "created" | "modified" | "deleted"
@@ -713,11 +731,31 @@ export class RunnerEventNormalizer {
       const filePath = this.asString(tool.file_path);
       const fileContent = this.asString(tool.file_content);
       const fileDiff = this.asString(tool.file_diff);
-      const output = this.asString(tool.output);
-      const exitCode = this.optionalNumber(tool.exit_code);
+      const output = this.asString(tool.output) || this.asString(metadata?.output);
+      const exitCode = this.optionalNumber(tool.exit_code) ?? this.optionalNumber(metadata?.exitCode);
       const additions = this.optionalNumber(tool.additions);
       const deletions = this.optionalNumber(tool.deletions);
       const operationKind = this.asChangeKind(tool.operation_kind) || "created";
+      const command = this.asString(tool.command) || this.asString(metadata?.command);
+      if (filePath && !isPlausibleRunnerFileChangePath(filePath)) {
+        return {
+          logs: command
+            ? [
+                {
+                  time: this.formatElapsed(),
+                  message: `Executed: ${command}`,
+                  type: exitCode === 0 ? "success" : "error",
+                  eventType: "command_execution",
+                  metadata: this.mergeMetadata(metadata, {
+                    command,
+                    exitCode,
+                    output: output?.trim(),
+                  }),
+                },
+              ]
+            : [],
+        };
+      }
       return {
         logs: [
           {

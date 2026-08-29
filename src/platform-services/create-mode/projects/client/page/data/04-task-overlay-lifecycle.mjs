@@ -772,6 +772,8 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
                 github: [],
                 googleDrive: [],
                 oneDrive: [],
+                notion: [],
+                atlassian: [],
               });
               setTaskConnectorBrowserSelectedNotionId("");
               setTaskConnectorBrowserPreviewState({
@@ -1001,7 +1003,13 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
             return undefined;
           }
 
-          void loadTaskConnectorFolder(taskConnectorBrowserCurrentSource, normalizedFolderId);
+          void loadTaskConnectorFolder(
+            taskConnectorBrowserCurrentSource,
+            normalizedFolderId,
+            taskConnectorBrowserCurrentSource === "atlassian" && taskConnectorBrowserAtlassianProduct
+              ? { product: taskConnectorBrowserAtlassianProduct }
+              : undefined
+          );
           return undefined;
         }, [
           loadTaskConnectorFolder,
@@ -1010,6 +1018,7 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
           taskConnectorBrowserCurrentFolderId,
           taskConnectorBrowserCurrentKey,
           taskConnectorBrowserCurrentSource,
+          taskConnectorBrowserAtlassianProduct,
           taskConnectorBrowserLoadedFolderIds,
           taskConnectorBrowserLoadingFolderIds,
           taskConnectorBrowserLoadingState.notion,

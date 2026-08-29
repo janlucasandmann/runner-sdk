@@ -3,7 +3,11 @@ const GITHUB_API_BASE = "https://api.github.com";
 export async function fetchGithubJson(
   pathname,
   accessToken,
-  { fetchImpl = globalThis.fetch } = {},
+  {
+    fetchImpl = globalThis.fetch,
+    method = "GET",
+    body,
+  } = {},
 ) {
   const normalizedToken = String(accessToken || "").trim();
   if (!normalizedToken) {
@@ -19,13 +23,15 @@ export async function fetchGithubJson(
   }
 
   const response = await fetchImpl(target.toString(), {
-    method: "GET",
+    method,
     headers: {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${normalizedToken}`,
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       "User-Agent": "computer-agents-platform",
       "X-GitHub-Api-Version": "2022-11-28",
     },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     cache: "no-store",
   });
   const text = await response.text().catch(() => "");
@@ -43,6 +49,7 @@ export async function fetchGithubJson(
     );
     error.status = response.status;
     error.code = "github_api_request_failed";
+    error.payload = payload;
     throw error;
   }
   return payload;

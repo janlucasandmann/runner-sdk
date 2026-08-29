@@ -45,11 +45,6 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
                 type: "button",
                 className: "sidebar-metronome-run-main",
                 onClick: () => {
-                  setCollapsedMetronomeRunGroups((current) => ({
-                    ...(current && typeof current === "object" ? current : {}),
-                    [groupKey]: false,
-                  }));
-                  void loadMetronomeSidebarRunThreads(entry);
                   openMetronomeRunTraceThread(entry);
                 },
                 "aria-label": loopPresentation.isTaskLoop

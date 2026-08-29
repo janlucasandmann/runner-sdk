@@ -115,6 +115,44 @@ describe("KnowledgeApi editor attachments", () => {
     expect(preview?.size).toBe(5);
   });
 
+  it("uploads source document bytes as multipart data for Markdown conversion", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      object: "knowledge.document_parse",
+      markdown: "# Parsed guide",
+      provider: "firecrawl",
+      metadata: { title: "Parsed guide" },
+      conversion: {
+        provider: "firecrawl",
+        format: "markdown",
+        convertedAt: "2026-08-28T08:00:00.000Z",
+        zeroDataRetention: true,
+        pdfMode: null,
+        pageMarkers: false,
+        creditsUsed: 1,
+      },
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const api = new KnowledgeApi("/api/real", {
+      "Content-Type": "application/json",
+      "X-Test-Identity": "user-1",
+    });
+    const file = new File(["docx"], "guide.docx", {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+
+    await expect(api.parseEditorDocument(file)).resolves.toMatchObject({
+      markdown: "# Parsed guide",
+      provider: "firecrawl",
+    });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/real/knowledge/parse");
+    const request = fetchMock.mock.calls[0]?.[1];
+    expect(request?.body).toBeInstanceOf(FormData);
+    expect(new Headers(request?.headers).has("content-type")).toBe(false);
+    const uploadedFile = (request?.body as FormData).get("file") as File;
+    expect(uploadedFile.name).toBe("guide.docx");
+    expect(uploadedFile.size).toBe(file.size);
+  });
+
   it("stores version descriptions and falls back only for an older strict API", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({

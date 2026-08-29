@@ -88,6 +88,7 @@ export function PlatformVersionSaveDialog({
   const [activeChangeId, setActiveChangeId] = useState(changes[0]?.id || "");
   const [internalPending, setInternalPending] = useState(false);
   const [internalError, setInternalError] = useState("");
+  const descriptionEditorRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(false);
   const openInstanceKeyRef = useRef(instanceKey);
   const descriptionTouchedRef = useRef({
@@ -215,6 +216,7 @@ export function PlatformVersionSaveDialog({
       headerClassName="platform-version-save-dialog__header"
       bodyClassName="platform-version-save-dialog__body"
       footerClassName="platform-version-save-dialog__footer"
+      initialFocusRef={descriptionEditorRef}
       headerActions={(
         <PlatformSwitch
           value={mode}
@@ -351,6 +353,7 @@ export function PlatformVersionSaveDialog({
           historyKey={`${String(instanceKey ?? "version-save")}:${mode}`}
           variant="minimalistic-ui"
           className="platform-version-save-dialog__description-editor"
+          editorRef={descriptionEditorRef}
           autoFocus={open && !isPending}
         />
         <span className="platform-version-save-dialog__character-count" aria-hidden="true">

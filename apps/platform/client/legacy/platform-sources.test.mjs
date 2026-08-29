@@ -23,14 +23,14 @@ const applianceSources = createLegacyPlatformApplicationSources({
       edition: "appliance",
       stage: "prod",
       topology: "on_prem",
-      readiness: "foundation",
+      readiness: "available",
       capabilities: {
         platform: true,
         agentExecution: true,
         schedules: true,
         metronomes: true,
         localInference: true,
-        deployableResources: false,
+        deployableResources: true,
         modelManagement: false,
         modelSelection: false,
         subscriptions: false,
@@ -132,6 +132,34 @@ assert.match(
 assert.doesNotMatch(
   applianceSources.moduleSource,
   /id: "models",\s*label: "Models"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "web-apps",\s*kind: "web_app",\s*label: "Web Apps"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "functions",\s*kind: "function",\s*label: "Functions"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "databases",\s*kind: "database",\s*label: "Databases"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "authentication",\s*kind: "auth",\s*label: "Authentication"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "secrets",\s*kind: "secrets",\s*label: "Secrets"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "payments",\s*kind: "payments",\s*label: "Payments"/,
+);
+assert.match(
+  applianceSources.moduleSource,
+  /id: "agent-runtime",\s*kind: "agent_runtime",\s*label: "Agent Runtime"/,
 );
 assert.doesNotMatch(
   applianceSources.moduleSource,

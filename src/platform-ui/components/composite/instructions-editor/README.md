@@ -12,12 +12,16 @@
   paragraph quotes, block quotes, and unboxed preformatted text
 - Bold, italic, underline, list, and ordered-list controls plus a centralized
   insert menu for code, links, optional files, and dividers
-- A selection-aware right-click menu for toggling bold, italic, and underline
-  plus persistent left, center, and right paragraph/heading alignment
-- A slash-anchored, scrollable `/` command menu that exposes formatting,
-  alignment, and insert commands with shortcut hints, filtering, and full
-  keyboard navigation; the same menu opens at the caret when unselected editor
-  text is right-clicked
+- A selection-aware formatting menu that opens as soon as text selection is
+  completed (and remains available from right-click), reports the selected
+  block type (including mixed selections), reuses the centralized hover submenu
+  for block conversion, and provides compact bold, italic, underline, and
+  persistent left, center, right, and justified paragraph/heading alignment controls
+- A slash-anchored `/` command menu with Recommended, Basic blocks, Text
+  formatting, and Insert sections; typing `/` adds a non-persisted “Write to
+  search” caret hint, filters commands in place, and supports full keyboard
+  navigation plus a fixed Escape footer. The same menu opens at the caret when
+  unselected editor text is right-clicked
 - Explicit character deletion and deterministic link insertion for both text
   selections and collapsed cursors
 - GFM table insertion from the toolbar, slash menu, or `Shift+Alt+T`, with a
@@ -25,6 +29,15 @@
   hover/focus ellipsis menu with grouped row, column, and whole-table actions
   that preserve Markdown round trips
 - ProseMirror-backed selection, keyboard shortcuts, and undo/redo history
+- Block-oriented writing semantics: visual wrapping remains inside the active
+  block, `Enter` creates a separately styleable block, `Shift+Enter` creates a
+  soft break inside the current block, and clicking the whitespace immediately
+  below populated content creates or focuses the next paragraph
+- The opt-in `block-editor` variant's Notion-style six-dot gutter handle for
+  every top-level editable block. Lists are intentionally treated as one block
+  instead of exposing a separate handle for every list item; native drag previews, a
+  visible insertion cursor, undoable reordering, and consistent movement for
+  text, quotes, tables, images, and files
 - Optional multi-file upload, caret/drop-position insertion, and drag-and-drop handling
 - Optional centralized prompt search with selection-aware Markdown insertion from
   the header's Insert menu
@@ -64,7 +77,9 @@ captures the current selection and inserts the returned Markdown at that
 position (or appends it when the editor was not focused).
 
 The toolbar popup behavior lives in `platform-instructions-editor-toolbar-popup.tsx`;
-the slash-command presentation lives in `platform-instructions-editor-slash-menu.tsx`.
+the slash-command presentation lives in `platform-instructions-editor-slash-menu.tsx`,
+and its non-persisted caret hint lives in
+`platform-instructions-editor-slash-hint.ts`.
 The Tiptap and read-only Markdown support for paragraph quotes lives in
 `paragraph-quote.ts`; keep its editor and renderer representations in sync.
 Generic file-node serialization, keyboard deletion, and read-only rendering
@@ -73,6 +88,10 @@ Image serialization, metadata, sizing, actions, and malformed-destination repair
 live in `platform-instructions-editor-image-node.tsx`.
 
 Use `variant="minimalistic-ui"` for modal and compact composition surfaces that need the same editing behavior without the editor's framed header and body treatment. This variant uses transparent, zero-padding, square container surfaces while preserving the Markdown controls and interaction model.
+
+Use `variant="block-editor"` only for document-centric workspaces that need the
+same flat surfaces plus block drag-and-drop. This behavior is intentionally
+opt-in and is currently owned by the Knowledge library document workspace.
 
 ## Working in this directory
 

@@ -188,7 +188,7 @@
             const activeServer = draftServer?.id === selectedServerId ? draftServer : null;
             const normalizedServerId = String(activeServer?.id || "").trim();
             const normalizedServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
-            const isSourceDeployableResource = ["function", "web_app"].includes(normalizedServerKind);
+            const isSourceDeployableResource = isSourceDeployablePlaygroundServerKind(normalizedServerKind);
             const isManagedTitleActionResource = isSourceDeployableResource
               || ["auth", "agent_runtime", "secrets", "payments"].includes(normalizedServerKind);
             const serverResourceLabel = formatPlaygroundServerKindLabel(normalizedServerKind);
@@ -318,8 +318,8 @@
               const activeServer = draftServer?.id === selectedServerId ? draftServer : null;
               const normalizedServerId = String(activeServer?.id || "").trim();
               const normalizedKind = canonicalizePlaygroundServerKind(activeServer?.kind);
-              const isSourceDeployableResource = ["function", "web_app"].includes(normalizedKind);
-              const isManagedDetailResource = ["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind);
+              const isSourceDeployableResource = isSourceDeployablePlaygroundServerKind(normalizedKind);
+              const isManagedDetailResource = isSourceDeployableResource || ["auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind);
               const serverResourceLabel = formatPlaygroundServerKindLabel(normalizedKind);
               const serverDocumentationPath = normalizedKind === "auth"
                 ? "/developers/libraries/authentication"
@@ -571,7 +571,7 @@
               const activeServerKind = canonicalizePlaygroundServerKind(
                 draftServer?.id === selectedServerId ? draftServer?.kind : ""
               );
-              if (["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(activeServerKind)) {
+              if (isSourceDeployablePlaygroundServerKind(activeServerKind) || ["auth", "agent_runtime", "secrets", "payments"].includes(activeServerKind)) {
                 return null;
               }
               return renderCurrentResourceSettingsControl(buttonClassName);
@@ -602,7 +602,7 @@
             && isServersMode
             && !shouldShowEnvironmentHome
             && selectedServerId
-            && ["function", "web_app", "auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(draftServer?.kind))
+            && (isSourceDeployablePlaygroundServerKind(draftServer?.kind) || ["auth", "agent_runtime", "secrets", "payments"].includes(canonicalizePlaygroundServerKind(draftServer?.kind)))
             ? createPortal(
                 renderServerTitleActionsControl(),
                 serverTitleActionsContainer
@@ -1490,14 +1490,14 @@
 	            isServersMode
 	            && selectedServerId
 	            && !selectedDatabaseId
-	            && ["function", "web_app"].includes(embeddedActiveServerKind)
+	            && isSourceDeployablePlaygroundServerKind(embeddedActiveServerKind)
 	            && serverDetailTab === "code"
 	          );
 	          const isEmbeddedSourceServerUsageTab = Boolean(
 	            isServersMode
 	            && selectedServerId
 	            && !selectedDatabaseId
-	            && ["function", "web_app"].includes(embeddedActiveServerKind)
+	            && isSourceDeployablePlaygroundServerKind(embeddedActiveServerKind)
 	            && serverDetailTab === "usage"
 	          );
   	          const isEmbeddedAuthUsersTab = Boolean(

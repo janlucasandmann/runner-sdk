@@ -12,6 +12,7 @@ function createHarness() {
   const service = createKnowledgeService({
     proxyUpstreamGet: (...args) => calls.push({ type: "get", args }),
     proxyUpstreamJsonRequest: (...args) => calls.push({ type: "json", args }),
+    proxyUpstreamRawRequest: (...args) => calls.push({ type: "raw", args }),
   });
   return { calls, service };
 }
@@ -23,6 +24,7 @@ test("Knowledge service proxies reads, search, document mutations, and version p
     ["GET", "/api/real/knowledge?limit=20", "/knowledge?limit=20", "get"],
     ["GET", "/api/real/knowledge/library%201", "/knowledge/library%201", "get"],
     ["POST", "/api/real/knowledge", "/knowledge", "json"],
+    ["POST", "/api/real/knowledge/parse", "/knowledge/parse", "raw"],
     ["POST", "/api/real/knowledge/search", "/knowledge/search", "json"],
     ["POST", "/api/real/knowledge/library-1/proposals", "/knowledge/library-1/proposals", "json"],
     ["PATCH", "/api/real/knowledge/library-1/documents/doc-1", "/knowledge/library-1/documents/doc-1", "json"],
@@ -33,7 +35,11 @@ test("Knowledge service proxies reads, search, document mutations, and version p
   }
   assert.deepEqual(
     calls.map(({ type, args }) => [type, args[2], args[3]]),
-    requests.map(([method, , upstreamPath, type]) => [type, upstreamPath, type === "json" ? method : undefined]),
+    requests.map(([method, , upstreamPath, type]) => [
+      type,
+      upstreamPath,
+      type === "json" || type === "raw" ? method : undefined,
+    ]),
   );
 });
 
@@ -78,7 +84,11 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
     /className: "playground-knowledge-overview-scope-switch"[\s\S]*\{ value: "all", label: "All Libraries" \}[\s\S]*\{ value: "created", label: "Created by me" \}[\s\S]*\{ value: "shared", label: "Shared with me" \}/,
   );
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__document-workspace/);
-  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-document-workspace__title-input/);
+  assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__document-workspace\.is-minimalistic-ui/);
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /knowledge-detail-page\.file-resource-detail-page\.is-code-tab[\s\S]{0,360}width:\s*100%;[\s\S]{0,220}padding:\s*0;/,
+  );
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page\.file-resource-detail-page\.is-settings-tab/);
   assert.match(
     PLAYGROUND_KNOWLEDGE_CSS,
@@ -89,6 +99,18 @@ test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
     /knowledge-detail-page \.knowledge-detail-page__settings-content[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}max-width:\s*none;/,
   );
   assert.match(PLAYGROUND_KNOWLEDGE_CSS, /knowledge-detail-page__settings-sidebar/);
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /\.knowledge-library-cover\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,160}height:\s*420px;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /\.knowledge-detail-page__document-workspace\s*\{[\s\S]{0,220}width:\s*min\(100%, var\(--playground-centered-page-max-width, 87\.5rem\)\);[\s\S]{0,180}padding-inline:\s*44px;/,
+  );
+  assert.match(
+    PLAYGROUND_KNOWLEDGE_CSS,
+    /\.knowledge-document-workspace__body-title:focus-within[\s\S]{0,160}\.knowledge-document-workspace__add-cover-button/,
+  );
 });
 
 test("Knowledge library identity survives browser history and nested access navigation", async () => {

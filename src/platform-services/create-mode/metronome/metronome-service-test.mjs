@@ -579,12 +579,12 @@ assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /"Workflow Logs"/);
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.state,
   /metronomeRunTraceWorkExpanded, setMetronomeRunTraceWorkExpanded\] = useState\(false\)/,
-  "Metronome overview workflow logs must start collapsed.",
+  "Workflow-log expansion state must remain isolated from regular thread pages.",
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.runController,
-  /function openMetronomeRunTraceThread[\s\S]*?setMetronomeRunTraceWorkExpanded\(false\)/,
-  "Opening a Metronome overview thread must reset workflow logs to collapsed.",
+  /function openMetronomeRunTraceThread[\s\S]*?setMetronomeRunTraceWorkExpanded\(true\)/,
+  "Opening a Metronome overview thread must expand workflow logs immediately.",
 );
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(PlatformMetronomeConditionResult, conditionPresentation\)/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /buildPlatformMetronomeConditionResultPresentation/);
@@ -595,6 +595,13 @@ assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /conditionWorkflowReq
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runController, /normalizeMetronomeRunTraceResponse\(data, selection, conditionWorkflow\)/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(RunnerTurnIdentity, \{/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /React\.createElement\(RunnerThreadLiveWorkStatus, \{/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /contextLabel:/);
+assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /className: "playground-metronome-run-trace-live-work-status"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /src: "\/img\/spinner\.svg"/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /renderMetronomeRunningThreadStatus\(getMetronomeRunningThreadLabel\(step, thread\)\)/);
+assert.doesNotMatch(METRONOME_PAGE_RUNTIME_SCRIPT, /"Thread is running\."/);
+assert.match(METRONOME_PAGE_RUNTIME_SCRIPT, /getMetronomeRunningThreadLabel\(step, thread\)/);
+assert.doesNotMatch(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /Thread is running/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /className: "playground-metronome-run-trace-thread-title"/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /function isMetronomeRunTraceVisibleStep\(step\)[\s\S]*?kind !== "trigger" && kind !== "end"/);
 assert.match(METRONOME_APP_SCRIPT_FRAGMENTS.runTraceView, /getMetronomeRunTraceSteps\(run\)\.filter\(isMetronomeRunTraceVisibleStep\)\.forEach/);
@@ -612,6 +619,7 @@ assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-r
 assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__node-icon\s*\{[\s\S]*?width:\s*20px[\s\S]*?height:\s*20px/);
 assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__node-icon\s*\{[\s\S]*?background:\s*linear-gradient\(180deg, #3159a8 0%, #172f68 100%\)/);
 assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-run-trace-thread-title\s*\{[\s\S]*?padding-bottom:\s*12px[\s\S]*?border-bottom:\s*1px solid rgba\(255, 255, 255, 0\.1\)[\s\S]*?font-size:\s*14px/);
+assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-run-trace-step > \.tb-thread-live-work-status\s*\{[\s\S]*?margin-left:\s*26px/);
 assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__condition-node\s*\{[\s\S]*?height:\s*38px/);
 assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__condition-node\s*\{[\s\S]*?border-radius:\s*10px/);
 assert.match(METRONOME_STYLE_FRAGMENTS.runs, /\.playground-metronome-condition-result__condition-node\s*\{[\s\S]*?width:\s*auto/);
@@ -637,8 +645,13 @@ assert.match(
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
-  /className: "sidebar-metronome-run-main"[\s\S]*?\[groupKey\]: false[\s\S]*?void loadMetronomeSidebarRunThreads\(entry\)[\s\S]*?openMetronomeRunTraceThread\(entry\)/,
-  "Opening a Metronome run from the sidebar must expand and hydrate its node threads by default.",
+  /className: "sidebar-metronome-run-main"[\s\S]*?openMetronomeRunTraceThread\(entry\)/,
+  "Opening a Metronome run from the sidebar must use the shared overview navigation path.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.runController,
+  /function expandMetronomeSidebarRunGroup\(entry\)[\s\S]*?\[key\]: false[\s\S]*?void loadMetronomeSidebarRunThreads\([\s\S]*?function openMetronomeRunTraceThread\(entry\)[\s\S]*?expandMetronomeSidebarRunGroup\(entry\)/,
+  "Opening a Metronome run overview must immediately expand and hydrate its node threads.",
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,

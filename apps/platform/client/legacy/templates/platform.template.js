@@ -13,7 +13,7 @@
         import { addEdge, Background, BaseEdge, Controls, EdgeLabelRenderer, getSimpleBezierPath, Handle, MarkerType, NodeResizer, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useReactFlow } from "@xyflow/react";
         import { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar as CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, ClipboardList, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image as ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Milestone, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCcwDot, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, ScanEye, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } from "lucide-react";
         import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
-	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileBrowserDialog, RunnerFileDiffSurface, RunnerGithubBranchSelector, RunnerImagePreviewSurface, RunnerProjectGithubRepositorySettings, RunnerThreadLiveWorkStatus, RunnerTurnIdentity, createGithubBrowserNodeId, createGithubBrowserRepoFolderId } from "/dist/react/index.js";
+	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileBrowserDialog, RunnerFileDiffSurface, RunnerFunctionGithubConnectorSettings, RunnerGithubBranchSelector, RunnerImagePreviewSurface, RunnerProjectConfluenceResourceSettings, RunnerProjectConnectorResourceSettings, RunnerProjectGithubRepositorySettings, RunnerProjectNotionResourceSettings, RunnerThreadLiveWorkStatus, RunnerTurnIdentity, createGithubBrowserNodeId, createGithubBrowserRepoFolderId } from "/dist/react/index.js";
 	      import { PlatformAnalyticsChart, PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
         import { PlatformAttachmentActionMenu, PlatformAttachments } from "/dist/platform-ui/components/composite/attachments/index.js";
         import { PlatformFileExplorerBrowser, PlatformFileExplorerBrowserModal, PlatformFileExplorerFileIcon, PlatformFileExplorerModal, resolvePlatformFileExplorerFileKind } from "/dist/platform-ui/components/composite/file-explorer/index.js";
@@ -170,10 +170,13 @@
   	        onRowActionMenuOpen,
   	        onRowContextMenu,
   	        activeRowMenuId = "",
-  	        searchPlaceholder = "Search resources",
+	        searchPlaceholder = "Search resources",
           searchAriaLabel = "Search resources",
-  	        newButtonLabel = "New",
-  	        newButtonClassName = "",
+	        newButtonLabel = "New",
+	        newButtonLeading = null,
+	        newMenuSearchPlaceholder = "",
+	        newMenuSearchAriaLabel = "Search resource actions",
+	        newButtonClassName = "",
   	        primaryHeader = "Resource",
           secondaryHeader = "Creator",
           sourceHeader = "Shared Through",
@@ -206,6 +209,7 @@
           const availableRows = Array.isArray(allRows) ? allRows : visibleRows;
           const activeViewMode = viewMode === "grid" ? "grid" : "list";
           const activeToolbarPopover = String(toolbarPopover || "");
+          const [newMenuSearchQuery, setNewMenuSearchQuery] = React.useState("");
           const activeFilter = String(filter || "all").trim() || "all";
           const resourceTypeFilters = Array.isArray(typeFilters) && typeFilters.length
             ? typeFilters
@@ -362,7 +366,7 @@
           };
           const renderSharedNewMenuItems = () => {
             if (typeof renderNewMenuItems === "function") {
-              return renderNewMenuItems();
+              return renderNewMenuItems(newMenuSearchQuery);
             }
             if (typeof onNewButtonClick !== "function") {
               return null;
@@ -574,6 +578,7 @@
                   buttonVariant: "secondary",
                   buttonSize: "small",
                   label: newButtonLabel,
+                  leading: newButtonLeading,
                   open: activeToolbarPopover === "new",
                   onOpenChange: (nextOpen) => {
                     closeRowMenu();
@@ -582,6 +587,9 @@
                     } else if (activeToolbarPopover === "new") {
                       setToolbarPopover("");
                     }
+                    if (!nextOpen) {
+                      setNewMenuSearchQuery("");
+                    }
                   },
                   closeOnSelect: true,
                   popupAriaLabel: "Create project resource",
@@ -589,6 +597,15 @@
                   popupRole: "menu",
                   popupVariant: "minimal",
                   popupWidth: 230,
+                  popupSearch: newMenuSearchPlaceholder
+                    ? {
+                        value: newMenuSearchQuery,
+                        onChange: (event) => setNewMenuSearchQuery(event.target.value),
+                        placeholder: newMenuSearchPlaceholder,
+                        autoFocus: activeToolbarPopover === "new",
+                        "aria-label": newMenuSearchAriaLabel,
+                      }
+                    : null,
                   className: "playground-project-resources-new-selector",
                   buttonClassName: newButtonClassName,
                   popupClassName: "playground-project-resources-new-selector-menu",
@@ -861,6 +878,7 @@
         const PLAYGROUND_GOOGLE_DRIVE_LOGO_URL = getPlatformPluginConnectionDefinition("google-drive").logoUrl;
         const PLAYGROUND_ONEDRIVE_LOGO_URL = getPlatformPluginConnectionDefinition("one-drive").logoUrl;
         const PLAYGROUND_NOTION_LOGO_URL = getPlatformPluginConnectionDefinition("notion").logoUrl;
+        const PLAYGROUND_ATLASSIAN_LOGO_URL = getPlatformPluginConnectionDefinition("jira").logoUrl;
         const PLAYGROUND_GMAIL_LOGO_URL = getPlatformPluginConnectionDefinition("gmail").logoUrl;
         const PLAYGROUND_SUBSCRIPTION_SUCCESS_QUERY_PARAM = "showSubscriptionSuccess";
         const PLAYGROUND_INITIAL_PROMPT_QUERY_PARAM = "initialPrompt";
@@ -3810,6 +3828,34 @@
           },
           dependencies: {
             serve: "latest",
+          },
+        }, null, 2) + "\n";
+        const PLAYGROUND_DEFAULT_API_SOURCE_PATH = "index.js";
+        const PLAYGROUND_DEFAULT_API_PACKAGE_PATH = "package.json";
+        const PLAYGROUND_DEFAULT_API_SOURCE_CONTENT = [
+          'import { createServer } from "node:http";',
+          "",
+          'const port = Number(process.env.PORT || 8080);',
+          "",
+          "createServer(async (request, response) => {",
+          '  response.setHeader("content-type", "application/json; charset=utf-8");',
+          "  response.end(JSON.stringify({",
+          '    message: "Hello from Computer Agents API",',
+          "    method: request.method,",
+          "    path: request.url,",
+          "  }));",
+          "}).listen(port);",
+        ].join("\n");
+        const PLAYGROUND_DEFAULT_API_PACKAGE_CONTENT = JSON.stringify({
+          name: "computer-agents-api",
+          version: "1.0.0",
+          private: true,
+          type: "module",
+          scripts: {
+            start: "node index.js",
+          },
+          engines: {
+            node: ">=22",
           },
         }, null, 2) + "\n";
         const PLAYGROUND_AGENT_DRAFT_ID = "__playground_new_agent__";
@@ -8223,6 +8269,12 @@
           if (normalizedKind === "secrets") return "secrets";
           if (normalizedKind === "payments" || normalizedKind === "payment") return "payments";
           return "web_app";
+        }
+
+        function isSourceDeployablePlaygroundServerKind(kind) {
+          return ["web_app", "function", "api"].includes(
+            canonicalizePlaygroundServerKind(kind)
+          );
         }
   
   	      function formatPlaygroundServerKindLabel(kind) {

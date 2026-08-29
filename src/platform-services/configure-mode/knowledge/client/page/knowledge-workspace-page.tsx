@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
+import {
+  createPlatformProjectIdentityFallback,
+  getPlatformProjectReferenceFromKnowledgeMetadata,
+  PlatformProjectIdentityApi,
+  type PlatformProjectIdentity,
+} from "../../../../../platform-resources/projects/index.js";
 import { KnowledgeApi } from "../api/index.js";
 import {
   withKnowledgeLibraryCreatorIdentity,
@@ -93,6 +99,10 @@ export function KnowledgeWorkspacePage({
   onStartThread,
 }: KnowledgeWorkspacePageProps) {
   const api = useMemo(() => new KnowledgeApi(backendUrl, requestHeaders), [backendUrl, requestHeaders]);
+  const projectIdentityApi = useMemo(
+    () => new PlatformProjectIdentityApi(backendUrl, requestHeaders),
+    [backendUrl, requestHeaders],
+  );
   const viewerIdentity = useMemo(() => ({
     id: currentUserId,
     name: currentUserName,
@@ -104,8 +114,13 @@ export function KnowledgeWorkspacePage({
     [viewerIdentity],
   );
   const identityChangeRef = useRef(onIdentityChange);
+  const projectIdentityLoadRef = useRef(0);
   const [libraries, setLibraries] = useState<KnowledgeLibrary[]>([]);
   const [activeLibrary, setActiveLibrary] = useState<KnowledgeLibrary | null>(null);
+  const [activeProjectIdentity, setActiveProjectIdentity] = useState<PlatformProjectIdentity | null>(null);
+  const [projectIdentitiesById, setProjectIdentitiesById] = useState<
+    Readonly<Record<string, PlatformProjectIdentity>>
+  >({});
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
@@ -132,16 +147,44 @@ export function KnowledgeWorkspacePage({
   }, [onIdentityChange]);
 
   const loadOverview = useCallback(async () => {
+    const identityLoad = projectIdentityLoadRef.current + 1;
+    projectIdentityLoadRef.current = identityLoad;
     setLoading(true);
     setError("");
     try {
-      setLibraries((await api.listLibraries()).map(personalizeLibrary));
+      const nextLibraries = (await api.listLibraries()).map(personalizeLibrary);
+      const references = [...new Map(
+        nextLibraries
+          .map((library) => getPlatformProjectReferenceFromKnowledgeMetadata(library.metadata))
+          .filter((reference) => reference !== null)
+          .map((reference) => [reference.projectId, reference]),
+      ).values()];
+      const fallbackIdentities = Object.fromEntries(
+        references.flatMap((reference) => {
+          const identity = createPlatformProjectIdentityFallback(reference);
+          return identity ? [[reference.projectId, identity] as const] : [];
+        }),
+      );
+      setLibraries(nextLibraries);
+      setProjectIdentitiesById(fallbackIdentities);
+      void Promise.all(references.map(async (reference) => {
+        try {
+          return await projectIdentityApi.get(reference.projectId, reference);
+        } catch {
+          return createPlatformProjectIdentityFallback(reference);
+        }
+      })).then((identities) => {
+        if (projectIdentityLoadRef.current !== identityLoad) return;
+        setProjectIdentitiesById(Object.fromEntries(
+          identities.flatMap((identity) => identity ? [[identity.id, identity] as const] : []),
+        ));
+      });
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to load Knowledge.");
     } finally {
       setLoading(false);
     }
-  }, [api, personalizeLibrary]);
+  }, [api, personalizeLibrary, projectIdentityApi]);
 
   const loadLibrary = useCallback(async (libraryId: string, options: { silent?: boolean } = {}) => {
     if (!libraryId) return;
@@ -149,7 +192,21 @@ export function KnowledgeWorkspacePage({
     setError("");
     try {
       const library = personalizeLibrary(await api.getLibrary(libraryId));
+      const projectReference = getPlatformProjectReferenceFromKnowledgeMetadata(library.metadata);
+      let projectIdentity = createPlatformProjectIdentityFallback(projectReference);
+      if (projectReference) {
+        try {
+          projectIdentity = await projectIdentityApi.get(
+            projectReference.projectId,
+            projectReference,
+          );
+        } catch {
+          // Project metadata remains a stable fallback for offline/local appliances
+          // and for users who can read the library but not the source project.
+        }
+      }
       setActiveLibrary(library);
+      setActiveProjectIdentity(projectIdentity);
       setLibraries((current) => [library, ...current.filter((item) => item.id !== library.id)]);
       const document = library.documents?.find((item) => item.id === selectedDocumentId);
       identityChangeRef.current?.({
@@ -160,12 +217,15 @@ export function KnowledgeWorkspacePage({
         versionNumber: library.currentVersionNumber,
       });
     } catch (nextError) {
-      if (!options.silent) setActiveLibrary(null);
+      if (!options.silent) {
+        setActiveLibrary(null);
+        setActiveProjectIdentity(null);
+      }
       setError(nextError instanceof Error ? nextError.message : "Failed to load the Knowledge library.");
     } finally {
       if (!options.silent) setDetailLoading(false);
     }
-  }, [api, personalizeLibrary, selectedDocumentId]);
+  }, [api, personalizeLibrary, projectIdentityApi, selectedDocumentId]);
 
   useEffect(() => {
     if (!shouldLoadData) return;
@@ -195,6 +255,7 @@ export function KnowledgeWorkspacePage({
     ));
     setLibraries((current) => [library, ...current]);
     setActiveLibrary(library);
+    setActiveProjectIdentity(null);
     onOpenLibrary(library.id, library.name);
     return library;
   }
@@ -242,7 +303,10 @@ export function KnowledgeWorkspacePage({
     return (
       <KnowledgeLibraryDetailPage
         library={activeLibrary}
+        relatedProjectIdentity={activeProjectIdentity}
         api={api}
+        backendUrl={backendUrl}
+        requestHeaders={requestHeaders}
         controlsPortalId={controlsPortalId}
         sectionControlsPortalId={sectionControlsPortalId}
         titleActionsPortalId={titleActionsPortalId}
@@ -267,6 +331,7 @@ export function KnowledgeWorkspacePage({
     <>
       <KnowledgeOverviewPage
         libraries={scopedLibraries}
+        projectIdentitiesById={projectIdentitiesById}
         loading={loading}
         error={error}
         controlsPortalId={controlsPortalId}

@@ -8,6 +8,21 @@ import { PROJECTS_DATA_04_FRAGMENT } from "../page/data/04-task-overlay-lifecycl
 import { PROJECTS_SHELL_01_FRAGMENT } from "../page/shell/01-state-and-loading.mjs";
 import { PROJECTS_VIEWS_03_FRAGMENT } from "../page/views/03-overview-and-task-previews.mjs";
 
+test("project Resources uses the compact resource selector action", () => {
+  assert.match(
+    PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT,
+    /newButtonLabel: "Resource",\s*newButtonLeading: React\.createElement\(Plus, \{[\s\S]*?width: 14,[\s\S]*?height: 14,[\s\S]*?"aria-hidden": "true"/,
+  );
+  assert.doesNotMatch(
+    PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT,
+    /newButtonLabel: "Add Resource"/,
+  );
+  assert.match(
+    PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT,
+    /function renderProjectOverviewResourceNewMenuItems\(searchQuery = ""\)[\s\S]*?No matching resource types\.[\s\S]*?newMenuSearchPlaceholder: "Search resources\.\.\."[\s\S]*?newMenuSearchAriaLabel: "Search resource types"/,
+  );
+});
+
 test("project Progress selectors share the ticket shortcut and searchable-popup contract", () => {
   assert.match(
     PROJECTS_SHELL_01_FRAGMENT,
@@ -19,11 +34,11 @@ test("project Progress selectors share the ticket shortcut and searchable-popup 
   );
   assert.match(
     PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT,
-    /placeholder: "Change status\.\.\."[\s\S]*?shortcut: "S"/,
+    /popupSearch: \{[\s\S]*?placeholder: "Change status\.\.\."[\s\S]*?shortcut: "S"/,
   );
   assert.match(
     PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT,
-    /placeholder: "Change priority\.\.\."[\s\S]*?shortcut: "P"/,
+    /popupSearch: \{[\s\S]*?placeholder: "Change priority\.\.\."[\s\S]*?shortcut: "P"/,
   );
   assert.match(
     PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT,
@@ -59,6 +74,21 @@ test("project computer changes explicitly offer clone and change-only paths", ()
   assert.match(
     PROJECTS_ACTIONS_02_FRAGMENT,
     /function requestProjectOverviewComputerChange\(nextEnvironmentId, selectedEnvironmentRecord = null\)[\s\S]*?setProjectComputerChangeDialog/,
+  );
+  assert.doesNotMatch(
+    PROJECTS_ACTIONS_02_FRAGMENT,
+    /getProjectOverviewSidebarEnvironmentValue\(/,
+    "the top-level computer change action must not call a helper scoped inside renderProjectOverviewView",
+  );
+  assert.doesNotMatch(
+    PROJECTS_ACTIONS_02_FRAGMENT,
+    /projectOverviewDraft/,
+    "the top-level computer change action must not reference view-local draft state",
+  );
+  assert.match(
+    PROJECTS_ACTIONS_02_FRAGMENT,
+    /const currentProject = getActiveProjectOverviewRecord\(\)[\s\S]*?const currentEnvironmentId = String\([\s\S]*?projectComposerDefaultEnvironmentId/,
+    "the computer change action must resolve the current computer through the action-scope project record",
   );
   assert.match(
     PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT,

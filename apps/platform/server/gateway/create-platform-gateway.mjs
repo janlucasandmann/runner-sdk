@@ -5,6 +5,7 @@ import { createThreadGateway } from "./thread/index.mjs";
 import { createAdminGateway } from "./admin-gateway.mjs";
 import { createAiosGateway } from "./aios-gateway.mjs";
 import { createPublicApiGateway } from "./public-api-gateway.mjs";
+import { createDeployableAppGateway } from "./deployable-app-gateway.mjs";
 export function createPlatformGateway(config) {
     const core = createCoreGateway(config);
     const resource = createResourceGateway({ ...config, ...core });
@@ -17,8 +18,11 @@ export function createPlatformGateway(config) {
     const admin = createAdminGateway({ ...config, ...core });
     const aios = createAiosGateway({ ...config, ...core });
     const publicApi = createPublicApiGateway(config);
-    const modules = { ...core, ...resource, ...thread, ...admin, ...aios, ...publicApi };
+    const deployableApps = createDeployableAppGateway(config);
+    const modules = { ...core, ...resource, ...thread, ...admin, ...aios, ...publicApi, ...deployableApps };
     return Object.freeze({
+        closeDeployableAppGateway: modules.closeDeployableAppGateway,
+        deployableAppGatewayEnabled: modules.deployableAppGatewayEnabled,
         extractFeedbackSummaryIdToken: modules.extractFeedbackSummaryIdToken,
         fetchAiosApi: modules.fetchAiosApi,
         fetchAiosCloud: modules.fetchAiosCloud,
@@ -39,6 +43,8 @@ export function createPlatformGateway(config) {
         proxyContactSalesSummaryGet: modules.proxyContactSalesSummaryGet,
         proxyApplianceOverviewGet: modules.proxyApplianceOverviewGet,
         proxyCreateThread: modules.proxyCreateThread,
+        proxyDeployableAppRequest: modules.proxyDeployableAppRequest,
+        proxyDeployableAppUpgrade: modules.proxyDeployableAppUpgrade,
         proxyEnvironmentGuiSession: modules.proxyEnvironmentGuiSession,
         proxyEnvironmentStart: modules.proxyEnvironmentStart,
         proxyFeedbackSummaryGet: modules.proxyFeedbackSummaryGet,

@@ -58,8 +58,8 @@ describe("PlatformFileExplorerModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close file preview" }));
     expect(onPreviewClose).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole("button", { name: "Close file explorer" }));
-    expect(onClose).toHaveBeenCalledWith("close-button");
+    expect(screen.queryByRole("button", { name: "Close file explorer" })).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("falls back from a thumbnail to its source file and then the file icon", () => {
@@ -153,8 +153,9 @@ describe("PlatformFileExplorerModal", () => {
 
     const dialog = screen.getByRole("dialog", { name: "Attach files" });
     expect(dialog.querySelector("[data-platform-modal-part='sidebar']")).toBeNull();
-    expect(dialog.querySelector(".platform-file-explorer")?.classList.contains("has-no-sidebar"))
-      .toBe(true);
+    expect(
+      dialog.querySelector(".platform-file-explorer")?.classList.contains("has-no-sidebar"),
+    ).toBe(true);
     expect(dialog.textContent).toContain("Repositories");
   });
 });

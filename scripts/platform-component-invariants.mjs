@@ -46,7 +46,12 @@ const compositeComponents = [
 ];
 const threadComponents = ["document-preview", "log-boxes"];
 const retiredRootComponents = [...primitiveComponents, ...compositeComponents];
-const allowedUiCompositeDependencies = new Map([["selector", new Set(["popup"])]]);
+const allowedUiCompositeDependencies = new Map([
+  ["selector", new Set(["popup"])],
+  // Ticket rows own their standardized action-menu trigger and positioning so
+  // every overview inherits the same multi-select and keyboard behavior.
+  ["ticket-item", new Set(["popup"])],
+]);
 
 async function pathExists(targetPath) {
   try {

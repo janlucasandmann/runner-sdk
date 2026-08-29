@@ -22,7 +22,7 @@ function useHarness() {
 }
 
 describe("useRunnerTurnNoticeController", () => {
-  it("appends and expands a completed synthetic turn", () => {
+  it("appends a collapsed completed synthetic turn", () => {
     const { result } = renderHook(() => useHarness());
 
     act(() => {
@@ -47,7 +47,7 @@ describe("useRunnerTurnNoticeController", () => {
       "Communicator answered",
       "Tests are passing.",
     ]);
-    expect(result.current.expandedTurns["turn-1"]).toBe(true);
+    expect(result.current.expandedTurns["turn-1"]).toBe(false);
   });
 
   it("creates completed and pending context notices", () => {

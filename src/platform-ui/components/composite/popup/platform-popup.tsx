@@ -10,6 +10,10 @@ import {
   type Ref,
 } from "react";
 import { createPortal } from "react-dom";
+import {
+  PlatformPopupSearchHeader,
+  type PlatformPopupSearchHeaderProps,
+} from "./platform-popup-search-header.js";
 
 export type PlatformPopupAnimation =
   | "up-in"
@@ -52,6 +56,7 @@ export interface PlatformPopupProps {
   open: boolean;
   trigger?: ReactNode | ((state: { open: boolean }) => ReactNode);
   children?: ReactNode;
+  searchHeader?: PlatformPopupSearchHeaderProps | null | false;
   rootRef?: Ref<HTMLDivElement>;
   rootProps?: Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">;
   surfaceRef?: Ref<HTMLDivElement>;
@@ -331,6 +336,7 @@ export function PlatformPopup({
   open,
   trigger,
   children,
+  searchHeader = null,
   rootRef,
   rootProps = {},
   surfaceRef,
@@ -460,6 +466,11 @@ export function PlatformPopup({
           : null),
       }}
     >
+      {searchHeader ? (
+        <div className="platform-popup__search-header">
+          <PlatformPopupSearchHeader {...searchHeader} />
+        </div>
+      ) : null}
       {children}
     </PlatformPopupSurface>
   ) : null;

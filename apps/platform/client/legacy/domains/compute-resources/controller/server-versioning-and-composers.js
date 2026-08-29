@@ -362,7 +362,7 @@
               : operation.includes("unpublish")
                 ? "unpublished"
                 : "saved";
-            const resourceType = canonicalizePlaygroundServerKind(serverRecord?.kind) === "function" ? "function" : "web_app";
+            const resourceType = canonicalizePlaygroundServerKind(serverRecord?.kind);
             const nextVersioning = {
               ...currentVersioning,
               schemaVersion: 1,
@@ -2892,11 +2892,13 @@
 	          const creationCopy = getServerCreationCopy(composerKind);
 	          const isWebAppComposer = composerKind === "web_app";
 	          const isFunctionComposer = composerKind === "function";
+	          const isApiComposer = composerKind === "api";
 	          const isAiChatAppTemplate = isWebAppComposer && composerDraft.template === "ai_chat_app";
 	          const authMode = composerDraft.authMode === "private" ? "private" : "public";
 	          const creationIconByKind = {
 	            web_app: Globe,
 	            function: FunctionSquare,
+	            api: Server,
 	            database: Database,
 	            auth: Shield,
 	            secrets: Key,
@@ -2980,7 +2982,7 @@
 	            }));
 	          }
 
-	          if (isWebAppComposer || isFunctionComposer) {
+	          if (isWebAppComposer || isFunctionComposer || isApiComposer) {
 	            settingRows.push(renderCreationSelectorRow("auth", "Auth", {
 	              value: authMode,
 	              options: [

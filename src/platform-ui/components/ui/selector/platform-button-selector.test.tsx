@@ -185,6 +185,30 @@ describe("PlatformButtonSelector", () => {
     expect(screen.queryByRole("menu", { name: "Create new" })).toBeNull();
   });
 
+  it("supports the centralized searchable-popup variant", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformButtonSelector
+        mode="popup"
+        label="Resource"
+        popupAriaLabel="Create project resource"
+        popupSearch={{
+          "aria-label": "Search resource types",
+          placeholder: "Search resources...",
+          autoFocus: true,
+        }}
+      >
+        <button type="button" role="menuitem">Database</button>
+      </PlatformButtonSelector>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Create project resource" }));
+
+    const search = screen.getByRole("searchbox", { name: "Search resource types" });
+    expect(search.closest(".platform-popup__search-header")).not.toBeNull();
+    expect(document.activeElement).toBe(search);
+  });
+
   it("keeps a hover-opened popup available while moving into its portaled surface", () => {
     vi.useFakeTimers();
     const { container } = render(

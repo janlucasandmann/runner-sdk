@@ -3,6 +3,7 @@ export * from "./shared/connections/connection-overview-page.js";
 export * from "./access-control/index.js";
 export * from "./agents/index.js";
 export * from "./computers/index.js";
+export * from "./projects/index.js";
 export * from "./skills/index.js";
 export * from "./tags/index.js";
 export * from "./plugins/index.js";

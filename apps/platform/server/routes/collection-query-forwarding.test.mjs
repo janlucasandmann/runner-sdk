@@ -89,3 +89,30 @@ test("account data-control deletes are forwarded to the authenticated control AP
     method: "DELETE",
   }]);
 });
+
+test("GitHub automation bindings are forwarded through the authenticated platform gateway", () => {
+  const calls = [];
+  const handler = createPlatformResourceRoutes({
+    matchPlaygroundBillingProxyRoute: () => null,
+    proxyUpstreamGet(_req, _res, upstreamPath) {
+      calls.push({ upstreamPath, method: "GET" });
+    },
+    proxyUpstreamJsonRequest(_req, _res, upstreamPath, method) {
+      calls.push({ upstreamPath, method });
+    },
+  });
+
+  const cases = [
+    ["GET", "/api/real/github/automations/bindings?scopeType=project&scopeId=project_1", "/github/automations/bindings"],
+    ["POST", "/api/real/github/automations/bindings", "/github/automations/bindings"],
+    ["PATCH", "/api/real/github/automations/bindings/binding%2Fone", "/github/automations/bindings/binding%2Fone"],
+    ["DELETE", "/api/real/github/automations/bindings/binding%2Fone", "/github/automations/bindings/binding%2Fone"],
+    ["GET", "/api/real/github/automations/bindings/binding%2Fone/executions?limit=20", "/github/automations/bindings/binding%2Fone/executions"],
+  ];
+
+  for (const [method, path, expectedUpstreamPath] of cases) {
+    assert.equal(handler({ method }, {}, new URL(`http://platform.test${path}`)), true);
+    const call = calls.at(-1);
+    assert.deepEqual(call, { upstreamPath: expectedUpstreamPath, method });
+  }
+});

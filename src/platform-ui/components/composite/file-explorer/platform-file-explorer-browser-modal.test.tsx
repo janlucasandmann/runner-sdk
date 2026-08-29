@@ -45,6 +45,7 @@ describe("PlatformFileExplorerBrowserModal", () => {
         renderItem={(file) => <div key={file.id}>{file.name}</div>}
         getItemKind={(file) => file.kind}
         getItemTimestamp={(file) => file.modifiedAt}
+        listFooter={<button type="button">Create repository</button>}
         confirmLabel="Attach Files"
         onConfirm={onConfirm}
       />,
@@ -56,6 +57,12 @@ describe("PlatformFileExplorerBrowserModal", () => {
     expect(screen.getByRole("searchbox", { name: "Search Files" })).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "File filters" })).toBeTruthy();
     expect(screen.getByText("notes.txt")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Create repository" })).toBeTruthy();
+    expect(
+      screen
+        .getByRole("button", { name: "Create repository" })
+        .closest(".tb-file-browser-list-footer"),
+    ).toBeTruthy();
 
     fireEvent.click(screen.getByRole("tab", { name: "Images" }));
     expect(screen.getByText("hero.png")).toBeTruthy();

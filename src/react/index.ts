@@ -2,7 +2,17 @@ export { RunnerLogList } from "./runner-log-list.js";
 export { RunnerChat } from "./runner-chat.js";
 export { RunnerFileBrowserDialog } from "./runner-chat/file-browser-dialog.js";
 export { RunnerGithubBranchSelector } from "./runner-chat/github-branch-selector.js";
+export { RunnerFunctionGithubConnectorSettings } from "./runner-chat/function-github-connector-settings.js";
 export { RunnerProjectGithubRepositorySettings } from "./runner-chat/project-github-repository-settings.js";
+export { RunnerProjectConnectorResourceSettings } from "./runner-chat/project-connector-resource-settings.js";
+export {
+  RunnerKnowledgeNotionResourceSettings,
+  RunnerProjectNotionResourceSettings,
+} from "./runner-chat/project-notion-resource-settings.js";
+export {
+  RunnerKnowledgeConfluenceResourceSettings,
+  RunnerProjectConfluenceResourceSettings,
+} from "./runner-chat/project-confluence-resource-settings.js";
 export {
   createGithubBrowserNodeId,
   createGithubBrowserRepoFolderId,

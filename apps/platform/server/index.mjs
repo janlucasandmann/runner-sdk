@@ -200,6 +200,7 @@ const server = http.createServer(createPlatformRequestHandler({
 }));
 
 server.on("upgrade", (req, socket, head) => {
+  if (platformGateway.proxyDeployableAppUpgrade(req, socket, head, { port })) return;
   vncWebSocketProxy.handleUpgrade(req, socket, head, { port });
 });
 
@@ -229,6 +230,7 @@ async function shutdownPlatform(signal) {
   if (shutdownStarted) return;
   shutdownStarted = true;
   console.log(`[platform] Received ${signal}; stopping execution dispatch and HTTP intake.`);
+  platformGateway.closeDeployableAppGateway();
   await Promise.all([
     executionDispatcherRuntime.stop({ wait: false }),
     platformServices.externalAgentService.stop({ wait: false }),

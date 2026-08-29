@@ -16,14 +16,14 @@ function dgxEnvelope() {
     edition: "appliance",
     stage: "prod",
     topology: "on_prem",
-    readiness: "foundation",
+    readiness: "available",
     capabilities: {
       platform: true,
       agentExecution: true,
       schedules: true,
       metronomes: true,
       localInference: true,
-      deployableResources: false,
+      deployableResources: true,
       modelManagement: false,
       modelSelection: false,
       subscriptions: false,
@@ -34,7 +34,7 @@ function dgxEnvelope() {
     product: {
       inference: {
         mode: "deployment_fixed",
-        fixedModelId: "deepseek-v4-flash",
+        fixedModelId: "qwen3.8-flash-next",
         deploymentEndpoint: {
           id: "deployment-inference-endpoint",
           name: "Stockifi Appliance Inference",
@@ -74,7 +74,7 @@ test("validates and freezes the sanitized DGX Spark profile", () => {
     expectedTopology: "on_prem",
     expectedStage: "prod",
   });
-  assert.equal(validated.profile.product.inference.fixedModelId, "deepseek-v4-flash");
+  assert.equal(validated.profile.product.inference.fixedModelId, "qwen3.8-flash-next");
   assert.deepEqual(validated.profile.product.inference.deploymentEndpoint, {
     id: "deployment-inference-endpoint",
     name: "Stockifi Appliance Inference",
@@ -109,6 +109,16 @@ test("rejects a malformed deployment inference descriptor", () => {
 test("rejects a profile whose payload does not match its integrity hash", () => {
   const envelope = dgxEnvelope();
   envelope.profile.capabilities.billing = true;
+  assert.throws(
+    () => validatePublicDeploymentProfileEnvelope(envelope),
+    DeploymentProfileIntegrityError,
+  );
+});
+
+test("rejects an appliance profile that disables local deployable resources", () => {
+  const envelope = dgxEnvelope();
+  envelope.profile.capabilities.deployableResources = false;
+  envelope.hash = hashPublicDeploymentProfile(envelope.profile);
   assert.throws(
     () => validatePublicDeploymentProfileEnvelope(envelope),
     DeploymentProfileIntegrityError,

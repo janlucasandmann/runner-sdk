@@ -607,6 +607,77 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
             );
           };
 
+          const getMetronomeRunningThreadLabel = (step, thread) => {
+            const safeStep = step && typeof step === "object" && !Array.isArray(step) ? step : {};
+            const safeThread = thread && typeof thread === "object" && !Array.isArray(thread) ? thread : {};
+            const output = safeStep.output && typeof safeStep.output === "object" && !Array.isArray(safeStep.output)
+              ? safeStep.output
+              : {};
+            const outputThread = output.thread && typeof output.thread === "object" && !Array.isArray(output.thread)
+              ? output.thread
+              : {};
+            const records = [safeStep, outputThread, safeThread, output].flatMap((record) => {
+              const metadata = record.metadata && typeof record.metadata === "object" && !Array.isArray(record.metadata)
+                ? record.metadata
+                : {};
+              const projection = metadata.projection && typeof metadata.projection === "object" && !Array.isArray(metadata.projection)
+                ? metadata.projection
+                : {};
+              const runProjection = metadata.runProjection && typeof metadata.runProjection === "object" && !Array.isArray(metadata.runProjection)
+                ? metadata.runProjection
+                : metadata.run_projection && typeof metadata.run_projection === "object" && !Array.isArray(metadata.run_projection)
+                  ? metadata.run_projection
+                  : {};
+              return [record, metadata, projection, runProjection];
+            });
+            const keys = [
+              "workingLabel",
+              "working_label",
+              "workingSummary",
+              "working_summary",
+              "headerSummary",
+              "header_summary",
+              "statusMessage",
+              "status_message",
+              "liveSummary",
+              "live_summary",
+              "thinkingSummary",
+              "thinking_summary",
+            ];
+            for (const record of records) {
+              for (const key of keys) {
+                const label = String(record[key] || "").replace(/\s+/g, " ").trim();
+                if (label && !/^thread is running[.!?]*$/i.test(label)) {
+                  return label;
+                }
+              }
+            }
+            return "Working...";
+          };
+
+          const renderMetronomeRunningThreadStatus = (workingLabel) => (
+            React.createElement("div", {
+              className: "tb-work-header is-static tb-thread-live-work-status playground-metronome-running-thread-status",
+            },
+              React.createElement("span", { className: "tb-work-label is-live" },
+                React.createElement("span", {
+                  className: "tb-log-inline-status-spinner-slot tb-work-status-loader",
+                  "aria-hidden": "true",
+                },
+                  React.createElement("img", {
+                    className: "tb-log-inline-status-spinner tb-thread-live-work-spinner",
+                    src: "/img/spinner.svg",
+                    alt: "",
+                  })
+                ),
+                React.createElement("span", {
+                  className: "tb-work-label-copy",
+                  "aria-live": "polite",
+                }, workingLabel)
+              )
+            )
+          );
+
           const renderMetronomeRunTrace = (run, { includeComposerPrompt = false } = {}) => {
             const output = run?.output && typeof run.output === "object" ? run.output : {};
             const steps = Array.isArray(output.steps) ? output.steps : [];
@@ -633,6 +704,10 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                   || stepSubtype === "thread"
                   || stepSubtype === "start_thread"
                   || /start\s+agent\s+thread/i.test(rawStepLabel);
+                const stepOutput = step?.output && typeof step.output === "object" ? step.output : {};
+                const outputThread = stepOutput.thread && typeof stepOutput.thread === "object" ? stepOutput.thread : {};
+                const threadStatus = String(step?.status || outputThread.status || thread?.status || stepOutput.status || "").trim();
+                const isThreadRunning = isThreadStep && isActiveMetronomeRunStatus(threadStatus);
                 const stepTitle = stepNode
                   ? getMetronomeNodeDisplayLabel(stepNode)
                   : normalizeMetronomeNodeLabel(rawStepLabel || getMetronomeSubtypeLabel(step.kind, step.subtype) || step.kind || "Workflow step", stepKind || step.kind, stepSubtype || step.subtype);
@@ -685,13 +760,15 @@ export const METRONOME_PAGE_EDITOR_SCRIPT = String.raw`
                         )
                       )
                     : null,
-                  summary
+                  isThreadRunning
+                    ? renderMetronomeRunningThreadStatus(getMetronomeRunningThreadLabel(step, thread))
+                    : summary
                     ? React.createElement("div", { className: "playground-metronome-run-trace-summary" }, summary)
                     : null,
                   conditionPresentation
                     ? React.createElement(PlatformMetronomeConditionResult, conditionPresentation)
                     : null,
-                  shouldRenderOutputText
+                  shouldRenderOutputText && !isThreadRunning
                     ? renderMetronomeRunOutputMarkdown(readableOutputText)
                     : null
                 ));

@@ -3,6 +3,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PlatformPopupSurface } from "./platform-popup.js";
 import { PlatformPopupSubmenu } from "./platform-popup-submenu.js";
 
 afterEach(() => {
@@ -14,7 +15,7 @@ describe("PlatformPopupSubmenu", () => {
   it("keeps its portaled surface open while pointer focus moves into it", () => {
     vi.useFakeTimers();
     const { container } = render(
-      <div role="menu">
+      <PlatformPopupSurface role="menu" variant="minimal">
         <PlatformPopupSubmenu
           label="Status"
           detail="Todo"
@@ -25,7 +26,7 @@ describe("PlatformPopupSubmenu", () => {
             In Progress
           </button>
         </PlatformPopupSubmenu>
-      </div>,
+      </PlatformPopupSurface>,
     );
 
     const submenuRoot = container.querySelector(".platform-popup-submenu");
@@ -53,7 +54,7 @@ describe("PlatformPopupSubmenu", () => {
 
   it("can close after selecting a submenu action", () => {
     render(
-      <div role="menu">
+      <PlatformPopupSurface role="menu" variant="minimal">
         <PlatformPopupSubmenu
           label="Priority"
           popupAriaLabel="Change ticket priority"
@@ -63,7 +64,7 @@ describe("PlatformPopupSubmenu", () => {
             High
           </button>
         </PlatformPopupSubmenu>
-      </div>,
+      </PlatformPopupSurface>,
     );
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Priority" }));

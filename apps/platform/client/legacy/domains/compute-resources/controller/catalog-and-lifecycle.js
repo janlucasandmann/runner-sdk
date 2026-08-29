@@ -2714,7 +2714,7 @@
             const seedServerKind = canonicalizePlaygroundServerKind(
               seedServer?.kind || normalizedEmbeddedServerKind
             );
-            if (["function", "web_app"].includes(seedServerKind)) {
+            if (isSourceDeployablePlaygroundServerKind(seedServerKind)) {
               setServerDetailTab("code");
               void loadServerFiles(selectedServerId);
             }
@@ -2737,7 +2737,7 @@
             }
             const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
             const activeServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
-            if (!["function", "web_app"].includes(activeServerKind)) {
+            if (!isSourceDeployablePlaygroundServerKind(activeServerKind)) {
               return;
             }
             if (
@@ -2847,8 +2847,8 @@
               return;
             }
             const normalizedKind = canonicalizePlaygroundServerKind(activeServer.kind);
-            const isSourceDeployableServer = ["web_app", "function"].includes(normalizedKind);
-            const isOperationalDetailServer = ["web_app", "function", "auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind);
+            const isSourceDeployableServer = isSourceDeployablePlaygroundServerKind(normalizedKind);
+            const isOperationalDetailServer = isSourceDeployableServer || ["auth", "agent_runtime", "secrets", "payments"].includes(normalizedKind);
             if (!isOperationalDetailServer && !activeServer.cloudRunServiceName && !activeServer.serviceUrl) {
               return;
             }
@@ -2899,7 +2899,7 @@
             }
             const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
             const activeServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
-            if (!["web_app", "function"].includes(activeServerKind)) {
+            if (!isSourceDeployablePlaygroundServerKind(activeServerKind)) {
               return;
             }
             const isSourceServerUsageActivity = serverDetailTab === "usage";
@@ -2923,7 +2923,7 @@
             }
             const activeServer = draftServer?.id === selectedServerId ? draftServer : selectedServerSnapshot;
             const activeServerKind = canonicalizePlaygroundServerKind(activeServer?.kind);
-            if (!["function", "web_app"].includes(activeServerKind)) {
+            if (!isSourceDeployablePlaygroundServerKind(activeServerKind)) {
               return;
             }
             if (!hasLoadedCurrentServerFiles || loadingServerFilesId === selectedServerId) {
@@ -2935,7 +2935,9 @@
 
             const preferredSourcePath = activeServerKind === "web_app"
               ? PLAYGROUND_DEFAULT_WEB_APP_SOURCE_PATH
-              : PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH;
+              : activeServerKind === "api"
+                ? PLAYGROUND_DEFAULT_API_SOURCE_PATH
+                : PLAYGROUND_DEFAULT_FUNCTION_SOURCE_PATH;
             const preferredEntry = currentServerFiles.find((entry) => !entry?.isFolder && entry.path === preferredSourcePath && isPlaygroundTextPreviewable(entry))
               || currentServerFiles.find((entry) => !entry?.isFolder && isPlaygroundTextPreviewable(entry))
               || null;
@@ -2947,6 +2949,8 @@
               void createDefaultFunctionSourceFile(selectedServerId);
             } else if (activeServerKind === "web_app") {
               void createDefaultWebAppSourceFiles(selectedServerId);
+            } else if (activeServerKind === "api") {
+              void createDefaultApiSourceFiles(selectedServerId);
             }
           }, [
             currentServerFiles,
@@ -4393,7 +4397,7 @@
 
           useEffect(() => {
             const normalizedKind = canonicalizePlaygroundServerKind(draftServer?.kind);
-            const isDeployableServer = normalizedKind === "web_app" || normalizedKind === "function";
+            const isDeployableServer = isSourceDeployablePlaygroundServerKind(normalizedKind);
             if (
               resourceMode !== "servers"
               || !draftServer?.id
@@ -4448,7 +4452,7 @@
 
           useEffect(() => {
             const normalizedKind = canonicalizePlaygroundServerKind(draftServer?.kind);
-            const isDeployableServer = normalizedKind === "web_app" || normalizedKind === "function";
+            const isDeployableServer = isSourceDeployablePlaygroundServerKind(normalizedKind);
             if (
               resourceMode !== "servers"
               || !isDeployableServer

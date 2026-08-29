@@ -83,6 +83,9 @@ export interface RunnerGithubRunReference {
   repoFullName: string;
   repoName: string;
   branch: string;
+  branchPrefix?: string;
+  createPullRequests?: boolean;
+  forcePushCommits?: boolean;
 }
 
 export interface RunnerThreadRunOptions {

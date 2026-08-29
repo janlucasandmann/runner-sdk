@@ -8,6 +8,7 @@ import {
 } from "node:crypto";
 import fs from "node:fs";
 import {
+  handleGithubRepositoryCreate,
   handleGithubRepositories,
   handleGithubRepositoryDetail,
 } from "./github-repository-api.mjs";
@@ -91,6 +92,26 @@ export async function handleGithubApiRequest({
         req,
         res,
         url,
+        envFileCandidates,
+        allowedOrigins,
+        verifyRequestUser,
+        loadGithubToken: (uid, candidates, credentialId = "") => loadGithubRequestToken(
+          req,
+          uid,
+          candidates,
+          credentialId,
+        ),
+        deleteGithubToken,
+        sendJson: sendGithubJson,
+      });
+    }
+
+    if (req.method === "POST" && normalizedPathname === "/api/github/repos") {
+      return await handleGithubRepositoryCreate({
+        req,
+        res,
+        url,
+        body: await readRequestBody(req),
         envFileCandidates,
         allowedOrigins,
         verifyRequestUser,

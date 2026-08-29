@@ -751,7 +751,7 @@
               && resourcesHeaderState.resourceType === "database";
             const isSourceDeployableResourcesDetailView = isResourcesDetailView
               && activeResourcesView === "servers"
-              && ["function", "web_app"].includes(activeResourcesServerKind)
+              && isSourceDeployablePlaygroundServerKind(activeResourcesServerKind)
               && resourcesHeaderState.resourceType === "server";
             const isAuthenticationResourcesDetailView = isResourcesDetailView
               && activeResourcesView === "servers"
@@ -775,7 +775,7 @@
               || isSecretsResourcesDetailView
               || isPaymentsResourcesDetailView;
             const isVersionedDevelopResource = activeResourcesView === "servers"
-              && ["web_app", "function"].includes(String(activeResourcesServerKind || ""));
+              && isSourceDeployablePlaygroundServerKind(activeResourcesServerKind);
             const returnToResourcesOverview = () => openResourcesView(activeResourcesView, {
               forceOverview: true,
               preserveSidebarMode: true,
@@ -802,7 +802,9 @@
                           ? "agent"
                           : activeResourcesServerKind === "function"
                             ? "function"
-                            : "web app"
+                            : activeResourcesServerKind === "api"
+                              ? "API"
+                              : "web app"
                     ) + " version history",
                     onClick: (event) => {
                       event.preventDefault();
@@ -927,7 +929,7 @@
                       })
                   : !isResourcesDetailView
                     && activeResourcesView === "servers"
-                    && ["web_app", "function", "database", "auth", "secrets", "payments"].includes(activeResourcesServerKind)
+                    && ["web_app", "function", "api", "database", "auth", "secrets", "payments"].includes(activeResourcesServerKind)
                     ? React.createElement("div", {
                         id: "playground-develop-resource-overview-period-controls",
                         className: "playground-develop-resource-overview-period-controls-slot",
@@ -2048,8 +2050,8 @@
                 onOpenChange: handleThreadNavMenuOpenChange,
                 resourceLabel: "Thread",
                 disabled: !selectedThreadNavRecord?.id,
-                width: 360,
-                maxWidth: "min(360px, calc(100vw - 16px))",
+                width: 280,
+                maxWidth: "min(280px, calc(100vw - 16px))",
                 popupClassName: "playground-thread-nav-popup-menu",
                 shortcutActions: {
                   rename: {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PlatformResourceActionMenuItem,
@@ -13,6 +13,7 @@ import {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -79,7 +80,8 @@ describe("PlatformResourceHeaderActions", () => {
     expect((menu as HTMLElement).style.width).toBe("240px");
   });
 
-  it("opens resource information beside the compact menu and exposes version history", () => {
+  it("opens resource information beside the compact menu and confirms successful copies", async () => {
+    vi.useFakeTimers();
     const onOpenVersionHistory = vi.fn();
     const onOpenChange = vi.fn();
     const writeText = vi.fn().mockResolvedValue(undefined);
@@ -128,10 +130,17 @@ describe("PlatformResourceHeaderActions", () => {
 
     const copyButton = screen.getByRole("button", { name: "Copy Test ID" });
     fireEvent.pointerDown(copyButton);
-    fireEvent.click(copyButton);
+    await act(async () => {
+      fireEvent.click(copyButton);
+      await Promise.resolve();
+    });
     expect(writeText).toHaveBeenCalledWith("test-resource-id-that-must-remain-fully-visible");
+    expect(screen.getByRole("button", { name: "Copied" }).querySelector(".lucide-check")).not.toBeNull();
     expect(screen.getByRole("dialog", { name: "Test information" })).not.toBeNull();
     expect(onOpenChange).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(1600));
+    expect(screen.getByRole("button", { name: "Copy Test ID" }).querySelector(".lucide-copy")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Show version history" }));
     expect(onOpenVersionHistory).toHaveBeenCalledTimes(1);

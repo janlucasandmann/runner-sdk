@@ -115,10 +115,6 @@
   margin-top: auto;
 }
 
-.platform-file-explorer__close {
-  margin-left: auto;
-}
-
 .platform-file-explorer__content-body {
   padding: 12px;
   padding-top: 2px;
@@ -588,6 +584,15 @@
   flex-direction: column;
   gap: 2px;
   padding: 0;
+}
+
+.platform-file-explorer-modal.is-browser-layout .tb-file-browser-list-footer {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-top: auto;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .platform-file-explorer-modal.is-browser-layout .tb-file-browser-loading-state {

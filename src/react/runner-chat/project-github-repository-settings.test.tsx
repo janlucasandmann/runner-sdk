@@ -42,18 +42,32 @@ describe("RunnerGithubBranchSelector", () => {
 });
 
 describe("RunnerProjectGithubRepositorySettings", () => {
-  it("emits persisted branch-prefix and pull-request policy changes", () => {
+  it("emits persisted branch, pull-request, and force-push policy changes", () => {
     const onChange = vi.fn();
 
-    render(
+    const { container } = render(
       <RunnerProjectGithubRepositorySettings
         repoFullName="computer-agents/platform"
         refName="main"
         branchPrefix="computer-agents/"
         createPullRequests
+        forcePushCommits={false}
         onChange={onChange}
       />,
     );
+
+    expect(
+      container
+        .querySelector(".playground-project-github-repository-settings__branch .platform-selector")
+        ?.classList.contains("is-full-width"),
+    ).toBe(false);
+    const heading = container.querySelector(".platform-connector-configuration__header");
+    expect(heading?.querySelector(".playground-project-github-repository-settings__branch")).toBeNull();
+    expect(
+      container.querySelector(
+        ".platform-connector-configuration__row .playground-project-github-repository-settings__branch",
+      ),
+    ).toBeTruthy();
 
     const prefixInput = screen.getByRole("textbox", {
       name: "Branch prefix for computer-agents/platform",
@@ -62,7 +76,18 @@ describe("RunnerProjectGithubRepositorySettings", () => {
     fireEvent.blur(prefixInput);
     expect(onChange).toHaveBeenCalledWith({ branchPrefix: "feature/" });
 
-    fireEvent.click(screen.getByRole("radio", { name: "Do not create" }));
+    fireEvent.click(
+      screen.getByRole("switch", {
+        name: "Create pull requests for computer-agents/platform",
+      }),
+    );
     expect(onChange).toHaveBeenCalledWith({ createPullRequests: false });
+
+    fireEvent.click(
+      screen.getByRole("switch", {
+        name: "Force-push commits for computer-agents/platform",
+      }),
+    );
+    expect(onChange).toHaveBeenCalledWith({ forcePushCommits: true });
   });
 });

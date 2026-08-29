@@ -339,6 +339,11 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
+  /function renderThreadTitleActionMenu\(\) \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?width: 280,[\s\S]*?maxWidth: "min\(280px, calc\(100vw - 16px\)\)"/,
+  "The thread title action popup must use the compact thread-only width.",
+);
+assert.match(
+  platformEntrySource,
   /function renderThreadTitleActionMenu\(\) \{\s*if \(!selectedThreadNavRecord\?\.id\) \{/,
   "The thread title menu must remain available while a thread side-detail drawer is open.",
 );

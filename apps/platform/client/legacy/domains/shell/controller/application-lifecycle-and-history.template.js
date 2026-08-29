@@ -1091,7 +1091,7 @@
           const isSourceDeployableCodeContentRoute = Boolean(
             isResourcesPage
             && activeResourcesView === "servers"
-            && ["function", "web_app"].includes(activeResourcesServerKind)
+            && isSourceDeployablePlaygroundServerKind(activeResourcesServerKind)
             && resourcesHeaderState.mode === "detail"
             && resourcesHeaderState.resourceType === "server"
             && resourcesHeaderState.activeSection === "code"

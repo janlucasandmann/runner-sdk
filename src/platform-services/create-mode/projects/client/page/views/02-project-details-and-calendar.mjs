@@ -1214,10 +1214,17 @@ export const PROJECTS_VIEWS_02_FRAGMENT = `	          );
                   style: getPlaygroundTaskColorStyle(task.taskColor),
                   draggable: isDraggable,
                   ticketActionMenu: ({ closeMenu }) => renderProjectTicketPreviewContextMenu(task, { closeMenu }),
-                  openTicketActionMenuOnClick: true,
-                  onTicketActionMenuOpen: () => handleSelectTask(task.id),
                   onTicketDeleteRequest: () => void handleDeleteTask(task.id),
                   ticketDeleteShortcutDisabled: saveState.isSaving || Boolean(taskDeleteDialogState),
+                  onClick: () => openProjectTaskDetailScreen(task.id),
+                  onKeyDown: (event) => {
+                    if (event.key !== "Enter" && event.key !== " ") {
+                      return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openProjectTaskDetailScreen(task.id);
+                  },
                   onDragStart: (event) => handleBacklogTaskDragStart(task, event),
                   onDragEnd: handleBacklogTaskDragEnd,
                   onDragOver: (event) => {

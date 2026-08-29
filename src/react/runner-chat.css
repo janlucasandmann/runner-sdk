@@ -1693,6 +1693,19 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   margin-right: 0;
 }
 
+.tb-runner-chat .tb-thread-live-work-status .tb-thread-live-work-spinner {
+  animation: tb-context-action-notice-spin 0.9s linear infinite;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-thread-live-work-context {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-thread-live-work-separator {
+  color: rgba(255, 255, 255, 0.42);
+}
+
 .tb-runner-chat .tb-thread-live-work-status .tb-work-label-copy {
   min-width: 0;
   overflow: hidden;

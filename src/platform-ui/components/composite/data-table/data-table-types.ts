@@ -270,6 +270,7 @@ export interface PlatformDataTableProps<TData> {
   getRowAriaLabel?: (row: TData) => string;
   isRowDisabled?: (row: TData) => boolean;
   loading?: boolean;
+  loadingState?: ReactNode;
   error?: ReactNode;
   emptyState?: ReactNode;
   noResultsState?: ReactNode;

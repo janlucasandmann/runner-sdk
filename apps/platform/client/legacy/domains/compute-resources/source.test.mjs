@@ -89,6 +89,26 @@ assert.match(
   "Develop resource overviews must not publish the legacy ellipsis menu into the right app-header actions.",
 );
 assert.match(
+  platformTemplateSource,
+  /function isSourceDeployablePlaygroundServerKind\(kind\) \{[\s\S]{0,180}\["web_app", "function", "api"\]\.includes/,
+  "Web Apps, Functions, and APIs must share one canonical source-deployable resource classifier.",
+);
+assert.match(
+  platformTemplateSource,
+  /const PLAYGROUND_DEFAULT_API_SOURCE_CONTENT =[\s\S]{0,900}\.listen\(port\);[\s\S]{0,180}const PLAYGROUND_DEFAULT_API_PACKAGE_CONTENT =[\s\S]{0,420}start: "node index\.js"/,
+  "New APIs must receive a standalone, container-runnable starter without hosted runtime assumptions.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /async function createDefaultApiSourceFiles\(serverId, options = \{\}\)[\s\S]{0,900}kind: "api"/,
+  "APIs must define their starter through the shared source-file service.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /composerKind === "api"[\s\S]{0,120}createDefaultApiSourceFiles\(savedServer\.id/,
+  "API creation must persist the default starter before opening its detail route.",
+);
+assert.match(
   shellCompositionSource,
   /key: "resources:"[\s\S]{0,180}activeResourcesView === "servers"[\s\S]{0,120}activeResourcesServerKind \|\| "all"/,
   "Each development server kind must own an isolated React lifecycle during rapid overview navigation.",
@@ -322,27 +342,27 @@ const sourceUsageActivityRendererIndex = COMPUTE_RESOURCES_PAGE_SCRIPT.indexOf(
 assert.ok(
   serverKindLabelDeclarationIndex > currentServerEditorStart
     && serverKindLabelDeclarationIndex < sourceUsageActivityRendererIndex,
-  "Shared source-resource metadata must initialize before Web App and Function detail consumers.",
+  "Shared source-resource metadata must initialize before source-deployable detail consumers.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /React\.createElement\(PlatformCodeEditorWorkspace, \{[\s\S]{0,600}variant: isSourceDeployableServer \? "full-screen" : "default"/,
-  "Function and Web App Code must share the centralized full-screen workspace.",
+  "Source-deployable Code must share the centralized full-screen workspace.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const sourceServerCodeIdentitySection = isSourceDeployableServer[\s\S]{0,600}className: "playground-source-server-code-identity-icon"[\s\S]{0,300}isFunctionServer \? FunctionSquare : Globe[\s\S]{0,900}className: "playground-source-server-code-name-input"[\s\S]{0,900}className: "file-resource-detail-page__description-input playground-source-server-code-description-input"/,
-  "Function and Web App Code must place their icon, editable name, and editable description above the source workspace.",
+  /const sourceServerCodeIdentitySection = isSourceDeployableServer[\s\S]{0,600}className: "playground-source-server-code-identity-icon"[\s\S]{0,360}isFunctionServer \? FunctionSquare : isApiServer \? Server : Globe[\s\S]{0,900}className: "playground-source-server-code-name-input"[\s\S]{0,900}className: "file-resource-detail-page__description-input playground-source-server-code-description-input"/,
+  "Source-deployable Code must place its resource-specific icon, editable name, and editable description above the workspace.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null/,
-  "Function and Web App Settings must not repeat the description shown on Code.",
+  "Source-deployable Settings must not repeat the description shown on Code.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /className: "playground-source-server-code-tab"[\s\S]{0,180}sourceServerCodeIdentitySection[\s\S]{0,180}className: "playground-source-server-code-workspace"[\s\S]{0,120}sourceFilesSection/,
-  "Function and Web App Code must compose the identity header and editor as one full-height surface.",
+  "Source-deployable Code must compose the identity header and editor as one full-height surface.",
 );
 assert.match(
   developServerDetailPageCss,
@@ -351,7 +371,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const isEmbeddedServerCodeTab = Boolean\([\s\S]{0,260}\["function", "web_app"\]\.includes\(embeddedActiveServerKind\)[\s\S]{0,100}serverDetailTab === "code"/,
+  /const isEmbeddedServerCodeTab = Boolean\([\s\S]{0,260}isSourceDeployablePlaygroundServerKind\(embeddedActiveServerKind\)[\s\S]{0,100}serverDetailTab === "code"/,
   "Source-deployable Code must derive one shared outer route scope.",
 );
 assert.match(
@@ -366,8 +386,8 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const isEmbeddedSourceServerUsageTab = Boolean\([\s\S]{0,260}\["function", "web_app"\]\.includes\(embeddedActiveServerKind\)[\s\S]{0,100}serverDetailTab === "usage"/,
-  "Function and Web App Usage must derive one shared outer route scope.",
+  /const isEmbeddedSourceServerUsageTab = Boolean\([\s\S]{0,260}isSourceDeployablePlaygroundServerKind\(embeddedActiveServerKind\)[\s\S]{0,100}serverDetailTab === "usage"/,
+  "Source-deployable Usage must derive one shared outer route scope.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -471,7 +491,7 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /if \(!\["function", "web_app"\]\.includes\(activeServerKind\)\)[\s\S]{0,500}void loadServerContext\(selectedServerId\)/,
+  /if \(!isSourceDeployablePlaygroundServerKind\(activeServerKind\)\)[\s\S]{0,500}void loadServerContext\(selectedServerId\)/,
   "Connectable server details must load their runtime context before Settings is opened.",
 );
 assert.match(
@@ -482,12 +502,12 @@ assert.match(
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /const serverVersionApiClient = useMemo\(\(\) => new RunnerClient\([\s\S]*?cache: "no-store",[\s\S]*?priority: "high"/,
-  "Function source versions must load through an uncached, high-priority client.",
+  "Source-deployable versions must load through an uncached, high-priority client.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /buildPlaygroundServerBindingsUrl[\s\S]{0,300}cache: "no-store",[\s\S]{0,120}priority: "high"[\s\S]*?buildPlaygroundServerContextUrl[\s\S]{0,300}cache: "no-store",[\s\S]{0,120}priority: "high"/,
-  "Function connections and runtime context must load uncached at high priority.",
+  "Source-deployable connections and runtime context must load uncached at high priority.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -568,17 +588,17 @@ assert.match(
 assert.match(
   shellCompositionSource,
   /className: "playground-source-server-detail-header-switch"[\s\S]{0,360}: "code",[\s\S]{0,240}\{ value: "code", label: "Code" \},\s*\{ value: "usage", label: "Usage" \}/,
-  "Function and Web App details must default to Code and show it as the leftmost app-header section.",
+  "Source-deployable details must default to Code and show it as the leftmost app-header section.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const selectedServerKind = canonicalizePlaygroundServerKind\([\s\S]{0,420}setServerDetailTab\(\["function", "web_app"\]\.includes\(selectedServerKind\) \? "code" : "usage"\)/,
-  "Opening a Function or Web App must select Code without changing the default for other server resources.",
+  /const selectedServerKind = canonicalizePlaygroundServerKind\([\s\S]{0,420}setServerDetailTab\(isSourceDeployablePlaygroundServerKind\(selectedServerKind\) \? "code" : "usage"\)/,
+  "Opening a source-deployable resource must select Code without changing the default for managed resources.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /if \(\["function", "web_app"\]\.includes\(seedServerKind\)\) \{\s*setServerDetailTab\("code"\);\s*void loadServerFiles\(selectedServerId\);\s*\}/,
-  "Deep-linked Functions and Web Apps must open Code and load their source immediately.",
+  /if \(isSourceDeployablePlaygroundServerKind\(seedServerKind\)\) \{\s*setServerDetailTab\("code"\);\s*void loadServerFiles\(selectedServerId\);\s*\}/,
+  "Deep-linked source-deployable resources must open Code and load their source immediately.",
 );
 assert.doesNotMatch(
   COMPUTE_RESOURCES_PAGE_SCRIPT.match(/const serverDetailKpis = isSourceDeployableServer[\s\S]{0,1100}/)?.[0] || "",
@@ -587,8 +607,8 @@ assert.doesNotMatch(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /React\.createElement\(SourceDeployableServerDetailPage, \{[\s\S]{0,180}resourceKind: isFunctionServer \? "function" : "web-app"[\s\S]{0,180}contentByTab: sourceServerDetailContentByTab/,
-  "Function and Web App details must use the shared source-deployable detail module.",
+  /React\.createElement\(SourceDeployableServerDetailPage, \{[\s\S]{0,220}resourceKind: isFunctionServer \? "function" : isApiServer \? "api" : "web-app"[\s\S]{0,180}contentByTab: sourceServerDetailContentByTab/,
+  "Source-deployable details must use the shared detail module with their concrete resource kind.",
 );
 assert.match(
   sourceDeployableServerDetailPageSource,
@@ -598,7 +618,7 @@ assert.match(
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /\.\.\.\(isSourceDeployableResourcesDetail\s*\?\s*\{[\s\S]{0,180}activeSection: \["code", "usage", "settings"\]\.includes\(serverDetailTab\)[\s\S]{0,1200}handleSourceServerDetailTabChange\(normalizedNextSection\)/,
-  "Function and Web App details must publish controlled section navigation to the app header.",
+  "Source-deployable details must publish controlled section navigation to the app header.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -657,8 +677,18 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*serverSettingsResourcesTable,\s*connectionsSection/,
+  /serverDeploymentMapSection,\s*isSourceDeployableServer \? null : descriptionSection,\s*isFunctionServer \? functionInvokeSection : null,\s*functionConnectorsSection,\s*serverSettingsResourcesTable,\s*connectionsSection/,
   "Source settings must retain deployment, resources, and connections while descriptions live exclusively on Code.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const functionConnectorsSection = isFunctionServer[\s\S]{0,1200}React\.createElement\(RunnerFunctionGithubConnectorSettings, \{[\s\S]{0,1800}onCreateRepository: createFunctionGithubRepository,[\s\S]{0,180}onRepositoryChange: updateFunctionGithubConnector/,
+  "Function Settings must render the centralized GitHub connector with durable repository persistence.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /async function createFunctionGithubRepository\(options = \{\}\)[\s\S]{0,1600}captureCurrentServerVersionSnapshot\(draftServer\)[\s\S]{0,2600}createRepository\(\{[\s\S]{0,500}files,[\s\S]{0,180}accountId:/,
+  "Function repository creation must capture the complete current source and seed it through the selected GitHub account.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -822,7 +852,7 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /function getServerPermissionSubjectType\(server\) \{[\s\S]{0,260}\["web_app", "function", "auth", "secrets", "payments", "agent_runtime"\]\.includes\(kind\)[\s\S]{0,80}: "server"/,
+  /function getServerPermissionSubjectType\(server\) \{[\s\S]{0,280}\["web_app", "function", "api", "auth", "secrets", "payments", "agent_runtime"\]\.includes\(kind\)[\s\S]{0,80}: "server"/,
   "Every managed Develop resource must resolve to its dedicated permission subject.",
 );
 assert.match(
@@ -995,8 +1025,8 @@ const sourceServerDecommissionSource =
   )?.[0] || "";
 assert.match(
   sourceServerDecommissionSource,
-  /\["function", "web_app"\]\.includes\(normalizedServerKind\)/,
-  "Source decommissioning must support both Function and Web App resources.",
+  /isSourceDeployablePlaygroundServerKind\(normalizedServerKind\)/,
+  "Source decommissioning must support every source-deployable resource kind.",
 );
 assert.match(
   sourceServerDecommissionSource,
@@ -1515,7 +1545,7 @@ assert.equal(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /\["function", "web_app", "auth", "agent_runtime", "secrets", "payments"\]\.includes\(activeServerKind\)[\s\S]{0,80}return null;[\s\S]{0,120}renderCurrentResourceSettingsControl\(buttonClassName\)/,
+  /isSourceDeployablePlaygroundServerKind\(activeServerKind\) \|\| \["auth", "agent_runtime", "secrets", "payments"\]\.includes\(activeServerKind\)[\s\S]{0,80}return null;[\s\S]{0,120}renderCurrentResourceSettingsControl\(buttonClassName\)/,
   "Managed server actions must not be duplicated in the right-side app-header controls.",
 );
 assert.match(

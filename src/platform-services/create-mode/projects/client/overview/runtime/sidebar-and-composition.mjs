@@ -557,6 +557,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
               popupAlignment: "right",
               fullWidth: true,
               emptyContent: options.emptyContent || "No options available.",
+              popupSearch: options.popupSearch || null,
               popupHeader: options.popupHeader || null,
               popupHeaderClassName: options.popupHeaderClassName || "",
               optionClassName: options.optionClassName || "",
@@ -903,15 +904,14 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                         {
                           ariaLabel: "Project status",
                           popupClassName: "playground-tasks-detail-status-selector-popup playground-project-overview-status-selector-popup",
-                          popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                          popupSearch: {
                             value: projectOverviewSidebarStatusSearchQuery,
                             onChange: (event) => setProjectOverviewSidebarStatusSearchQuery(event.target.value),
                             placeholder: "Change status...",
                             shortcut: "S",
                             autoFocus: projectOverviewSidebarPropertyPopover === "status",
                             "aria-label": "Search project statuses",
-                          }),
-                          popupHeaderClassName: "is-search-header",
+                          },
                           emptyContent: "No matching statuses.",
                           onOpenChange: (nextOpen) => {
                             if (!nextOpen) {
@@ -941,15 +941,14 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                     ), {
                       ariaLabel: "Project priority",
                       popupClassName: "playground-tasks-detail-priority-selector-popup playground-project-overview-priority-selector-popup",
-                      popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                      popupSearch: {
                         value: projectOverviewSidebarPrioritySearchQuery,
                         onChange: (event) => setProjectOverviewSidebarPrioritySearchQuery(event.target.value),
                         placeholder: "Change priority...",
                         shortcut: "P",
                         autoFocus: projectOverviewSidebarPropertyPopover === "priority",
                         "aria-label": "Search project priorities",
-                      }),
-                      popupHeaderClassName: "is-search-header",
+                      },
                       emptyContent: "No matching priorities.",
                       onOpenChange: (nextOpen) => {
                         if (!nextOpen) {
@@ -973,14 +972,13 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
                       React.createElement("span", null, currentEnvironmentLabel)
                     ), {
                       ariaLabel: "Project computer",
-                      popupHeader: React.createElement(PlatformPopupSearchHeader, {
+                      popupSearch: {
                         value: projectOverviewSidebarComputerSearchQuery,
                         onChange: (event) => setProjectOverviewSidebarComputerSearchQuery(event.target.value),
                         placeholder: "Change computer...",
                         autoFocus: projectOverviewSidebarPropertyPopover === "computer",
                         "aria-label": "Search project computers",
-                      }),
-                      popupHeaderClassName: "is-search-header",
+                      },
                       emptyContent: normalizedComputerSearchQuery
                         ? "No matching computers."
                         : "No computers available.",
@@ -1179,6 +1177,11 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	            const isInline = Boolean(options?.inline);
 	            const isReadOnly = Boolean(options?.readOnly);
 	            const ruleEntries = splitPlaygroundProjectRuleEntries(projectRulesDraft || selectedProjectRules);
+	            const managedRuleEntries = buildPlaygroundProjectRepositoryPolicyRuleEntries(selectedProject);
+	            const displayedRuleEntries = [
+	              ...managedRuleEntries.map((entry) => ({ entry, isManaged: true, customIndex: -1 })),
+	              ...ruleEntries.map((entry, index) => ({ entry, isManaged: false, customIndex: index })),
+	            ];
 	            const canAddRule = !isReadOnly
 	              && Boolean(normalizePlaygroundProjectRuleTitle(projectRuleTitleInputValue))
 	              && Boolean(normalizePlaygroundProjectRuleEntry(projectRuleInputValue))
@@ -1333,12 +1336,13 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                ref: isInline ? null : projectOverviewRulesSurfaceRef,
 	              },
 	              React.createElement("div", { className: "playground-project-overview-rules-list" },
-	                ruleEntries.length > 0
-	                  ? ruleEntries.map((entry, index) => {
+	                displayedRuleEntries.length > 0
+	                  ? displayedRuleEntries.map(({ entry, isManaged, customIndex }, index) => {
 	                      const rule = parsePlaygroundProjectRuleEntry(entry, index);
 	                      return React.createElement("div", {
-	                        key: String(index) + ":" + rule.title,
-	                        className: "playground-tasks-backlog-item playground-project-overview-rule-item",
+	                        key: (isManaged ? "managed:" : "custom:") + String(index) + ":" + rule.title,
+	                        className: "playground-tasks-backlog-item playground-project-overview-rule-item" + (isManaged ? " is-managed" : ""),
+	                        ...(isManaged ? { title: "Managed by the repository settings in Project Connectors" } : {}),
 	                      },
 	                        React.createElement("div", { className: "playground-tasks-backlog-item-content" },
 	                          React.createElement("div", { className: "playground-tasks-backlog-leading" },
@@ -1348,15 +1352,15 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                          ),
 	                          React.createElement("div", { className: "playground-tasks-backlog-main playground-project-overview-rule-main" },
 	                            React.createElement("div", {
-	                                  className: "playground-project-overview-rule-copy tb-runner-chat" + (isReadOnly ? " is-read-only" : ""),
-	                                  ...(isReadOnly ? {} : {
+	                                  className: "playground-project-overview-rule-copy tb-runner-chat" + (isReadOnly || isManaged ? " is-read-only" : ""),
+	                                  ...(isReadOnly || isManaged ? {} : {
 	                                    role: "button",
 	                                    tabIndex: 0,
-	                                    onClick: () => beginProjectRuleEntryEdit(index, entry),
+	                                    onClick: () => beginProjectRuleEntryEdit(customIndex, entry),
 	                                    onKeyDown: (event) => {
 	                                      if (event.key === "Enter" || event.key === " ") {
 	                                        event.preventDefault();
-	                                        beginProjectRuleEntryEdit(index, entry);
+	                                        beginProjectRuleEntryEdit(customIndex, entry);
 	                                      }
 	                                    },
 	                                  }),
@@ -1366,16 +1370,20 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	                                  }, rule.title || "Untitled Rule")
 	                                )
 	                          ),
-	                          isReadOnly
+	                          isManaged
+	                            ? React.createElement("div", { className: "playground-tasks-backlog-meta" },
+	                                React.createElement("span", { className: "playground-project-overview-rule-managed-label" }, "Managed")
+	                              )
+	                            : isReadOnly
 	                            ? null
 	                            : React.createElement("div", { className: "playground-tasks-backlog-meta" },
 	                                React.createElement("button", {
 	                                  type: "button",
 	                                  className: "playground-project-overview-rule-remove",
-	                                  onClick: () => requestProjectRuleEntryDeletion(index),
+	                                  onClick: () => requestProjectRuleEntryDeletion(customIndex),
 	                                  disabled: projectRulesSaveState.isSaving,
 	                                  title: "Remove rule",
-	                                  "aria-label": "Remove rule " + String(index + 1),
+	                                  "aria-label": "Remove rule " + String(customIndex + 1),
 	                                }, React.createElement(Trash2, { width: 13, height: 13, strokeWidth: 1.8 }))
 	                              )
 	                        )
@@ -1836,7 +1844,7 @@ export const PROJECT_OVERVIEW_SIDEBAR_COMPOSITION_FRAGMENT = String.raw`
 	            return renderProjectOverviewSettingsLayout([
                 {
                   id: "plugins",
-                  label: "Plugins",
+                  label: "Connectors",
                   icon: Plug,
                   render: renderProjectOverviewPluginsPanel,
                 },

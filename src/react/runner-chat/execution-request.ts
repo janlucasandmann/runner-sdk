@@ -227,6 +227,9 @@ export interface RunnerThreadMessageRequestOptions
     repoFullName: string;
     repoName: string;
     branch: string;
+    branchPrefix?: string;
+    createPullRequests?: boolean;
+    forcePushCommits?: boolean;
   } | null;
   truncateAtMessageIndex?: number;
   persistFileChanges?: boolean;

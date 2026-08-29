@@ -170,6 +170,30 @@ export function createAiosAndAdminRoutes(bindings) {
             void proxyAiosJsonRequest(req, res, "/api/notion/databases" + url.search, "GET");
             return true;
         }
+        if (
+            (req.method === "GET" || req.method === "PUT")
+            && url.pathname === "/api/aios/notion/strategy-sync"
+        ) {
+            void proxyAiosJsonRequest(
+                req,
+                res,
+                "/api/notion/strategy-sync" + (req.method === "GET" ? url.search : ""),
+                req.method,
+            );
+            return true;
+        }
+        if (
+            (req.method === "GET" || req.method === "PUT")
+            && url.pathname === "/api/aios/confluence/strategy-sync"
+        ) {
+            void proxyAiosJsonRequest(
+                req,
+                res,
+                "/api/confluence/strategy-sync" + (req.method === "GET" ? url.search : ""),
+                req.method,
+            );
+            return true;
+        }
         if (req.method === "GET" && url.pathname === "/api/aios/github/repos") {
             void proxyAiosJsonRequest(req, res, "/api/github/repos" + url.search, "GET");
             return true;

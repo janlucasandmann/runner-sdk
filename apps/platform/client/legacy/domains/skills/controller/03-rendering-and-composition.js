@@ -978,6 +978,9 @@
                 onFileRename: isSelectedSkillCodeFilesEditable ? renameSkillWorkspaceEntry : undefined,
                 onFilesDelete: isSelectedSkillCodeFilesEditable ? deleteSkillWorkspaceEntries : undefined,
                 onFilesMove: isSelectedSkillCodeFilesEditable ? moveSkillWorkspaceEntries : undefined,
+                onExternalFilesDrop: isSelectedSkillCodeFilesEditable
+                  ? ({ files }) => handleSkillCodeFileSelection(files)
+                  : undefined,
                 onCreateFile: isSelectedSkillCodeFilesEditable ? createSkillSourceFile : undefined,
                 onUploadFiles: isSelectedSkillCodeFilesEditable ? openSkillCodeFilePicker : undefined,
                 onCreateFolder: isSelectedSkillCodeFilesEditable ? createSkillSourceFolder : undefined,

@@ -55,9 +55,11 @@ selectors, while action menus normally size to content.
 that already own positioning. `PlatformPopupDismissLayer` supplies canonical
 backdrop geometry but deliberately does not decide how state closes.
 
-`PlatformPopupSearchHeader` provides the standard searchable popup header. Put
-it in a selector's `popupHeader` slot and use the selector's
-`popupHeaderClassName="is-search-header"` to remove the host padding.
+`PlatformPopupSearchHeader` provides the standard searchable popup header.
+Prefer the first-class `searchHeader` option on `PlatformPopup`, or
+`popupSearch` on the centralized selector controls, so spacing, the divider,
+and focus behavior remain consistent. The lower-level component stays
+available for composite popup layouts that own their own header structure.
 
 `PlatformInfoTooltip` is the centralized compact information sign for form and
 settings labels. It opens on hover or keyboard focus, uses a portaled minimal

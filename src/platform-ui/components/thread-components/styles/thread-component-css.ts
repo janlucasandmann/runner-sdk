@@ -725,7 +725,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 8px 16px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -847,6 +847,16 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   align-items: center;
   gap: 9px;
   padding: 8px 12px;
+}
+
+.platform-popup__search-header {
+  position: sticky;
+  top: 0;
+  z-index: 7;
+  flex: 0 0 auto;
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  background: #1a1a1a;
 }
 
 .platform-popup-search-header__icon {
@@ -1397,6 +1407,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .platform-resource-actions-menu__metadata-copy.platform-icon-button:hover,
 .platform-resource-actions-menu__metadata-copy.platform-icon-button:focus-visible {
+  color: #fff;
+}
+
+.platform-resource-actions-menu__metadata-copy.platform-icon-button.is-copied {
   color: #fff;
 }
 
@@ -2761,6 +2775,260 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   .platform-modal-surface {
     --platform-modal-animation-duration: 1ms;
   }
+}
+
+
+.platform-connector-configuration {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-connector-configuration__header,
+.platform-connector-configuration__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 38%);
+  align-items: center;
+  gap: 24px;
+  min-height: 76px;
+  padding: 14px 18px;
+}
+
+.platform-connector-configuration__row {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.platform-connector-configuration__identity {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-connector-configuration__header-actions,
+.platform-connector-configuration__control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.platform-connector-configuration__header-actions {
+  gap: 8px;
+}
+
+.platform-connector-configuration__metadata {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-connector-configuration__menu-anchor {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.platform-connector-configuration__menu {
+  z-index: 1600;
+}
+
+.platform-connector-configuration__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.platform-connector-configuration__copy > strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-connector-configuration__description {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 820px) {
+  .platform-connector-configuration__header,
+  .platform-connector-configuration__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .platform-connector-configuration__header-actions,
+  .platform-connector-configuration__control {
+    justify-content: flex-start;
+  }
+
+  .platform-connector-configuration__header-actions {
+    justify-content: space-between;
+  }
+}
+
+
+.platform-github-automations {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.platform-github-automations__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 16px 18px 10px;
+}
+
+.platform-github-automations__heading strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.platform-github-automations__heading span,
+.platform-github-automations__copy span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.platform-github-automations__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 68px;
+  padding: 10px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.platform-github-automations__summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-github-automations__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.platform-github-automations__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-github-automations__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.platform-github-automations__copy strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.platform-github-automations__error {
+  margin: 0 18px 10px;
+  color: #ff8f8f;
+  font-size: 12px;
+}
+
+.platform-github-automation-configuration {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 0;
+}
+
+.platform-github-automation-configuration__section,
+.platform-github-automation-configuration__field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.platform-github-automation-configuration__section > strong,
+.platform-github-automation-configuration__field > span {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.platform-github-automation-configuration__toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 42px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+}
+
+.platform-github-automation-configuration__toggle-row.is-standalone {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-github-automation-configuration__field input,
+.platform-github-automation-configuration__field textarea {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.platform-github-automation-configuration__field input {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.platform-github-automation-configuration__field textarea {
+  min-height: 112px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.platform-github-automation-configuration__field small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
 }
 
 
@@ -5530,11 +5798,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   position: absolute;
   inset: 0 0 0 auto;
   z-index: 120;
+  box-sizing: border-box;
   width: min(520px, 42vw);
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
-  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  border-left: 0;
+  padding: 20px;
   background: #000;
   opacity: 0;
   transform: translate3d(100%, 0, 0);
@@ -5551,10 +5821,13 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 }
 
 .tb-runner-chat .tb-thread-execution-workbench-sidebar .platform-thread-workbench {
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  background: #000;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: none;
 }
 
 @media (max-width: 980px) {
@@ -5630,6 +5903,10 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   max-width: 85%;
   margin-left: auto;
   margin-bottom: var(--tb-user-turn-shell-gap);
+}
+
+.tb-runner-chat .tb-task-preview-turn-shell .platform-ticket-item.is-card {
+  min-width: 240px;
 }
 
 .tb-runner-chat .tb-user-turn-shell-has-actions,
@@ -6681,6 +6958,19 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
 
 .tb-runner-chat .tb-thread-live-work-status .tb-work-status-loader {
   margin-right: 0;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-thread-live-work-spinner {
+  animation: tb-context-action-notice-spin 0.9s linear infinite;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-thread-live-work-context {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+}
+
+.tb-runner-chat .tb-thread-live-work-status .tb-thread-live-work-separator {
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .tb-runner-chat .tb-thread-live-work-status .tb-work-label-copy {
@@ -21198,10 +21488,178 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   min-width: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 15px;
-  background: #0d0d0d;
+  background: rgba(255, 255, 255, 0.075);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+}
+
+.platform-thread-workbench--summary {
+  height: auto;
+  min-height: 0;
+  max-height: min(72vh, 760px);
+}
+
+.platform-thread-workbench__summary-list {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+.platform-thread-workbench__summary-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.platform-thread-workbench__summary-section:last-child {
+  border-bottom: 0;
+}
+
+.platform-thread-workbench__summary-heading {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.platform-thread-workbench__summary-copy {
+  min-width: 0;
+}
+
+.platform-thread-workbench__summary-copy h2,
+.platform-thread-workbench__summary-copy p {
+  margin: 0;
+}
+
+.platform-thread-workbench__summary-copy h2 {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.platform-thread-workbench__summary-copy p {
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-thread-workbench__summary-meta {
+  display: inline-flex;
+  min-height: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.platform-thread-workbench__summary-content {
+  margin-top: 12px;
+}
+
+.platform-thread-workbench__summary-items {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.platform-thread-workbench__summary-item {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.platform-thread-workbench__summary-item > svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.platform-thread-workbench__summary-item.is-task.is-complete {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.platform-thread-workbench__summary-item.is-task.is-complete > svg {
+  width: 16px;
+  height: 16px;
+  flex-basis: 16px;
+  color: #747ce8;
+}
+
+.platform-thread-workbench__summary-item.is-task.is-complete > span {
+  text-decoration: line-through;
+}
+
+.platform-thread-workbench__summary-item.is-permission,
+.platform-thread-workbench__summary-item.is-resource {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.platform-thread-workbench__summary-item-main {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+.platform-thread-workbench__summary-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-thread-workbench__summary-item-meta {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.platform-thread-workbench__connector-icon-shell {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 0;
+  border-radius: 5px;
+}
+
+.platform-thread-workbench__connector-logo,
+.platform-thread-workbench__connector-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.platform-thread-workbench__summary-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.platform-thread-workbench__summary-state.is-error {
+  color: #f19a9a;
+}
+
+.platform-thread-workbench__summary-state > svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
 }
 
 .platform-thread-workbench__header {
@@ -21210,7 +21668,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 16px 12px;
+  padding: 20px 20px 12px;
 }
 
 .platform-thread-workbench__heading {
@@ -21300,7 +21758,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   flex: 0 0 auto;
   border-top: 1px solid rgba(255, 255, 255, 0.075);
   border-bottom: 1px solid rgba(255, 255, 255, 0.075);
-  padding: 8px 16px 0;
+  padding: 8px 20px 0;
 }
 
 .platform-thread-workbench__tabs .platform-detail-tab-bar__list {
@@ -21317,7 +21775,7 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
   min-height: 0;
   flex: 1 1 auto;
   overflow: auto;
-  padding: 14px 16px 20px;
+  padding: 20px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
 }
@@ -21549,6 +22007,12 @@ body.tb-runner-document-preview-maximized .tb-runner-chat.tb-runner-chat-image-p
     border-right: 0;
     border-bottom: 0;
     border-radius: 15px 0 0 15px;
+  }
+
+  .platform-thread-workbench--summary {
+    height: auto;
+    min-height: 0;
+    max-height: 100%;
   }
 }
 

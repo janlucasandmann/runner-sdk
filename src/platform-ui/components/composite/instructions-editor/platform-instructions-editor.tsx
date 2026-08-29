@@ -1,16 +1,14 @@
+import DragHandle from "@tiptap/extension-drag-handle-react";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TableKit } from "@tiptap/extension-table";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { Markdown } from "@tiptap/markdown";
-import {
-  EditorContent,
-  useEditor,
-  type Editor as TiptapEditor,
-} from "@tiptap/react";
+import { EditorContent, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   AlignCenter,
+  AlignJustify,
   AlignLeft,
   AlignRight,
   Bold,
@@ -20,6 +18,7 @@ import {
   Heading2,
   Heading3,
   FilePlus2,
+  GripVertical,
   Italic,
   Link2,
   List,
@@ -83,6 +82,10 @@ import {
   type InstructionsEditorSlashCommandOption,
   type InstructionsEditorSlashMenuAnchor,
 } from "./platform-instructions-editor-slash-menu.js";
+import {
+  PlatformInstructionsEditorSlashSearchHint,
+  setPlatformInstructionsEditorSlashSearchHint,
+} from "./platform-instructions-editor-slash-hint.js";
 import { PlatformInstructionsEditorTableNode } from "./platform-instructions-editor-table-node.js";
 import {
   PlatformInstructionsEditorHeading,
@@ -91,31 +94,27 @@ import {
   remarkPlatformInstructionsEditorTextAlignment,
   type PlatformInstructionsEditorTextAlignment,
 } from "./platform-instructions-editor-text-alignment.js";
-import { PlatformInstructionsEditorTextSelectionMenu } from "./platform-instructions-editor-text-selection-menu.js";
+import {
+  type PlatformInstructionsEditorSelectionBlockType,
+  PlatformInstructionsEditorTextSelectionMenu,
+} from "./platform-instructions-editor-text-selection-menu.js";
 import { InstructionsEditorToolbarPopup } from "./platform-instructions-editor-toolbar-popup.js";
 
 const HISTORY_LIMIT = 80;
-
 export interface PlatformMarkdownRendererProps {
   content: string;
   className?: string;
-  resolvePreviewSource?:
-    PlatformInstructionsEditorFileUpload["resolvePreviewSource"];
+  resolvePreviewSource?: PlatformInstructionsEditorFileUpload["resolvePreviewSource"];
 }
 
-export type PlatformInstructionsEditorVariant = "default" | "minimalistic-ui";
+export type PlatformInstructionsEditorVariant = "default" | "minimalistic-ui" | "block-editor";
 export type PlatformInstructionsEditorMode = "rich-text" | "code";
-export type PlatformInstructionsEditorContentVariant =
-  | "text"
-  | "file-enabled"
-  | "image-enabled";
+export type PlatformInstructionsEditorContentVariant = "text" | "file-enabled" | "image-enabled";
 
 /** @deprecated Use PlatformInstructionsEditorUploadedFile. */
-export type PlatformInstructionsEditorUploadedImage =
-  PlatformInstructionsEditorUploadedFile;
+export type PlatformInstructionsEditorUploadedImage = PlatformInstructionsEditorUploadedFile;
 /** @deprecated Use PlatformInstructionsEditorFileUpload. */
-export type PlatformInstructionsEditorImageUpload =
-  PlatformInstructionsEditorFileUpload;
+export type PlatformInstructionsEditorImageUpload = PlatformInstructionsEditorFileUpload;
 
 export interface PlatformInstructionsEditorChangeContext {
   source: "edit" | "file-upload" | "image-upload" | "prompt-insert";
@@ -134,24 +133,24 @@ export interface PlatformInstructionsEditorPrompt {
 
 export interface PlatformInstructionsEditorPromptInsertion {
   openSearch: (
-    onSelect: (
-      prompt: PlatformInstructionsEditorPrompt,
-    ) => void | Promise<void>,
+    onSelect: (prompt: PlatformInstructionsEditorPrompt) => void | Promise<void>,
   ) => void;
   disabled?: boolean;
 }
 
 export interface PlatformInstructionsEditorProps {
   value: string;
-  onChange: (
-    value: string,
-    context?: PlatformInstructionsEditorChangeContext,
-  ) => void;
+  onChange: (value: string, context?: PlatformInstructionsEditorChangeContext) => void;
   title?: ReactNode;
+  /** Optional document title rendered inside the scrollable editor body. */
+  bodyTitle?: ReactNode;
+  /** @deprecated The centralized editor always uses its shared command hint. */
   placeholder?: string;
   ariaLabel?: string;
   readOnly?: boolean;
   stickyHeader?: boolean;
+  /** Removes the title and formatting toolbar while preserving the editor body. */
+  showHeader?: boolean;
   historyKey?: string | number;
   variant?: PlatformInstructionsEditorVariant;
   editorMode?: PlatformInstructionsEditorMode;
@@ -207,6 +206,7 @@ interface InstructionsEditorTextSelectionMenuState {
   from: number;
   to: number;
   anchorPoint: { x: number; y: number };
+  blockType: PlatformInstructionsEditorSelectionBlockType;
   bold: boolean;
   italic: boolean;
   underline: boolean;
@@ -239,8 +239,7 @@ function getInstructionsEditorSlashMenuState(
   const match = /\/([^/]*)$/.exec(textBeforeCursor);
   if (!match) return null;
   const slashOffset = match.index;
-  if (slashOffset > 0 && !/\s/.test(textBeforeCursor.charAt(slashOffset - 1)))
-    return null;
+  if (slashOffset > 0 && !/\s/.test(textBeforeCursor.charAt(slashOffset - 1))) return null;
 
   const query = match[1] || "";
   if (query.length > 80) return null;
@@ -327,7 +326,9 @@ function filterInstructionsEditorMentionOptions(
       (option) =>
         !normalizedQuery ||
         [option.label, option.description, option.kind].some((value) =>
-          String(value || "").toLocaleLowerCase().includes(normalizedQuery),
+          String(value || "")
+            .toLocaleLowerCase()
+            .includes(normalizedQuery),
         ),
     )
     .slice(0, 12);
@@ -340,8 +341,7 @@ function getNextEnabledSlashCommandIndex(
 ) {
   if (!options.length) return 0;
   for (let offset = 1; offset <= options.length; offset += 1) {
-    const index =
-      (currentIndex + offset * direction + options.length) % options.length;
+    const index = (currentIndex + offset * direction + options.length) % options.length;
     if (!options[index]?.disabled) return index;
   }
   return Math.max(0, Math.min(currentIndex, options.length - 1));
@@ -357,13 +357,10 @@ function getInstructionsEditorDeletionRange(
   }
 
   const adjacentNode =
-    direction === "backward"
-      ? selection.$from.nodeBefore
-      : selection.$from.nodeAfter;
+    direction === "backward" ? selection.$from.nodeBefore : selection.$from.nodeAfter;
   if (!adjacentNode?.isText || !adjacentNode.text) return null;
   const codePoints = Array.from(adjacentNode.text);
-  const adjacentCodePoint =
-    direction === "backward" ? codePoints.at(-1) : codePoints[0];
+  const adjacentCodePoint = direction === "backward" ? codePoints.at(-1) : codePoints[0];
   const deletionLength = adjacentCodePoint?.length || 0;
   if (!deletionLength) return null;
 
@@ -387,14 +384,8 @@ function getInstructionsEditorTextSelectionRange(
       editorDom.contains(domSelection.focusNode)
     ) {
       try {
-        const anchor = editor.view.posAtDOM(
-          domSelection.anchorNode,
-          domSelection.anchorOffset,
-        );
-        const focus = editor.view.posAtDOM(
-          domSelection.focusNode,
-          domSelection.focusOffset,
-        );
+        const anchor = editor.view.posAtDOM(domSelection.anchorNode, domSelection.anchorOffset);
+        const focus = editor.view.posAtDOM(domSelection.focusNode, domSelection.focusOffset);
         if (anchor !== focus) {
           return {
             from: Math.min(anchor, focus),
@@ -411,12 +402,98 @@ function getInstructionsEditorTextSelectionRange(
   return empty || from === to ? null : { from, to };
 }
 
+function getInstructionsEditorTextSelectionAnchorPoint(
+  editor: TiptapEditor,
+): { x: number; y: number } | null {
+  if (typeof window !== "undefined") {
+    const domSelection = window.getSelection();
+    const editorDom = editor.view.dom;
+    if (
+      domSelection &&
+      !domSelection.isCollapsed &&
+      domSelection.rangeCount > 0 &&
+      domSelection.anchorNode &&
+      domSelection.focusNode &&
+      editorDom.contains(domSelection.anchorNode) &&
+      editorDom.contains(domSelection.focusNode)
+    ) {
+      const range = domSelection.getRangeAt(0);
+      const clientRects = Array.from(range.getClientRects());
+      const rect = clientRects.at(-1) || range.getBoundingClientRect();
+      if (Number.isFinite(rect.left) && Number.isFinite(rect.bottom)) {
+        return { x: rect.left, y: rect.bottom + 4 };
+      }
+    }
+  }
+
+  const selection = editor.state.selection;
+  if (selection.empty) return null;
+  try {
+    const coordinates = editor.view.coordsAtPos(selection.to);
+    return { x: coordinates.left, y: coordinates.bottom + 4 };
+  } catch {
+    return null;
+  }
+}
+
 function getInstructionsEditorTextAlignment(
   editor: TiptapEditor,
 ): PlatformInstructionsEditorTextAlignment {
   if (editor.isActive({ textAlign: "center" })) return "center";
   if (editor.isActive({ textAlign: "right" })) return "right";
+  if (editor.isActive({ textAlign: "justify" })) return "justify";
   return "left";
+}
+
+function getInstructionsEditorSelectionBlockType(
+  editor: TiptapEditor,
+  range: { from: number; to: number },
+): PlatformInstructionsEditorSelectionBlockType {
+  const blockTypes = new Set<PlatformInstructionsEditorSelectionBlockType>();
+
+  editor.state.doc.nodesBetween(range.from, range.to, (node) => {
+    const nodeType = node.type.name;
+    if (node.isTextblock && !node.textContent.trim()) return false;
+    if (nodeType === "bulletList") {
+      blockTypes.add("bullet-list");
+      return false;
+    }
+    if (nodeType === "orderedList") {
+      blockTypes.add("ordered-list");
+      return false;
+    }
+    if (nodeType === "taskList") {
+      blockTypes.add("task-list");
+      return false;
+    }
+    if (nodeType === "blockquote") {
+      blockTypes.add("block-quote");
+      return false;
+    }
+    if (nodeType === "codeBlock") {
+      blockTypes.add("preformatted");
+      return false;
+    }
+    if (nodeType === "paragraphQuote") {
+      blockTypes.add("paragraph-quote");
+      return false;
+    }
+    if (nodeType === "heading") {
+      const level = Number(node.attrs.level);
+      if (level === 1) blockTypes.add("heading-1");
+      else if (level === 2) blockTypes.add("heading-2");
+      else blockTypes.add("heading-3");
+      return false;
+    }
+    if (nodeType === "paragraph") {
+      blockTypes.add("paragraph");
+      return false;
+    }
+    return undefined;
+  });
+
+  if (blockTypes.size !== 1) return "multiple";
+  return blockTypes.values().next().value || "paragraph";
 }
 
 const EMPTY_TOOLBAR_STATE = {
@@ -454,11 +531,7 @@ function remarkSoftbreaksToBreaks() {
     visit(
       tree as Parameters<typeof visit>[0],
       "text",
-      (
-        node: { value?: string },
-        index,
-        parent: { children?: unknown[] } | undefined,
-      ) => {
+      (node: { value?: string }, index, parent: { children?: unknown[] } | undefined) => {
         if (
           !parent?.children ||
           typeof index !== "number" ||
@@ -467,8 +540,7 @@ function remarkSoftbreaksToBreaks() {
         )
           return;
         const parts = node.value.split("\n");
-        const replacement: Array<{ type: "text" | "break"; value?: string }> =
-          [];
+        const replacement: Array<{ type: "text" | "break"; value?: string }> = [];
         parts.forEach((part, partIndex) => {
           if (part) replacement.push({ type: "text", value: part });
           if (partIndex < parts.length - 1) replacement.push({ type: "break" });
@@ -485,11 +557,7 @@ function remarkUnderline() {
     visit(
       tree as Parameters<typeof visit>[0],
       "text",
-      (
-        node: { value?: string },
-        index,
-        parent: { children?: unknown[] } | undefined,
-      ) => {
+      (node: { value?: string }, index, parent: { children?: unknown[] } | undefined) => {
         if (
           !parent?.children ||
           typeof index !== "number" ||
@@ -551,10 +619,7 @@ const markdownComponents: Components = {
     />
   ),
   strong: ({ node: _node, ...props }) => (
-    <strong
-      {...props}
-      className="platform-markdown__strong tb-message-markdown-strong"
-    />
+    <strong {...props} className="platform-markdown__strong tb-message-markdown-strong" />
   ),
   em: ({ node: _node, ...props }) => (
     <em {...props} className="platform-markdown__em tb-message-markdown-em" />
@@ -566,16 +631,10 @@ const markdownComponents: Components = {
     />
   ),
   pre: ({ node: _node, ...props }) => (
-    <pre
-      {...props}
-      className="platform-markdown__pre tb-message-markdown-pre"
-    />
+    <pre {...props} className="platform-markdown__pre tb-message-markdown-pre" />
   ),
   ul: ({ node: _node, ...props }) => (
-    <ul
-      {...props}
-      className="platform-markdown__list tb-message-markdown-list"
-    />
+    <ul {...props} className="platform-markdown__list tb-message-markdown-list" />
   ),
   ol: ({ node: _node, ...props }) => (
     <ol
@@ -584,34 +643,19 @@ const markdownComponents: Components = {
     />
   ),
   li: ({ node: _node, ...props }) => (
-    <li
-      {...props}
-      className="platform-markdown__list-item tb-message-markdown-list-item"
-    />
+    <li {...props} className="platform-markdown__list-item tb-message-markdown-list-item" />
   ),
   h1: ({ node: _node, ...props }) => (
-    <h1
-      {...props}
-      className="platform-markdown__heading tb-message-markdown-heading"
-    />
+    <h1 {...props} className="platform-markdown__heading tb-message-markdown-heading" />
   ),
   h2: ({ node: _node, ...props }) => (
-    <h2
-      {...props}
-      className="platform-markdown__heading tb-message-markdown-heading"
-    />
+    <h2 {...props} className="platform-markdown__heading tb-message-markdown-heading" />
   ),
   h3: ({ node: _node, ...props }) => (
-    <h3
-      {...props}
-      className="platform-markdown__heading tb-message-markdown-heading"
-    />
+    <h3 {...props} className="platform-markdown__heading tb-message-markdown-heading" />
   ),
   h4: ({ node: _node, ...props }) => (
-    <h4
-      {...props}
-      className="platform-markdown__heading tb-message-markdown-heading"
-    />
+    <h4 {...props} className="platform-markdown__heading tb-message-markdown-heading" />
   ),
   a: ({ node: _node, ...props }) => (
     <a
@@ -622,24 +666,15 @@ const markdownComponents: Components = {
     />
   ),
   blockquote: ({ node: _node, ...props }) => (
-    <blockquote
-      {...props}
-      className="platform-markdown__quote tb-message-markdown-quote"
-    />
+    <blockquote {...props} className="platform-markdown__quote tb-message-markdown-quote" />
   ),
   table: ({ node: _node, ...props }) => (
     <div className="platform-markdown__table-wrap tb-message-markdown-table-wrap">
-      <table
-        {...props}
-        className="platform-markdown__table tb-message-markdown-table"
-      />
+      <table {...props} className="platform-markdown__table tb-message-markdown-table" />
     </div>
   ),
   thead: ({ node: _node, ...props }) => (
-    <thead
-      {...props}
-      className="platform-markdown__thead tb-message-markdown-thead"
-    />
+    <thead {...props} className="platform-markdown__thead tb-message-markdown-thead" />
   ),
   tbody: ({ node: _node, ...props }) => <tbody {...props} />,
   tr: ({ node: _node, ...props }) => (
@@ -652,10 +687,7 @@ const markdownComponents: Components = {
     <td {...props} className="platform-markdown__td tb-message-markdown-td" />
   ),
   hr: ({ node: _node, ...props }) => (
-    <hr
-      {...props}
-      className="platform-markdown__rule tb-message-markdown-rule"
-    />
+    <hr {...props} className="platform-markdown__rule tb-message-markdown-rule" />
   ),
   u: ({ node: _node, ...props }) => (
     <u
@@ -686,18 +718,14 @@ export function PlatformMarkdownRenderer({
   resolvePreviewSourceRef.current = resolvePreviewSource;
   const hasPreviewResolver = Boolean(resolvePreviewSource);
   const resolveStablePreviewSource = useCallback(
-    (
-      file: PlatformInstructionsEditorUploadedFile,
-      signal: AbortSignal,
-    ) => {
+    (file: PlatformInstructionsEditorUploadedFile, signal: AbortSignal) => {
       const resolver = resolvePreviewSourceRef.current;
-      return resolver
-        ? resolver(file, signal)
-        : Promise.resolve<string | null>(null);
+      return resolver ? resolver(file, signal) : Promise.resolve<string | null>(null);
     },
     [],
   );
-  const components = useMemo<Components>(() => ({
+  const components = useMemo<Components>(
+    () => ({
     ...markdownComponents,
     img: ({ node: _node, className = "", src, alt, title, ...props }) => {
       const imageMetadata = parsePlatformInstructionsEditorImageTitle(title);
@@ -716,16 +744,16 @@ export function PlatformMarkdownRenderer({
             displaySize: imageMetadata.displaySize,
             alignment: imageMetadata.alignment,
           }}
-          resolvePreviewSource={
-            hasPreviewResolver ? resolveStablePreviewSource : undefined
-          }
+            resolvePreviewSource={hasPreviewResolver ? resolveStablePreviewSource : undefined}
           className={`platform-markdown__image tb-message-markdown-image is-size-${imageMetadata.displaySize} is-align-${imageMetadata.alignment}${className ? ` ${className}` : ""}`}
           data-platform-image-size={imageMetadata.displaySize}
           data-platform-image-alignment={imageMetadata.alignment}
         />
       );
     },
-  }), [hasPreviewResolver, resolveStablePreviewSource]);
+    }),
+    [hasPreviewResolver, resolveStablePreviewSource],
+  );
 
   return (
     <div className={`platform-markdown${className ? ` ${className}` : ""}`}>
@@ -761,17 +789,13 @@ function findInstructionsEditorScrollContainer(element: HTMLElement | null) {
 function getUploadFiles(files: File[] | FileList | null | undefined) {
   return Array.from(files || []).filter(
     (file): file is File =>
-      file instanceof File &&
-      typeof file.name === "string" &&
-      typeof file.size === "number",
+      file instanceof File && typeof file.name === "string" && typeof file.size === "number",
   );
 }
 
 function hasFileTransfer(event: DragEvent<HTMLElement>) {
   if (getUploadFiles(event.dataTransfer?.files).length > 0) return true;
-  return Array.from(event.dataTransfer?.items || []).some(
-    (item) => item.kind === "file",
-  );
+  return Array.from(event.dataTransfer?.items || []).some((item) => item.kind === "file");
 }
 
 function normalizeUploadedFiles(
@@ -782,23 +806,13 @@ function normalizeUploadedFiles(
     .map((uploadedFile, index) =>
       normalizePlatformInstructionsEditorFile({
         ...uploadedFile,
-        name:
-          uploadedFile?.name ||
-          uploadedFile?.alt ||
-          sourceFiles[index]?.name ||
-          "Attachment",
+        name: uploadedFile?.name || uploadedFile?.alt || sourceFiles[index]?.name || "Attachment",
         size: uploadedFile?.size || sourceFiles[index]?.size || 0,
-        mimeType:
-          uploadedFile?.mimeType || sourceFiles[index]?.type || "",
-        alt:
-          uploadedFile?.alt ||
-          uploadedFile?.name ||
-          sourceFiles[index]?.name ||
-          "Attachment",
+        mimeType: uploadedFile?.mimeType || sourceFiles[index]?.type || "",
+        alt: uploadedFile?.alt || uploadedFile?.name || sourceFiles[index]?.name || "Attachment",
       }),
     )
-    .filter(
-      (uploadedFile): uploadedFile is PlatformInstructionsEditorUploadedFile =>
+    .filter((uploadedFile): uploadedFile is PlatformInstructionsEditorUploadedFile =>
         Boolean(uploadedFile),
     );
 }
@@ -811,20 +825,21 @@ function normalizeInstructionsEditorLinkHref(value: string) {
   return `https://${href}`;
 }
 
-function resolveInstructionsEditorPromptMarkdown(
-  prompt: PlatformInstructionsEditorPrompt,
-) {
+function resolveInstructionsEditorPromptMarkdown(prompt: PlatformInstructionsEditorPrompt) {
   return String(prompt?.currentVersion?.markdown ?? prompt?.markdown ?? "");
 }
+
+const PLATFORM_INSTRUCTIONS_EDITOR_PLACEHOLDER = 'Enter "/" for commands';
 
 export function PlatformInstructionsEditor({
   value,
   onChange,
   title = "Instructions",
-  placeholder = "Add instructions here",
+  bodyTitle,
   ariaLabel = "Instructions",
   readOnly = false,
   stickyHeader = true,
+  showHeader = true,
   historyKey = "default",
   variant = "default",
   editorMode = "rich-text",
@@ -846,25 +861,27 @@ export function PlatformInstructionsEditor({
   onMentionQueryChange,
   onMentionSelect,
 }: PlatformInstructionsEditorProps) {
+  const placeholder = PLATFORM_INSTRUCTIONS_EDITOR_PLACEHOLDER;
   const normalizedCollapsedLines = Number.isFinite(Number(collapsedLines))
     ? Math.max(0, Math.floor(Number(collapsedLines)))
     : 0;
   const collapseEnabled = normalizedCollapsedLines > 0;
   const [editing, setEditing] = useState(false);
   const [contentExpanded, setContentExpanded] = useState(false);
-  const [contentExceedsCollapsedHeight, setContentExceedsCollapsedHeight] =
-    useState(false);
+  const [contentExceedsCollapsedHeight, setContentExceedsCollapsedHeight] = useState(false);
   const [headerStuck, setHeaderStuck] = useState(false);
   const [fileDragging, setFileDragging] = useState(false);
   const [fileUploading, setFileUploading] = useState(false);
   const [fileUploadError, setFileUploadError] = useState("");
   const [toolbarState, setToolbarState] = useState(EMPTY_TOOLBAR_STATE);
-  const [activeToolbarMenu, setActiveToolbarMenu] =
-    useState<InstructionsEditorToolbarMenu | null>(null);
+  const [activeToolbarMenu, setActiveToolbarMenu] = useState<InstructionsEditorToolbarMenu | null>(
+    null,
+  );
   const [textSelectionMenuState, setTextSelectionMenuState] =
     useState<InstructionsEditorTextSelectionMenuState | null>(null);
-  const [slashMenuState, setSlashMenuState] =
-    useState<InstructionsEditorSlashMenuState | null>(null);
+  const [slashMenuState, setSlashMenuState] = useState<InstructionsEditorSlashMenuState | null>(
+    null,
+  );
   const [slashMenuActiveIndex, setSlashMenuActiveIndex] = useState(0);
   const [mentionMenuState, setMentionMenuState] =
     useState<InstructionsEditorMentionMenuState | null>(null);
@@ -872,11 +889,10 @@ export function PlatformInstructionsEditor({
   const shellRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const contentViewportRef = useRef<HTMLDivElement>(null);
+  const mentionPopupAnchorRef = useRef<HTMLSpanElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const insertionTargetRef =
-    useRef<InstructionsEditorInsertionTarget | null>(null);
-  const promptInsertionTargetRef =
-    useRef<InstructionsEditorInsertionTarget | null>(null);
+  const insertionTargetRef = useRef<InstructionsEditorInsertionTarget | null>(null);
+  const promptInsertionTargetRef = useRef<InstructionsEditorInsertionTarget | null>(null);
   const changeContextRef = useRef<PlatformInstructionsEditorChangeContext>({
     source: "edit",
   });
@@ -888,11 +904,9 @@ export function PlatformInstructionsEditor({
   const onChangeRef = useRef(onChange);
   const onEditingChangeRef = useRef(onEditingChange);
   const fileUploadRef = useRef(fileUpload || imageUpload);
-  const slashMenuStateRef = useRef<InstructionsEditorSlashMenuState | null>(
-    null,
-  );
-  const mentionMenuStateRef =
-    useRef<InstructionsEditorMentionMenuState | null>(null);
+  const slashMenuStateRef = useRef<InstructionsEditorSlashMenuState | null>(null);
+  const dismissedSlashPositionRef = useRef<number | null>(null);
+  const mentionMenuStateRef = useRef<InstructionsEditorMentionMenuState | null>(null);
   const onMentionQueryChangeRef = useRef(onMentionQueryChange);
   const onMentionSelectRef = useRef(onMentionSelect);
   onChangeRef.current = onChange;
@@ -903,9 +917,11 @@ export function PlatformInstructionsEditor({
   if (interactionHistoryKeyRef.current !== historyKey) {
     interactionHistoryKeyRef.current = historyKey;
     userInteractionRef.current = false;
+    dismissedSlashPositionRef.current = null;
   }
 
-  const setEditingState = useCallback((next: boolean) => {
+  const setEditingState = useCallback(
+    (next: boolean) => {
     if (editingRef.current === next) return;
     editingRef.current = next;
     if (next && collapseEnabled) {
@@ -913,7 +929,9 @@ export function PlatformInstructionsEditor({
     }
     setEditing(next);
     onEditingChangeRef.current?.(next);
-  }, [collapseEnabled]);
+    },
+    [collapseEnabled],
+  );
 
   const refreshToolbarState = useCallback((editor: TiptapEditor) => {
     if (editor.isDestroyed) return;
@@ -940,16 +958,23 @@ export function PlatformInstructionsEditor({
   }, []);
 
   const refreshSlashMenuState = useCallback((editor: TiptapEditor) => {
-    const nextState = getInstructionsEditorSlashMenuState(editor);
+    let nextState = getInstructionsEditorSlashMenuState(editor);
+    const dismissedSlashPosition = dismissedSlashPositionRef.current;
+    if (nextState && dismissedSlashPosition === nextState.from) {
+      nextState = null;
+    } else if (
+      dismissedSlashPosition !== null &&
+      (!nextState || nextState.from !== dismissedSlashPosition)
+    ) {
+      dismissedSlashPositionRef.current = null;
+    }
     const previousState = slashMenuStateRef.current;
     const queryChanged =
-      previousState?.from !== nextState?.from ||
-      previousState?.query !== nextState?.query;
+      previousState?.from !== nextState?.from || previousState?.query !== nextState?.query;
     slashMenuStateRef.current = nextState;
     if (queryChanged) setSlashMenuActiveIndex(0);
     setSlashMenuState((currentState) => {
-      if (!currentState || !nextState)
-        return currentState === nextState ? currentState : nextState;
+      if (!currentState || !nextState) return currentState === nextState ? currentState : nextState;
       const unchanged =
         currentState.from === nextState.from &&
         currentState.to === nextState.to &&
@@ -961,18 +986,13 @@ export function PlatformInstructionsEditor({
     });
   }, []);
 
-  const mentionsEnabled = Boolean(
-    mentionOptions.length || onMentionQueryChange || mentionsLoading,
-  );
+  const mentionsEnabled = Boolean(mentionOptions.length || onMentionQueryChange || mentionsLoading);
   const refreshMentionMenuState = useCallback(
     (editor: TiptapEditor) => {
-      const nextState = mentionsEnabled
-        ? getInstructionsEditorMentionMenuState(editor)
-        : null;
+      const nextState = mentionsEnabled ? getInstructionsEditorMentionMenuState(editor) : null;
       const previousState = mentionMenuStateRef.current;
       const queryChanged =
-        previousState?.from !== nextState?.from ||
-        previousState?.query !== nextState?.query;
+        previousState?.from !== nextState?.from || previousState?.query !== nextState?.query;
       mentionMenuStateRef.current = nextState;
       if (queryChanged) setMentionMenuActiveIndex(0);
       setMentionMenuState((currentState) => {
@@ -1000,6 +1020,10 @@ export function PlatformInstructionsEditor({
         StarterKit.configure({
           paragraph: false,
           heading: false,
+          dropcursor: {
+            color: "rgba(77, 163, 255, 0.92)",
+            width: 2,
+          },
           link: {
             openOnClick: false,
             autolink: true,
@@ -1010,12 +1034,16 @@ export function PlatformInstructionsEditor({
         PlatformInstructionsEditorParagraph,
         PlatformInstructionsEditorHeading,
         PlatformInstructionsEditorTextAlign,
-        Placeholder.configure({ placeholder }),
+        Placeholder.configure({
+          placeholder,
+          showOnlyCurrent: true,
+          showOnlyWhenEditable: true,
+        }),
+        PlatformInstructionsEditorSlashSearchHint,
         PlatformInstructionsEditorImageNode.configure({
           allowBase64: false,
           HTMLAttributes: {
-            class:
-              "platform-instructions-editor__image platform-markdown__image",
+            class: "platform-instructions-editor__image platform-markdown__image",
           },
           getFileUpload: () => fileUploadRef.current,
         }),
@@ -1050,8 +1078,7 @@ export function PlatformInstructionsEditor({
         const nextValue = editor.getMarkdown();
         if (externalValueRef.current === nextValue) return;
         const changeContext = changeContextRef.current;
-        const isUserInitiated = changeContext.source !== "edit"
-          || userInteractionRef.current;
+        const isUserInitiated = changeContext.source !== "edit" || userInteractionRef.current;
         if (!isUserInitiated) {
           externalValueRef.current = nextValue;
           return;
@@ -1086,6 +1113,22 @@ export function PlatformInstructionsEditor({
   }, [readOnly, richTextEditor]);
 
   useEffect(() => {
+    setPlatformInstructionsEditorSlashSearchHint(
+      richTextEditor,
+      Boolean(
+        slashMenuState &&
+          slashMenuState.to > slashMenuState.from &&
+          slashMenuState.query.length === 0,
+      ),
+    );
+  }, [
+    richTextEditor,
+    slashMenuState?.from,
+    slashMenuState?.to,
+    slashMenuState?.query,
+  ]);
+
+  useEffect(() => {
     if (richTextEditor.isDestroyed) return;
     const nextValue = String(value || "");
     if (externalValueRef.current === nextValue) return;
@@ -1110,7 +1153,8 @@ export function PlatformInstructionsEditor({
     }
     const viewport = contentViewportRef.current;
     if (!viewport) return undefined;
-    const content = viewport.querySelector<HTMLElement>(
+    const content =
+      viewport.querySelector<HTMLElement>(
       ".platform-instructions-editor__prosemirror, .platform-instructions-editor__readonly",
     ) || viewport;
     const measure = () => {
@@ -1128,30 +1172,20 @@ export function PlatformInstructionsEditor({
         content.scrollHeight,
         content.getBoundingClientRect().height,
       );
-      const nextExceedsCollapsedHeight =
-        renderedHeight > collapsedHeight + 1;
+      const nextExceedsCollapsedHeight = renderedHeight > collapsedHeight + 1;
       setContentExceedsCollapsedHeight((current) =>
-        current === nextExceedsCollapsedHeight
-          ? current
-          : nextExceedsCollapsedHeight,
+        current === nextExceedsCollapsedHeight ? current : nextExceedsCollapsedHeight,
       );
     };
     measure();
     const resizeObserver =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(measure);
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     resizeObserver?.observe(viewport);
     if (content !== viewport) resizeObserver?.observe(content);
     return () => resizeObserver?.disconnect();
-  }, [
-    collapseEnabled,
-    normalizedCollapsedLines,
-    richTextEditor,
-    value,
-  ]);
+  }, [collapseEnabled, normalizedCollapsedLines, richTextEditor, value]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (richTextEditor.isDestroyed) return undefined;
     const element = richTextEditor.view.dom as HTMLElement;
     assignRef(forwardedEditorRef, element);
@@ -1177,7 +1211,7 @@ export function PlatformInstructionsEditor({
   }, [autoFocus, historyKey, readOnly, richTextEditor]);
 
   useEffect(() => {
-    if (!stickyHeader || readOnly) {
+    if (!showHeader || !stickyHeader || readOnly) {
       setHeaderStuck(false);
       return undefined;
     }
@@ -1190,15 +1224,11 @@ export function PlatformInstructionsEditor({
       const editorRect = shell.getBoundingClientRect();
       const headerRect = header.getBoundingClientRect();
       const scrollTop = scrollContainer?.getBoundingClientRect().top || 0;
-      const stickyOffset =
-        Number.parseFloat(window.getComputedStyle(header).top) || 0;
+      const stickyOffset = Number.parseFloat(window.getComputedStyle(header).top) || 0;
       const pinnedTop = scrollTop + stickyOffset;
       const nextHeaderStuck =
-        editorRect.top < headerRect.top - 0.5 &&
-        Math.abs(headerRect.top - pinnedTop) <= 2;
-      setHeaderStuck((current) =>
-        current === nextHeaderStuck ? current : nextHeaderStuck,
-      );
+        editorRect.top < headerRect.top - 0.5 && Math.abs(headerRect.top - pinnedTop) <= 2;
+      setHeaderStuck((current) => (current === nextHeaderStuck ? current : nextHeaderStuck));
     };
 
     const scrollTarget: HTMLElement | Window = scrollContainer || window;
@@ -1208,9 +1238,7 @@ export function PlatformInstructionsEditor({
     });
     window.addEventListener("resize", updateStickyState);
     const resizeObserver =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(updateStickyState);
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateStickyState);
     resizeObserver?.observe(shell);
     if (scrollContainer) resizeObserver?.observe(scrollContainer);
 
@@ -1219,7 +1247,7 @@ export function PlatformInstructionsEditor({
       window.removeEventListener("resize", updateStickyState);
       resizeObserver?.disconnect();
     };
-  }, [readOnly, stickyHeader]);
+  }, [readOnly, showHeader, stickyHeader]);
 
   const getInsertionTarget = useCallback(
     (appendWhenBlurred = true): InstructionsEditorInsertionTarget => {
@@ -1247,23 +1275,18 @@ export function PlatformInstructionsEditor({
     ) => {
       const normalizedFiles = normalizeUploadedFiles(uploadedFiles, sourceFiles);
       if (!normalizedFiles.length) {
-        throw new Error(
-          "The file upload completed without a usable file URL.",
-        );
+        throw new Error("The file upload completed without a usable file URL.");
       }
       const documentEnd = richTextEditor.state.doc.content.size;
-      const from = target.append
-        ? documentEnd
-        : Math.max(0, Math.min(target.from, documentEnd));
-      const to = target.append
-        ? from
-        : Math.max(from, Math.min(target.to, documentEnd));
+      const from = target.append ? documentEnd : Math.max(0, Math.min(target.from, documentEnd));
+      const to = target.append ? from : Math.max(from, Math.min(target.to, documentEnd));
       const content = normalizedFiles.flatMap((uploadedFile, index) => {
         const kind = resolvePlatformFileExplorerFileKind({
           name: uploadedFile.name,
           mimeType: uploadedFile.mimeType,
         });
-        const node = kind === "image"
+        const node =
+          kind === "image"
           ? {
               type: "image",
               attrs: {
@@ -1287,12 +1310,7 @@ export function PlatformInstructionsEditor({
                 attachmentId: uploadedFile.attachmentId || "",
               },
             };
-        return [
-          node,
-          ...(index === normalizedFiles.length - 1
-          ? [{ type: "paragraph" }]
-          : []),
-        ];
+        return [node, ...(index === normalizedFiles.length - 1 ? [{ type: "paragraph" }] : [])];
       });
       changeContextRef.current = {
         source: fileUpload ? "file-upload" : "image-upload",
@@ -1317,15 +1335,12 @@ export function PlatformInstructionsEditor({
       const normalizedFiles = getUploadFiles(files).filter((candidate) =>
         fileUpload || !imageUpload
           ? true
-          : String(candidate.type || "").toLowerCase().startsWith("image/"),
+          : String(candidate.type || "")
+              .toLowerCase()
+              .startsWith("image/"),
       );
       const upload = uploadConfig?.upload;
-      if (
-        !upload ||
-        normalizedFiles.length === 0 ||
-        uploadingRef.current ||
-        uploadConfig?.disabled
-      )
+      if (!upload || normalizedFiles.length === 0 || uploadingRef.current || uploadConfig?.disabled)
         return;
       uploadingRef.current = true;
       setFileUploading(true);
@@ -1334,9 +1349,7 @@ export function PlatformInstructionsEditor({
         const uploadedFiles = await upload(normalizedFiles);
         insertUploadedFiles(uploadedFiles, normalizedFiles, target);
       } catch (error) {
-        setFileUploadError(
-          error instanceof Error ? error.message : "Failed to upload file.",
-        );
+        setFileUploadError(error instanceof Error ? error.message : "Failed to upload file.");
       } finally {
         uploadingRef.current = false;
         setFileUploading(false);
@@ -1352,21 +1365,14 @@ export function PlatformInstructionsEditor({
   };
 
   const insertPrompt = useCallback(
-    (
-      prompt: PlatformInstructionsEditorPrompt,
-      target: InstructionsEditorInsertionTarget,
-    ) => {
+    (prompt: PlatformInstructionsEditorPrompt, target: InstructionsEditorInsertionTarget) => {
       const markdown = resolveInstructionsEditorPromptMarkdown(prompt);
       if (!markdown.trim()) {
         throw new Error("The selected prompt does not contain any text.");
       }
       const documentEnd = richTextEditor.state.doc.content.size;
-      const from = target.append
-        ? documentEnd
-        : Math.max(0, Math.min(target.from, documentEnd));
-      const to = target.append
-        ? from
-        : Math.max(from, Math.min(target.to, documentEnd));
+      const from = target.append ? documentEnd : Math.max(0, Math.min(target.from, documentEnd));
+      const to = target.append ? from : Math.max(from, Math.min(target.to, documentEnd));
       changeContextRef.current = {
         source: "prompt-insert",
         prompt,
@@ -1391,8 +1397,7 @@ export function PlatformInstructionsEditor({
     if (!promptInsertion || promptInsertion.disabled) return;
     promptInsertionTargetRef.current = getInsertionTarget();
     promptInsertion.openSearch((prompt) => {
-      const target =
-        promptInsertionTargetRef.current || getInsertionTarget();
+      const target = promptInsertionTargetRef.current || getInsertionTarget();
       promptInsertionTargetRef.current = null;
       insertPrompt(prompt, target);
     });
@@ -1424,14 +1429,9 @@ export function PlatformInstructionsEditor({
   const handleEditorContextMenu = (event: MouseEvent<HTMLElement>) => {
     if (readOnly || richTextEditor.isDestroyed) return;
     const target = event.target;
-    if (
-      target instanceof Element &&
-      target.closest('[contenteditable="false"]')
-    )
-      return;
+    if (target instanceof Element && target.closest('[contenteditable="false"]')) return;
 
-    const selectedRange =
-      getInstructionsEditorTextSelectionRange(richTextEditor);
+    const selectedRange = getInstructionsEditorTextSelectionRange(richTextEditor);
     let contextPosition: number | undefined;
     try {
       contextPosition = richTextEditor.view.posAtCoords({
@@ -1445,8 +1445,7 @@ export function PlatformInstructionsEditor({
     const contextIsInsideSelection =
       selectedRange !== null &&
       (typeof contextPosition !== "number" ||
-        (contextPosition >= selectedRange.from &&
-          contextPosition <= selectedRange.to));
+        (contextPosition >= selectedRange.from && contextPosition <= selectedRange.to));
 
     if (selectedRange && contextIsInsideSelection) {
       event.preventDefault();
@@ -1459,6 +1458,7 @@ export function PlatformInstructionsEditor({
       setTextSelectionMenuState({
         ...selectedRange,
         anchorPoint: { x: event.clientX, y: event.clientY },
+        blockType: getInstructionsEditorSelectionBlockType(richTextEditor, selectedRange),
         bold: richTextEditor.isActive("bold"),
         italic: richTextEditor.isActive("italic"),
         underline: richTextEditor.isActive("underline"),
@@ -1493,11 +1493,7 @@ export function PlatformInstructionsEditor({
   };
 
   const applyTextSelectionCommand = (
-    command:
-      | "bold"
-      | "italic"
-      | "underline"
-      | PlatformInstructionsEditorTextAlignment,
+    command: "bold" | "italic" | "underline" | PlatformInstructionsEditorTextAlignment,
   ) => {
     const selectedRange = textSelectionMenuState;
     if (!selectedRange || readOnly || richTextEditor.isDestroyed) return;
@@ -1506,18 +1502,64 @@ export function PlatformInstructionsEditor({
     const to = Math.max(from, Math.min(selectedRange.to, documentEnd));
     if (from === to) return;
     userInteractionRef.current = true;
-    const chain = richTextEditor
-      .chain()
-      .focus()
-      .setTextSelection({ from, to });
+    const chain = richTextEditor.chain().focus().setTextSelection({ from, to });
     if (command === "bold") chain.toggleBold().run();
     else if (command === "italic") chain.toggleItalic().run();
     else if (command === "underline") chain.toggleUnderline().run();
     else chain.setTextAlign(command).run();
+    setTextSelectionMenuState((current) => current ? {
+      ...current,
+      blockType: getInstructionsEditorSelectionBlockType(richTextEditor, selectedRange),
+      bold: richTextEditor.isActive("bold"),
+      italic: richTextEditor.isActive("italic"),
+      underline: richTextEditor.isActive("underline"),
+      alignment: getInstructionsEditorTextAlignment(richTextEditor),
+    } : current);
   };
 
-  const preserveEditorFocus = (event: MouseEvent<HTMLButtonElement>) =>
-    event.preventDefault();
+  const applyTextSelectionBlockType = (
+    blockType: Exclude<PlatformInstructionsEditorSelectionBlockType, "multiple">,
+  ) => {
+    const selectedRange = textSelectionMenuState;
+    if (!selectedRange || readOnly || richTextEditor.isDestroyed) return;
+    if (selectedRange.blockType === blockType) return;
+    const documentEnd = richTextEditor.state.doc.content.size;
+    const from = Math.max(0, Math.min(selectedRange.from, documentEnd));
+    const to = Math.max(from, Math.min(selectedRange.to, documentEnd));
+    if (from === to) return;
+    userInteractionRef.current = true;
+
+    let chain = richTextEditor.chain().focus().setTextSelection({ from, to });
+    if (blockType === "bullet-list") chain.toggleBulletList().run();
+    else if (blockType === "ordered-list") chain.toggleOrderedList().run();
+    else if (blockType === "task-list") chain.toggleTaskList().run();
+    else {
+      chain = chain.clearNodes();
+      if (blockType === "paragraph") chain.setParagraph().run();
+      else if (blockType === "heading-1") chain.setHeading({ level: 1 }).run();
+      else if (blockType === "heading-2") chain.setHeading({ level: 2 }).run();
+      else if (blockType === "heading-3") chain.setHeading({ level: 3 }).run();
+      else if (blockType === "paragraph-quote") chain.setNode("paragraphQuote").run();
+      else if (blockType === "block-quote") chain.setBlockquote().run();
+      else chain.setCodeBlock().run();
+    }
+
+    const nextSelection = richTextEditor.state.selection;
+    const nextRange = nextSelection.empty
+      ? { from, to }
+      : { from: nextSelection.from, to: nextSelection.to };
+    setTextSelectionMenuState((current) => current ? {
+      ...current,
+      ...nextRange,
+      blockType: getInstructionsEditorSelectionBlockType(richTextEditor, nextRange),
+      bold: richTextEditor.isActive("bold"),
+      italic: richTextEditor.isActive("italic"),
+      underline: richTextEditor.isActive("underline"),
+      alignment: getInstructionsEditorTextAlignment(richTextEditor),
+    } : current);
+  };
+
+  const preserveEditorFocus = (event: MouseEvent<HTMLButtonElement>) => event.preventDefault();
   const toolbarButton = (
     label: string,
     icon: ReactNode,
@@ -1557,11 +1599,7 @@ export function PlatformInstructionsEditor({
     if (readOnly) return;
     const currentHref = String(richTextEditor.getAttributes("link").href || "");
     const selection = richTextEditor.state.selection;
-    const selectedText = richTextEditor.state.doc.textBetween(
-      selection.from,
-      selection.to,
-      " ",
-    );
+    const selectedText = richTextEditor.state.doc.textBetween(selection.from, selection.to, " ");
     const linkWasActive = richTextEditor.isActive("link");
     const href = window.prompt("Link URL", currentHref || "https://");
     if (href === null) return;
@@ -1601,17 +1639,13 @@ export function PlatformInstructionsEditor({
     Boolean(fileUploadConfig);
   const insertTable = () => {
     if (readOnly || richTextEditor.isActive("table")) return;
-    richTextEditor
-      .chain()
-      .focus()
-      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-      .run();
+    richTextEditor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   };
   const styleMenuOptions: InstructionsEditorSlashCommandOption[] = [
     {
       id: "paragraph",
       label: "Paragraph",
-      group: "Style",
+      group: "Basic blocks",
       keywords: ["normal", "text"],
       icon: <Pilcrow width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.paragraph,
@@ -1620,7 +1654,8 @@ export function PlatformInstructionsEditor({
     {
       id: "heading-1",
       label: "Heading 1",
-      group: "Style",
+      group: "Basic blocks",
+      menuHint: "#",
       keywords: ["h1", "title"],
       icon: <Heading1 width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.heading1,
@@ -1629,7 +1664,8 @@ export function PlatformInstructionsEditor({
     {
       id: "heading-2",
       label: "Heading 2",
-      group: "Style",
+      group: "Basic blocks",
+      menuHint: "##",
       keywords: ["h2", "subtitle"],
       icon: <Heading2 width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.heading2,
@@ -1638,7 +1674,8 @@ export function PlatformInstructionsEditor({
     {
       id: "heading-3",
       label: "Heading 3",
-      group: "Style",
+      group: "Basic blocks",
+      menuHint: "###",
       keywords: ["h3", "subtitle"],
       icon: <Heading3 width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.heading3,
@@ -1647,7 +1684,8 @@ export function PlatformInstructionsEditor({
     {
       id: "paragraph-quote",
       label: "Paragraph quote",
-      group: "Style",
+      group: "Basic blocks",
+      menuHint: ">",
       keywords: ["quote", "callout"],
       icon: <TextQuote width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.paragraphQuote,
@@ -1656,7 +1694,7 @@ export function PlatformInstructionsEditor({
     {
       id: "block-quote",
       label: "Block quote",
-      group: "Style",
+      group: "Basic blocks",
       keywords: ["quote", "citation"],
       icon: <Quote width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.blockquote,
@@ -1665,7 +1703,8 @@ export function PlatformInstructionsEditor({
     {
       id: "preformatted",
       label: "Preformatted",
-      group: "Style",
+      group: "Basic blocks",
+      menuHint: "```",
       keywords: ["monospace", "plain code"],
       icon: <SquareCode width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.codeBlock,
@@ -1676,7 +1715,7 @@ export function PlatformInstructionsEditor({
     {
       id: "bold",
       label: "Bold",
-      group: "Formatting",
+      group: "Text formatting",
       keywords: ["strong"],
       icon: <Bold width={14} height={14} strokeWidth={2.7} />,
       active: toolbarState.bold,
@@ -1685,7 +1724,7 @@ export function PlatformInstructionsEditor({
     {
       id: "italic",
       label: "Italic",
-      group: "Formatting",
+      group: "Text formatting",
       keywords: ["emphasis"],
       icon: <Italic width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.italic,
@@ -1694,7 +1733,7 @@ export function PlatformInstructionsEditor({
     {
       id: "underline",
       label: "Underline",
-      group: "Formatting",
+      group: "Text formatting",
       icon: <Underline width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.underline,
       onSelect: () => richTextEditor.chain().focus().toggleUnderline().run(),
@@ -1704,39 +1743,46 @@ export function PlatformInstructionsEditor({
     {
       id: "align-left",
       label: "Align left",
-      group: "Alignment",
+      group: "Text formatting",
       keywords: ["text alignment", "left aligned"],
       icon: <AlignLeft width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.alignment === "left",
-      onSelect: () =>
-        richTextEditor.chain().focus().setTextAlign("left").run(),
+      onSelect: () => richTextEditor.chain().focus().setTextAlign("left").run(),
     },
     {
       id: "align-center",
       label: "Align center",
-      group: "Alignment",
+      group: "Text formatting",
       keywords: ["text alignment", "centered", "centred"],
       icon: <AlignCenter width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.alignment === "center",
-      onSelect: () =>
-        richTextEditor.chain().focus().setTextAlign("center").run(),
+      onSelect: () => richTextEditor.chain().focus().setTextAlign("center").run(),
     },
     {
       id: "align-right",
       label: "Align right",
-      group: "Alignment",
+      group: "Text formatting",
       keywords: ["text alignment", "right aligned"],
       icon: <AlignRight width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.alignment === "right",
-      onSelect: () =>
-        richTextEditor.chain().focus().setTextAlign("right").run(),
+      onSelect: () => richTextEditor.chain().focus().setTextAlign("right").run(),
+    },
+    {
+      id: "align-justify",
+      label: "Align justify",
+      group: "Text formatting",
+      keywords: ["text alignment", "justified", "full width"],
+      icon: <AlignJustify width={14} height={14} strokeWidth={1.8} />,
+      active: toolbarState.alignment === "justify",
+      onSelect: () => richTextEditor.chain().focus().setTextAlign("justify").run(),
     },
   ];
   const listMenuOptions: InstructionsEditorSlashCommandOption[] = [
     {
       id: "bullet-list",
       label: "Bulleted list",
-      group: "Lists",
+      group: "Basic blocks",
+      menuHint: "-",
       keywords: ["unordered list", "list"],
       icon: <List width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.bulletList,
@@ -1745,7 +1791,8 @@ export function PlatformInstructionsEditor({
     {
       id: "ordered-list",
       label: "Numbered list",
-      group: "Lists",
+      group: "Basic blocks",
+      menuHint: "1.",
       keywords: ["ordered list", "list"],
       icon: <ListOrdered width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.orderedList,
@@ -1754,7 +1801,8 @@ export function PlatformInstructionsEditor({
     {
       id: "task-list",
       label: "Checklist",
-      group: "Lists",
+      group: "Basic blocks",
+      menuHint: "[]",
       keywords: ["todo list", "task list", "check list"],
       icon: <ListTodo width={14} height={14} strokeWidth={1.8} />,
       active: toolbarState.taskList,
@@ -1783,19 +1831,17 @@ export function PlatformInstructionsEditor({
     {
       id: "file",
       label: "File",
-      group: "Insert",
+      group: "Recommended",
       keywords: ["attachment", "document", "media", "picture", "upload"],
       icon: <FilePlus2 width={14} height={14} strokeWidth={1.8} />,
       disabled: !fileUploadEnabled || fileUploading || fileUploadConfig?.disabled,
-      title: fileUploadEnabled
-        ? "Add file"
-        : "File upload is not available in this editor",
+      title: fileUploadEnabled ? "Add file" : "File upload is not available in this editor",
       onSelect: openFilePicker,
     },
     {
       id: "table",
       label: "Table",
-      group: "Insert",
+      group: "Recommended",
       keywords: ["grid", "rows", "columns", "spreadsheet"],
       icon: <Table2 width={14} height={14} strokeWidth={1.8} />,
       disabled: toolbarState.table,
@@ -1818,44 +1864,32 @@ export function PlatformInstructionsEditor({
       ? {
           id: "prompt",
           label: "Prompt",
-          group: "Insert",
+          group: "Recommended",
           keywords: ["saved prompt", "centralized prompt", "instructions"],
-          icon: (
-            <MessageSquareText
-              width={14}
-              height={14}
-              strokeWidth={1.8}
-            />
-          ),
+          icon: <MessageSquareText width={14} height={14} strokeWidth={1.8} />,
           disabled: promptInsertion.disabled,
           title: "Insert a saved prompt",
           onSelect: openPromptPicker,
         }
       : null;
   const toolbarInsertMenuOptions = promptInsertMenuOption
-    ? [
-        ...insertMenuOptions.slice(0, 3),
-        promptInsertMenuOption,
-        ...insertMenuOptions.slice(3),
-      ]
+    ? [...insertMenuOptions.slice(0, 3), promptInsertMenuOption, ...insertMenuOptions.slice(3)]
     : insertMenuOptions;
   const slashCommandOptions = [
+    ...(promptInsertMenuOption ? [promptInsertMenuOption] : []),
+    ...insertMenuOptions.filter((option) => option.group === "Recommended"),
     ...styleMenuOptions,
+    ...listMenuOptions,
     ...formattingMenuOptions,
     ...alignmentMenuOptions,
-    ...listMenuOptions,
-    ...insertMenuOptions,
+    ...insertMenuOptions.filter((option) => option.group !== "Recommended"),
   ];
   const filteredSlashCommandOptions = filterInstructionsEditorSlashCommands(
     slashCommandOptions,
     slashMenuState?.query || "",
   );
   const filteredMentionOptions = useMemo(
-    () =>
-      filterInstructionsEditorMentionOptions(
-        mentionOptions,
-        mentionMenuState?.query || "",
-      ),
+    () => filterInstructionsEditorMentionOptions(mentionOptions, mentionMenuState?.query || ""),
     [mentionMenuState?.query, mentionOptions],
   );
 
@@ -1868,22 +1902,22 @@ export function PlatformInstructionsEditor({
       ) {
         return currentIndex;
       }
-      const firstEnabledIndex = filteredSlashCommandOptions.findIndex(
-        (option) => !option.disabled,
-      );
+      const firstEnabledIndex = filteredSlashCommandOptions.findIndex((option) => !option.disabled);
       return firstEnabledIndex >= 0 ? firstEnabledIndex : 0;
     });
   }, [filteredSlashCommandOptions.length, slashMenuState?.query]);
 
   useEffect(() => {
     setMentionMenuActiveIndex((currentIndex) =>
-      filteredMentionOptions.length
-        ? Math.min(currentIndex, filteredMentionOptions.length - 1)
-        : 0,
+      filteredMentionOptions.length ? Math.min(currentIndex, filteredMentionOptions.length - 1) : 0,
     );
   }, [filteredMentionOptions.length, mentionMenuState?.query]);
 
   const dismissSlashMenu = () => {
+    const currentState = slashMenuStateRef.current;
+    if (currentState && currentState.to > currentState.from) {
+      dismissedSlashPositionRef.current = currentState.from;
+    }
     slashMenuStateRef.current = null;
     setSlashMenuState(null);
     setSlashMenuActiveIndex(0);
@@ -1895,6 +1929,83 @@ export function PlatformInstructionsEditor({
     setMentionMenuActiveIndex(0);
     onMentionQueryChangeRef.current?.(null);
   };
+
+  const refreshTextSelectionMenuState = () => {
+    if (readOnly || richTextEditor.isDestroyed) return;
+    const selectedRange = getInstructionsEditorTextSelectionRange(richTextEditor);
+    const selectedText = selectedRange
+      ? richTextEditor.state.doc.textBetween(selectedRange.from, selectedRange.to, " ")
+      : "";
+    const anchorPoint = selectedRange
+      ? getInstructionsEditorTextSelectionAnchorPoint(richTextEditor)
+      : null;
+    if (!selectedRange || !selectedText || !anchorPoint) {
+      setTextSelectionMenuState(null);
+      return;
+    }
+
+    setActiveToolbarMenu(null);
+    dismissSlashMenu();
+    dismissMentionMenu();
+    setTextSelectionMenuState({
+      ...selectedRange,
+      anchorPoint,
+      blockType: getInstructionsEditorSelectionBlockType(richTextEditor, selectedRange),
+      bold: richTextEditor.isActive("bold"),
+      italic: richTextEditor.isActive("italic"),
+      underline: richTextEditor.isActive("underline"),
+      alignment: getInstructionsEditorTextAlignment(richTextEditor),
+    });
+  };
+
+  const handleEditorContentMouseDown = (event: MouseEvent<HTMLElement>) => {
+    if (readOnly || event.button !== 0 || richTextEditor.isDestroyed) return;
+
+    const editorElement = richTextEditor.view.dom;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+
+    // Let ProseMirror handle clicks inside existing blocks. We only provide the
+    // Notion-style affordance for otherwise inert whitespace below the document.
+    if (target !== editorElement && target !== event.currentTarget) return;
+    const lastBlock = editorElement.lastElementChild;
+    if (!(lastBlock instanceof HTMLElement)) return;
+    if (event.clientY <= lastBlock.getBoundingClientRect().bottom + 1) return;
+
+    event.preventDefault();
+    userInteractionRef.current = true;
+    editorElement.focus({ preventScroll: true });
+    setActiveToolbarMenu(null);
+    setTextSelectionMenuState(null);
+    dismissSlashMenu();
+    dismissMentionMenu();
+
+    const lastNode = richTextEditor.state.doc.lastChild;
+    if (lastNode?.isTextblock && lastNode.content.size === 0) {
+      richTextEditor.commands.focus("end", { scrollIntoView: false });
+      return;
+    }
+
+    richTextEditor
+      .chain()
+      .insertContentAt(richTextEditor.state.doc.content.size, { type: "paragraph" })
+      .focus("end", { scrollIntoView: false })
+      .run();
+  };
+
+  const handleBlockDragStart = useCallback(() => {
+    userInteractionRef.current = true;
+    setActiveToolbarMenu(null);
+    setTextSelectionMenuState(null);
+    slashMenuStateRef.current = null;
+    dismissedSlashPositionRef.current = null;
+    setSlashMenuState(null);
+    setSlashMenuActiveIndex(0);
+    mentionMenuStateRef.current = null;
+    setMentionMenuState(null);
+    setMentionMenuActiveIndex(0);
+    onMentionQueryChangeRef.current?.(null);
+  }, []);
 
   const selectMention = (option: PlatformMentionOption) => {
     const menuState = mentionMenuStateRef.current;
@@ -1924,11 +2035,7 @@ export function PlatformInstructionsEditor({
         .deleteRange({ from: commandState.from, to: commandState.to })
         .run();
     } else {
-      richTextEditor
-        .chain()
-        .focus()
-        .setTextSelection(commandState.to)
-        .run();
+      richTextEditor.chain().focus().setTextSelection(commandState.to).run();
     }
     option.onSelect();
   };
@@ -1961,9 +2068,7 @@ export function PlatformInstructionsEditor({
     selectSlashCommand(activeOption);
   };
 
-  const handleMentionMenuKeyDown = (
-    event: ReactKeyboardEvent<HTMLElement>,
-  ) => {
+  const handleMentionMenuKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
     if (!mentionMenuState) return;
     if (event.key === "Escape") {
       event.preventDefault();
@@ -2024,11 +2129,7 @@ export function PlatformInstructionsEditor({
       event.key === "Backspace" ? "backward" : "forward",
     );
     if (!deletionRange) return;
-    const deleted = richTextEditor
-      .chain()
-      .focus()
-      .deleteRange(deletionRange)
-      .run();
+    const deleted = richTextEditor.chain().focus().deleteRange(deletionRange).run();
     if (!deleted) return;
     event.preventDefault();
     event.stopPropagation();
@@ -2048,11 +2149,7 @@ export function PlatformInstructionsEditor({
           },
           onDragLeaveCapture: (event: DragEvent<HTMLElement>) => {
             const nextTarget = event.relatedTarget;
-            if (
-              nextTarget instanceof Node &&
-              event.currentTarget.contains(nextTarget)
-            )
-              return;
+            if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
             setFileDragging(false);
           },
           onDropCapture: handleFileDrop,
@@ -2062,7 +2159,7 @@ export function PlatformInstructionsEditor({
   return (
     <section
       ref={shellRef}
-      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" ? " is-minimalistic-ui" : ""}${editorMode === "code" ? " is-code-editor" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${collapseEnabled ? " is-content-collapsible" : ""}${collapseEnabled && contentExceedsCollapsedHeight && !contentExpanded && !editing ? " is-content-collapsed" : ""}${collapseEnabled && (contentExpanded || editing) ? " is-content-expanded" : ""}${className ? ` ${className}` : ""}`}
+      className={`platform-instructions-editor playground-tasks-detail-description playground-environments-editor-description playground-agents-detail-instructions-section${stickyHeader && !readOnly ? " is-sticky" : " is-static"}${readOnly ? " is-readonly" : ""}${editing && !readOnly ? " is-editing" : ""}${variant === "minimalistic-ui" || variant === "block-editor" ? " is-minimalistic-ui" : ""}${variant === "block-editor" ? " is-block-editor" : ""}${editorMode === "code" ? " is-code-editor" : ""}${fileUploadEnabled ? " is-file-enabled" : ""}${fileDragging ? " is-file-dragging" : ""}${fileUploading ? " is-file-uploading" : ""}${collapseEnabled ? " is-content-collapsible" : ""}${collapseEnabled && contentExceedsCollapsedHeight && !contentExpanded && !editing ? " is-content-collapsed" : ""}${collapseEnabled && (contentExpanded || editing) ? " is-content-expanded" : ""}${className ? ` ${className}` : ""}`}
       data-platform-instructions-editor="true"
       data-platform-instructions-editor-variant={variant}
       data-platform-instructions-editor-mode={editorMode}
@@ -2082,12 +2179,11 @@ export function PlatformInstructionsEditor({
       }}
       {...dragHandlers}
     >
+      {showHeader ? (
       <header
         ref={headerRef}
         className={`platform-instructions-editor__header playground-tasks-detail-section-header${stickyHeader && !readOnly ? "" : " is-static-transparent"}${headerStuck ? " is-stuck" : ""}`}
-        data-platform-instructions-editor-header-stuck={
-          headerStuck ? "true" : undefined
-        }
+          data-platform-instructions-editor-header-stuck={headerStuck ? "true" : undefined}
       >
         {typeof title === "string" || typeof title === "number" ? (
           <h2 className="platform-instructions-editor__title playground-tasks-detail-section-title">
@@ -2106,23 +2202,14 @@ export function PlatformInstructionsEditor({
           >
             <InstructionsEditorToolbarPopup
               open={activeToolbarMenu === "style"}
-              onOpenChange={(open) =>
-                setActiveToolbarMenu(open ? "style" : null)
-              }
+                onOpenChange={(open) => setActiveToolbarMenu(open ? "style" : null)}
               label="Style"
               triggerClassName="is-style-trigger"
               popupWidth={190}
               trigger={
                 <>
-                  <span className="platform-instructions-editor__toolbar-menu-label">
-                    Style
-                  </span>
-                  <ChevronDown
-                    width={12}
-                    height={12}
-                    strokeWidth={1.8}
-                    aria-hidden="true"
-                  />
+                    <span className="platform-instructions-editor__toolbar-menu-label">Style</span>
+                    <ChevronDown width={12} height={12} strokeWidth={1.8} aria-hidden="true" />
                 </>
               }
               options={styleMenuOptions}
@@ -2153,50 +2240,29 @@ export function PlatformInstructionsEditor({
               className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider"
               aria-hidden="true"
             />
-            {toolbarButton(
-              "List",
-              listMenuOptions[0].icon,
-              listMenuOptions[0].onSelect,
-              { active: toolbarState.bulletList },
-            )}
-            {toolbarButton(
-              "Ordered list",
-              listMenuOptions[1].icon,
-              listMenuOptions[1].onSelect,
-              { active: toolbarState.orderedList },
-            )}
-            {toolbarButton(
-              "Checklist",
-              listMenuOptions[2].icon,
-              listMenuOptions[2].onSelect,
-              { active: toolbarState.taskList },
-            )}
+              {toolbarButton("List", listMenuOptions[0].icon, listMenuOptions[0].onSelect, {
+                active: toolbarState.bulletList,
+              })}
+              {toolbarButton("Ordered list", listMenuOptions[1].icon, listMenuOptions[1].onSelect, {
+                active: toolbarState.orderedList,
+              })}
+              {toolbarButton("Checklist", listMenuOptions[2].icon, listMenuOptions[2].onSelect, {
+                active: toolbarState.taskList,
+              })}
             <span
               className="platform-instructions-editor__toolbar-divider playground-agents-detail-instructions-toolbar-divider"
               aria-hidden="true"
             />
             <InstructionsEditorToolbarPopup
               open={activeToolbarMenu === "insert"}
-              onOpenChange={(open) =>
-                setActiveToolbarMenu(open ? "insert" : null)
-              }
+                onOpenChange={(open) => setActiveToolbarMenu(open ? "insert" : null)}
               label="Insert"
               triggerClassName="is-insert-trigger"
               popupWidth={160}
               trigger={
                 <>
-                  <Plus
-                    width={14}
-                    height={14}
-                    strokeWidth={1.8}
-                    aria-hidden="true"
-                  />
-                  <ChevronDown
-                    width={12}
-                    height={12}
-                    strokeWidth={1.8}
-                    aria-hidden="true"
-                  />
+                    <Plus width={14} height={14} strokeWidth={1.8} aria-hidden="true" />
+                    <ChevronDown width={12} height={12} strokeWidth={1.8} aria-hidden="true" />
                 </>
               }
               options={toolbarInsertMenuOptions}
@@ -2214,8 +2280,7 @@ export function PlatformInstructionsEditor({
                   const files = getUploadFiles(event.currentTarget.files);
                   event.currentTarget.value = "";
                   if (!files.length) return;
-                  const target =
-                    insertionTargetRef.current || getInsertionTarget();
+                    const target = insertionTargetRef.current || getInsertionTarget();
                   insertionTargetRef.current = null;
                   void uploadFiles(files, target);
                 }}
@@ -2224,6 +2289,7 @@ export function PlatformInstructionsEditor({
           </div>
         ) : null}
       </header>
+      ) : null}
       <div className="platform-instructions-editor__body playground-tasks-detail-description-editor">
         <div
           ref={contentViewportRef}
@@ -2231,12 +2297,18 @@ export function PlatformInstructionsEditor({
           style={
             collapseEnabled
               ? ({
-                  "--platform-instructions-editor-collapsed-lines":
-                    normalizedCollapsedLines,
+                  "--platform-instructions-editor-collapsed-lines": normalizedCollapsedLines,
                 } as CSSProperties)
               : undefined
           }
         >
+          {bodyTitle !== undefined && bodyTitle !== null ? (
+            typeof bodyTitle === "string" || typeof bodyTitle === "number" ? (
+              <h1 className="platform-instructions-editor__body-title">{bodyTitle}</h1>
+            ) : (
+              <div className="platform-instructions-editor__body-title">{bodyTitle}</div>
+            )
+          ) : null}
           {editorMode === "code" ? (
             <PlatformMonacoCodeEditor
               value={value}
@@ -2263,27 +2335,46 @@ export function PlatformInstructionsEditor({
               </div>
             )
           ) : (
-            <EditorContent
-              editor={richTextEditor}
-              className="platform-instructions-editor__content"
-              onKeyDownCapture={handleEditorKeyDown}
-              onKeyUpCapture={() => {
-                refreshSlashMenuState(richTextEditor);
-                refreshMentionMenuState(richTextEditor);
-              }}
-              onMouseUpCapture={() => {
-                refreshSlashMenuState(richTextEditor);
-                refreshMentionMenuState(richTextEditor);
-              }}
-              onContextMenu={handleEditorContextMenu}
-            />
+            <>
+              {variant === "block-editor" ? (
+                <DragHandle
+                  editor={richTextEditor}
+                  className="platform-instructions-editor__block-drag-handle"
+                  onElementDragStart={handleBlockDragStart}
+                >
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    className="platform-instructions-editor__block-drag-handle-control"
+                    aria-label="Move block"
+                    title="Drag to move"
+                  >
+                    <GripVertical aria-hidden="true" />
+                  </button>
+                </DragHandle>
+              ) : null}
+              <EditorContent
+                editor={richTextEditor}
+                className="platform-instructions-editor__content"
+                onMouseDown={handleEditorContentMouseDown}
+                onKeyDownCapture={handleEditorKeyDown}
+                onKeyUpCapture={() => {
+                  refreshSlashMenuState(richTextEditor);
+                  refreshMentionMenuState(richTextEditor);
+                  refreshTextSelectionMenuState();
+                }}
+                onMouseUpCapture={() => {
+                  refreshSlashMenuState(richTextEditor);
+                  refreshMentionMenuState(richTextEditor);
+                  refreshTextSelectionMenuState();
+                }}
+                onContextMenu={handleEditorContextMenu}
+              />
+            </>
           )}
         </div>
         {fileUploadError ? (
-          <div
-            className="platform-instructions-editor__upload-error"
-            role="alert"
-          >
+          <div className="platform-instructions-editor__upload-error" role="alert">
             {fileUploadError}
           </div>
         ) : null}
@@ -2305,6 +2396,7 @@ export function PlatformInstructionsEditor({
         <PlatformInstructionsEditorTextSelectionMenu
           open={Boolean(textSelectionMenuState)}
           anchorPoint={textSelectionMenuState?.anchorPoint || null}
+          blockType={textSelectionMenuState?.blockType || "paragraph"}
           bold={Boolean(textSelectionMenuState?.bold)}
           italic={Boolean(textSelectionMenuState?.italic)}
           underline={Boolean(textSelectionMenuState?.underline)}
@@ -2312,6 +2404,7 @@ export function PlatformInstructionsEditor({
           onOpenChange={(open) => {
             if (!open) setTextSelectionMenuState(null);
           }}
+          onBlockTypeChange={applyTextSelectionBlockType}
           onToggleBold={() => applyTextSelectionCommand("bold")}
           onToggleItalic={() => applyTextSelectionCommand("italic")}
           onToggleUnderline={() => applyTextSelectionCommand("underline")}
@@ -2330,24 +2423,32 @@ export function PlatformInstructionsEditor({
         />
       ) : null}
       {!readOnly && editorMode === "rich-text" && mentionMenuState ? (
-        <div
-          className="platform-instructions-editor__mention-popup"
+        <>
+          <span
+            ref={mentionPopupAnchorRef}
+            className="platform-instructions-editor__mention-popup-anchor"
+            aria-hidden="true"
           style={{
             position: "fixed",
             left: mentionMenuState.anchor.left,
-            top: mentionMenuState.anchor.bottom + 4,
-            zIndex: 10080,
+              top: mentionMenuState.anchor.bottom - 4,
+              width: 280,
+              height: 0,
+              pointerEvents: "none",
           }}
-        >
+          />
           <PlatformMentionSuggestionsPopup
             options={filteredMentionOptions}
             activeIndex={mentionMenuActiveIndex}
             loading={mentionsLoading}
             emptyMessage={mentionEmptyMessage}
+            placement="bottom"
+            portal
+            anchorRef={mentionPopupAnchorRef}
             onActiveIndexChange={setMentionMenuActiveIndex}
             onSelect={selectMention}
           />
-        </div>
+        </>
       ) : null}
     </section>
   );

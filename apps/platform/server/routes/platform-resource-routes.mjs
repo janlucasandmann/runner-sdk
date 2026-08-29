@@ -27,6 +27,32 @@ export function createPlatformResourceRoutes(bindings) {
             void proxyUpstreamGet(req, res, "/account/data-controls");
             return true;
         }
+        if (url.pathname === "/api/real/github/automations/bindings") {
+            if (req.method === "GET") {
+                void proxyUpstreamGet(req, res, "/github/automations/bindings");
+                return true;
+            }
+            if (req.method === "POST") {
+                void proxyUpstreamJsonRequest(req, res, "/github/automations/bindings", "POST");
+                return true;
+            }
+        }
+        const githubAutomationBindingMatch = url.pathname.match(
+            /^\/api\/real\/github\/automations\/bindings\/([^/]+)(\/executions)?$/,
+        );
+        if (githubAutomationBindingMatch) {
+            const bindingId = encodeURIComponent(decodeURIComponent(githubAutomationBindingMatch[1]));
+            const executionsSuffix = githubAutomationBindingMatch[2] || "";
+            const upstreamPath = `/github/automations/bindings/${bindingId}${executionsSuffix}`;
+            if (req.method === "GET" && executionsSuffix) {
+                void proxyUpstreamGet(req, res, upstreamPath);
+                return true;
+            }
+            if (!executionsSuffix && ["PATCH", "DELETE"].includes(req.method || "")) {
+                void proxyUpstreamJsonRequest(req, res, upstreamPath, req.method);
+                return true;
+            }
+        }
         const accountDataControlMatch = url.pathname.match(/^\/api\/real\/account\/data-controls\/([^/]+)$/);
         if (req.method === "DELETE" && accountDataControlMatch) {
             void proxyUpstreamJsonRequest(

@@ -973,6 +973,13 @@ export const PROJECT_OVERVIEW_CSS_04_FRAGMENT = String.raw`        cursor: point
         cursor: default;
       }
 
+      .playground-project-overview-rule-managed-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
       .playground-project-overview-rule-copy.tb-runner-chat {
         display: flex;
         height: auto;

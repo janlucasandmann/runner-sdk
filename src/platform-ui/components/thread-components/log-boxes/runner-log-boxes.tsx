@@ -77,18 +77,16 @@ import { parseGitCommitLogDetails } from "./git-commit-log-box.js";
 import { parseGitDiffLogDetails } from "./git-diff-log-box.js";
 import { parseGitStatusLogDetails } from "./git-status-log-box.js";
 import { LogHeader, LogPanel } from "./log-card.js";
-import {
-  RunnerMarkdown,
-  stripRunnerSystemTags,
-} from "../shared/runner-markdown.js";
+import { RunnerMarkdown, stripRunnerSystemTags } from "../shared/runner-markdown.js";
 import { DotLoader } from "../../ui/dot-loader/index.js";
 import { LazyMediaPreviewMount } from "../shared/lazy-media-preview.js";
 import { findRunnerWorkingLogJsonSegments } from "./working-log-json.js";
 
-const RUNNER_TEXT_FILE_ICON_URL = new URL(
-  "../assets/txtfile.png",
-  import.meta.url,
-).toString();
+// File-operation activity is rendered from both the development module graph
+// and the production content-addressed platform bundle. A module-relative URL
+// changes its base to `/platform/assets` after production bundling, so keep the
+// shared Files-page artwork on the stable same-origin public asset contract.
+const RUNNER_TEXT_FILE_ICON_URL = "/img/logos/txtfile.png";
 import {
   extractQuotedArgument,
   extractHeadTailReadPath,
@@ -117,16 +115,14 @@ import { CompactActionLogLine } from "./compact-action-log-line.js";
 import { MetronomeWorkflowLogBox } from "./metronome-workflow-view.js";
 import { PermissionRequestLogBox } from "./permission-request-view.js";
 import { isDeepResearchCommand } from "./deep-research-state.js";
-import {
-  DeepResearchCommandLogBox,
-  DeepResearchEventLogBox,
-} from "./deep-research-view.js";
+import { DeepResearchCommandLogBox, DeepResearchEventLogBox } from "./deep-research-view.js";
 import {
   extractJsonStringFieldValue,
   parseStructuredCommandExecutionOutput,
   resolveCommandOutputText,
 } from "./structured-command-output.js";
 import { buildCompactLogPreviewId } from "./preview-id.js";
+import { isPlausibleRunnerFileChangePath } from "../../../../thread/file-change-path.js";
 import {
   extractWorkspaceImagePathFromOutput,
   extractWorkspaceImagePathFromResult,
@@ -145,10 +141,7 @@ import {
 import type { RunnerWorkLogEntryProps } from "./log-entry-types.js";
 import { isListFilesLog, normalizeListFileName } from "./list-files-state.js";
 import { ListFilesLogBox } from "./list-files-view.js";
-import {
-  AtlassianActivityLogBox,
-  isAtlassianConnectorLog,
-} from "./atlassian-activity-view.js";
+import { AtlassianActivityLogBox, isAtlassianConnectorLog } from "./atlassian-activity-view.js";
 import { parseRunnerKnowledgeActivityDetails } from "./knowledge-activity-state.js";
 import { KnowledgeActivityLogBox } from "./knowledge-activity-view.js";
 import { parseRunnerProjectTaskListDetails } from "./project-task-list-state.js";
@@ -177,11 +170,7 @@ export {
   DeepResearchLogBox,
 } from "./deep-research-view.js";
 
-function formatCompactListCount(
-  count: number,
-  singular: string,
-  plural = `${singular}s`,
-): string {
+function formatCompactListCount(count: number, singular: string, plural = `${singular}s`): string {
   const safeCount = Number.isFinite(count) ? Math.max(0, count) : 0;
   return `${safeCount.toLocaleString()} ${safeCount === 1 ? singular : plural}`;
 }
@@ -194,13 +183,9 @@ function renderComputerAgentsListCompactLog(
   const firstAgent = agents.length === 1 ? agents[0] : null;
   return (
     <CompactActionLogLine
-      icon={
-        <Bot className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Bot className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Listed Agents"
-      detail={
-        firstAgent?.name || formatCompactListCount(agents.length, "agent")
-      }
+      detail={firstAgent?.name || formatCompactListCount(agents.length, "agent")}
       onClick={
         firstAgent
           ? () =>
@@ -215,44 +200,28 @@ function renderComputerAgentsListCompactLog(
 }
 
 function renderComputerAgentsThreadsListCompactLog(
-  details: NonNullable<
-    ReturnType<typeof parseComputerAgentsThreadsListLogDetails>
-  >,
+  details: NonNullable<ReturnType<typeof parseComputerAgentsThreadsListLogDetails>>,
 ) {
   const threads = details.threads || [];
   const firstThread = threads.length === 1 ? threads[0] : null;
   return (
     <CompactActionLogLine
-      icon={
-        <MessageSquare
-          className="tb-log-compact-action-icon-svg"
-          strokeWidth={1.6}
-        />
-      }
+      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Listed Threads"
       detail={
-        firstThread?.title ||
-        firstThread?.id ||
-        formatCompactListCount(threads.length, "thread")
+        firstThread?.title || firstThread?.id || formatCompactListCount(threads.length, "thread")
       }
     />
   );
 }
 
 function renderComputerAgentsThreadGetCompactLog(
-  details: NonNullable<
-    ReturnType<typeof parseComputerAgentsThreadGetLogDetails>
-  >,
+  details: NonNullable<ReturnType<typeof parseComputerAgentsThreadGetLogDetails>>,
 ) {
   const thread = details.thread;
   return (
     <CompactActionLogLine
-      icon={
-        <MessageSquare
-          className="tb-log-compact-action-icon-svg"
-          strokeWidth={1.6}
-        />
-      }
+      icon={<MessageSquare className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Retrieved Thread"
       detail={thread?.title || thread?.id || ""}
     />
@@ -260,30 +229,21 @@ function renderComputerAgentsThreadGetCompactLog(
 }
 
 function renderAppPlatformResourcesListCompactLog(
-  details: NonNullable<
-    ReturnType<typeof parseAppPlatformResourcesListLogDetails>
-  >,
+  details: NonNullable<ReturnType<typeof parseAppPlatformResourcesListLogDetails>>,
 ) {
   const resources = details.resources || [];
   const firstResource = resources.length === 1 ? resources[0] : null;
   return (
     <CompactActionLogLine
-      icon={
-        <Server className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Server className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Listed Resources"
-      detail={
-        firstResource?.name ||
-        formatCompactListCount(resources.length, "resource")
-      }
+      detail={firstResource?.name || formatCompactListCount(resources.length, "resource")}
     />
   );
 }
 
 function renderTaskManagementProjectsListCompactLog(
-  details: NonNullable<
-    ReturnType<typeof parseTaskManagementProjectsListLogDetails>
-  >,
+  details: NonNullable<ReturnType<typeof parseTaskManagementProjectsListLogDetails>>,
   onProjectPreviewClick?: RunnerWorkLogEntryProps["onProjectPreviewClick"],
 ) {
   const projects = details.projects || [];
@@ -292,9 +252,7 @@ function renderTaskManagementProjectsListCompactLog(
     <CompactActionLogLine
       icon={<span aria-hidden="true">🚀</span>}
       title="Listed Projects"
-      detail={
-        firstProject?.name || formatCompactListCount(projects.length, "project")
-      }
+      detail={firstProject?.name || formatCompactListCount(projects.length, "project")}
       onClick={
         firstProject
           ? () =>
@@ -309,26 +267,16 @@ function renderTaskManagementProjectsListCompactLog(
 }
 
 function renderComputerAgentsEnvironmentsListCompactLog(
-  details: NonNullable<
-    ReturnType<typeof parseComputerAgentsEnvironmentsListLogDetails>
-  >,
+  details: NonNullable<ReturnType<typeof parseComputerAgentsEnvironmentsListLogDetails>>,
   onEnvironmentPreviewClick?: RunnerWorkLogEntryProps["onEnvironmentPreviewClick"],
 ) {
   const environments = details.environments || [];
   const firstEnvironment = environments.length === 1 ? environments[0] : null;
   return (
     <CompactActionLogLine
-      icon={
-        <HardDrive
-          className="tb-log-compact-action-icon-svg"
-          strokeWidth={1.6}
-        />
-      }
+      icon={<HardDrive className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Listed Computers"
-      detail={
-        firstEnvironment?.name ||
-        formatCompactListCount(environments.length, "computer")
-      }
+      detail={firstEnvironment?.name || formatCompactListCount(environments.length, "computer")}
       onClick={
         firstEnvironment
           ? () =>
@@ -342,18 +290,14 @@ function renderComputerAgentsEnvironmentsListCompactLog(
   );
 }
 
-function renderGitDiffCompactLog(
-  details: NonNullable<ReturnType<typeof parseGitDiffLogDetails>>,
-) {
+function renderGitDiffCompactLog(details: NonNullable<ReturnType<typeof parseGitDiffLogDetails>>) {
   const detail =
     details.filesChanged > 0
       ? `${formatCompactListCount(details.filesChanged, "file")} changed`
       : `${details.linesChanged.toLocaleString()} lines changed`;
   return (
     <CompactActionLogLine
-      icon={
-        <Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Viewed Git Diff"
       detail={detail}
     />
@@ -365,9 +309,7 @@ function renderGitCommitCompactLog(
 ) {
   return (
     <CompactActionLogLine
-      icon={
-        <Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Created Git Commit"
       detail={[details.shortSha, details.message].filter(Boolean).join(" - ")}
     />
@@ -379,9 +321,7 @@ function renderGitStatusCompactLog(
 ) {
   return (
     <CompactActionLogLine
-      icon={
-        <Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Github className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Checked Git Status"
       detail={
         details.clean
@@ -408,10 +348,7 @@ export type RunnerLogFileChangePreview = {
   deletions?: number;
 };
 
-const runnerLogFileChangePreviewCache = new WeakMap<
-  RunnerLog,
-  RunnerLogFileChangePreview[]
->();
+const runnerLogFileChangePreviewCache = new WeakMap<RunnerLog, RunnerLogFileChangePreview[]>();
 
 function resolveFileMapValue<T>(
   map: Record<string, T> | undefined,
@@ -419,13 +356,9 @@ function resolveFileMapValue<T>(
 ): T | undefined {
   if (!map || !filePath) return undefined;
   if (map[filePath] !== undefined) return map[filePath];
-  const normalizedPath = filePath
-    .replace(/^\.?\//, "")
-    .replace(/^\/workspace\//, "");
+  const normalizedPath = filePath.replace(/^\.?\//, "").replace(/^\/workspace\//, "");
   for (const [key, value] of Object.entries(map)) {
-    const normalizedKey = key
-      .replace(/^\.?\//, "")
-      .replace(/^\/workspace\//, "");
+    const normalizedKey = key.replace(/^\.?\//, "").replace(/^\/workspace\//, "");
     if (normalizedKey === normalizedPath) {
       return value;
     }
@@ -433,12 +366,8 @@ function resolveFileMapValue<T>(
   return undefined;
 }
 
-function resolveFileDiffMetadata(
-  log: RunnerLog,
-  filePath?: string,
-): RunnerFileDiffMetadata | null {
-  const diffs = log.metadata?.diffs as
-    Record<string, RunnerFileDiffMetadata> | undefined;
+function resolveFileDiffMetadata(log: RunnerLog, filePath?: string): RunnerFileDiffMetadata | null {
+  const diffs = log.metadata?.diffs as Record<string, RunnerFileDiffMetadata> | undefined;
   return resolveFileMapValue(diffs, filePath) || null;
 }
 
@@ -464,25 +393,15 @@ function buildStructuredPatchDiff(
   operation: "created" | "modified" | "deleted",
 ): string {
   const normalizedPath = String(filePath || "").replace(/^\/+/, "");
-  const oldHeaderPath =
-    operation === "created" ? "/dev/null" : `a/${normalizedPath}`;
-  const newHeaderPath =
-    operation === "deleted" ? "/dev/null" : `b/${normalizedPath}`;
+  const oldHeaderPath = operation === "created" ? "/dev/null" : `a/${normalizedPath}`;
+  const newHeaderPath = operation === "deleted" ? "/dev/null" : `b/${normalizedPath}`;
   const lines = [`--- ${oldHeaderPath}`, `+++ ${newHeaderPath}`];
 
   for (const patch of patches) {
-    const oldStart = Number.isFinite(patch.oldStart)
-      ? Number(patch.oldStart)
-      : 1;
-    const oldLines = Number.isFinite(patch.oldLines)
-      ? Number(patch.oldLines)
-      : 0;
-    const newStart = Number.isFinite(patch.newStart)
-      ? Number(patch.newStart)
-      : 1;
-    const newLines = Number.isFinite(patch.newLines)
-      ? Number(patch.newLines)
-      : 0;
+    const oldStart = Number.isFinite(patch.oldStart) ? Number(patch.oldStart) : 1;
+    const oldLines = Number.isFinite(patch.oldLines) ? Number(patch.oldLines) : 0;
+    const newStart = Number.isFinite(patch.newStart) ? Number(patch.newStart) : 1;
+    const newLines = Number.isFinite(patch.newLines) ? Number(patch.newLines) : 0;
     lines.push(`@@ -${oldStart},${oldLines} +${newStart},${newLines} @@`);
     if (Array.isArray(patch.lines)) {
       lines.push(...patch.lines.map((entry) => String(entry)));
@@ -612,9 +531,7 @@ function GenericTextLogBox({
   icon: ReactNode;
   onWorkspacePathClick?: (path: string) => void;
 }) {
-  const content = stripRunnerSystemTags(
-    log.message || log.metadata?.output || "",
-  );
+  const content = stripRunnerSystemTags(log.message || log.metadata?.output || "");
   const jsonSegments = useMemo(
     () => findRunnerWorkingLogJsonSegments([content], title || label || "JSON"),
     [content, label, title],
@@ -680,9 +597,7 @@ function isMkdirCommand(command?: string): boolean {
 function extractMkdirPaths(command?: string): string[] {
   if (!command) return [];
   const normalizedCommand = stripShellInlineComments(command);
-  const match = normalizedCommand.match(
-    /(?:^|\n|[;&|]\s*)\$?\s*mkdir\b\s+([^\n;|]+)/i,
-  );
+  const match = normalizedCommand.match(/(?:^|\n|[;&|]\s*)\$?\s*mkdir\b\s+([^\n;|]+)/i);
   const args = match?.[1]
     ?.replace(/\s+\d?>&\d+[\s\S]*$/g, "")
     ?.replace(/\s+\d?>\s*\S+[\s\S]*$/g, "")
@@ -695,10 +610,7 @@ function extractMkdirPaths(command?: string): string[] {
 }
 
 function isMkdirLog(log?: RunnerLog): boolean {
-  if (
-    !log ||
-    (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")
-  ) {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
     return false;
   }
   const command = [log.metadata?.command, log.message]
@@ -738,8 +650,7 @@ function extractWaitDurationMsFromValue(value: unknown): number | null {
         ? record.duration_ms
         : typeof record.durationMs === "number"
           ? record.durationMs
-          : typeof record.duration === "number" &&
-              String(record.unit || "").toLowerCase() === "ms"
+          : typeof record.duration === "number" && String(record.unit || "").toLowerCase() === "ms"
             ? record.duration
             : null;
     const message = typeof record.message === "string" ? record.message : "";
@@ -771,10 +682,7 @@ function extractWaitDurationMsFromValue(value: unknown): number | null {
 }
 
 function extractWaitDurationSeconds(log?: RunnerLog): number | null {
-  if (
-    !log ||
-    (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")
-  ) {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
     return null;
   }
 
@@ -784,15 +692,9 @@ function extractWaitDurationSeconds(log?: RunnerLog): number | null {
       .join("\n"),
   );
   const commandDurationMatch =
-    command.match(
-      /(?:^|\n|[;&|]\s*)\$?\s*sleep\s+(\d+(?:\.\d+)?)(ms|s|m)?\b/i,
-    ) ||
-    command.match(
-      /(?:^|\n)\s*\$?\s*Sleep(?:\s+(\d+(?:\.\d+)?)(ms|s|m)?)?\s*$/i,
-    );
-  const structuredOutput = parseStructuredCommandExecutionOutput(
-    log.metadata?.output,
-  );
+    command.match(/(?:^|\n|[;&|]\s*)\$?\s*sleep\s+(\d+(?:\.\d+)?)(ms|s|m)?\b/i) ||
+    command.match(/(?:^|\n)\s*\$?\s*Sleep(?:\s+(\d+(?:\.\d+)?)(ms|s|m)?)?\s*$/i);
+  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
   const outputDurationMs = [
     log.metadata,
     log.metadata?.output,
@@ -825,13 +727,7 @@ function isWaitLog(log?: RunnerLog): boolean {
   return extractWaitDurationSeconds(log) != null;
 }
 
-function WaitLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function WaitLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void log;
   void timeLabel;
   return null;
@@ -848,10 +744,7 @@ export function isReadFileLog(log?: RunnerLog): boolean {
   return (
     isReadFileCommand(command) ||
     /^Read:\s+/i.test(message) ||
-    Boolean(
-      log.metadata?.fileContents &&
-      typeof log.metadata.fileContents === "object",
-    ) ||
+    Boolean(log.metadata?.fileContents && typeof log.metadata.fileContents === "object") ||
     Boolean(extractStructuredReadFilePayload(log.metadata?.output)) ||
     /"filePath"\s*:/.test(output) ||
     /"content"\s*:/.test(output)
@@ -898,10 +791,7 @@ function isNoopReadFileSentinelPayload(value: unknown): boolean {
 }
 
 function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
-  if (
-    !log ||
-    (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")
-  ) {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "mcp_tool_call")) {
     return false;
   }
 
@@ -910,8 +800,7 @@ function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
     .join("\n");
   const readPath =
     normalizeRunnerFilePath(
-      (log.metadata as { file_path?: string; path?: string } | undefined)
-        ?.file_path,
+      (log.metadata as { file_path?: string; path?: string } | undefined)?.file_path,
     ) ||
     normalizeRunnerFilePath(
       (log.metadata as { file_path?: string; path?: string } | undefined)?.path,
@@ -923,9 +812,7 @@ function shouldHideNoopReadFileLog(log?: RunnerLog): boolean {
     return false;
   }
 
-  const structuredOutput = parseStructuredCommandExecutionOutput(
-    log.metadata?.output,
-  );
+  const structuredOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
   const candidates: unknown[] = [
     log.metadata,
     log.metadata?.output,
@@ -988,13 +875,9 @@ function normalizeReadFileFailureMessage({
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    const matchedLine = lines.find((line) =>
-      failurePatterns.some((pattern) => pattern.test(line)),
-    );
+    const matchedLine = lines.find((line) => failurePatterns.some((pattern) => pattern.test(line)));
     if (matchedLine) {
-      return matchedLine.length > 180
-        ? `${matchedLine.slice(0, 177).trimEnd()}...`
-        : matchedLine;
+      return matchedLine.length > 180 ? `${matchedLine.slice(0, 177).trimEnd()}...` : matchedLine;
     }
   }
 
@@ -1009,17 +892,13 @@ function normalizeReadFileFailureMessage({
   if (!fallbackLine) {
     return "failed to read file";
   }
-  return fallbackLine.length > 180
-    ? `${fallbackLine.slice(0, 177).trimEnd()}...`
-    : fallbackLine;
+  return fallbackLine.length > 180 ? `${fallbackLine.slice(0, 177).trimEnd()}...` : fallbackLine;
 }
 
 function extractStructuredReadFilePayload(
   output: unknown,
 ): { filePath?: string; content?: string } | null {
-  const visit = (
-    value: unknown,
-  ): { filePath?: string; content?: string } | null => {
+  const visit = (value: unknown): { filePath?: string; content?: string } | null => {
     if (value == null) {
       return null;
     }
@@ -1066,9 +945,7 @@ function extractStructuredReadFilePayload(
     if (filePathCandidate || contentCandidate !== undefined) {
       return {
         ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
-        ...(contentCandidate !== undefined
-          ? { content: contentCandidate }
-          : {}),
+        ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
       };
     }
 
@@ -1098,15 +975,8 @@ function extractStructuredReadFilePayload(
     return null;
   }
 
-  const fallbackFilePath = extractJsonStringFieldValue(output, [
-    "filePath",
-    "file_path",
-    "path",
-  ]);
-  const fallbackContent = extractJsonStringFieldValue(output, [
-    "content",
-    "text",
-  ]);
+  const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
+  const fallbackContent = extractJsonStringFieldValue(output, ["content", "text"]);
   if (fallbackFilePath || fallbackContent !== null) {
     return {
       ...(fallbackFilePath ? { filePath: fallbackFilePath } : {}),
@@ -1125,11 +995,8 @@ function extractStructuredWriteFilePayload(output: string): {
   additions?: number;
   deletions?: number;
 } | null {
-  const normalizeOperation = (
-    value: unknown,
-  ): "created" | "modified" | "deleted" | undefined => {
-    const normalized =
-      typeof value === "string" ? value.trim().toLowerCase() : "";
+  const normalizeOperation = (value: unknown): "created" | "modified" | "deleted" | undefined => {
+    const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
     if (!normalized) return undefined;
     if (
       normalized === "created" ||
@@ -1259,22 +1126,13 @@ function extractStructuredWriteFilePayload(output: string): {
         : "");
     const stats = diffText ? countDiffStats(diffText) : null;
 
-    if (
-      filePathCandidate ||
-      contentCandidate !== undefined ||
-      operationCandidate ||
-      diffText
-    ) {
+    if (filePathCandidate || contentCandidate !== undefined || operationCandidate || diffText) {
       return {
         ...(filePathCandidate ? { filePath: filePathCandidate } : {}),
-        ...(contentCandidate !== undefined
-          ? { content: contentCandidate }
-          : {}),
+        ...(contentCandidate !== undefined ? { content: contentCandidate } : {}),
         ...(operationCandidate ? { operation: operationCandidate } : {}),
         ...(diffText ? { diffText } : {}),
-        ...(stats
-          ? { additions: stats.additions, deletions: stats.deletions }
-          : {}),
+        ...(stats ? { additions: stats.additions, deletions: stats.deletions } : {}),
       };
     }
 
@@ -1300,15 +1158,8 @@ function extractStructuredWriteFilePayload(output: string): {
     return structured;
   }
 
-  const fallbackFilePath = extractJsonStringFieldValue(output, [
-    "filePath",
-    "file_path",
-    "path",
-  ]);
-  const fallbackContent = extractJsonStringFieldValue(output, [
-    "content",
-    "text",
-  ]);
+  const fallbackFilePath = extractJsonStringFieldValue(output, ["filePath", "file_path", "path"]);
+  const fallbackContent = extractJsonStringFieldValue(output, ["content", "text"]);
   const fallbackOperation = normalizeOperation(
     extractJsonStringFieldValue(output, [
       "operationKind",
@@ -1333,14 +1184,12 @@ export function isWriteFileLog(log?: RunnerLog): boolean {
   if (!log) return false;
   const command = String(log.metadata?.command || "");
   const message = String(log.message || "");
-  const output =
-    typeof log.metadata?.output === "string" ? log.metadata.output : "";
+  const output = typeof log.metadata?.output === "string" ? log.metadata.output : "";
   const structuredWrite = extractStructuredWriteFilePayload(output);
   const candidatePaths = [
     ...(Array.isArray(log.metadata?.filePaths)
       ? log.metadata.filePaths.filter(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
+          (value): value is string => typeof value === "string" && value.trim().length > 0,
         )
       : []),
     structuredWrite?.filePath,
@@ -1349,12 +1198,11 @@ export function isWriteFileLog(log?: RunnerLog): boolean {
     extractWriteMessagePath(message),
   ].filter(
     (value): value is string =>
-      typeof value === "string" && value.trim().length > 0,
+      typeof value === "string" &&
+      value.trim().length > 0 &&
+      isPlausibleRunnerFileChangePath(value),
   );
-  if (
-    candidatePaths.length > 0 &&
-    candidatePaths.every((filePath) => isRunnerNullDevicePath(filePath))
-  ) {
+  if (candidatePaths.length === 0) {
     return false;
   }
 
@@ -1368,9 +1216,7 @@ export function isWriteFileLog(log?: RunnerLog): boolean {
   );
 }
 
-export function collectRunnerLogFileChangePreviews(
-  log: RunnerLog,
-): RunnerLogFileChangePreview[] {
+export function collectRunnerLogFileChangePreviews(log: RunnerLog): RunnerLogFileChangePreview[] {
   if (!log) {
     return [];
   }
@@ -1378,9 +1224,7 @@ export function collectRunnerLogFileChangePreviews(
   if (cached) {
     return cached;
   }
-  const cacheAndReturn = (
-    previews: RunnerLogFileChangePreview[],
-  ): RunnerLogFileChangePreview[] => {
+  const cacheAndReturn = (previews: RunnerLogFileChangePreview[]): RunnerLogFileChangePreview[] => {
     runnerLogFileChangePreviewCache.set(log, previews);
     return previews;
   };
@@ -1391,19 +1235,16 @@ export function collectRunnerLogFileChangePreviews(
           (value): value is string =>
             typeof value === "string" &&
             value.trim().length > 0 &&
-            !isRunnerNullDevicePath(value),
+            isPlausibleRunnerFileChangePath(value),
         )
       : [];
     if (filePaths.length === 0) {
       return cacheAndReturn([]);
     }
 
-    const changeKinds = Array.isArray(log.metadata?.changeKinds)
-      ? log.metadata.changeKinds
-      : [];
+    const changeKinds = Array.isArray(log.metadata?.changeKinds) ? log.metadata.changeKinds : [];
     const fileContents =
-      log.metadata?.fileContents &&
-      typeof log.metadata.fileContents === "object"
+      log.metadata?.fileContents && typeof log.metadata.fileContents === "object"
         ? (log.metadata.fileContents as Record<string, string>)
         : undefined;
     const diffs =
@@ -1456,21 +1297,16 @@ export function collectRunnerLogFileChangePreviews(
   }
 
   const imageGenerationCommand =
-    typeof log.metadata?.command === "string"
-      ? log.metadata.command
-      : undefined;
+    typeof log.metadata?.command === "string" ? log.metadata.command : undefined;
   if (
-    (log.eventType === "command_execution" ||
-      log.eventType === "mcp_tool_call") &&
+    (log.eventType === "command_execution" || log.eventType === "mcp_tool_call") &&
     isLikelyImageGenerationLog(log, imageGenerationCommand)
   ) {
     const imagePaths = new Set<string>();
     const metadataFilePaths = Array.isArray(log.metadata?.filePaths)
       ? log.metadata.filePaths.filter(
           (value): value is string =>
-            typeof value === "string" &&
-            value.trim().length > 0 &&
-            !isRunnerNullDevicePath(value),
+            typeof value === "string" && value.trim().length > 0 && !isRunnerNullDevicePath(value),
         )
       : [];
     for (const filePath of metadataFilePaths) {
@@ -1478,21 +1314,14 @@ export function collectRunnerLogFileChangePreviews(
         imagePaths.add(filePath);
       }
     }
-    if (
-      typeof log.metadata?.savedImagePath === "string" &&
-      log.metadata.savedImagePath.trim()
-    ) {
+    if (typeof log.metadata?.savedImagePath === "string" && log.metadata.savedImagePath.trim()) {
       imagePaths.add(log.metadata.savedImagePath.trim());
     }
-    const resultImagePath = extractWorkspaceImagePathFromResult(
-      log.metadata?.result,
-    );
+    const resultImagePath = extractWorkspaceImagePathFromResult(log.metadata?.result);
     if (resultImagePath) {
       imagePaths.add(resultImagePath);
     }
-    const outputImagePath = extractWorkspaceImagePathFromOutput(
-      log.metadata?.output,
-    );
+    const outputImagePath = extractWorkspaceImagePathFromOutput(log.metadata?.output);
     if (outputImagePath) {
       imagePaths.add(outputImagePath);
     }
@@ -1544,34 +1373,26 @@ export function collectRunnerLogFileChangePreviews(
   const command = String(log.metadata?.command || "");
   const output = stripRunnerSystemTags(String(log.metadata?.output || ""));
   const structuredWrite = extractStructuredWriteFilePayload(output);
-  const filePath =
-    (log.metadata?.filePaths?.[0] as string | undefined) ||
-    structuredWrite?.filePath ||
-    extractWriteFilePath(command) ||
-    extractWorkspacePathFromText(log.message) ||
-    extractWriteMessagePath(log.message) ||
-    undefined;
-  if (!filePath || isRunnerNullDevicePath(filePath)) {
+  const filePath = [
+    ...(Array.isArray(log.metadata?.filePaths) ? log.metadata.filePaths : []),
+    structuredWrite?.filePath,
+    extractWriteFilePath(command),
+    extractWorkspacePathFromText(log.message),
+    extractWriteMessagePath(log.message),
+  ].find(
+    (value): value is string => typeof value === "string" && isPlausibleRunnerFileChangePath(value),
+  );
+  if (!filePath) {
     return cacheAndReturn([]);
   }
 
-  const fileContents = log.metadata?.fileContents as
-    Record<string, string> | undefined;
-  const content =
-    resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
+  const fileContents = log.metadata?.fileContents as Record<string, string> | undefined;
+  const content = resolveFileMapValue(fileContents, filePath) ?? structuredWrite?.content;
   const operation =
-    structuredWrite?.operation ||
-    deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
+    structuredWrite?.operation || deriveWriteOperation(command, log.metadata?.changeKinds?.[0]);
   const previewSource = typeof content === "string" ? content : output;
-  const diffPreview = resolveWriteDiffPreview(
-    log,
-    filePath,
-    previewSource,
-    operation,
-  );
-  const effectiveDiffText = String(
-    structuredWrite?.diffText || diffPreview.diffText || "",
-  ).trim();
+  const diffPreview = resolveWriteDiffPreview(log, filePath, previewSource, operation);
+  const effectiveDiffText = String(structuredWrite?.diffText || diffPreview.diffText || "").trim();
 
   return cacheAndReturn([
     {
@@ -1593,16 +1414,12 @@ export function collectRunnerLogFileChangePreviews(
   ]);
 }
 
-function extractDeletedFilePathFromCommandOutput(
-  log: RunnerLog,
-): string | null {
+function extractDeletedFilePathFromCommandOutput(log: RunnerLog): string | null {
   if (log.eventType !== "command_execution") {
     return null;
   }
 
-  const parsedOutput = parseStructuredCommandExecutionOutput(
-    log.metadata?.output,
-  );
+  const parsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
   const outputText = [
     parsedOutput?.stdout || "",
     parsedOutput?.stderr || "",
@@ -1615,12 +1432,8 @@ function extractDeletedFilePathFromCommandOutput(
   }
 
   const pathMatch =
-    /cannot access ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(
-      outputText,
-    ) ||
-    /cannot remove ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(
-      outputText,
-    ) ||
+    /cannot access ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
+    /cannot remove ['"`]([^'"`\n]+)['"`]: No such file or directory/i.exec(outputText) ||
     /no such file or directory[^\n]*['"`]([^'"`\n]+)['"`]/i.exec(outputText);
   const resolvedPath = normalizeRunnerFilePath(pathMatch?.[1] || "");
   if (!resolvedPath || isRunnerNullDevicePath(resolvedPath)) {
@@ -1640,14 +1453,12 @@ function resolveReadDocumentPreviewAttachment(
     /\.html?$/i.test(String(filePath || "")) ||
     /<!doctype\s+html/i.test(normalizedContent) ||
     /<html[\s>]/i.test(normalizedContent) ||
-    (/<head[\s>]/i.test(normalizedContent) &&
-      /<body[\s>]/i.test(normalizedContent));
+    (/<head[\s>]/i.test(normalizedContent) && /<body[\s>]/i.test(normalizedContent));
   if (!looksLikeHtml) {
     return null;
   }
 
-  const normalizedPath =
-    normalizeRunnerFilePath(filePath) || "/workspace/preview.html";
+  const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.html";
   const baseAttachment = buildRunnerPreviewAttachmentFromPath(normalizedPath, {
     backendUrl,
     environmentId,
@@ -1673,8 +1484,7 @@ function resolveReadCodePreviewAttachment(
   if (!normalizedContent.trim()) {
     return null;
   }
-  const normalizedPath =
-    normalizeRunnerFilePath(filePath) || "/workspace/preview.txt";
+  const normalizedPath = normalizeRunnerFilePath(filePath) || "/workspace/preview.txt";
   const filename = getFileName(normalizedPath);
   const isMarkdown = looksLikeMarkdown(normalizedContent, normalizedPath);
   const mimeType = isMarkdown ? "text/markdown" : "text/plain";
@@ -1693,9 +1503,7 @@ function resolveReadCodePreviewAttachment(
   };
 }
 
-function isRenderableReadFilePath(
-  filePath?: string | null,
-): filePath is string {
+function isRenderableReadFilePath(filePath?: string | null): filePath is string {
   const normalizedPath = normalizeRunnerFilePath(filePath);
   if (!normalizedPath || isRunnerNullDevicePath(normalizedPath)) {
     return false;
@@ -1774,23 +1582,16 @@ function ReadFileLogBox({
   onWorkspacePathClick?: (path: string) => void;
 }) {
   const command = log.metadata?.command || "";
-  const output = stripRunnerSystemTags(
-    resolveCommandOutputText(log.metadata?.output, "stdout"),
-  );
-  const commandOutput = parseStructuredCommandExecutionOutput(
-    log.metadata?.output,
-  );
+  const output = stripRunnerSystemTags(resolveCommandOutputText(log.metadata?.output, "stdout"));
+  const commandOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
   const structuredReadPayload =
     extractStructuredReadFilePayload(log.metadata?.output) ||
     extractStructuredReadFilePayload(output) ||
     extractStructuredReadFilePayload(commandOutput?.stdout || "");
   const filePath =
+    normalizeRunnerFilePath(log.metadata?.filePaths?.[0] as string | undefined) ||
     normalizeRunnerFilePath(
-      log.metadata?.filePaths?.[0] as string | undefined,
-    ) ||
-    normalizeRunnerFilePath(
-      (log.metadata as { file_path?: string; path?: string } | undefined)
-        ?.file_path,
+      (log.metadata as { file_path?: string; path?: string } | undefined)?.file_path,
     ) ||
     normalizeRunnerFilePath(
       (log.metadata as { file_path?: string; path?: string } | undefined)?.path,
@@ -1799,8 +1600,7 @@ function ReadFileLogBox({
     normalizeRunnerFilePath(extractReadFilePath(command)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(log.message)) ||
     normalizeRunnerFilePath(extractWorkspacePathFromText(command));
-  const isError =
-    typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
   const content = stripLineNumbers(
     structuredReadPayload?.content ?? commandOutput?.stdout ?? output,
   );
@@ -1823,26 +1623,14 @@ function ReadFileLogBox({
     backendUrl,
     environmentId,
   );
-  const skillDescriptionName = getReadSkillDescriptionName(
-    normalizedPath,
-    content,
-  );
+  const skillDescriptionName = getReadSkillDescriptionName(normalizedPath, content);
 
   if (skillDescriptionName) {
     return (
       <CompactActionLogLine
-        icon={
-          <SquareMousePointer
-            className="tb-log-compact-action-icon-svg"
-            strokeWidth={1.6}
-          />
-        }
+        icon={<SquareMousePointer className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
         title={`Read skill description of ${skillDescriptionName}`}
-        onClick={
-          onPreviewDocument
-            ? () => onPreviewDocument(previewAttachment)
-            : undefined
-        }
+        onClick={onPreviewDocument ? () => onPreviewDocument(previewAttachment) : undefined}
       />
     );
   }
@@ -1860,19 +1648,12 @@ function ReadFileLogBox({
       }
       title="Read file"
       detail={normalizedPath}
-      onClick={
-        onPreviewDocument
-          ? () => onPreviewDocument(previewAttachment)
-          : undefined
-      }
+      onClick={onPreviewDocument ? () => onPreviewDocument(previewAttachment) : undefined}
     />
   );
 }
 
-function getReadSkillDescriptionName(
-  filePath: string,
-  content: string,
-): string | null {
+function getReadSkillDescriptionName(filePath: string, content: string): string | null {
   const normalizedPath = normalizeRunnerFilePath(filePath);
   if (!normalizedPath) return null;
   const pathParts = normalizedPath.split("/").filter(Boolean);
@@ -1906,7 +1687,7 @@ function isWriteFileCommand(command?: string): boolean {
   ].some((pattern) => pattern.test(command));
   if (!isWriteLike) return false;
   const writeTarget = extractWriteFilePath(command);
-  return !isRunnerNullDevicePath(writeTarget);
+  return isPlausibleRunnerFileChangePath(writeTarget);
 }
 
 function extractWriteFilePath(command?: string): string | null {
@@ -1923,28 +1704,21 @@ function extractWriteFilePath(command?: string): string | null {
   ];
   for (const pattern of patterns) {
     const match = command.match(pattern);
-    if (match?.[1]) return match[1];
+    if (match?.[1] && isPlausibleRunnerFileChangePath(match[1])) {
+      return match[1];
+    }
   }
   return null;
 }
 
 function extractWriteMessagePath(message?: string | null): string | null {
-  const match = String(message || "").match(
-    /^\s*(?:Write|Edit|Delete):\s+(.+?)\s*$/i,
-  );
+  const match = String(message || "").match(/^\s*(?:Write|Edit|Delete):\s+(.+?)\s*$/i);
   return normalizeRunnerFilePath(match?.[1] || "") || null;
 }
 
-function deriveWriteOperation(
-  command?: string,
-  changeKind?: string,
-): "created" | "modified" {
+function deriveWriteOperation(command?: string, changeKind?: string): "created" | "modified" {
   if (changeKind === "created") return "created";
-  if (
-    changeKind === "modified" ||
-    changeKind === "update" ||
-    changeKind === "updated"
-  )
+  if (changeKind === "modified" || changeKind === "update" || changeKind === "updated")
     return "modified";
   if (!command) return "modified";
   if (command.includes(">>")) return "modified";
@@ -1974,11 +1748,7 @@ function resolveWriteDocumentPreviewAttachment(
   }
 
   const previewKind = getRunnerDocumentPreviewKind(attachment);
-  if (
-    previewKind !== "pdf" &&
-    previewKind !== "html" &&
-    previewKind !== "markdown"
-  ) {
+  if (previewKind !== "pdf" && previewKind !== "html" && previewKind !== "markdown") {
     return null;
   }
 
@@ -2060,24 +1830,15 @@ function WriteFileLogGroup({
       }),
       workspacePath: normalizedPath,
       changeKind: item.kind,
-      ...(typeof item.diff === "string" && item.diff.trim()
-        ? { diffContent: item.diff }
-        : {}),
-      ...(typeof item.content === "string"
-        ? { fileContent: item.content }
-        : {}),
-      ...(typeof item.additions === "number"
-        ? { diffAdditions: item.additions }
-        : {}),
-      ...(typeof item.deletions === "number"
-        ? { diffDeletions: item.deletions }
-        : {}),
+      ...(typeof item.diff === "string" && item.diff.trim() ? { diffContent: item.diff } : {}),
+      ...(typeof item.content === "string" ? { fileContent: item.content } : {}),
+      ...(typeof item.additions === "number" ? { diffAdditions: item.additions } : {}),
+      ...(typeof item.deletions === "number" ? { diffDeletions: item.deletions } : {}),
     });
   }
 
   const firstItem = items[0];
-  const detail =
-    items.length === 1 && firstItem ? firstItem.path : `${items.length} files`;
+  const detail = items.length === 1 && firstItem ? firstItem.path : `${items.length} files`;
   const canPreview = items.length === 1 && firstItem?.kind !== "deleted";
   return (
     <CompactActionLogLine
@@ -2092,9 +1853,7 @@ function WriteFileLogGroup({
       }
       title={getWriteFileCompactTitle(items)}
       detail={detail}
-      onClick={
-        canPreview && firstItem ? () => openFilePreview(firstItem) : undefined
-      }
+      onClick={canPreview && firstItem ? () => openFilePreview(firstItem) : undefined}
     />
   );
 }
@@ -2105,6 +1864,48 @@ type GrepSearchMatch = {
   source?: string;
   lineNumber?: string;
 };
+
+type RunnerSessionLogInspectionDetails = {
+  title: "Inspected session logs" | "Searched session logs";
+  detail?: string;
+};
+
+function parseRunnerSessionLogInspectionDetails(
+  log?: RunnerLog,
+): RunnerSessionLogInspectionDetails | null {
+  if (!log || (log.eventType !== "command_execution" && log.eventType !== "file_change")) {
+    return null;
+  }
+
+  const command = stripRunnerSystemTags(String(log.metadata?.command || log.message || ""));
+  if (!/\.claw[\\/]sessions(?:[\\/]|\b)/i.test(command) && !/\bsession\s+logs?\b/i.test(command)) {
+    return null;
+  }
+
+  const isStructureInspection =
+    /json\.dumps\s*\(\s*obj\b/i.test(command) ||
+    /\bkeys\s*=\s*list\s*\(\s*obj\.keys/i.test(command);
+  const title = isStructureInspection ? "Inspected session logs" : "Searched session logs";
+  const detail = /manage-tasks(?:\.py)?/i.test(command)
+    ? "for manage-tasks.py"
+    : /\btask_[A-Za-z0-9_-]+\b/.test(command)
+      ? "for ticket context"
+      : /\bthread_[A-Za-z0-9_-]+\b/.test(command)
+        ? "for thread context"
+        : undefined;
+
+  return { title, ...(detail ? { detail } : {}) };
+}
+
+function SessionLogInspectionLogBox({ details }: { details: RunnerSessionLogInspectionDetails }) {
+  return (
+    <CompactActionLogLine
+      icon={<Search className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
+      title={details.title}
+      detail={details.detail}
+    />
+  );
+}
 
 function isGrepSearchCommand(command?: string): boolean {
   if (!command) return false;
@@ -2117,8 +1918,8 @@ function isGrepSearchCommand(command?: string): boolean {
 function isGrepSearchLog(log?: RunnerLog): boolean {
   return Boolean(
     log &&
-    log.eventType === "command_execution" &&
-    isGrepSearchCommand(String(log.metadata?.command || "")),
+      log.eventType === "command_execution" &&
+      isGrepSearchCommand(String(log.metadata?.command || "")),
   );
 }
 
@@ -2195,9 +1996,7 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
       const [, size, modifiedAt, name] = directoryEntry;
       matches.push({
         title: normalizeListFileName(name),
-        subtitle: [formatBytes(Number(size)), modifiedAt]
-          .filter(Boolean)
-          .join(" · "),
+        subtitle: [formatBytes(Number(size)), modifiedAt].filter(Boolean).join(" · "),
       });
       continue;
     }
@@ -2217,8 +2016,7 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
     const sourceMatch = line.match(/^(.+?):\s*(.+)$/);
     if (
       sourceMatch &&
-      (sourceMatch[1].includes("/") ||
-        /\.[A-Za-z0-9]{1,12}$/.test(sourceMatch[1]))
+      (sourceMatch[1].includes("/") || /\.[A-Za-z0-9]{1,12}$/.test(sourceMatch[1]))
     ) {
       const [, source, content] = sourceMatch;
       matches.push({
@@ -2235,37 +2033,18 @@ function parseGrepSearchMatches(output: string): GrepSearchMatch[] {
   return matches;
 }
 
-function GrepSearchLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function GrepSearchLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   const compactCommand = String(log.metadata?.command || "");
-  const compactStdout = resolveCommandOutputText(
-    log.metadata?.output,
-    "stdout",
-  );
-  const compactPattern = formatGrepSearchPattern(
-    extractGrepSearchPattern(compactCommand),
-  );
+  const compactStdout = resolveCommandOutputText(log.metadata?.output, "stdout");
+  const compactPattern = formatGrepSearchPattern(extractGrepSearchPattern(compactCommand));
   const compactMatches = parseGrepSearchMatches(compactStdout);
-  const compactExitCode =
-    typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
-  const compactParsedOutput = parseStructuredCommandExecutionOutput(
-    log.metadata?.output,
-  );
-  const compactStderr = stripRunnerSystemTags(
-    compactParsedOutput?.stderr || "",
-  );
-  const compactHasError =
-    Boolean(compactStderr.trim()) && compactExitCode !== 1;
+  const compactExitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const compactParsedOutput = parseStructuredCommandExecutionOutput(log.metadata?.output);
+  const compactStderr = stripRunnerSystemTags(compactParsedOutput?.stderr || "");
+  const compactHasError = Boolean(compactStderr.trim()) && compactExitCode !== 1;
   return (
     <CompactActionLogLine
-      icon={
-        <Search className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Search className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Searched files"
       detail={
         compactHasError
@@ -2290,10 +2069,7 @@ import {
 
 function isMemoryCommand(command?: string): boolean {
   if (!command) return false;
-  return (
-    command.includes("search-threads.py") ||
-    command.includes(".claude/skills/memory/")
-  );
+  return command.includes("search-threads.py") || command.includes(".claude/skills/memory/");
 }
 
 function extractMemoryQuery(command?: string): string | null {
@@ -2330,8 +2106,7 @@ function parseMemoryOutput(output?: string): {
     results.push({
       threadId,
       title,
-      createdAt:
-        section.match(/\*\*Created:\*\*\s*(\d{4}-\d{2}-\d{2})/)?.[1] || "",
+      createdAt: section.match(/\*\*Created:\*\*\s*(\d{4}-\d{2}-\d{2})/)?.[1] || "",
       task: section.match(/\*\*Task:\*\*\s*(.+?)(?=\n-|\n###|$)/)?.[1]?.trim(),
     });
   }
@@ -2347,9 +2122,7 @@ function formatRelativeDate(dateStr: string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
-    const diffDays = Math.floor(
-      (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -2359,35 +2132,24 @@ function formatRelativeDate(dateStr: string): string {
   }
 }
 
-function MemoryLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function MemoryLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void timeLabel;
   const query = extractMemoryQuery(log.metadata?.command || "");
   const output = String(log.metadata?.output || log.metadata?.result || "");
   const parsed = parseMemoryOutput(output);
-  const isLoading =
-    log.metadata?.status === "running" || log.metadata?.status === "started";
-  const isError =
-    typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
+  const isError = typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0;
 
   return (
     <CompactActionLogLine
-      icon={
-        <Brain className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Brain className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Searched Memory"
       detail={
         isError
           ? "failed"
           : isLoading
             ? "searching..."
-            : query ||
-              `${parsed.total} ${parsed.total === 1 ? "result" : "results"}`
+            : query || `${parsed.total} ${parsed.total === 1 ? "result" : "results"}`
       }
     />
   );
@@ -2395,17 +2157,12 @@ function MemoryLogBox({
 
 function isEmailCommand(command?: string): boolean {
   if (!command) return false;
-  return (
-    command.includes("/workspace/.scripts/send-email.py") ||
-    command.includes("send-email.py")
-  );
+  return command.includes("/workspace/.scripts/send-email.py") || command.includes("send-email.py");
 }
 
 function extractAttachments(command?: string): string[] {
   if (!command) return [];
-  const attachmentsMatch = command.match(
-    /(?:--attachments|-a)\s+(.+?)(?=\s+--|\s+-[a-z]|$)/i,
-  );
+  const attachmentsMatch = command.match(/(?:--attachments|-a)\s+(.+?)(?=\s+--|\s+-[a-z]|$)/i);
   if (!attachmentsMatch) return [];
   const files: string[] = [];
   let current = "";
@@ -2464,41 +2221,27 @@ function parseEmailOutput(output?: string): {
   }
   return {
     success:
-      output.includes("EMAIL SENT SUCCESSFULLY") ||
-      output.includes("Email sent successfully"),
-    recipient:
-      output.match(/(?:Sending email to|To):\s*([^\s\n]+@[^\s\n]+)/i)?.[1] ||
-      null,
+      output.includes("EMAIL SENT SUCCESSFULLY") || output.includes("Email sent successfully"),
+    recipient: output.match(/(?:Sending email to|To):\s*([^\s\n]+@[^\s\n]+)/i)?.[1] || null,
     subject: output.match(/Subject:\s*(.+?)(?:\n|$)/i)?.[1]?.trim() || null,
     errorMessage: output.match(/Error:\s*(.+?)(?:\n|$)/i)?.[1]?.trim() || null,
   };
 }
 
-function EmailLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function EmailLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void timeLabel;
   const command = log.metadata?.command || log.message || "";
   const output = String(log.metadata?.output || "");
   const parsed = parseEmailOutput(output);
-  const subject =
-    extractQuotedArgument(command, "--subject|-s") || parsed.subject;
-  const isLoading =
-    log.metadata?.status === "running" || log.metadata?.status === "started";
+  const subject = extractQuotedArgument(command, "--subject|-s") || parsed.subject;
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError =
-    (typeof log.metadata?.exitCode === "number" &&
-      log.metadata.exitCode !== 0) ||
+    (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) ||
     Boolean(parsed.errorMessage);
 
   return (
     <CompactActionLogLine
-      icon={
-        <Mail className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Mail className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Sent Email"
       detail={
         isError
@@ -2523,9 +2266,7 @@ function isDocumentParseCommand(command?: string): boolean {
 
 function extractDocumentParsePath(command?: string): string | null {
   if (!command) return null;
-  const quoted = command.match(
-    /(?:document-parse|pdf-reader)\.py\s+["']([^"']+)["']/,
-  );
+  const quoted = command.match(/(?:document-parse|pdf-reader)\.py\s+["']([^"']+)["']/);
   if (quoted?.[1]) return quoted[1];
   const unquoted = command.match(
     /(?:document-parse|pdf-reader)\.py\s+(\S+\.(?:pdf|docx?|xlsx?|odt|rtf|html?|csv|txt))/i,
@@ -2533,9 +2274,7 @@ function extractDocumentParsePath(command?: string): string | null {
   return unquoted?.[1] || null;
 }
 
-function parseDocumentParseOutput(
-  output?: string,
-): Record<string, unknown> | null {
+function parseDocumentParseOutput(output?: string): Record<string, unknown> | null {
   if (!output) return null;
   const patterns = [
     /---\s*DOCUMENT PARSE JSON\s*---\s*(\{[\s\S]*?\})\s*---\s*DOCUMENT PARSE MARKDOWN\s*---/i,
@@ -2554,13 +2293,7 @@ function parseDocumentParseOutput(
   return null;
 }
 
-function DocumentParseLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function DocumentParseLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void timeLabel;
   const command = log.metadata?.command || "";
   const output = String(log.metadata?.output || "");
@@ -2569,25 +2302,16 @@ function DocumentParseLogBox({
     (typeof parsed?.file_name === "string" ? parsed.file_name : null) ||
     (typeof parsed?.title === "string" ? parsed.title : null) ||
     extractDocumentParsePath(command);
-  const isLoading =
-    log.metadata?.status === "running" || log.metadata?.status === "started";
+  const isLoading = log.metadata?.status === "running" || log.metadata?.status === "started";
   const isError =
-    (typeof log.metadata?.exitCode === "number" &&
-      log.metadata.exitCode !== 0) ||
+    (typeof log.metadata?.exitCode === "number" && log.metadata.exitCode !== 0) ||
     parsed?.success === false;
 
   return (
     <CompactActionLogLine
-      icon={
-        <FileSearch
-          className="tb-log-compact-action-icon-svg"
-          strokeWidth={1.6}
-        />
-      }
+      icon={<FileSearch className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Parsed Document"
-      detail={
-        isError ? "failed" : isLoading ? "parsing..." : fileName || "document"
-      }
+      detail={isError ? "failed" : isLoading ? "parsing..." : fileName || "document"}
     />
   );
 }
@@ -2636,13 +2360,7 @@ function TodoListLogBox({ onOpenTaskList }: { onOpenTaskList?: () => void }) {
   );
 }
 
-function MkdirLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function MkdirLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void log;
   void timeLabel;
   return null;
@@ -2665,12 +2383,7 @@ function HelpCommandLogBox({
 
   return (
     <CompactActionLogLine
-      icon={
-        <CircleQuestionMark
-          className="tb-log-compact-action-icon-svg"
-          strokeWidth={1.6}
-        />
-      }
+      icon={<CircleQuestionMark className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title={`Called help on ${details.resourceName}`}
     />
   );
@@ -2685,24 +2398,14 @@ function buildBashCommandPreviewText(params: {
   exitCode: number | null;
   parsedOutput: ReturnType<typeof parseStructuredCommandExecutionOutput>;
 }): string {
-  const {
-    command,
-    stdout,
-    stderr,
-    output,
-    statusNotice,
-    exitCode,
-    parsedOutput,
-  } = params;
+  const { command, stdout, stderr, output, statusNotice, exitCode, parsedOutput } = params;
   const sections: string[] = [];
   const normalizedCommand = formatShellCommandForDisplay(command).trim();
   if (normalizedCommand) {
     sections.push(
       [
         "Command",
-        normalizedCommand.startsWith("$")
-          ? normalizedCommand
-          : `$ ${normalizedCommand}`,
+        normalizedCommand.startsWith("$") ? normalizedCommand : `$ ${normalizedCommand}`,
       ].join("\n"),
     );
   }
@@ -2725,17 +2428,12 @@ function buildBashCommandPreviewText(params: {
   return sections.length > 0 ? sections.join("\n\n") : "No command output.";
 }
 
-function buildBashCommandPreviewAttachment(
-  previewText: string,
-): RunnerPreviewAttachment {
+function buildBashCommandPreviewAttachment(previewText: string): RunnerPreviewAttachment {
   const previewUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(previewText)}`;
   return {
-    ...buildRunnerPreviewAttachmentFromPath(
-      "/workspace/bash-command-output.txt",
-      {
-        idPrefix: "bash-command-preview",
-      },
-    ),
+    ...buildRunnerPreviewAttachmentFromPath("/workspace/bash-command-output.txt", {
+      idPrefix: "bash-command-preview",
+    }),
     id: buildCompactLogPreviewId("bash-command-preview", previewText),
     filename: "bash-command-output.txt",
     mimeType: "text/plain",
@@ -2761,11 +2459,8 @@ function GenericCommandLogBox({
   onAgentClick?: (agent: ComputerAgentsListAgent) => void;
   onPreviewDocument?: (attachment: RunnerPreviewAttachment) => void;
 }) {
-  const command = stripRunnerSystemTags(
-    log.metadata?.command || log.message || "",
-  );
-  const exitCode =
-    typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
+  const command = stripRunnerSystemTags(log.metadata?.command || log.message || "");
+  const exitCode = typeof log.metadata?.exitCode === "number" ? log.metadata.exitCode : null;
   const parsedOutput = useMemo(
     () => parseStructuredCommandExecutionOutput(log.metadata?.output),
     [log.metadata?.output],
@@ -2782,12 +2477,7 @@ function GenericCommandLogBox({
     if (parsedOutput?.returnCodeInterpretation === "timeout") {
       return "Timed out";
     }
-    if (
-      typeof exitCode === "number" &&
-      exitCode !== 0 &&
-      !hasStdout &&
-      !hasStderr
-    ) {
+    if (typeof exitCode === "number" && exitCode !== 0 && !hasStdout && !hasStderr) {
       return `Exited with code ${exitCode}`;
     }
     if (parsedOutput?.interrupted && !hasStdout && !hasStderr) {
@@ -2835,10 +2525,7 @@ function GenericCommandLogBox({
       .filter((value) => value.trim().length > 0)
       .join("\n");
     for (const commandCandidate of commandCandidates) {
-      const parsedDetails = parseComputerAgentsListCommandOutput(
-        commandCandidate,
-        outputText,
-      );
+      const parsedDetails = parseComputerAgentsListCommandOutput(commandCandidate, outputText);
       if (parsedDetails) return parsedDetails;
     }
     return null;
@@ -2907,10 +2594,7 @@ function GenericCommandLogBox({
       .filter((value) => value.trim().length > 0)
       .join("\n");
     for (const commandCandidate of commandCandidates) {
-      const parsedDetails = parseComputerAgentsThreadGetCommandOutput(
-        commandCandidate,
-        outputText,
-      );
+      const parsedDetails = parseComputerAgentsThreadGetCommandOutput(commandCandidate, outputText);
       if (parsedDetails) return parsedDetails;
     }
     return null;
@@ -2937,9 +2621,7 @@ function GenericCommandLogBox({
     return null;
   }, [command, copyPayload, shellCommand]);
   const helpCommandOutput = useMemo(() => {
-    const outputParts = parsedOutput
-      ? [stdout, stderr, statusNotice || ""]
-      : [output || rawOutput];
+    const outputParts = parsedOutput ? [stdout, stderr, statusNotice || ""] : [output || rawOutput];
     return stripRunnerSystemTags(
       outputParts.filter((value) => value.trim().length > 0).join("\n"),
     ).trim();
@@ -2971,26 +2653,20 @@ function GenericCommandLogBox({
   );
 
   if (computerAgentsListDetails) {
-    return renderComputerAgentsListCompactLog(
-      computerAgentsListDetails,
-      (agent) =>
-        onAgentClick?.({
-          id: agent.agentId,
-          name: agent.agentName,
-        } as ComputerAgentsListAgent),
+    return renderComputerAgentsListCompactLog(computerAgentsListDetails, (agent) =>
+      onAgentClick?.({
+        id: agent.agentId,
+        name: agent.agentName,
+      } as ComputerAgentsListAgent),
     );
   }
 
   if (computerAgentsThreadsListDetails) {
-    return renderComputerAgentsThreadsListCompactLog(
-      computerAgentsThreadsListDetails,
-    );
+    return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
   }
 
   if (computerAgentsThreadGetDetails) {
-    return renderComputerAgentsThreadGetCompactLog(
-      computerAgentsThreadGetDetails,
-    );
+    return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
   }
 
   if (helpCommandDetails) {
@@ -3030,13 +2706,7 @@ function GenericCommandLogBox({
   );
 }
 
-function GenericMcpToolLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function GenericMcpToolLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void timeLabel;
   const serverName = log.metadata?.serverName || "MCP";
   const toolName = log.metadata?.toolName || "tool";
@@ -3068,9 +2738,7 @@ function GenericMcpToolLogBox({
   }
   return (
     <CompactActionLogLine
-      icon={
-        <Globe className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />
-      }
+      icon={<Globe className="tb-log-compact-action-icon-svg" strokeWidth={1.6} />}
       title="Called MCP Tool"
       detail={
         [String(serverName || "").trim(), String(toolName || "").trim()]
@@ -3081,13 +2749,7 @@ function GenericMcpToolLogBox({
   );
 }
 
-function ComputerUseEventLogBox({
-  log,
-  timeLabel,
-}: {
-  log: RunnerLog;
-  timeLabel?: string;
-}) {
+function ComputerUseEventLogBox({ log, timeLabel }: { log: RunnerLog; timeLabel?: string }) {
   void log;
   void timeLabel;
   return null;
@@ -3102,17 +2764,12 @@ export function InlineStatusLogBox({
   pending?: boolean;
 }) {
   return (
-    <div
-      className={`tb-log-reasoning ${pending ? "tb-log-reasoning-pending" : ""}`.trim()}
-    >
+    <div className={`tb-log-reasoning ${pending ? "tb-log-reasoning-pending" : ""}`.trim()}>
       <div
         className={`tb-log-reasoning-copy ${pending ? "tb-log-reasoning-copy-pending" : ""}`.trim()}
       >
         {pending ? (
-          <span
-            className="tb-log-inline-status-spinner-slot"
-            aria-hidden="true"
-          >
+          <span className="tb-log-inline-status-spinner-slot" aria-hidden="true">
             <DotLoader
               dotCount={9}
               dotSize={3}
@@ -3158,10 +2815,7 @@ export function RunnerWorkLogEntry({
     .trim()
     .toLowerCase();
 
-  if (
-    normalizedMessage === "starting session" ||
-    normalizedMessage === "starting session..."
-  ) {
+  if (normalizedMessage === "starting session" || normalizedMessage === "starting session...") {
     return null;
   }
 
@@ -3175,9 +2829,7 @@ export function RunnerWorkLogEntry({
     log.isReasoning ||
     log.isPlanning
   ) {
-    return (
-      <ReasoningLogBox log={log} onWorkspacePathClick={onWorkspacePathClick} />
-    );
+    return <ReasoningLogBox log={log} onWorkspacePathClick={onWorkspacePathClick} />;
   }
 
   if (
@@ -3189,9 +2841,7 @@ export function RunnerWorkLogEntry({
         log={log}
         timeLabel={timeLabel}
         label="Action Summary"
-        icon={
-          <Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />
-        }
+        icon={<Lightbulb className="tb-log-card-small-icon" strokeWidth={1.5} />}
         onWorkspacePathClick={onWorkspacePathClick}
       />
     );
@@ -3211,24 +2861,15 @@ export function RunnerWorkLogEntry({
     return <DeepResearchEventLogBox log={log} timeLabel={timeLabel} />;
   }
 
-  if (
-    log.eventType === "metronome_workflow" ||
-    log.metadata?.metronomeWorkflow
-  ) {
+  if (log.eventType === "metronome_workflow" || log.metadata?.metronomeWorkflow) {
     return <MetronomeWorkflowLogBox log={log} timeLabel={timeLabel} />;
   }
 
   if (isAtlassianConnectorLog(log)) {
-    return (
-      <AtlassianActivityLogBox
-        log={log}
-        onPreviewDocument={onPreviewDocument}
-      />
-    );
+    return <AtlassianActivityLogBox log={log} onPreviewDocument={onPreviewDocument} />;
   }
 
-  const persistedCommand =
-    typeof log.metadata?.command === "string" ? log.metadata.command : "";
+  const persistedCommand = typeof log.metadata?.command === "string" ? log.metadata.command : "";
   if (isLikelyVideoGenerationLog(log, persistedCommand)) {
     return (
       <VideoGenerationLogBox
@@ -3240,6 +2881,11 @@ export function RunnerWorkLogEntry({
         onPreviewDocument={onPreviewDocument}
       />
     );
+  }
+
+  const sessionLogInspectionDetails = parseRunnerSessionLogInspectionDetails(log);
+  if (sessionLogInspectionDetails) {
+    return <SessionLogInspectionLogBox details={sessionLogInspectionDetails} />;
   }
 
   if (log.eventType === "command_execution") {
@@ -3280,8 +2926,7 @@ export function RunnerWorkLogEntry({
       );
     }
     if (isWebScrapeCommand(command) || isWebScrapeOutput(output)) {
-      return isWebScrapeJsonCommand(command) ||
-        parseWebScrapeLog(log)?.mode === "json" ? (
+      return isWebScrapeJsonCommand(command) || parseWebScrapeLog(log)?.mode === "json" ? (
         <WebScrapeJsonLogBox log={log} timeLabel={timeLabel} />
       ) : (
         <WebScrapeMarkdownLogBox
@@ -3293,15 +2938,10 @@ export function RunnerWorkLogEntry({
     }
     if (isWebSearchCommand(command) || isWebSearchOutput(output)) {
       return (
-        <WebSearchLogBox
-          log={log}
-          timeLabel={timeLabel}
-          onPreviewDocument={onPreviewDocument}
-        />
+        <WebSearchLogBox log={log} timeLabel={timeLabel} onPreviewDocument={onPreviewDocument} />
       );
     }
-    if (isMemoryCommand(command))
-      return <MemoryLogBox log={log} timeLabel={timeLabel} />;
+    if (isMemoryCommand(command)) return <MemoryLogBox log={log} timeLabel={timeLabel} />;
     if (isBrowserSkillCommand(command) && !renderBrowserSkillAsGeneric) {
       return (
         <BrowserSkillLogBox
@@ -3313,8 +2953,7 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    if (isEmailCommand(command))
-      return <EmailLogBox log={log} timeLabel={timeLabel} />;
+    if (isEmailCommand(command)) return <EmailLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderComputerAgentsCreateLog(log)) {
       return (
         <ComputerAgentsCreateLogBox
@@ -3326,15 +2965,11 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    const appPlatformResourcesListDetails =
-      parseAppPlatformResourcesListLogDetails(log);
+    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
     if (appPlatformResourcesListDetails) {
-      return renderAppPlatformResourcesListCompactLog(
-        appPlatformResourcesListDetails,
-      );
+      return renderAppPlatformResourcesListCompactLog(appPlatformResourcesListDetails);
     }
-    const taskManagementProjectsListDetails =
-      parseTaskManagementProjectsListLogDetails(log);
+    const taskManagementProjectsListDetails = parseTaskManagementProjectsListLogDetails(log);
     if (taskManagementProjectsListDetails) {
       return renderTaskManagementProjectsListCompactLog(
         taskManagementProjectsListDetails,
@@ -3351,33 +2986,20 @@ export function RunnerWorkLogEntry({
     }
     const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
     if (computerAgentsListDetails) {
-      return renderComputerAgentsListCompactLog(
-        computerAgentsListDetails,
-        onAgentPreviewClick,
-      );
+      return renderComputerAgentsListCompactLog(computerAgentsListDetails, onAgentPreviewClick);
     }
-    const computerAgentsThreadsListDetails =
-      parseComputerAgentsThreadsListLogDetails(log);
+    const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
     if (computerAgentsThreadsListDetails) {
-      return renderComputerAgentsThreadsListCompactLog(
-        computerAgentsThreadsListDetails,
-      );
+      return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
     }
-    const computerAgentsThreadGetDetails =
-      parseComputerAgentsThreadGetLogDetails(log);
+    const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
     if (computerAgentsThreadGetDetails) {
-      return renderComputerAgentsThreadGetCompactLog(
-        computerAgentsThreadGetDetails,
-      );
+      return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
     }
     if (isComputerAgentsThreadSnapshotLog(log))
-      return (
-        <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />
-      );
+      return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementReleaseCreateLog(log))
-      return (
-        <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />
-      );
+      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementCommentLog(log))
       return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
     if (shouldRenderTaskManagementUpdateLog(log))
@@ -3402,8 +3024,7 @@ export function RunnerWorkLogEntry({
           onTaskPreviewClick={onTaskPreviewClick}
         />
       );
-    if (isGrepSearchLog(log))
-      return <GrepSearchLogBox log={log} timeLabel={timeLabel} />;
+    if (isGrepSearchLog(log)) return <GrepSearchLogBox log={log} timeLabel={timeLabel} />;
     if (isListFilesLog(log)) {
       return (
         <ListFilesLogBox
@@ -3519,38 +3140,24 @@ export function RunnerWorkLogEntry({
         />
       );
     }
-    const appPlatformResourcesListDetails =
-      parseAppPlatformResourcesListLogDetails(log);
+    const appPlatformResourcesListDetails = parseAppPlatformResourcesListLogDetails(log);
     if (appPlatformResourcesListDetails) {
-      return renderAppPlatformResourcesListCompactLog(
-        appPlatformResourcesListDetails,
-      );
+      return renderAppPlatformResourcesListCompactLog(appPlatformResourcesListDetails);
     }
     const computerAgentsListDetails = parseComputerAgentsListLogDetails(log);
     if (computerAgentsListDetails) {
-      return renderComputerAgentsListCompactLog(
-        computerAgentsListDetails,
-        onAgentPreviewClick,
-      );
+      return renderComputerAgentsListCompactLog(computerAgentsListDetails, onAgentPreviewClick);
     }
-    const computerAgentsThreadsListDetails =
-      parseComputerAgentsThreadsListLogDetails(log);
+    const computerAgentsThreadsListDetails = parseComputerAgentsThreadsListLogDetails(log);
     if (computerAgentsThreadsListDetails) {
-      return renderComputerAgentsThreadsListCompactLog(
-        computerAgentsThreadsListDetails,
-      );
+      return renderComputerAgentsThreadsListCompactLog(computerAgentsThreadsListDetails);
     }
-    const computerAgentsThreadGetDetails =
-      parseComputerAgentsThreadGetLogDetails(log);
+    const computerAgentsThreadGetDetails = parseComputerAgentsThreadGetLogDetails(log);
     if (computerAgentsThreadGetDetails) {
-      return renderComputerAgentsThreadGetCompactLog(
-        computerAgentsThreadGetDetails,
-      );
+      return renderComputerAgentsThreadGetCompactLog(computerAgentsThreadGetDetails);
     }
     if (isComputerAgentsThreadSnapshotLog(log)) {
-      return (
-        <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />
-      );
+      return <ComputerAgentsThreadSnapshotLogBox log={log} timeLabel={timeLabel} />;
     }
     if (isListFilesLog(log)) {
       return (
@@ -3582,9 +3189,7 @@ export function RunnerWorkLogEntry({
       );
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
-      return (
-        <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />
-      );
+      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     }
     if (shouldRenderTaskManagementCommentLog(log)) {
       return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
@@ -3679,9 +3284,7 @@ export function RunnerWorkLogEntry({
       );
     }
     if (shouldRenderTaskManagementReleaseCreateLog(log)) {
-      return (
-        <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />
-      );
+      return <TaskManagementReleaseCreateLogBox log={log} timeLabel={timeLabel} />;
     }
     if (shouldRenderTaskManagementCommentLog(log)) {
       return <TaskManagementCommentLogBox log={log} timeLabel={timeLabel} />;
@@ -3769,9 +3372,7 @@ export function RunnerWorkLogEntry({
         log={log}
         timeLabel={timeLabel}
         label="Error"
-        icon={
-          <AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />
-        }
+        icon={<AlertCircle className="tb-log-card-small-icon" strokeWidth={1.5} />}
         onWorkspacePathClick={onWorkspacePathClick}
       />
     );

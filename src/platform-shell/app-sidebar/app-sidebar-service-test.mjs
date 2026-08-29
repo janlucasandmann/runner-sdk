@@ -154,13 +154,13 @@ assert.match(
 );
 assert.match(
   fragments.threadList,
-  /const isRunning = isRunningThreadDisplayStatus\(safeThread\?\.status\)/,
-  "Queued and starting background threads must show the running affordance before they are opened.",
+  /const isRunning = metronomeChild[\s\S]*?resolveMetronomeThreadLifecycle\(\[\{ record: safeThread[\s\S]*?\}\]\)\.isRunning[\s\S]*?: isRunningThreadDisplayStatus\(safeThread\?\.status\)/,
+  "Workflow children must use exact execution state while ordinary queued background threads keep their optimistic affordance.",
 );
 assert.match(
   fragments.threadList,
-  /const fallbackIsRunning = isRunningThreadDisplayStatus\(fallbackThread\?\.status\)/,
-  "Fallback sidebar rows must preserve the shared active-lifecycle presentation.",
+  /const fallbackIsRunning = options\?\.metronomeChild[\s\S]*?resolveMetronomeThreadLifecycle\(\[\{ record: fallbackThread[\s\S]*?\}\]\)\.isRunning[\s\S]*?: isRunningThreadDisplayStatus\(fallbackThread\?\.status\)/,
+  "Fallback workflow children must preserve the exact lifecycle presentation.",
 );
 assert.doesNotMatch(
   fragments.threadList,

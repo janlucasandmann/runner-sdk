@@ -154,6 +154,13 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           logoUrl: PLAYGROUND_NOTION_LOGO_URL,
           rootLabel: "Notion",
         },
+        {
+          key: "atlassian",
+          source: "atlassian",
+          label: "Atlassian",
+          logoUrl: PLAYGROUND_ATLASSIAN_LOGO_URL,
+          rootLabel: "Atlassian",
+        },
       ];
       const PLAYGROUND_TASK_CONNECTOR_SOURCE_TO_KEY = Object.freeze({
         github: "github",
@@ -164,6 +171,9 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         oneDrive: "oneDrive",
         one_drive: "oneDrive",
         notion: "notion",
+        atlassian: "atlassian",
+        jira: "atlassian",
+        confluence: "atlassian",
       });
 
       function buildEmptyPlaygroundProjectSummary() {
@@ -186,6 +196,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           googleDrive: null,
           oneDrive: null,
           notion: null,
+          atlassian: null,
         };
       }
 
@@ -1397,8 +1408,43 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
 	          .join("\\n\\n");
 	      }
 
+	      function buildPlaygroundProjectRepositoryPolicyRuleEntries(project) {
+	        const githubSelection = normalizePlaygroundTaskConnectorSelections(project?.connectors).github;
+	        return buildPlaygroundGithubRepoReferencesFromConnectorSelection(githubSelection)
+	          .map((repository) => {
+	            const repoFullName = String(repository?.repoFullName || "").trim();
+	            if (!repoFullName) {
+	              return "";
+	            }
+	            const baseBranch = String(repository?.branch || "main").trim() || "main";
+	            const branchPrefix = String(repository?.branchPrefix || "computer-agents/").trim();
+	            const policyLines = [
+	              "This is a managed repository policy. It cannot be overridden by a ticket or an agent.",
+	              "- Repository: " + repoFullName,
+	              "- Treat " + baseBranch + " as the base branch and create working branches from it.",
+	              branchPrefix
+	                ? "- Every new working branch name must start with " + branchPrefix + "."
+	                : "- No branch-name prefix is required.",
+	              repository?.createPullRequests !== false
+	                ? "- When changes are complete, push the working branch and create a pull request. Never commit completed work directly to the base branch."
+	                : "- Do not create a pull request. Leave completed changes on the working branch.",
+	              repository?.forcePushCommits === true
+	                ? "- Update an existing remote working branch with git push --force-with-lease. Never use an unguarded --force push."
+	                : "- Never force-push. Use a normal push and stop for user guidance if the remote branch cannot be updated safely.",
+	            ];
+	            return createPlaygroundProjectRuleEntry(
+	              "GitHub · " + repoFullName,
+	              policyLines.join(String.fromCharCode(10))
+	            );
+	          })
+	          .filter(Boolean);
+	      }
+
 	      function buildPlaygroundProjectRulesPromptSection(project) {
-	        const rules = serializePlaygroundProjectRuleEntries(splitPlaygroundProjectRuleEntries(getPlaygroundProjectRules(project)));
+	        const rules = serializePlaygroundProjectRuleEntries([
+	          ...buildPlaygroundProjectRepositoryPolicyRuleEntries(project),
+	          ...splitPlaygroundProjectRuleEntries(getPlaygroundProjectRules(project)),
+	        ]);
 	        if (!rules) {
 	          return "";
 	        }
@@ -1577,7 +1623,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         return next;
       }
 
-      function notionDatabasesToPlaygroundConnectorItems(databases) {
+      function notionDatabasesToPlaygroundConnectorItems(databases, options = {}) {
         const workspaceItem = {
           id: "__entire_workspace__",
           name: "Entire workspace",
@@ -1592,7 +1638,9 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           isFolder: false,
         })).filter((item) => item.id);
 
-        return [workspaceItem].concat(databaseItems);
+        return options?.includeWorkspace === false
+          ? databaseItems
+          : [workspaceItem].concat(databaseItems);
       }
 
       function fileItemsForParent(items, parentId) {
@@ -1677,6 +1725,27 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           ref: typeof item.ref === "string" && item.ref.trim() ? item.ref.trim() : undefined,
           branchPrefix: typeof item.branchPrefix === "string" ? item.branchPrefix.trim() : undefined,
           createPullRequests: typeof item.createPullRequests === "boolean" ? item.createPullRequests : undefined,
+          forcePushCommits: typeof item.forcePushCommits === "boolean" ? item.forcePushCommits : undefined,
+          strategyKnowledgeSyncEnabled: typeof item.strategyKnowledgeSyncEnabled === "boolean"
+            ? item.strategyKnowledgeSyncEnabled
+            : undefined,
+          strategyKnowledgeSyncToNotionEnabled: typeof item.strategyKnowledgeSyncToNotionEnabled === "boolean"
+            ? item.strategyKnowledgeSyncToNotionEnabled
+            : undefined,
+          strategyKnowledgeSyncFromNotionEnabled: typeof item.strategyKnowledgeSyncFromNotionEnabled === "boolean"
+            ? item.strategyKnowledgeSyncFromNotionEnabled
+            : undefined,
+          strategyKnowledgeSyncToConfluenceEnabled: typeof item.strategyKnowledgeSyncToConfluenceEnabled === "boolean"
+            ? item.strategyKnowledgeSyncToConfluenceEnabled
+            : undefined,
+          strategyKnowledgeSyncFromConfluenceEnabled: typeof item.strategyKnowledgeSyncFromConfluenceEnabled === "boolean"
+            ? item.strategyKnowledgeSyncFromConfluenceEnabled
+            : undefined,
+          resourceType: typeof item.resourceType === "string" && item.resourceType.trim() ? item.resourceType.trim() : undefined,
+          resourceKey: typeof item.resourceKey === "string" && item.resourceKey.trim() ? item.resourceKey.trim() : undefined,
+          spaceKey: typeof item.spaceKey === "string" && item.spaceKey.trim() ? item.spaceKey.trim() : undefined,
+          cloudId: typeof item.cloudId === "string" && item.cloudId.trim() ? item.cloudId.trim() : undefined,
+          siteUrl: typeof item.siteUrl === "string" && item.siteUrl.trim() ? item.siteUrl.trim() : undefined,
         };
       }
 
@@ -1691,7 +1760,9 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
         }
 
         if (normalizedSource === "notion") {
-          return normalizedItems[0]?.name || "";
+          return normalizedItems.length === 1
+            ? normalizedItems[0]?.name || ""
+            : normalizedItems.length + " databases";
         }
 
         if (normalizedSource === "github") {
@@ -1706,6 +1777,12 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
           return repoName
             ? repoName + " • " + normalizedItems.length + " item" + (normalizedItems.length === 1 ? "" : "s")
             : normalizedItems.length + " item" + (normalizedItems.length === 1 ? "" : "s");
+        }
+
+        if (normalizedSource === "atlassian") {
+          return normalizedItems.length === 1
+            ? normalizedItems[0]?.name || ""
+            : normalizedItems.length + " resources";
         }
 
         if (normalizedItems.length === 1) {
@@ -1770,6 +1847,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
             branch,
             branchPrefix: typeof item.branchPrefix === "string" ? item.branchPrefix : "computer-agents/",
             createPullRequests: item.createPullRequests !== false,
+            forcePushCommits: item.forcePushCommits === true,
           });
         });
         return references;
@@ -1854,6 +1932,7 @@ export const PROJECTS_DOMAIN_RUNTIME_01_FRAGMENT = `
               item.ref ? ("branch=" + item.ref) : null,
               item.repoFullName ? ("branch-prefix=" + (item.branchPrefix || "computer-agents/")) : null,
               item.repoFullName ? ("pull-requests=" + (item.createPullRequests === false ? "do-not-create" : "create")) : null,
+              item.repoFullName ? ("force-push=" + (item.forcePushCommits === true ? "always-with-lease" : "never")) : null,
               item.path ? ("path=" + item.path) : null,
               item.isFolder ? "folder=true" : null,
             ].filter(Boolean);

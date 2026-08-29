@@ -945,6 +945,14 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
 
         function buildPlaygroundTaskGithubRepoReference(taskRecord, options = {}) {
           const normalizedTask = normalizePlaygroundTaskRecord(taskRecord);
+          const taskGithubSelection = getDraftTaskConnectorSelection("github", normalizedTask);
+          const projectGithubSelection = normalizePlaygroundTaskConnectorSelections(
+            options?.projectConnectors || selectedProject?.connectors
+          ).github;
+          const githubPolicyReferences = [
+            ...buildPlaygroundGithubRepoReferencesFromConnectorSelection(taskGithubSelection),
+            ...buildPlaygroundGithubRepoReferencesFromConnectorSelection(projectGithubSelection),
+          ];
           const attachments = normalizePlaygroundTaskAttachmentList(normalizedTask.attachments);
           const githubAttachment = attachments.find((attachment) =>
             getPlaygroundTaskAttachmentConnectorSource(attachment) === "github"
@@ -952,18 +960,21 @@ export const PROJECTS_SHELL_03_FRAGMENT = `          setTaskDetailThreadToolbarP
           ) || null;
           if (githubAttachment?.connectorRepoFullName && githubAttachment?.connectorRef) {
             const repoFullName = githubAttachment.connectorRepoFullName;
+            const repositoryPolicy = githubPolicyReferences.find((reference) => (
+              reference.repoFullName === repoFullName
+              && reference.branch === githubAttachment.connectorRef
+            )) || githubPolicyReferences.find((reference) => reference.repoFullName === repoFullName) || null;
             return {
               repoFullName,
               repoName: repoFullName.split("/").pop() || repoFullName,
               branch: githubAttachment.connectorRef,
+              branchPrefix: repositoryPolicy?.branchPrefix || "computer-agents/",
+              createPullRequests: repositoryPolicy?.createPullRequests !== false,
+              forcePushCommits: repositoryPolicy?.forcePushCommits === true,
             };
           }
 
-          const githubSelection = getDraftTaskConnectorSelection("github", normalizedTask);
-          return buildPlaygroundGithubRepoReferenceFromConnectorSelection(githubSelection)
-            || buildPlaygroundGithubRepoReferenceFromConnectorSelection(
-              normalizePlaygroundTaskConnectorSelections(options?.projectConnectors || selectedProject?.connectors).github
-            );
+          return githubPolicyReferences[0] || null;
         }
 
         function buildPlaygroundTaskThreadPreview(taskRecord, threadId = "") {

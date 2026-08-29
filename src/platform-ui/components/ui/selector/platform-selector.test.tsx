@@ -144,6 +144,28 @@ describe("PlatformSelector", () => {
     expect(document.activeElement).toBe(screen.getByRole("searchbox", { name: "Search computers" }));
   });
 
+  it("uses the centralized popup search variant", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="todo"
+        options={[{ value: "todo", label: "Todo" }]}
+        popupSearch={{
+          "aria-label": "Search ticket statuses",
+          placeholder: "Change status...",
+        }}
+        ariaLabel="Choose ticket status"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose ticket status" }));
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    const search = screen.getByRole("searchbox", { name: "Search ticket statuses" });
+    expect(search.closest(".platform-popup__search-header")).not.toBeNull();
+    expect(document.activeElement).toBe(search);
+  });
+
   it("supports an interactive popup header outside the listbox", async () => {
     const user = userEvent.setup();
     render(

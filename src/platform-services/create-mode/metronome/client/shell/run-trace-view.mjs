@@ -419,8 +419,9 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             agentName: thread.agentName || thread.agent_name || "",
             computerName: thread.computerName || thread.computer_name || thread.environmentName || thread.environment_name || "",
             environmentName: thread.environmentName || thread.environment_name || "",
+            status: thread.status || "",
             startedAt: thread.startedAt || thread.started_at || thread.createdAt || thread.created_at || "",
-            completedAt: thread.completedAt || thread.completed_at || thread.updatedAt || thread.updated_at || "",
+            completedAt: thread.completedAt || thread.completed_at || thread.finishedAt || thread.finished_at || "",
             output: thread.output || thread.summary || thread.result || thread.data || "",
             summary: thread.summary || "",
           })).filter((step) => !isMetronomeRunTraceStarterStep(step));
@@ -486,6 +487,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           const safeStep = getMetronomeRunTraceRecord(step);
           const output = getMetronomeRunTraceStepOutputRecord(safeStep);
           const outputThread = getMetronomeRunTraceRecord(output.thread || output.threadRecord || output.thread_record);
+          const lifecycle = resolveMetronomeRunTraceChildThreadLifecycle(safeStep, safeThread, run);
           const runtimeMeta = getMetronomeRunTraceThreadRuntimeMeta(safeStep, safeThread, {
             threads: realThreadsRef.current || [],
             agents: runtimeAgentsForComposer || [],
@@ -493,12 +495,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           });
           const selection = selectionOverride || metronomeRunTraceSelectionRef.current || metronomeRunTraceSelection || {};
           const now = new Date().toISOString();
-          const stepStatus = String(safeStep.status || outputThread.status || output.status || "").trim();
-          const nextStatus = isActiveMetronomeRunStatus(stepStatus)
-            ? "running"
-            : stepStatus === "failed"
-              ? "failed"
-              : "completed";
+          const nextStatus = lifecycle.status || "queued";
           const title = String(
             safeThread.title
             || outputThread.title
@@ -520,7 +517,8 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             environmentId: outputThread.environmentId || outputThread.environment_id || outputThread.computerId || outputThread.computer_id || safeThread.environmentId || safeThread.environment_id || safeStep.environmentId || safeStep.environment_id || "",
             environmentName: outputThread.environmentName || outputThread.environment_name || outputThread.computerName || outputThread.computer_name || safeThread.environmentName || safeThread.environment_name || runtimeMeta?.computerName || "",
             createdAt: outputThread.createdAt || outputThread.created_at || safeThread.createdAt || safeThread.created_at || safeStep.startedAt || safeStep.started_at || now,
-            updatedAt: outputThread.updatedAt || outputThread.updated_at || safeThread.updatedAt || safeThread.updated_at || safeStep.completedAt || safeStep.completed_at || now,
+            updatedAt: outputThread.updatedAt || outputThread.updated_at || safeThread.updatedAt || safeThread.updated_at || safeStep.completedAt || safeStep.completed_at || safeStep.startedAt || safeStep.started_at || run?.updatedAt || run?.updated_at || run?.createdAt || run?.created_at || now,
+            completedAt: outputThread.completedAt || outputThread.completed_at || safeThread.completedAt || safeThread.completed_at || safeStep.completedAt || safeStep.completed_at || "",
             metadata: {
               ...metadata,
               metronome: {
@@ -533,7 +531,8 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                 nodeId: String(safeStep.nodeId || safeStep.node_id || "").trim(),
                 nodeLabel: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
                 nodeName: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
-                status: stepStatus || nextStatus,
+                status: nextStatus,
+                lifecyclePhase: lifecycle.phase,
               },
               metronomeWorkflow: {
                 ...(metadata.metronomeWorkflow && typeof metadata.metronomeWorkflow === "object" && !Array.isArray(metadata.metronomeWorkflow)
@@ -548,7 +547,8 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                 nodeId: String(safeStep.nodeId || safeStep.node_id || "").trim(),
                 nodeLabel: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
                 nodeName: String(safeStep.label || safeStep.nodeName || safeStep.nodeLabel || title || "").trim(),
-                status: stepStatus || nextStatus,
+                status: nextStatus,
+                lifecyclePhase: lifecycle.phase,
                 isOriginThread: false,
               },
             },
@@ -573,18 +573,59 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           handleThreadSelect(normalizedThreadId);
         }
 
-        function getMetronomeRunTraceChildThreadStatus(step, thread) {
+        function getMetronomeRunTraceNodeIds(run, keys) {
+          const safeRun = getMetronomeRunTraceRecord(run);
+          const output = getMetronomeRunTraceRecord(safeRun.output);
+          const values = [];
+          keys.forEach((key) => {
+            const candidate = output[key] ?? safeRun[key];
+            (Array.isArray(candidate) ? candidate : candidate ? [candidate] : []).forEach((value) => {
+              const normalized = String(value || "").trim();
+              if (normalized && !values.includes(normalized)) values.push(normalized);
+            });
+          });
+          return values;
+        }
+
+        function resolveMetronomeRunTraceChildThreadLifecycle(step, thread, run) {
           const safeStep = getMetronomeRunTraceRecord(step);
           const safeThread = getMetronomeRunTraceRecord(thread);
           const output = getMetronomeRunTraceStepOutputRecord(safeStep);
           const outputThread = getMetronomeRunTraceRecord(output.thread || output.threadRecord || output.thread_record);
-          return String(
-            safeStep.status
-            || outputThread.status
-            || safeThread.status
-            || output.status
-            || ""
-          ).trim();
+          const threadId = getMetronomeRunTraceStepThreadId(safeStep, safeThread);
+          const knownThread = threadId
+            ? (realThreadsRef.current || []).find((item) => String(item?.id || "").trim() === threadId) || null
+            : null;
+          const safeRun = getMetronomeRunTraceRecord(run);
+          const runOutput = getMetronomeRunTraceRecord(safeRun.output);
+          const activeNodeIds = getMetronomeRunTraceNodeIds(safeRun, [
+            "activeNodeIds",
+            "active_node_ids",
+            "activeNodeId",
+            "active_node_id",
+          ]);
+          const completedNodeIds = getMetronomeRunTraceNodeIds(safeRun, ["completedNodeIds", "completed_node_ids"]);
+          const nodeId = String(safeStep.nodeId || safeStep.node_id || safeThread.nodeId || safeThread.node_id || "").trim();
+          const hasActiveNodeProjection = ["activeNodeIds", "active_node_ids", "activeNodeId", "active_node_id"]
+            .some((key) => Object.prototype.hasOwnProperty.call(runOutput, key) || Object.prototype.hasOwnProperty.call(safeRun, key));
+          return resolveMetronomeThreadLifecycle([
+            { record: safeStep, source: "step", priority: 100 },
+            { record: output, source: "step-output", priority: 200 },
+            { record: safeThread, source: "run-thread", priority: 300 },
+            { record: outputThread, source: "output-thread", priority: 400 },
+            { record: knownThread || {}, source: "thread", priority: 500 },
+          ], {
+            nodeId,
+            activeNodeIds,
+            completedNodeIds,
+            hasActiveNodeProjection,
+            startedAt: safeStep.startedAt || safeStep.started_at || safeThread.startedAt || safeThread.started_at || "",
+            runStatus: safeRun.status || "",
+          });
+        }
+
+        function getMetronomeRunTraceChildThreadStatus(step, thread, run) {
+          return resolveMetronomeRunTraceChildThreadLifecycle(step, thread, run).status;
         }
 
         function getMetronomeRunTraceChildThreadWorkingLabel(step, thread) {
@@ -628,10 +669,10 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           const kind = getMetronomeRunTraceStepKind(step);
           const isThreadStep = isMetronomeRunTraceThreadStep(step, thread);
           const threadId = getMetronomeRunTraceStepThreadId(step, thread);
-          const childThreadStatus = isThreadStep
-            ? getMetronomeRunTraceChildThreadStatus(step, thread)
-            : "";
-          const isThreadRunning = isThreadStep && isActiveMetronomeRunStatus(childThreadStatus);
+          const childThreadLifecycle = isThreadStep
+            ? resolveMetronomeRunTraceChildThreadLifecycle(step, thread, run)
+            : null;
+          const isThreadRunning = Boolean(isThreadStep && childThreadLifecycle?.isRunning);
           const runtimeMeta = isThreadStep
             ? getMetronomeRunTraceThreadRuntimeMeta(step, thread, {
                 threads: realThreadsRef.current || [],
@@ -652,7 +693,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
             kind === "condition"
               ? ""
               : isThreadStep
-                ? (readableOutputText ? "" : (isActiveMetronomeRunStatus(step?.status) ? "Thread is running..." : thread?.prompt || step?.summary || step?.status || ""))
+                ? (readableOutputText ? "" : (isActiveMetronomeRunStatus(step?.status) ? "" : thread?.prompt || step?.summary || step?.status || ""))
                 : step?.summary || step?.status || ""
           ).trim();
           const shouldRenderOutputText = Boolean(
@@ -698,6 +739,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
                   threadId,
                   headers: authRequestHeaders,
                   enabled: Boolean(threadId),
+                  className: "playground-metronome-run-trace-live-work-status",
                   fallbackLabel: getMetronomeRunTraceChildThreadWorkingLabel(step, thread),
                   onClick: threadId
                     ? () => handleMetronomeRunTraceChildThreadSelect(threadId, thread, step, run)
@@ -1007,7 +1049,7 @@ export const METRONOME_APP_RUN_TRACE_VIEW_SCRIPT = `
           const hasActiveChildThread = steps.some((step) => {
             const thread = findMetronomeRunThreadForStep(step, runThreads);
             return isMetronomeRunTraceThreadStep(step, thread)
-              && isActiveMetronomeRunStatus(getMetronomeRunTraceChildThreadStatus(step, thread));
+              && resolveMetronomeRunTraceChildThreadLifecycle(step, thread, run).isRunning;
           });
           const rawSummaryText = getMetronomeRunSummaryText(run);
           const status = metronomeRunTraceState.status;

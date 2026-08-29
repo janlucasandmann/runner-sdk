@@ -231,6 +231,7 @@ export function PlatformDataTable<TData>({
   getRowAriaLabel,
   isRowDisabled,
   loading = false,
+  loadingState = null,
   error = null,
   emptyState = "No items yet.",
   noResultsState = "No items match this view.",
@@ -1689,19 +1690,25 @@ export function PlatformDataTable<TData>({
   const renderBody = () => {
     let stateContent: ReactNode = null;
     if (loading)
-      stateContent = createElement(
-        "div",
-        { className: "platform-data-table__state is-loading", role: "status" },
-        createElement(DotLoader, {
-          className: "platform-data-table__dot-loader",
-          dotCount: 9,
-          dotSize: 3,
-          gap: 2,
-          speed: 800,
-          color: "currentColor",
-        }),
-        createElement("span", null, "Loading"),
-      );
+      stateContent = loadingState
+        ? createElement(
+            "div",
+            { className: "platform-data-table__state is-loading has-custom-loading-state" },
+            loadingState,
+          )
+        : createElement(
+            "div",
+            { className: "platform-data-table__state is-loading", role: "status" },
+            createElement(DotLoader, {
+              className: "platform-data-table__dot-loader",
+              dotCount: 9,
+              dotSize: 3,
+              gap: 2,
+              speed: 800,
+              color: "currentColor",
+            }),
+            createElement("span", null, "Loading"),
+          );
     else if (error)
       stateContent = createElement(
         "div",

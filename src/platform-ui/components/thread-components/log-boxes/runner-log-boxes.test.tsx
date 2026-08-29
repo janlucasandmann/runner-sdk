@@ -21,7 +21,7 @@ describe("runner log boxes", () => {
     const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
 
     expect(markup).toContain("Read file");
-    expect(markup).toContain("txtfile.png");
+    expect(markup).toContain('src="/img/logos/txtfile.png"');
     expect(markup).not.toContain('class="lucide lucide-file-text');
   });
 
@@ -33,8 +33,7 @@ describe("runner log boxes", () => {
       eventType: "command_execution",
       metadata: {
         command: "cat /workspace/.claude/skills/mission-control/SKILL.md",
-        output:
-          "---\nname: mission-control\ndescription: Maintain projects.\n---\n",
+        output: "---\nname: mission-control\ndescription: Maintain projects.\n---\n",
         exitCode: 0,
         filePaths: ["/workspace/.claude/skills/mission-control/SKILL.md"],
       },
@@ -109,8 +108,7 @@ describe("runner log boxes", () => {
         command:
           "python3 /workspace/.claude/skills/task-management/scripts/manage-tasks.py tasks -h",
         output: JSON.stringify({
-          stdout:
-            "usage: manage-tasks.py tasks [-h] {list,get,create,comments,comment}",
+          stdout: "usage: manage-tasks.py tasks [-h] {list,get,create,comments,comment}",
           stderr: "",
         }),
         exitCode: 0,
@@ -187,8 +185,7 @@ describe("runner log boxes", () => {
   it("collapses a filtered Knowledge listing into one library activity line", () => {
     const log: RunnerLog = {
       time: "2026-08-25T06:00:00.000Z",
-      message:
-        "Inspected one Knowledge library from the accessible library list",
+      message: "Inspected one Knowledge library from the accessible library list",
       type: "info",
       eventType: "command_execution",
       metadata: {
@@ -211,9 +208,7 @@ for lib in d.get('data', []):
 
     const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
 
-    expect(markup).toContain(
-      "Read Knowledge Library knowledge_qcyS4Tz0IMeoz_2Ml9Wag",
-    );
+    expect(markup).toContain("Read Knowledge Library knowledge_qcyS4Tz0IMeoz_2Ml9Wag");
     expect(markup).toContain("lucide-library-big");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("CURRENT_VERSION_ID");
@@ -228,8 +223,7 @@ for lib in d.get('data', []):
       metadata: {
         command: `$ python3 /workspace/.claude/skills/task-management/scripts/manage-tasks.py tasks list --project-id planproj_zpFzDI7EPG7Pu7x-kh8CE 2>&1 | python3 -c "print('TASK COUNT:', 5)" 2>&1 | head -40`,
         output: JSON.stringify({
-          stdout:
-            "TASK COUNT: 5\n- task_1 | Define project goal | deps: [] | assignee: Spark",
+          stdout: "TASK COUNT: 5\n- task_1 | Define project goal | deps: [] | assignee: Spark",
           stderr: "",
         }),
         exitCode: 0,
@@ -239,9 +233,7 @@ for lib in d.get('data', []):
     const markup = renderToStaticMarkup(
       <RunnerWorkLogEntry
         log={log}
-        availableProjects={[
-          { id: "planproj_zpFzDI7EPG7Pu7x-kh8CE", name: "My New Project" },
-        ]}
+        availableProjects={[{ id: "planproj_zpFzDI7EPG7Pu7x-kh8CE", name: "My New Project" }]}
       />,
     );
 
@@ -261,8 +253,7 @@ for lib in d.get('data', []):
       metadata: {
         command: `$ python3 /workspace/.claude/skills/task-management/scripts/manage-tasks.py releases list --project-id planproj_zpFzDI7EPG7Pu7x-kh8CE 2>&1 | python3 -c "print('RELEASE COUNT:', 2)" 2>&1 | head -40`,
         output: JSON.stringify({
-          stdout:
-            "RELEASE COUNT: 2\n- release_1 | Research foundation | Milestone 1",
+          stdout: "RELEASE COUNT: 2\n- release_1 | Research foundation | Milestone 1",
           stderr: "",
         }),
         exitCode: 0,
@@ -272,9 +263,7 @@ for lib in d.get('data', []):
     const markup = renderToStaticMarkup(
       <RunnerWorkLogEntry
         log={log}
-        availableProjects={[
-          { id: "planproj_zpFzDI7EPG7Pu7x-kh8CE", name: "My New Project" },
-        ]}
+        availableProjects={[{ id: "planproj_zpFzDI7EPG7Pu7x-kh8CE", name: "My New Project" }]}
       />,
     );
 
@@ -287,16 +276,8 @@ for lib in d.get('data', []):
 
   it("uses the shared text-file asset for created and updated file activity", () => {
     for (const [message, command, kind] of [
-      [
-        "Write: /workspace/new.txt",
-        "printf 'hello' > /workspace/new.txt",
-        "created",
-      ],
-      [
-        "Edit: /workspace/notes.txt",
-        "sed -i 's/a/b/' /workspace/notes.txt",
-        "modified",
-      ],
+      ["Write: /workspace/new.txt", "printf 'hello' > /workspace/new.txt", "created"],
+      ["Edit: /workspace/notes.txt", "sed -i 's/a/b/' /workspace/notes.txt", "modified"],
     ] as const) {
       const log: RunnerLog = {
         time: "2026-08-25T08:00:00.000Z",
@@ -316,5 +297,95 @@ for lib in d.get('data', []):
       expect(markup).toContain("txtfile.png");
       expect(markup).not.toContain("lucide-file-plus");
     }
+  });
+
+  it("renders session-history searches as one semantic activity line", () => {
+    const log: RunnerLog = {
+      time: "2026-08-27T12:00:00.000Z",
+      message: "Executed session history search",
+      type: "success",
+      eventType: "command_execution",
+      metadata: {
+        command: `$ python3 - <<'EOF'
+import json, glob
+for f in glob.glob('/workspace/.claw/sessions/*.jsonl'):
+    if 'manage-tasks' in f:
+        print(f)
+EOF`,
+        output: JSON.stringify({
+          stdout: "",
+          stderr: "",
+          noOutputExpected: true,
+          sandboxStatus: { enabled: true },
+        }),
+        exitCode: 0,
+      },
+    };
+
+    const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
+
+    expect(markup).toContain("Searched session logs");
+    expect(markup).toContain("for manage-tasks.py");
+    expect(markup).toContain("lucide-search");
+    expect(markup).not.toContain("Command Output");
+    expect(markup).not.toContain("sandboxStatus");
+  });
+
+  it("does not render heredoc comparisons as created files", () => {
+    const log: RunnerLog = {
+      time: "2026-08-27T12:00:00.000Z",
+      message: "Write: 30:",
+      type: "success",
+      eventType: "file_change",
+      metadata: {
+        command: `$ python3 - <<'EOF'
+import json
+f = '/workspace/.claw/sessions/worker.jsonl'
+with open(f) as fh:
+    for i, line in enumerate(fh):
+        obj = json.loads(line)
+        if 'task_example' in line:
+            print(json.dumps(obj, indent=1))
+            if i > 30: break
+EOF`,
+        output: JSON.stringify({
+          stdout: "",
+          stderr: "",
+          noOutputExpected: true,
+        }),
+        exitCode: 0,
+        filePaths: ["30:"],
+        changeKinds: ["created"],
+      },
+    };
+
+    const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
+
+    expect(markup).toContain("Inspected session logs");
+    expect(markup).toContain("for ticket context");
+    expect(markup).not.toContain("Created file");
+    expect(markup).not.toContain("30:");
+    expect(markup).not.toContain("Command Output");
+  });
+
+  it("suppresses invalid file-change targets from unrelated heredocs", () => {
+    const log: RunnerLog = {
+      time: "2026-08-27T12:00:00.000Z",
+      message: "Write: maxdepth:",
+      type: "success",
+      eventType: "file_change",
+      metadata: {
+        command:
+          "$ python3 - <<'EOF'\ndef walk(depth=0, maxdepth=3):\n    if depth > maxdepth: return\nEOF",
+        output: "",
+        exitCode: 0,
+        filePaths: ["maxdepth:"],
+        changeKinds: ["created"],
+      },
+    };
+
+    const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
+
+    expect(markup).toBe("");
   });
 });

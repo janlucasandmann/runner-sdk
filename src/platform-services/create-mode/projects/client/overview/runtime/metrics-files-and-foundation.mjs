@@ -921,6 +921,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               ["notion", 1],
               ["googleDrive", 2],
               ["oneDrive", 3],
+              ["atlassian", 4],
             ]);
             return (Array.isArray(PLAYGROUND_TASK_CONNECTOR_OPTIONS) ? PLAYGROUND_TASK_CONNECTOR_OPTIONS : [])
               .slice()
@@ -929,7 +930,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 const rightOrder = integrationOrder.has(right?.key) ? integrationOrder.get(right.key) : 99;
                 return leftOrder - rightOrder;
               })
-              .map((option) => {
+              .flatMap((option) => {
                 const selection = getDraftTaskConnectorSelection(option.source, selectedProject);
                 const repositories = option.key === "github"
                   ? Array.from((Array.isArray(selection?.items) ? selection.items : []).reduce((itemsByRepo, item) => {
@@ -947,11 +948,52 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                         createPullRequests: typeof item?.createPullRequests === "boolean"
                           ? item.createPullRequests
                           : current?.createPullRequests !== false,
+                        forcePushCommits: typeof item?.forcePushCommits === "boolean"
+                          ? item.forcePushCommits
+                          : current?.forcePushCommits === true,
                       });
                       return itemsByRepo;
                     }, new Map()).values())
                   : [];
-                return {
+                const selectedResourceIds = new Set(
+                  (Array.isArray(selection?.selectedIds) && selection.selectedIds.length > 0
+                    ? selection.selectedIds
+                    : (Array.isArray(selection?.items) ? selection.items.map((item) => item?.id) : []))
+                    .map((id) => String(id || "").trim())
+                    .filter(Boolean)
+                );
+                const resources = option.key !== "github"
+                  ? (Array.isArray(selection?.items) ? selection.items : [])
+                      .filter((item) => {
+                        const itemId = String(item?.id || "").trim();
+                        return itemId && selectedResourceIds.has(itemId);
+                      })
+                      .map((item) => ({
+                        id: String(item?.id || "").trim(),
+                        name: String(item?.name || "").trim() || "Untitled resource",
+                        path: String(item?.path || "").trim(),
+                        resourceType: item?.id === "__entire_workspace__"
+                          ? "workspace"
+                          : String(item?.resourceType || item?.mimeType || "").trim(),
+                        resourceKey: String(item?.resourceKey || "").trim(),
+                        cloudId: String(item?.cloudId || "").trim(),
+                        siteUrl: String(item?.siteUrl || "").trim(),
+                        strategyKnowledgeSyncEnabled: item?.strategyKnowledgeSyncEnabled === true,
+                        strategyKnowledgeSyncToNotionEnabled: typeof item?.strategyKnowledgeSyncToNotionEnabled === "boolean"
+                          ? item.strategyKnowledgeSyncToNotionEnabled
+                          : item?.strategyKnowledgeSyncEnabled === true,
+                        strategyKnowledgeSyncFromNotionEnabled: typeof item?.strategyKnowledgeSyncFromNotionEnabled === "boolean"
+                          ? item.strategyKnowledgeSyncFromNotionEnabled
+                          : item?.strategyKnowledgeSyncEnabled === true,
+                        strategyKnowledgeSyncToConfluenceEnabled: typeof item?.strategyKnowledgeSyncToConfluenceEnabled === "boolean"
+                          ? item.strategyKnowledgeSyncToConfluenceEnabled
+                          : item?.strategyKnowledgeSyncEnabled === true,
+                        strategyKnowledgeSyncFromConfluenceEnabled: typeof item?.strategyKnowledgeSyncFromConfluenceEnabled === "boolean"
+                          ? item.strategyKnowledgeSyncFromConfluenceEnabled
+                          : item?.strategyKnowledgeSyncEnabled === true,
+                      }))
+                  : [];
+                const row = {
                   id: String(option?.key || option?.source || option?.label || ""),
                   source: option?.source || "",
                   label: option?.label || "Integration",
@@ -959,7 +1001,25 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                   value: selection?.valueLabel || "Connect",
                   isEmpty: !selection,
                   repositories,
+                  resources,
                 };
+                if (option.key !== "atlassian") return [row];
+                return [
+                  {
+                    ...row,
+                    id: "jira",
+                    label: "Jira",
+                    connectorKind: "jira",
+                    resources: resources.filter((resource) => resource.resourceType === "jira_project"),
+                  },
+                  {
+                    ...row,
+                    id: "confluence",
+                    label: "Confluence",
+                    connectorKind: "confluence",
+                    resources: resources.filter((resource) => resource.resourceType === "confluence_space"),
+                  },
+                ];
               });
           })();
           const overviewProjectAttachments = Array.isArray(selectedProjectAttachments) ? selectedProjectAttachments : [];
@@ -1774,6 +1834,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
 
           function renderProjectOverviewIntegrationRow(row) {
             const rowProjectId = normalizedSelectedProjectId;
+            const isManagedProjectConnector = ["github", "notion", "google-drive", "one-drive", "atlassian"].includes(row.source);
             const openProjectConnectorBrowser = (reason, event) => {
               console.info("[connector-debug] project overview integration row open requested", {
                 reason,
@@ -1789,15 +1850,18 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
               requestProjectConnectorBrowserOpen(row.source, {
                 projectId: rowProjectId,
                 projectRecord: selectedProject,
+                atlassianProduct: row.connectorKind === "jira" || row.connectorKind === "confluence"
+                  ? row.connectorKind
+                  : undefined,
               });
             };
-            const mainRow = React.createElement(row.source === "github" ? "div" : "button", {
+            const mainRow = React.createElement(isManagedProjectConnector ? "div" : "button", {
                 key: row.id || row.label,
-                ...(row.source === "github" ? {} : { type: "button" }),
+                ...(isManagedProjectConnector ? {} : { type: "button" }),
                 className: "playground-tasks-connector-row playground-project-overview-integration-row",
                 "data-project-overview-connector-source": row.source,
                 "data-project-overview-project-id": rowProjectId,
-                onPointerDown: row.source === "github" ? undefined : (event) => {
+                onPointerDown: isManagedProjectConnector ? undefined : (event) => {
                   console.info("[connector-debug] project overview integration row pointerdown", {
                     source: row.source,
                     rowProjectId,
@@ -1816,7 +1880,7 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                   event.preventDefault();
                   openProjectConnectorBrowser("pointerdown", event);
                 },
-                onClick: row.source === "github" ? undefined : (event) => {
+                onClick: isManagedProjectConnector ? undefined : (event) => {
                   console.info("[connector-debug] project overview integration row click", {
                     source: row.source,
                     rowProjectId,
@@ -1840,8 +1904,8 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 React.createElement("span", { className: "playground-tasks-connector-service-label" }, row.label)
               ),
               React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                row.source === "github"
-                  ? React.createElement(PlatformSecondaryButton, {
+                isManagedProjectConnector
+                  ? React.createElement(PlatformPrimaryButton, {
                       type: "button",
                       size: "small",
                       className: "playground-project-overview-integration-manage-button",
@@ -1860,22 +1924,37 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                     )
               )
             );
-            if (row.source !== "github" || !row.repositories?.length) {
+            const hasRepositories = row.source === "github" && row.repositories?.length > 0;
+            const hasResources = row.source !== "github" && row.resources?.length > 0;
+            if (!hasRepositories && !hasResources) {
               return mainRow;
             }
             return React.createElement("div", {
                 key: row.id || row.label,
-                className: "playground-project-overview-integration-group is-github",
+                className: "playground-project-overview-integration-group is-" + row.source,
               },
               mainRow,
-              React.createElement("div", { className: "playground-project-overview-github-repositories" },
-                row.repositories.map((repository) => React.createElement(RunnerProjectGithubRepositorySettings, {
+              React.createElement("div", {
+                  className: "playground-project-overview-connector-resources" + (hasRepositories ? " playground-project-overview-github-repositories" : ""),
+                },
+                hasRepositories ? row.repositories.map((repository) => React.createElement(RunnerProjectGithubRepositorySettings, {
                   key: repository.repoFullName,
                   accountId: String(taskConnectorBrowserAccountIdsBySource.github || "").trim() || undefined,
                   repoFullName: repository.repoFullName,
                   refName: repository.ref || "main",
                   branchPrefix: repository.branchPrefix,
                   createPullRequests: repository.createPullRequests,
+                  forcePushCommits: repository.forcePushCommits,
+                  projectId: rowProjectId,
+                  apiBaseUrl: backendUrl,
+                  requestHeaders,
+                  automationEnvironmentId: String(selectedProject?.defaultEnvironmentId || "").trim(),
+                  automationAgentOptions: (Array.isArray(sortedAgents) ? sortedAgents : [])
+                    .filter((agent) => agent?.id && !isPlaygroundMissionControlAgent(agent) && !isPlaygroundAgentCreatorAgent(agent))
+                    .map((agent) => ({
+                      id: String(agent.id),
+                      label: String(agent.name || agent.displayName || agent.id),
+                    })),
                   fetchBranches: taskConnectorConfigByKey.github?.fetchBranches,
                   onChange: (patch) => updateProjectGithubRepositorySettings(
                     selectedProject,
@@ -1887,7 +1966,115 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                       github: error instanceof Error ? error.message : "Failed to update GitHub repository settings.",
                     }));
                   }),
-                }))
+                  onDisconnect: () => disconnectProjectConnectorResource(
+                    selectedProject,
+                    "github",
+                    repository.repoFullName
+                  ).catch((error) => {
+                    setTaskConnectorBrowserErrors((current) => ({
+                      ...current,
+                      github: error instanceof Error ? error.message : "Failed to disconnect GitHub repository.",
+                    }));
+                  }),
+                })) : row.resources.map((resource) => row.connectorKind === "confluence"
+                  ? React.createElement(RunnerProjectConfluenceResourceSettings, {
+                      key: resource.id,
+                      organizationId: String(
+                        projectOverviewConnectorCredentialOrganizationId
+                        || selectedProject?.organizationId
+                        || selectedProject?.metadata?.organizationId
+                        || ""
+                      ).trim(),
+                      projectId: rowProjectId,
+                      requestHeaders,
+                      resourceId: resource.id,
+                      resourceName: resource.name,
+                      spaceId: String(resource.id || "").startsWith("atlassian:confluence-space:")
+                        ? String(resource.id || "").split(":").filter(Boolean).pop()
+                        : (resource.resourceKey || resource.id),
+                      cloudId: resource.cloudId,
+                      siteUrl: resource.siteUrl,
+                      strategyKnowledgeSyncEnabled: resource.strategyKnowledgeSyncEnabled,
+                      strategyKnowledgeSyncToConfluenceEnabled: resource.strategyKnowledgeSyncToConfluenceEnabled,
+                      strategyKnowledgeSyncFromConfluenceEnabled: resource.strategyKnowledgeSyncFromConfluenceEnabled,
+                      onChange: (patch) => updateProjectConfluenceSpaceSettings(
+                        selectedProject,
+                        resource.id,
+                        patch
+                      ).catch((error) => {
+                        setTaskConnectorBrowserErrors((current) => ({
+                          ...current,
+                          atlassian: error instanceof Error ? error.message : "Failed to update Confluence space settings.",
+                        }));
+                      }),
+                      onDisconnect: () => disconnectProjectConnectorResource(
+                        selectedProject,
+                        "atlassian",
+                        resource.id
+                      ).catch((error) => {
+                        setTaskConnectorBrowserErrors((current) => ({
+                          ...current,
+                          atlassian: error instanceof Error ? error.message : "Failed to disconnect Confluence space.",
+                        }));
+                      }),
+                    })
+                  : row.source === "notion"
+                  ? React.createElement(RunnerProjectNotionResourceSettings, {
+                      key: resource.id,
+                      organizationId: String(
+                        projectOverviewConnectorCredentialOrganizationId
+                        || selectedProject?.organizationId
+                        || selectedProject?.metadata?.organizationId
+                        || ""
+                      ).trim(),
+                      projectId: rowProjectId,
+                      requestHeaders,
+                      resourceId: resource.id,
+                      resourceName: resource.name,
+                      resourceType: resource.resourceType === "workspace" ? "workspace" : "database",
+                      strategyKnowledgeSyncEnabled: resource.strategyKnowledgeSyncEnabled,
+                      strategyKnowledgeSyncToNotionEnabled: resource.strategyKnowledgeSyncToNotionEnabled,
+                      strategyKnowledgeSyncFromNotionEnabled: resource.strategyKnowledgeSyncFromNotionEnabled,
+                      onChange: (patch) => updateProjectNotionDatabaseSettings(
+                        selectedProject,
+                        resource.id,
+                        patch
+                      ).catch((error) => {
+                        setTaskConnectorBrowserErrors((current) => ({
+                          ...current,
+                          notion: error instanceof Error ? error.message : "Failed to update Notion database settings.",
+                        }));
+                      }),
+                      onDisconnect: () => disconnectProjectConnectorResource(
+                        selectedProject,
+                        "notion",
+                        resource.id
+                      ).catch((error) => {
+                        setTaskConnectorBrowserErrors((current) => ({
+                          ...current,
+                          notion: error instanceof Error ? error.message : "Failed to disconnect Notion resource.",
+                        }));
+                      }),
+                    })
+                  : React.createElement(RunnerProjectConnectorResourceSettings, {
+                      key: resource.id,
+                      provider: row.source,
+                      resourceId: resource.id,
+                      resourceName: resource.name,
+                      resourceType: resource.resourceType,
+                      resourcePath: resource.path,
+                      onDisconnect: () => disconnectProjectConnectorResource(
+                        selectedProject,
+                        row.source,
+                        resource.id
+                      ).catch((error) => {
+                        const connectorKey = getPlaygroundTaskConnectorKey(row.source) || row.source;
+                        setTaskConnectorBrowserErrors((current) => ({
+                          ...current,
+                          [connectorKey]: error instanceof Error ? error.message : "Failed to disconnect connector resource.",
+                        }));
+                      }),
+                    }))
               )
             );
           }
@@ -1898,15 +2085,15 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 className: "playground-plugins-section playground-project-overview-panel-plain playground-project-overview-panel-full playground-project-overview-plugins-panel",
               },
               renderOverviewSectionHeader(
-                "Project Plugins",
-                "Connect project-scoped plugin access so agents can read and write the right repositories, drives, and workspaces while they work."
+                "Project Connectors",
+                "Connect project-scoped access so agents can read and write the right repositories, drives, and workspaces while they work."
               ),
               hasProjectPlugins
                 ? React.createElement("div", { className: "playground-project-overview-plugins-list" },
                     projectOverviewIntegrationRows.map((row) => renderProjectOverviewIntegrationRow(row))
                   )
                 : React.createElement("div", { className: "playground-tasks-secondary-copy" },
-                    "No plugins are available yet."
+                    "No connectors are available yet."
                   )
             );
           }
