@@ -89,6 +89,8 @@ for public_file in \
   img/04-skills/gitlab.svg \
   img/bg/bg-abstract.avif \
   img/bg/blend.avif \
+  img/bg/blur.webp \
+  img/bg/blur3.webp \
   img/bg/clouds.jpeg \
   img/bg/desert.avif \
   img/bg/dune.avif \

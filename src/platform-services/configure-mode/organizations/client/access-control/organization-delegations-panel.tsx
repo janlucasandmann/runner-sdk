@@ -1,4 +1,4 @@
-import { Plus, ShieldOff } from "lucide-react";
+import { Plus, ShieldOff } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 import {
   PlatformDataTable,

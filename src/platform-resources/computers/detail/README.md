@@ -5,9 +5,22 @@
 ## Purpose
 
 `ComputerDetailPage` owns the computer-specific composition of the shared
-`ResourceDetailPage`. Runtime controls and data mutations remain in the
-computer resource controller while the page shell, tabs, and sidebar layout
-stay aligned with other resource detail screens.
+General, Runtime, and Settings detail surfaces. General is the initial,
+sidebar-free overview for analytics and runtime configuration.
+`ComputerRuntimeEditor` adapts the centralized code workspace and Monaco editor
+to the complete effective Dockerfile returned by the Computers API. Settings is
+the rightmost tab and uses the canonical resource Settings page for editable
+identity, deployment location, GitHub connection, team access, and the details
+sidebar.
+Data mutations remain in the computer resource controller.
+
+The runtime source contract deliberately keeps the generated/effective file
+separate from `dockerfileExtensions`. The current API can read the complete
+Dockerfile but only writes a base image plus extension suffix. The full file is
+therefore displayed and exported to newly connected GitHub repositories without
+being written back as an extension (which would duplicate generated build
+instructions). A future repository sync implementation should add an explicit
+whole-Dockerfile replace/validate/build API before enabling bidirectional edits.
 
 ## Working in this directory
 

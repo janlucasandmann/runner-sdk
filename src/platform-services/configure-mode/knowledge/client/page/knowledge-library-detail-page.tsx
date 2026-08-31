@@ -1,4 +1,4 @@
-import { Bookmark, Copy, LibraryBig, Send, SquarePen, Trash2, UsersRound } from "lucide-react";
+import { Bookmark, Copy, LibraryBig, SquarePen, Trash2, UsersRound } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -8,6 +8,9 @@ import {
 import {
   type PlatformProjectIdentity,
   PlatformProjectIdentityIcon,
+  getPlatformResourceProjectScopeIds,
+  isPlatformProjectStrategyKnowledgeMetadata,
+  withPlatformResourceProjectScope,
 } from "../../../../../platform-resources/projects/index.js";
 import {
   type PlatformCodeEditorFile,
@@ -19,7 +22,6 @@ import {
   serializePlatformInstructionsEditorFileMarkdown,
   serializePlatformInstructionsEditorImageMarkdown,
 } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
-import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformConfirmationModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import type { PlatformOwnerOption } from "../../../../../platform-ui/components/composite/owner-selector/index.js";
 import {
@@ -38,7 +40,7 @@ import {
 } from "../../../../../platform-ui/components/composite/resource-header-actions/index.js";
 import {
   type PlatformVersionChangesFile,
-  PlatformVersionChangesPage,
+  PlatformVersionChangesModal,
   PlatformVersionHistorySidebar,
   type PlatformVersionSaveDetails,
   PlatformVersionSaveDialog,
@@ -76,6 +78,7 @@ type KnowledgeDetailTab = "general" | "settings";
 export interface KnowledgeLibraryDetailPageProps {
   library: KnowledgeLibrary;
   relatedProjectIdentity?: PlatformProjectIdentity | null;
+  availableProjectIdentities?: readonly PlatformProjectIdentity[];
   api: KnowledgeApi;
   backendUrl?: string;
   requestHeaders?: Readonly<Record<string, string>>;
@@ -456,6 +459,7 @@ function resolveKnowledgeIdentity(
 export function KnowledgeLibraryDetailPage({
   library,
   relatedProjectIdentity = null,
+  availableProjectIdentities = [],
   api,
   backendUrl = "",
   requestHeaders = {},
@@ -696,6 +700,62 @@ export function KnowledgeLibraryDetailPage({
     return Boolean(draft && !draft.title.trim());
   });
   const dirty = identityDirty || dirtyDocuments.length > 0;
+  const projectScopeIdentities = useMemo(
+    () => [
+      ...new Map(
+        [
+          ...availableProjectIdentities,
+          ...(relatedProjectIdentity ? [relatedProjectIdentity] : []),
+        ].map((project) => [project.id, project]),
+      ).values(),
+    ],
+    [availableProjectIdentities, relatedProjectIdentity],
+  );
+  const selectedProjectScopeIds = useMemo(
+    () => getPlatformResourceProjectScopeIds(library.metadata),
+    [library.metadata],
+  );
+  const isProjectStrategyLibrary = useMemo(
+    () => isPlatformProjectStrategyKnowledgeMetadata(library.metadata),
+    [library.metadata],
+  );
+
+  const persistProjectScope = useCallback(
+    async (projectIds: readonly string[]) => {
+      if (busy || dirty || isHistorical || isProjectStrategyLibrary) return;
+      const projectById = new Map(projectScopeIdentities.map((project) => [project.id, project]));
+      const selectedProjects = projectIds
+        .map((projectId) => projectById.get(projectId))
+        .filter((project): project is PlatformProjectIdentity => Boolean(project));
+      setBusy(true);
+      setError("");
+      try {
+        const nextLibrary = await api.updateLibrary(library.id, {
+          metadata: withPlatformResourceProjectScope(library.metadata, selectedProjects),
+        });
+        onLibraryChange(nextLibrary);
+      } catch (nextError) {
+        setError(
+          nextError instanceof Error
+            ? nextError.message
+            : "Failed to update the Knowledge library scope.",
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [
+      api,
+      busy,
+      dirty,
+      isHistorical,
+      isProjectStrategyLibrary,
+      library.id,
+      library.metadata,
+      onLibraryChange,
+      projectScopeIdentities,
+    ],
+  );
 
   const versions = useMemo(
     () =>
@@ -743,7 +803,7 @@ export function KnowledgeLibraryDetailPage({
       leftVersionId: base.id,
       rightVersionId: target.id,
     });
-    setVersionsOpen(true);
+    setVersionsOpen(false);
   }, [versions, viewedVersionId]);
 
   useEffect(() => {
@@ -873,19 +933,18 @@ export function KnowledgeLibraryDetailPage({
 
   useEffect(() => {
     if (
-      activeTab !== "settings" ||
       !activeOrganizationId ||
       ownerCandidates.length > 0 ||
       ownerCandidatesLoadedOrganizationRef.current === activeOrganizationId
     )
       return;
     void loadOrganizationOwnerCandidates();
-  }, [activeOrganizationId, activeTab, loadOrganizationOwnerCandidates, ownerCandidates.length]);
+  }, [activeOrganizationId, loadOrganizationOwnerCandidates, ownerCandidates.length]);
 
   useEffect(() => {
-    if (!ownerSelectorOpen || ownerMissingTeamIds.length === 0) return;
+    if (ownerMissingTeamIds.length === 0) return;
     requestWorkspaceTeamMembers(ownerMissingTeamIds[0]);
-  }, [ownerMissingTeamIds, ownerSelectorOpen, requestWorkspaceTeamMembers]);
+  }, [ownerMissingTeamIds, requestWorkspaceTeamMembers]);
 
   const shareTeams = useMemo<PlatformResourceShareTeam[]>(
     () =>
@@ -1562,12 +1621,14 @@ export function KnowledgeLibraryDetailPage({
       setCoverBusy(true);
       setError("");
       try {
-        const nextLibrary = nextCover === null
-          ? await api.removeLibraryCover(library.id)
-          : await api.updateLibrary(library.id, { cover: nextCover });
-        const persistedCover = nextLibrary.cover === undefined
-          ? readKnowledgeLibraryCover(nextLibrary.metadata)
-          : readKnowledgeLibraryCover(nextLibrary.cover);
+        const nextLibrary =
+          nextCover === null
+            ? await api.removeLibraryCover(library.id)
+            : await api.updateLibrary(library.id, { cover: nextCover });
+        const persistedCover =
+          nextLibrary.cover === undefined
+            ? readKnowledgeLibraryCover(nextLibrary.metadata)
+            : readKnowledgeLibraryCover(nextLibrary.cover);
         setCover(persistedCover ?? nextCover);
         onLibraryChange(nextLibrary);
       } catch (nextError) {
@@ -1586,10 +1647,7 @@ export function KnowledgeLibraryDetailPage({
   );
 
   const persistCoverImage = useCallback(
-    async (
-      input: KnowledgeLibraryCoverImageUpload,
-      view: KnowledgeLibraryCoverView,
-    ) => {
+    async (input: KnowledgeLibraryCoverImageUpload, view: KnowledgeLibraryCoverView) => {
       if (coverBusy || isHistorical) return;
       const previousCover = cover;
       setCoverBusy(true);
@@ -1605,9 +1663,10 @@ export function KnowledgeLibraryDetailPage({
           computerId: input.computerId,
           computerPath: input.computerPath,
         });
-        const nextCover = nextLibrary.cover === undefined
-          ? readKnowledgeLibraryCover(nextLibrary.metadata)
-          : readKnowledgeLibraryCover(nextLibrary.cover);
+        const nextCover =
+          nextLibrary.cover === undefined
+            ? readKnowledgeLibraryCover(nextLibrary.metadata)
+            : readKnowledgeLibraryCover(nextLibrary.cover);
         if (!nextCover) {
           throw new Error("The cover image was saved but is missing from the library response.");
         }
@@ -1615,9 +1674,10 @@ export function KnowledgeLibraryDetailPage({
         onLibraryChange(nextLibrary);
       } catch (nextError) {
         setCover(previousCover);
-        const normalized = nextError instanceof Error
-          ? nextError
-          : new Error("Failed to save the Knowledge library cover image.");
+        const normalized =
+          nextError instanceof Error
+            ? nextError
+            : new Error("Failed to save the Knowledge library cover image.");
         setError(normalized.message);
         throw normalized;
       } finally {
@@ -1754,7 +1814,9 @@ export function KnowledgeLibraryDetailPage({
         titleAriaLabel: "Knowledge library name",
         descriptionAriaLabel: "Knowledge library description",
         readOnly: isHistorical,
-        trailing: isHistorical ? <PlatformLabel variant="gray">Version preview</PlatformLabel> : null,
+        trailing: isHistorical ? (
+          <PlatformLabel variant="gray">Version preview</PlatformLabel>
+        ) : null,
         className: "knowledge-library-identity",
         iconClassName: `knowledge-library-identity__icon${relatedProjectIdentity ? " is-project-linked" : ""}`,
         iconStyle: relatedProjectIdentity
@@ -1764,9 +1826,8 @@ export function KnowledgeLibraryDetailPage({
           : undefined,
       }}
       details={{
-        attributes: [
-          { id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) },
-        ],
+        variant: "standard",
+        updatedAt: library.updatedAt,
         creator: {
           value: creatorIdentity.id,
           name: creatorIdentity.name,
@@ -1790,32 +1851,49 @@ export function KnowledgeLibraryDetailPage({
           popupAlignment: "right",
           fullWidth: true,
           disabled: busy || dirty || !activeOrganizationId,
-          loading:
-            ownerCandidatesLoading || (ownerSelectorOpen && ownerMissingTeamIds.length > 0),
+          loading: ownerCandidatesLoading || (ownerSelectorOpen && ownerMissingTeamIds.length > 0),
           title: dirty ? "Save Knowledge changes before changing the owner." : undefined,
         },
-        primaryAction: onStartThread ? (
-          <PlatformPrimaryButton
-            className="knowledge-detail-page__start-thread-button"
-            fullWidth
-            size="small"
-            onClick={() => onStartThread(library)}
-          >
-            <Send width={14} height={14} aria-hidden="true" />
-            Start Thread
-          </PlatformPrimaryButton>
-        ) : null,
+        scope: {
+          values: selectedProjectScopeIds,
+          options: projectScopeIdentities.map((project) => ({
+            value: project.id,
+            label: project.name,
+            leading: (
+              <PlatformProjectIdentityIcon
+                icon={project.icon}
+                size={14}
+                strokeWidth={1.8}
+                style={{ color: project.color }}
+              />
+            ),
+          })),
+          onValuesChange: persistProjectScope,
+          ariaLabel: "Choose Knowledge library scope",
+          title: isProjectStrategyLibrary
+            ? "Project Strategy Knowledge is permanently scoped to its Project."
+            : undefined,
+          disabled: busy || dirty || isHistorical || isProjectStrategyLibrary,
+        },
+        primaryActions: [
+          {
+            id: "start-thread",
+            label: "Start Thread",
+            onSelect: onStartThread ? () => onStartThread(library) : undefined,
+            disabled: !onStartThread || isHistorical,
+          },
+        ],
         className: "knowledge-detail-page__settings-sidebar",
         propertiesClassName: "knowledge-detail-page__settings-sidebar-properties",
       }}
-      location={(
+      location={
         <PlatformDeploymentMap
           className="knowledge-detail-page__storage-map"
           regionCode={String(library.metadata.region || library.metadata.location || "eur3")}
           title="Location"
         />
-      )}
-      connectors={(
+      }
+      connectors={
         <KnowledgeConnectorSettings
           library={library}
           api={api}
@@ -1823,8 +1901,8 @@ export function KnowledgeLibraryDetailPage({
           activeOrganizationId={activeOrganizationId}
           onLibraryChange={onLibraryChange}
         />
-      )}
-      access={(
+      }
+      access={
         <KnowledgeAccessSettings
           library={library}
           api={api}
@@ -1834,7 +1912,7 @@ export function KnowledgeLibraryDetailPage({
           onLibraryChange={onLibraryChange}
           onPermissionDetailOpenChange={setAccessDetailOpen}
         />
-      )}
+      }
       accessDetailOpen={accessDetailOpen}
       detailsSidebarCollapsed={versionsOpen}
       detailsSidebarAriaLabel="Knowledge library information"
@@ -1842,55 +1920,7 @@ export function KnowledgeLibraryDetailPage({
     />
   );
   const saveActionPortal = controlsPortal || (!titleActionsPortalId ? actionsPortal : null);
-  const detailSurface = versionChangesState ? (
-    <div className="knowledge-version-changes-surface">
-      {versionChangesLoading ? (
-        <PlatformLoadingState centered message="Loading version changes…" />
-      ) : versionChangesError ? (
-        <div className="knowledge-version-changes-surface__error" role="alert">
-          {versionChangesError}
-        </div>
-      ) : (
-        <PlatformVersionChangesPage
-          title="Changes"
-          subtitle="Compare saved Knowledge versions and review the exact document changes."
-          files={versionChangesFiles}
-          leftSelector={{
-            value: versionChangesState.leftVersionId,
-            options: versionSelectorOptions,
-            onValueChange: (value) =>
-              setVersionChangesState((current) =>
-                current
-                  ? {
-                      ...current,
-                      leftVersionId: value,
-                    }
-                  : current,
-              ),
-            ariaLabel: "Select base Knowledge version",
-          }}
-          rightSelector={{
-            value: versionChangesState.rightVersionId,
-            options: versionSelectorOptions,
-            onValueChange: (value) =>
-              setVersionChangesState((current) =>
-                current
-                  ? {
-                      ...current,
-                      rightVersionId: value,
-                    }
-                  : current,
-              ),
-            ariaLabel: "Select target Knowledge version",
-          }}
-          onBack={() => setVersionChangesState(null)}
-          backLabel="Back to Knowledge library"
-          emptyMessage="No differences between the selected versions."
-          className="knowledge-version-changes-page"
-        />
-      )}
-    </div>
-  ) : (
+  const detailSurface = (
     <MarkdownResourceDetailPage
       activeTab={activeTab === "settings" ? "settings" : "code"}
       notice={
@@ -1912,6 +1942,49 @@ export function KnowledgeLibraryDetailPage({
       settingsClassName="knowledge-detail-page__settings"
     />
   );
+  const versionChangesModal = versionChangesState ? (
+    <PlatformVersionChangesModal
+      open
+      title="Changes"
+      subtitle="Compare saved Knowledge versions and review the exact document changes."
+      files={versionChangesFiles}
+      loading={versionChangesLoading}
+      loadingMessage="Loading version changes…"
+      error={versionChangesError || null}
+      leftSelector={{
+        value: versionChangesState.leftVersionId,
+        options: versionSelectorOptions,
+        onValueChange: (value) =>
+          setVersionChangesState((current) =>
+            current
+              ? {
+                  ...current,
+                  leftVersionId: value,
+                }
+              : current,
+          ),
+        ariaLabel: "Select base Knowledge version",
+      }}
+      rightSelector={{
+        value: versionChangesState.rightVersionId,
+        options: versionSelectorOptions,
+        onValueChange: (value) =>
+          setVersionChangesState((current) =>
+            current
+              ? {
+                  ...current,
+                  rightVersionId: value,
+                }
+              : current,
+          ),
+        ariaLabel: "Select target Knowledge version",
+      }}
+      onClose={() => setVersionChangesState(null)}
+      closeButtonLabel="Close Knowledge version changes"
+      emptyMessage="No differences between the selected versions."
+      contentClassName="knowledge-version-changes-modal"
+    />
+  ) : null;
 
   return (
     <>
@@ -1919,6 +1992,7 @@ export function KnowledgeLibraryDetailPage({
       {actionsPortal ? createPortal(titleActions, actionsPortal) : null}
       {saveActionPortal ? createPortal(saveAction, saveActionPortal) : null}
       {detailSurface}
+      {versionChangesModal}
       <PlatformVersionSaveDialog
         open={saveDialogOpen}
         title="Review changes"

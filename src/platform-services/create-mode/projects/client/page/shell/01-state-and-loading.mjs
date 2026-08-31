@@ -613,6 +613,7 @@ export const PROJECTS_SHELL_01_FRAGMENT = `
 	          status: "idle",
 	          error: "",
 	          items: [],
+	          linkedResources: [],
 	        });
 	        const [projectOverviewThreadPagination, setProjectOverviewThreadPagination] = useState({
 	          pageIndex: 0,

@@ -1,4 +1,4 @@
-import { Settings2, Trash2 } from "lucide-react";
+import { Settings2, Trash2 } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   PlatformDataTable,

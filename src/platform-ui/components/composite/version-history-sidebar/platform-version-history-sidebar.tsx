@@ -15,7 +15,7 @@ import {
   ListFilter,
   Plus,
   Rocket,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformLabel } from "../../ui/label/index.js";

@@ -8,7 +8,8 @@ This directory owns small, reusable Project identity contracts that are needed
 outside the Create-mode Projects service. It provides the canonical project
 icon renderer and catalog, normalization of project identity records, and the
 metadata-only project identity client used by linked resources such as Project
-Knowledge libraries.
+Knowledge libraries. It also owns the multi-Project resource Scope metadata
+contract and identification of lifecycle-managed Project Strategy libraries.
 
 Project planning, tickets, delivery orchestration, and persistence remain in
 `platform-services/create-mode/projects`. Domain-neutral presentation remains
@@ -21,12 +22,16 @@ Import through `platform-resources/projects` or the top-level
 resource needs to reproduce a Project's Lucide or emoji icon. Use
 `PlatformProjectIdentityApi` for a current, permission-aware identity and keep
 the linked resource's copied metadata as an appliance/offline fallback.
+Use `getPlatformResourceProjectScopeIds` and
+`withPlatformResourceProjectScope` rather than reading or writing legacy
+`projectId` fields directly.
 
 ## Contents
 
 - [`project-identity-icon.tsx`](project-identity-icon.tsx) — Canonical icon catalog, icon-ID normalization, and Lucide/emoji renderer.
 - [`project-identity.ts`](project-identity.ts) — Project identity and Project Knowledge-reference normalization.
 - [`project-identity-api.ts`](project-identity-api.ts) — Minimal metadata-only project identity client.
+- [`project-scope.ts`](project-scope.ts) — Canonical multi-Project Scope metadata and managed Strategy Knowledge classification.
 - [`project-identity.test.tsx`](project-identity.test.tsx) — Renderer, fallback, normalization, and API coverage.
 - [`index.ts`](index.ts) — Public barrel.
 
@@ -36,6 +41,8 @@ Keep this boundary limited to Project identity that is genuinely reused across
 services. Do not move the Projects service's planning runtime or UI composition
 here. When adding an icon, keep the catalog aligned with the Projects service's
 picker catalog and cover the mapping with a focused test.
+Project Strategy Knowledge scope is descriptive and lifecycle-owned by the
+Project; resource settings must not allow users to detach or re-scope it.
 
 ## Verification
 

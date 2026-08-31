@@ -1,4 +1,4 @@
-import { Copy, Plus, SquarePen, Trash2, UsersRound } from "lucide-react";
+import { Copy, Plus, SquarePen, Trash2, UsersRound } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
 import {

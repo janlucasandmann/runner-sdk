@@ -18,6 +18,16 @@ assert.match(
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state, /SETTINGS_NOTIFICATION_PREFERENCE_DEFAULTS/);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.state, /settingsNotificationPreferences/);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /function openSettingsModal/);
+assert.match(
+  SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation,
+  /\["profile", "notifications", "password", "api", "data-controls", "delete"\]/,
+  "The global settings modal must accept the dedicated API Keys section.",
+);
+assert.doesNotMatch(
+  SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation,
+  /requestedSectionId === "api" \? "profile"/,
+  "Opening API Keys must not redirect back to Account.",
+);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /loadSettingsNotificationPreferences/);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /updateSettingsNotificationPreference/);
 assert.match(SETTINGS_MODAL_APP_SCRIPT_FRAGMENTS.navigation, /notifications\/preferences/);
@@ -113,6 +123,7 @@ assert.match(
 assert.match(pageScript, /\{ id: "profile", label: "Account", Icon: UserRound \}/);
 assert.match(pageScript, /\{ id: "notifications", label: "Notifications", Icon: Bell \}/);
 assert.match(pageScript, /\{ id: "password", label: "Password", Icon: KeyRound \}/);
+assert.match(pageScript, /\{ id: "api", label: "API Keys", Icon: Code2 \}/);
 assert.match(pageScript, /\{ id: "data-controls", label: "Data Controls", Icon: Database \}/);
 assert.match(pageScript, /\{ id: "delete", label: "Delete Account", Icon: Trash2, isDanger: true \}/);
 assert.match(pageScript, /case "password":/);
@@ -207,7 +218,7 @@ const accountMenuSource = await fs.readFile(
   "utf8",
 );
 assert.match(accountMenuSource, /onClick: openSettingsModal/);
-assert.match(accountMenuSource, /React\.createElement\(Settings,/);
+assert.match(accountMenuSource, /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: Settings01Icon/);
 
 const organizationBillingSource = await fs.readFile(
   new URL("../../platform-services/configure-mode/organizations/client/page/identity-and-billing.mjs", import.meta.url),

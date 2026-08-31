@@ -71,6 +71,10 @@
   transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease;
 }
 
+.platform-popup-surface > .tb-popup-row:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .platform-popup-surface .tb-popup-row:hover:not(:disabled),
 .platform-popup-surface .tb-popup-row:focus-visible,
 .platform-popup-surface .tb-popup-row.selected,

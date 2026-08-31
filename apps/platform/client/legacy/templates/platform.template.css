@@ -17321,7 +17321,7 @@
           display: none;
         }
   
-        .playground-version-changes-page {
+        .playground-version-changes-modal {
           width: 100%;
           min-width: 0;
           display: flex;

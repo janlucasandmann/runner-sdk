@@ -6,6 +6,14 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.platform-github-automations.without-heading {
+  border-top: 0;
+}
+
+.platform-github-automations.without-heading .platform-github-automations__row:first-of-type {
+  border-top: 0;
+}
+
 .platform-github-automations__heading {
   display: flex;
   flex-direction: column;

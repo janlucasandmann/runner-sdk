@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Component } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, ChevronRight, EllipsisVertical } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, EllipsisVertical } from "../../ui/hugeicons-compat.js";
 import { DiffModeEnum, DiffView } from "@git-diff-view/react";
 import { generateDiffFile } from "@git-diff-view/file";
 import { PlatformPopupSurface } from "../popup/index.js";

@@ -133,276 +133,141 @@
   font-weight: 400;
 }
 
-.tb-runner-chat .tb-fork-thread-modal {
-  width: min(560px, 100%);
-  overflow: visible;
+.platform-modal-surface.tb-fork-thread-modal {
+  color: #fff;
 }
 
-.tb-runner-chat .tb-fork-thread-modal-body {
+.tb-fork-thread-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  overflow: visible;
+  gap: 22px;
+  padding: 20px 24px;
 }
 
-.tb-runner-chat .tb-fork-thread-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.tb-runner-chat .tb-fork-thread-section-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tb-runner-chat .tb-fork-thread-section-title {
-  color: white;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.3;
-}
-
-.tb-runner-chat .tb-fork-thread-section-copy {
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.45;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-list,
-.tb-runner-chat .tb-fork-thread-copy-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow: visible;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-row,
-.tb-runner-chat .tb-fork-thread-copy-option {
+.tb-fork-thread-section {
   min-width: 0;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-row:hover,
-.tb-runner-chat .tb-fork-thread-environment-row.selected,
-.tb-runner-chat .tb-fork-thread-copy-option:hover,
-.tb-runner-chat .tb-fork-thread-copy-option.selected {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.tb-runner-chat .tb-fork-thread-environment-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease;
-  position: relative;
-  overflow: visible;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-main,
-.tb-runner-chat .tb-fork-thread-copy-option-main {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
 }
 
-.tb-runner-chat .tb-fork-thread-environment-copy,
-.tb-runner-chat .tb-fork-thread-copy-option-copy {
+.tb-fork-thread-section-header {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.tb-runner-chat .tb-fork-thread-row-control {
-  flex: 0 0 min(250px, 100%);
-  min-width: min(250px, 100%);
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-name,
-.tb-runner-chat .tb-fork-thread-copy-option-title {
-  color: white;
+.tb-fork-thread-section-title {
+  margin: 0;
+  color: #fff;
   font-size: 13px;
   font-weight: 400;
   line-height: 1.35;
 }
 
-.tb-runner-chat .tb-fork-thread-environment-meta,
-.tb-runner-chat .tb-fork-thread-copy-option-description {
-  color: rgba(255, 255, 255, 0.62);
+.tb-fork-thread-section-copy {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.55);
   font-size: 12px;
   font-weight: 400;
   line-height: 1.45;
 }
 
-.tb-runner-chat .tb-fork-thread-environment-meta {
-  font-family:
-    ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
-  white-space: nowrap;
+.tb-fork-thread-fields {
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
 }
 
-.tb-runner-chat .tb-fork-thread-selector-anchor {
-  position: relative;
-  width: 100%;
-  z-index: 4;
-}
-
-.tb-runner-chat .tb-fork-thread-inline-selector {
-  width: 100%;
-  justify-content: space-between;
-  font-weight: 400;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-popup {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  min-width: min(320px, 100%);
-  height: 160px;
-  z-index: 6;
-}
-
-.tb-runner-chat .tb-fork-thread-environment-popup .tb-popup-menu-inline-body {
-  height: 100%;
-  overflow-y: auto;
-}
-
-.tb-runner-chat .tb-fork-thread-name-input {
-  width: 100%;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  background: rgba(18, 18, 18, 0.3);
-  color: white;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 400;
-  outline: none;
-  transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    box-shadow 140ms ease;
-}
-
-.tb-runner-chat .tb-fork-thread-name-input::placeholder {
-  color: rgba(255, 255, 255, 0.38);
-}
-
-.tb-runner-chat .tb-fork-thread-name-input:focus {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(18, 18, 18, 0.42);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
-}
-
-.tb-runner-chat .tb-fork-thread-copy-option {
-  width: 100%;
-  display: flex;
+.tb-fork-thread-field {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: minmax(112px, 0.7fr) minmax(220px, 1.3fr);
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease;
+  gap: 16px;
+  padding: 8px 12px;
 }
 
-.tb-runner-chat .tb-fork-thread-copy-option-icon-shell {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.74);
+.tb-fork-thread-field + .tb-fork-thread-field {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
 }
 
-.tb-runner-chat .tb-fork-thread-copy-option.selected .tb-fork-thread-copy-option-icon-shell {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+.tb-fork-thread-field-label {
+  min-width: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
 }
 
-.tb-runner-chat .tb-fork-thread-copy-option-icon {
-  width: 15px;
-  height: 15px;
+.tb-fork-thread-field .platform-selector {
+  width: 100%;
+  justify-self: stretch;
 }
 
-.tb-runner-chat .tb-fork-thread-error {
+.tb-fork-thread-selector-trigger.platform-selector__trigger {
+  width: 100%;
+  min-height: 34px;
+  justify-content: flex-end;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.86);
+  text-align: right;
+}
+
+.tb-fork-thread-selector-trigger .platform-selector__value {
+  justify-content: flex-end;
+}
+
+.tb-fork-thread-selector-popup {
+  max-width: min(360px, calc(100vw - 32px));
+}
+
+.platform-input.tb-fork-thread-name-input {
+  text-align: right;
+}
+
+.tb-fork-thread-error {
   margin: 0;
 }
 
-.tb-runner-chat .tb-edit-confirmation-actions.tb-fork-thread-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 0;
+.platform-modal-footer.tb-fork-thread-actions {
+  gap: 8px;
 }
 
-.tb-runner-chat .tb-fork-thread-actions .tb-popup-action,
-.tb-runner-chat .tb-fork-thread-modal .tb-popup-note-title,
-.tb-runner-chat .tb-fork-thread-modal .tb-popup-note-body,
-.tb-runner-chat .tb-fork-thread-modal .tb-popup-label {
-  font-weight: 400;
-}
-
-.tb-runner-chat .tb-fork-thread-actions .tb-popup-action {
-  flex: 1 1 0;
-  width: auto;
-  font-size: 12px;
-}
-
-.tb-runner-chat .tb-fork-thread-actions .tb-popup-action.loading:disabled {
-  opacity: 1;
-}
-
-.tb-runner-chat .tb-fork-thread-action-loading {
+.tb-fork-thread-action-loading {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  color: black;
+  gap: 7px;
+  color: inherit;
 }
 
-.tb-runner-chat .tb-fork-thread-action-spinner {
-  border-color: rgba(0, 0, 0, 0.18);
-  border-top-color: black;
-}
-
-@media (max-width: 720px) {
-  .tb-runner-chat .tb-fork-thread-environment-row {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 560px) {
+  .tb-fork-thread-modal-body {
+    padding: 18px;
   }
 
-  .tb-runner-chat .tb-fork-thread-row-control {
-    width: 100%;
-    min-width: 0;
+  .tb-fork-thread-field {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 10px 12px;
   }
 
-  .tb-runner-chat .tb-fork-thread-environment-popup {
-    left: 0;
-    right: auto;
-    min-width: 100%;
+  .tb-fork-thread-selector-trigger.platform-selector__trigger {
+    justify-content: flex-start;
+  }
+
+  .platform-input.tb-fork-thread-name-input {
+    text-align: left;
+  }
+
+  .tb-fork-thread-selector-trigger .platform-selector__value {
+    justify-content: flex-start;
   }
 }
 

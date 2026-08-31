@@ -1,4 +1,4 @@
-import { ListTodo, Plus } from "lucide-react";
+import { ListTodo, Plus } from "../../ui/hugeicons-compat.js";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 
 import { PlatformSecondaryButton } from "../../ui/button/index.js";

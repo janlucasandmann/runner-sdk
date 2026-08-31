@@ -35,5 +35,7 @@ export {
 } from "../../platform-resources/computers/overview/computers-overview-model.js";
 export {
   deleteComputerResource,
+  loadComputerDockerfile,
+  normalizeComputerDockerfileSource,
   saveComputerResource,
 } from "../../platform-resources/computers/client/computer-resource-client.js";

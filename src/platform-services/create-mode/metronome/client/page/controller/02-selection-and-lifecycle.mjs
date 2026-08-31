@@ -900,6 +900,60 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
             replaceMetronomeWorkflowInEditableState(workflowId, savedWorkflow);
           }, [activeMetronomeEditorWorkflow, activeWorkflow, replaceMetronomeWorkflowInEditableState]);
 
+          const persistMetronomeWorkflowProjectScope = useCallback(async (projectIds) => {
+            const sourceWorkflow = activeMetronomeEditorWorkflow || activeWorkflow;
+            const workflowId = String(sourceWorkflow?.id || "").trim();
+            if (!workflowId) throw new Error("Metronome workflow is unavailable.");
+            if (isActiveWorkflowBuiltIn) return;
+            const projectById = new Map(metronomeProjectIdentities.map((project) => [project.id, project]));
+            const selectedProjects = (Array.isArray(projectIds) ? projectIds : [])
+              .map((projectId) => projectById.get(String(projectId || "").trim()))
+              .filter(Boolean);
+            const primaryProject = selectedProjects[0] || null;
+            const nextMetadata = withPlatformResourceProjectScope(
+              sourceWorkflow?.metadata,
+              selectedProjects
+            );
+            const nextDefinition = sourceWorkflow?.definition
+              && typeof sourceWorkflow.definition === "object"
+              && !Array.isArray(sourceWorkflow.definition)
+              ? {
+                  ...sourceWorkflow.definition,
+                  projectId: primaryProject?.id || "",
+                  project_id: primaryProject?.id || "",
+                  projectName: primaryProject?.name || "",
+                  project_name: primaryProject?.name || "",
+                }
+              : sourceWorkflow?.definition;
+            setMetronomeScopeUpdateState({ workflowId, status: "loading", message: "" });
+            try {
+              const nextWorkflow = normalizeMetronomeWorkflow({
+                ...sourceWorkflow,
+                projectId: primaryProject?.id || "",
+                project_id: primaryProject?.id || "",
+                projectName: primaryProject?.name || "",
+                project_name: primaryProject?.name || "",
+                ...(nextDefinition ? { definition: nextDefinition } : {}),
+                metadata: nextMetadata,
+              });
+              const savedWorkflow = await updateMetronomeWorkflowApi(nextWorkflow);
+              replaceMetronomeWorkflowInEditableState(workflowId, savedWorkflow);
+              setMetronomeScopeUpdateState({ workflowId, status: "success", message: "" });
+            } catch (error) {
+              const message = error instanceof Error
+                ? error.message
+                : "Failed to update the workflow scope.";
+              setMetronomeScopeUpdateState({ workflowId, status: "error", message });
+              throw error;
+            }
+          }, [
+            activeMetronomeEditorWorkflow,
+            activeWorkflow,
+            isActiveWorkflowBuiltIn,
+            metronomeProjectIdentities,
+            replaceMetronomeWorkflowInEditableState,
+          ]);
+
           const addMetronomeWorkflowTeamAccess = useCallback(async (teamId, permissionSets) => {
             const workflow = activeMetronomeEditorWorkflow || activeWorkflow;
             const share = await shareMetronomeWorkflowWithTeam({
@@ -1370,10 +1424,15 @@ export const METRONOME_CONTROLLER_02_FRAGMENT = String.raw`                }
 	            if (isActiveWorkflowBuiltIn) return;
 	            if (!nextNode) return;
 	            pushGraphHistory();
-	            setNodes((current) => normalizeMetronomeNodeOrder([...current, nextNode]));
+	            const selectedNextNode = { ...nextNode, selected: true };
+	            setNodes((current) => normalizeMetronomeNodeOrder([
+	              ...current.map((node) => node.selected ? { ...node, selected: false } : node),
+	              selectedNextNode,
+	            ]));
+	            setEdges((current) => current.map((edge) => edge.selected ? { ...edge, selected: false } : edge));
 	            const nextKind = String(nextNode?.data?.kind || "").trim();
 	            setSelectedNodeId(nextKind === "note" || nextKind === "end" ? "" : nextNode.id);
-	          }, [isActiveWorkflowBuiltIn, setNodes, pushGraphHistory]);
+	          }, [isActiveWorkflowBuiltIn, setNodes, setEdges, pushGraphHistory]);
 
           const handleMetronomeNodeDragStop = useCallback((_event, node) => {
             if (isActiveWorkflowBuiltIn) return;

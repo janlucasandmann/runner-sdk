@@ -18,6 +18,16 @@ function asString(value: unknown): string {
 }
 
 export function normalizeAssurancePersonIdentity(value: unknown): AssurancePersonIdentity {
+  if (typeof value === "string") {
+    const normalizedValue = value.trim();
+    return {
+      id: normalizedValue,
+      userId: "",
+      name: normalizedValue.includes("@") ? "" : normalizedValue,
+      email: normalizedValue.includes("@") ? normalizedValue.toLowerCase() : "",
+      avatarUrl: "",
+    };
+  }
   const source = asAssuranceRecord(value);
   const id = asString(source.id || source.userId || source.user_id || source.uid || source.email);
   const userId = asString(source.userId || source.user_id || source.uid);
@@ -38,6 +48,40 @@ export function normalizeAssurancePersonIdentity(value: unknown): AssurancePerso
         source.imageUrl ||
         source.imageURL,
     ),
+  };
+}
+
+export function resolveAssurancePersonIdentity(
+  value: unknown,
+  knownIdentities: readonly unknown[] = [],
+): AssurancePersonIdentity {
+  const identity = normalizeAssurancePersonIdentity(value);
+  const identityKeys = new Set(
+    [identity.userId, identity.email, identity.id]
+      .map((key) => key.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  const matchingIdentity = knownIdentities
+    .map(normalizeAssurancePersonIdentity)
+    .filter((candidate) => candidate.id || candidate.userId || candidate.email || candidate.name)
+    .find((candidate) => {
+      const candidateKeys = [candidate.userId, candidate.email, candidate.id]
+        .map((key) => key.trim().toLowerCase())
+        .filter(Boolean);
+      if (candidateKeys.some((key) => identityKeys.has(key))) return true;
+      const identityName = identity.name.trim().toLowerCase();
+      const candidateName = candidate.name.trim().toLowerCase();
+      return Boolean(!identityKeys.size && identityName && identityName === candidateName);
+    });
+  if (!matchingIdentity) return identity;
+  const identityName = identity.name.trim();
+  const identityNameIsIdentifier = identityKeys.has(identityName.toLowerCase());
+  return {
+    id: identity.id || matchingIdentity.id,
+    userId: identity.userId || matchingIdentity.userId,
+    name: matchingIdentity.name || (identityNameIsIdentifier ? "" : identityName),
+    email: matchingIdentity.email || identity.email,
+    avatarUrl: matchingIdentity.avatarUrl || identity.avatarUrl,
   };
 }
 
@@ -106,6 +150,16 @@ export function getAssurancePolicyCreatorIdentity(policy: unknown): AssurancePer
     email: nestedIdentity.email || direct.email,
     avatarUrl: nestedIdentity.avatarUrl || direct.avatarUrl,
   };
+}
+
+export function resolveAssurancePolicyCreatorIdentity(
+  policy: unknown,
+  knownIdentities: readonly unknown[] = [],
+): AssurancePersonIdentity {
+  return resolveAssurancePersonIdentity(
+    getAssurancePolicyCreatorIdentity(policy),
+    knownIdentities,
+  );
 }
 
 export function initializeAssurancePolicyIdentityMetadata(

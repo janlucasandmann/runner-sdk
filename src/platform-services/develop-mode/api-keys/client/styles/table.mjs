@@ -4,6 +4,22 @@ export const API_KEYS_TABLE_CSS = `      .playground-settings-api-keys-table {
         width: 100%;
       }
 
+      .playground-settings-api-keys-platform-table {
+        --platform-data-table-surface: transparent;
+        --platform-data-table-body-background: transparent;
+        --platform-data-table-row-background: transparent;
+        --platform-data-table-header-background: transparent;
+        --platform-data-table-sticky-background: transparent;
+      }
+
+      .playground-settings-api-keys-platform-table.platform-data-table.is-fill-layout.is-minimalistic-ui > .platform-data-table__surface,
+      .playground-settings-api-keys-platform-table.platform-data-table.is-minimalistic-ui .platform-data-table__sticky,
+      .playground-settings-api-keys-platform-table.platform-data-table.is-minimalistic-ui .platform-data-table__header-group,
+      .playground-settings-api-keys-platform-table.platform-data-table.is-minimalistic-ui .platform-data-table__header,
+      .playground-settings-api-keys-platform-table.platform-data-table.is-minimalistic-ui .platform-data-table__scroll {
+        background: transparent;
+      }
+
       .playground-settings-api-keys-table-header,
       .playground-settings-api-keys-table-row {
         display: grid;

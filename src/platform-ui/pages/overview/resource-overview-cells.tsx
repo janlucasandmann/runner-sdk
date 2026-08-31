@@ -9,6 +9,7 @@ interface ResourceOverviewIdentityCellProps {
   fallback?: string;
   icon?: ComponentType<{ width?: number; height?: number; strokeWidth?: number }>;
   iconClassName?: string;
+  className?: string;
   size?: ResourceOverviewIdentitySize;
 }
 
@@ -59,10 +60,11 @@ export function ResourceOverviewIdentityCell({
   fallback = "",
   icon: Icon,
   iconClassName = "",
+  className = "",
   size = "standard",
 }: ResourceOverviewIdentityCellProps) {
   return (
-    <div className="resource-overview-identity">
+    <div className={`resource-overview-identity${className ? ` ${className}` : ""}`}>
       <span className={`resource-overview-identity__visual is-size-${size}${iconClassName ? ` ${iconClassName}` : ""}`} aria-hidden="true">
         {imageUrl ? <img src={imageUrl} alt="" className={imageClassName} /> : Icon ? <Icon width={17} height={17} strokeWidth={1.8} /> : fallback}
       </span>

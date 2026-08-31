@@ -26,6 +26,7 @@ export const METRONOME_APP_STATE_SCRIPT = `
         const [optimisticMetronomeRunEntries, setOptimisticMetronomeRunEntries] = useState({});
         const [absorbedMetronomeTriggerThreadIds, setAbsorbedMetronomeTriggerThreadIds] = useState({});
         const [metronomeRunStatusByKey, setMetronomeRunStatusByKey] = useState({});
+        const [metronomeComposerWorkflowTriggers, setMetronomeComposerWorkflowTriggers] = useState([]);
         const metronomeRunTraceSelectionRef = useRef(null);
         const metronomeSidebarRunsLoadKeyRef = useRef("");
         const metronomeRunTraceSeenStepKeysRef = useRef({

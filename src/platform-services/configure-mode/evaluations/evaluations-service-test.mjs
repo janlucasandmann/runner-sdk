@@ -39,6 +39,14 @@ assert.equal(
   PLAYGROUND_EVALUATIONS_CSS,
 );
 assert.match(EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation, /createPlaygroundEvaluationId/);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.views,
+  /resolvePlaygroundEvaluationCreatorIdentity\(set, \[currentEvaluationCreator\]\)/,
+);
+assert.match(
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.tables,
+  /resolvePlaygroundEvaluationCreatorIdentity\(set, \[currentEvaluationCreator\]\)/,
+);
 assert.doesNotMatch(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.execution,
   /new Function\("input",\s*"expected",\s*"actual"/,
@@ -60,8 +68,9 @@ const {
   normalizePlaygroundEvaluationDataRow: normalizeClientEvaluationDataRow,
   normalizePlaygroundEvaluationRun: normalizeClientEvaluationRun,
   normalizePlaygroundEvaluationSet: normalizeOwnershipEvaluationSet,
+  resolvePlaygroundEvaluationCreatorIdentity: resolveClientEvaluationCreatorIdentity,
 } = new Function(
-  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation + "; return { createPlaygroundEvaluationSetDraft, normalizePlaygroundEvaluationDataRow, normalizePlaygroundEvaluationRun, normalizePlaygroundEvaluationSet };",
+  EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.foundation + "; return { createPlaygroundEvaluationSetDraft, normalizePlaygroundEvaluationDataRow, normalizePlaygroundEvaluationRun, normalizePlaygroundEvaluationSet, resolvePlaygroundEvaluationCreatorIdentity };",
 )();
 assert.deepEqual(createClientEvaluationSetDraft().dataRows, []);
 assert.equal(normalizeClientEvaluationDataRow({ split: "holdout" }).optimizationRole, "holdout");
@@ -96,6 +105,50 @@ const evaluationWithKnownCreator = normalizeOwnershipEvaluationSet({
 });
 assert.equal(evaluationWithKnownCreator.creator.userId, "creator_1");
 assert.equal(evaluationWithKnownCreator.createdByUserId, "creator_1");
+assert.deepEqual(
+  resolveClientEvaluationCreatorIdentity({
+    id: "evaluation_legacy_creator",
+    createdBy: "creator_1",
+  }, [{
+    id: "creator_1",
+    userId: "creator_1",
+    name: "Jan Luca Sandmann",
+    email: "jan@example.com",
+    avatarUrl: "/jan.png",
+  }]),
+  {
+    id: "creator_1",
+    userId: "creator_1",
+    name: "Jan Luca Sandmann",
+    email: "jan@example.com",
+    avatarUrl: "/jan.png",
+  },
+);
+assert.deepEqual(
+  resolveClientEvaluationCreatorIdentity({
+    id: "evaluation_other_creator",
+    creator: {
+      id: "creator_2",
+      userId: "creator_2",
+      name: "Other User",
+      email: "other@example.com",
+      avatarUrl: "/other.png",
+    },
+  }, [{
+    id: "creator_1",
+    userId: "creator_1",
+    name: "Jan Luca Sandmann",
+    email: "jan@example.com",
+    avatarUrl: "/jan.png",
+  }]),
+  {
+    id: "creator_2",
+    userId: "creator_2",
+    name: "Other User",
+    email: "other@example.com",
+    avatarUrl: "/other.png",
+  },
+);
 const historicalClientRun = normalizeClientEvaluationRun({
   id: "historical_run_1",
   evaluationId: "evaluation_1",
@@ -747,6 +800,7 @@ assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /evaluationsPageMode ===
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationRequest: requestPlatformNavigation/);
 assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "evaluations"/);
+assert.match(EVALUATIONS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: EvaluationsSidebarIcon/);
 assert.match(
   EVALUATIONS_PAGE_SCRIPT_FRAGMENTS.dialogs,
   /const breadcrumbActionsPortal = evaluationBreadcrumbActionsContainer[\s\S]*?React\.createElement\(PlatformPopup, \{[\s\S]*?variant: "minimal"/,

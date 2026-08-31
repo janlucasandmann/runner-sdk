@@ -12,7 +12,7 @@ import {
   Server,
   Shield,
   SlidersHorizontal,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import { PlatformPopupSurface } from "../../composite/popup/index.js";
 import { LogHeader, LogPanel } from "./log-card.js";

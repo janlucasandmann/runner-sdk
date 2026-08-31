@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ArrowUpFromLine, Shield, UserRound } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Shield, UserRound } from "../../components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useRef, type ElementType } from "react";
 import {
   getPlatformPermissionAccessProgress,

@@ -5,7 +5,7 @@ import {
   Play,
   Save,
   ShieldCheck,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { createPortal } from "react-dom";
 import {
   useCallback,
@@ -40,11 +40,17 @@ import {
 } from "../../../../../platform-ui/pages/details/index.js";
 import type { AssuranceApi } from "../api/index.js";
 import type {
+  AssurancePersonIdentityInput,
   AssurancePolicy,
   AssurancePolicyDefinition,
   AssurancePolicyVersion,
   AssuranceRun,
   AssuranceWorkspaceOption,
+} from "../domain/index.js";
+import {
+  normalizeAssurancePersonIdentity,
+  resolveAssurancePersonIdentity,
+  resolveAssurancePolicyCreatorIdentity,
 } from "../domain/index.js";
 import { AssurancePolicyAccessSettings } from "./assurance-policy-access-settings.js";
 
@@ -55,6 +61,7 @@ interface AssurancePolicyDetailPageProps {
   api: AssuranceApi;
   projects: readonly AssuranceWorkspaceOption[];
   workspaceTeams?: readonly unknown[];
+  currentUser?: AssurancePersonIdentityInput;
   controlsPortalId?: string;
   sectionControlsPortalId?: string;
   onPolicyChange: (policy: AssurancePolicy) => void;
@@ -149,6 +156,7 @@ export function AssurancePolicyDetailPage({
   api,
   projects,
   workspaceTeams = [],
+  currentUser = {},
   controlsPortalId,
   sectionControlsPortalId,
   onPolicyChange,
@@ -250,6 +258,15 @@ export function AssurancePolicyDetailPage({
   const projectLabel = projects.find((project) => project.id === policy.projectId)?.name
     || "Unassigned";
   const publishedVersion = versions.find((version) => version.id === policy.publishedVersionId);
+  const normalizedCurrentUser = normalizeAssurancePersonIdentity(currentUser);
+  const creatorIdentity = resolveAssurancePolicyCreatorIdentity(policy, [normalizedCurrentUser]);
+  const policyMetadata = policy.metadata && typeof policy.metadata === "object"
+    ? policy.metadata
+    : {};
+  const ownerIdentity = resolveAssurancePersonIdentity(
+    policyMetadata.owner || creatorIdentity,
+    [normalizedCurrentUser, creatorIdentity],
+  );
 
   async function savePolicy() {
     if (!dirty || !parsedDefinition.definition || busyAction) return;
@@ -529,6 +546,136 @@ export function AssurancePolicyDetailPage({
       ariaLabel="Assurance Policy section"
     />
   );
+  const settings = activeTab === "settings" ? {
+    ariaLabel: "Assurance Policy settings",
+    className: "assurance-settings-page",
+    identity: {
+      icon: <ShieldCheck width={24} height={24} strokeWidth={1.7} aria-hidden="true" />,
+      title: name,
+      description,
+      onTitleChange: setName,
+      onDescriptionChange: setDescription,
+      titlePlaceholder: "Assurance Policy",
+      descriptionPlaceholder: "Describe the release contract this policy enforces",
+      titleAriaLabel: "Assurance Policy name",
+      descriptionAriaLabel: "Assurance Policy description",
+    },
+    details: {
+      variant: "standard" as const,
+      customAttributes: [
+        {
+          id: "status",
+          label: "Status",
+          value: (
+            <PlatformSelector
+              value={status}
+              options={[
+                { value: "draft", label: "Draft" },
+                { value: "active", label: "Active" },
+                { value: "archived", label: "Archived" },
+              ]}
+              fullWidth
+              ariaLabel="Assurance Policy status"
+              onValueChange={setStatus}
+            />
+          ),
+        },
+        { id: "gates", label: "Gates", value: gateRows.length },
+        {
+          id: "approval",
+          label: "Approval",
+          value: formatStatus(policy.definition.approval.mode),
+        },
+        {
+          id: "published",
+          label: "Published",
+          value: publishedVersion ? `v${publishedVersion.version}` : "None",
+        },
+        { id: "created", label: "Created", value: formatTimestamp(policy.createdAt) },
+      ],
+      updatedAt: policy.updatedAt,
+      creator: {
+        value: creatorIdentity.id || creatorIdentity.userId || creatorIdentity.email || "assurance-creator",
+        name: creatorIdentity.name || creatorIdentity.email || "Unknown",
+        email: creatorIdentity.email,
+        avatarUrl: creatorIdentity.avatarUrl,
+      },
+      owner: {
+        value: ownerIdentity.id || ownerIdentity.userId || ownerIdentity.email || "assurance-owner",
+        name: ownerIdentity.name || ownerIdentity.email || "Unknown",
+        email: ownerIdentity.email,
+        avatarUrl: ownerIdentity.avatarUrl,
+      },
+      scope: {
+        values: projectId ? [projectId] : [],
+        options: projects.map((project) => ({
+          value: project.id,
+          label: project.name,
+        })),
+        onValuesChange: (values: readonly string[]) => setProjectId(values.at(-1) || ""),
+        ariaLabel: "Choose Assurance Policy scope",
+        disabled: Boolean(busyAction),
+      },
+      primaryActions: [{
+        id: "run-assurance",
+        label: "Run Assurance",
+        onSelect: () => onRun(policy),
+        disabled: Boolean(busyAction) || policy.status === "archived" || !policy.publishedVersionId,
+      }] as const,
+      className: "assurance-detail-sidebar-card",
+    },
+    additionalSections: (
+      <PlatformSettingsSectionList>
+        <PlatformSettingsSection
+          title="Version history"
+          description="Save Changes creates and publishes a new immutable policy snapshot."
+          bodyPresentation="flush"
+        >
+          <PlatformDataTable
+            rows={versions}
+            columns={versionColumns}
+            getRowId={(version) => version.id}
+            ariaLabel="Assurance Policy versions"
+            variant="minimalistic-ui"
+            surface="plain"
+            sticky={false}
+            pagination={false}
+            getRowActions={(version) => [{
+              id: "publish",
+              label: version.id === policy.publishedVersionId ? "Published" : "Publish",
+              icon: CheckCircle2,
+              disabled: version.id === policy.publishedVersionId || Boolean(busyAction),
+              onSelect: () => void publishVersion(version),
+            }]}
+            emptyState="No saved policy versions."
+          />
+        </PlatformSettingsSection>
+        <PlatformSettingsSection
+          title="Trust boundary"
+          description="Assurance decisions are derived from version-pinned authoritative evidence."
+        >
+          <dl className="assurance-evidence-identity">
+            <div><dt>Policy</dt><dd>Immutable version</dd></div>
+            <div><dt>Evidence</dt><dd>Authoritative services</dd></div>
+            <div><dt>Decision</dt><dd>Server derived</dd></div>
+            <div><dt>Approval</dt><dd>Fingerprint bound</dd></div>
+          </dl>
+        </PlatformSettingsSection>
+      </PlatformSettingsSectionList>
+    ),
+    access: (
+      <AssurancePolicyAccessSettings
+        policy={policy}
+        api={api}
+        workspaceTeams={workspaceTeams}
+        onPolicyChange={onPolicyChange}
+        onPermissionDetailOpenChange={setAccessDetailOpen}
+      />
+    ),
+    accessDetailOpen,
+    detailsSidebarAriaLabel: "Assurance Policy information",
+    detailsSidebarClassName: "assurance-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+  } : undefined;
 
   return (
     <>
@@ -537,6 +684,7 @@ export function AssurancePolicyDetailPage({
         ? createPortal(sectionSwitch, sectionControlsPortalTarget)
         : null}
       <PlatformServiceDetailPage
+        settings={settings}
         properties={properties}
         ariaLabel={`${policy.name} Assurance Policy`}
         sidebarAriaLabel="Assurance Policy information"
@@ -634,104 +782,6 @@ export function AssurancePolicyDetailPage({
           </div>
         ) : null}
 
-        {activeTab === "settings" ? (
-          <div className="assurance-detail-stack">
-            <PlatformSettingsSectionList>
-              <PlatformSettingsSection
-                title="Properties"
-                description="Bind this versioned release contract to the project it protects."
-              >
-                <div className="assurance-form-grid">
-                  <label className="assurance-form-field">
-                    <span>Name</span>
-                    <input value={name} onChange={(event) => setName(event.currentTarget.value)} />
-                  </label>
-                  <div className="assurance-form-field">
-                    <span>Status</span>
-                    <PlatformSelector
-                      value={status}
-                      options={[
-                        { value: "draft", label: "Draft" },
-                        { value: "active", label: "Active" },
-                        { value: "archived", label: "Archived" },
-                      ]}
-                      fullWidth
-                      ariaLabel="Assurance Policy status"
-                      onValueChange={setStatus}
-                    />
-                  </div>
-                  <label className="assurance-form-field is-span-2">
-                    <span>Description</span>
-                    <textarea
-                      rows={3}
-                      value={description}
-                      onChange={(event) => setDescription(event.currentTarget.value)}
-                    />
-                  </label>
-                  <div className="assurance-form-field is-span-2">
-                    <span>Project</span>
-                    <PlatformSelector
-                      value={projectId}
-                      options={[
-                        { value: "", label: "Unassigned" },
-                        ...projects.map((project) => ({
-                          value: project.id,
-                          label: project.name,
-                          description: project.description,
-                        })),
-                      ]}
-                      fullWidth
-                      ariaLabel="Assurance Policy project"
-                      onValueChange={setProjectId}
-                    />
-                  </div>
-                </div>
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Version history"
-                description="Save Changes creates and publishes a new immutable policy snapshot."
-                bodyPresentation="flush"
-              >
-                <PlatformDataTable
-                  rows={versions}
-                  columns={versionColumns}
-                  getRowId={(version) => version.id}
-                  ariaLabel="Assurance Policy versions"
-                  variant="minimalistic-ui"
-                  surface="plain"
-                  sticky={false}
-                  pagination={false}
-                  getRowActions={(version) => [{
-                    id: "publish",
-                    label: version.id === policy.publishedVersionId ? "Published" : "Publish",
-                    icon: CheckCircle2,
-                    disabled: version.id === policy.publishedVersionId || Boolean(busyAction),
-                    onSelect: () => void publishVersion(version),
-                  }]}
-                  emptyState="No saved policy versions."
-                />
-              </PlatformSettingsSection>
-              <PlatformSettingsSection
-                title="Trust boundary"
-                description="Assurance decisions are derived from version-pinned authoritative evidence."
-              >
-                <dl className="assurance-evidence-identity">
-                  <div><dt>Policy</dt><dd>Immutable version</dd></div>
-                  <div><dt>Evidence</dt><dd>Authoritative services</dd></div>
-                  <div><dt>Decision</dt><dd>Server derived</dd></div>
-                  <div><dt>Approval</dt><dd>Fingerprint bound</dd></div>
-                </dl>
-              </PlatformSettingsSection>
-            </PlatformSettingsSectionList>
-            <AssurancePolicyAccessSettings
-              policy={policy}
-              api={api}
-              workspaceTeams={workspaceTeams}
-              onPolicyChange={onPolicyChange}
-              onPermissionDetailOpenChange={setAccessDetailOpen}
-            />
-          </div>
-        ) : null}
       </PlatformServiceDetailPage>
     </>
   );

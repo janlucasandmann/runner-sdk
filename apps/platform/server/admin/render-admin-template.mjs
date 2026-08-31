@@ -20,7 +20,11 @@ function readAdminTemplate(templateName) {
   return templateCache.get(normalizedName);
 }
 
-export function createAdminHtmlRenderer(templateName, replacements = {}) {
+export function createAdminHtmlRenderer(
+  templateName,
+  replacements = {},
+  { statusCode = 200 } = {},
+) {
   const template = readAdminTemplate(templateName);
   const html = Object.entries(replacements).reduce(
     (source, [placeholder, value]) => (
@@ -30,7 +34,7 @@ export function createAdminHtmlRenderer(templateName, replacements = {}) {
   );
 
   return function serveAdminHtmlPage(res) {
-    res.writeHead(200, {
+    res.writeHead(statusCode, {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",

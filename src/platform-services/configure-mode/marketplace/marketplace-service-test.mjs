@@ -70,7 +70,7 @@ assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.selectedTitle, /return "Marketplac
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavigation, /label: "Marketplace"/);
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.pageView, /function renderResourceTemplatesPage/);
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Marketplace"/);
-assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: LibraryBig/);
+assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: MarketplaceSidebarIcon/);
 assert.match(MARKETPLACE_APP_SCRIPT_FRAGMENTS.topNavIcon, /normalizedLabel === "marketplace"/);
 assert.doesNotThrow(() => new Function(`
   function marketplaceHostIntegration() {

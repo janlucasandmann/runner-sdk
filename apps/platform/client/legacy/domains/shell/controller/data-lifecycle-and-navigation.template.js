@@ -3724,6 +3724,10 @@
           function handleOpenTagsShortcut() {
             openToolsView("tags", { forceOverview: true });
           }
+
+          if (typeof globalThis.window !== "undefined") {
+            globalThis.window.computerAgentsOpenConnectors = handleOpenTagsShortcut;
+          }
   
           function handleOpenSkillsShortcut() {
             openToolsView("skills", { forceOverview: true });

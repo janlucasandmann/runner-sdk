@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, TestTubeDiagonal, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, TestTubeDiagonal, Trash2 } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
@@ -6,9 +6,7 @@ import type {
 import { PlatformEmptyState } from "../../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
   createResourceOverviewColumns,
-  ResourceOverviewIdentityCell,
   ResourceOverviewPage,
-  ResourceOverviewValue,
 } from "../../../../../../platform-ui/pages/overview/index.js";
 import { FineTuningOverviewGuide } from "./fine-tuning-overview-guide.js";
 
@@ -56,51 +54,6 @@ export function FineTuningOverviewPage({
           icon: <TestTubeDiagonal width={16} height={16} strokeWidth={1.8} />,
           iconClassName: "is-optimization",
         }),
-      },
-      extensions: {
-        afterName: [
-          {
-            id: "agent",
-            header: "Agent",
-            accessor: "agentLabel",
-            sortable: true,
-            width: "minmax(180px, 0.9fr)",
-            cell: ({ row }) => (
-              <ResourceOverviewIdentityCell
-                title={row.agentLabel}
-                imageUrl={row.agentAvatarUrl}
-                fallback={row.agentFallback}
-                iconClassName="is-agent"
-                size="compact"
-              />
-            ),
-          },
-          {
-            id: "sets",
-            header: "Sets",
-            accessor: "evaluationSetCount",
-            sortable: true,
-            sortDescFirst: true,
-            width: "minmax(90px, 0.42fr)",
-            cell: ({ row }) => (
-              <ResourceOverviewValue>
-                {row.evaluationSetCount} {row.evaluationSetCount === 1 ? "set" : "sets"}
-              </ResourceOverviewValue>
-            ),
-          },
-          {
-            id: "improvement",
-            header: "Improvement",
-            accessor: "improvementScore",
-            sortable: true,
-            sortDescFirst: true,
-            width: "minmax(160px, 0.78fr)",
-            hideBelow: 780,
-            cell: ({ row }) => (
-              <ResourceOverviewValue>{row.improvementLabel}</ResourceOverviewValue>
-            ),
-          },
-        ],
       },
     }),
     [],

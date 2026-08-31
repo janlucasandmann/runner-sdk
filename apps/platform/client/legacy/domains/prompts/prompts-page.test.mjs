@@ -93,12 +93,12 @@ assert.match(
 );
 assert.match(
   promptPageSource,
-  /onClick: \(\) => onStartThread\?\.\(selectedPrompt\),[\s\S]{0,80}"New Thread"/,
+  /id: "new-thread",[\s\S]{0,80}label: "New Thread",[\s\S]{0,180}onStartThread\?\.\(selectedPrompt\)/,
   "Prompt Settings must pass the selected prompt to its New Thread action.",
 );
 assert.match(
   promptPageSource,
-  /const promptSettingsDetails = !isDraft && selectedPrompt[\s\S]{0,700}owner: promptOwnerIdentity,[\s\S]{0,300}ownerOptions: promptOwnerOptions,[\s\S]{0,300}onOwnerTransfer: transferPromptOwner/,
+  /const promptSettingsDetails = \{[\s\S]{0,900}owner: promptOwnerIdentity,[\s\S]{0,300}ownerOptions: promptOwnerOptions,[\s\S]{0,300}onOwnerTransfer: !isDraft && selectedPrompt \? transferPromptOwner : undefined/,
   "Prompt Settings must render ownership through the centralized resource sidebar and owner selector.",
 );
 assert.doesNotMatch(
@@ -183,7 +183,7 @@ assert.match(
 );
 assert.match(
   versioningCoreSource,
-  /function renderPlaygroundVersionChangesPage[\s\S]{0,500}React\.createElement\(PlatformVersionChangesPage/,
+  /function renderPlaygroundVersionChangesModal[\s\S]{0,600}React\.createElement\(PlatformVersionChangesModal/,
   "Legacy resource screens must delegate version comparisons to the centralized versioning component.",
 );
 assert.match(

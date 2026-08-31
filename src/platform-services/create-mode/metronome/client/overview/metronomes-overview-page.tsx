@@ -1,22 +1,25 @@
-import { Copy, Metronome, Plus, RotateCcw, SquarePen, Trash2, UsersRound } from "lucide-react";
+import {
+  Copy,
+  Metronome,
+  Plus,
+  RefreshCcwDot,
+  RefreshCw,
+  RotateCcw,
+  SquarePen,
+  Trash2,
+  UsersRound,
+} from "lucide-react";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
-  PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import {
-  PlatformLabel,
-  type PlatformLabelVariant,
-} from "../../../../../platform-ui/components/ui/label/index.js";
-import {
+  createResourceOverviewColumns,
   ResourceOverviewPage,
-  ResourceOverviewIdentityCell,
-  ResourceOverviewValue,
 } from "../../../../../platform-ui/pages/overview/index.js";
 import {
   type MetronomeOverviewRow,
-  type MetronomeOverviewStatus,
 } from "./metronomes-overview-model.js";
 import { MetronomesOverviewGuide } from "./metronomes-overview-guide.js";
 
@@ -44,25 +47,6 @@ export interface MetronomesOverviewPageProps {
   onLoadMore?: () => void | Promise<void>;
 }
 
-function getOwnerIdentity(row: MetronomeOverviewRow) {
-  const candidateName = String(row.ownerName || row.creatorName || "").trim();
-  const name = candidateName && candidateName.toLowerCase() !== "me"
-    ? candidateName
-    : "User";
-  return {
-    name,
-    avatarUrl: row.ownerAvatarUrl || row.creatorAvatarUrl,
-    fallback: row.ownerFallback || row.creatorFallback,
-  };
-}
-
-function getStatusVariant(status: MetronomeOverviewStatus): PlatformLabelVariant {
-  if (status === "active" || status === "default") return "green";
-  if (status === "shared") return "blue";
-  if (status === "paused") return "yellow";
-  return "gray";
-}
-
 export function MetronomesOverviewPage({
   rows,
   controlsPortalId,
@@ -86,57 +70,29 @@ export function MetronomesOverviewPage({
     [rows],
   );
 
-  const columns = useMemo<PlatformDataTableColumn<MetronomeOverviewRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        accessor: "name",
-        sortable: true,
-        width: "minmax(220px, 1.35fr)",
-        cell: ({ row }) => <span className="resource-overview-identity__title">{row.name}</span>,
-      },
-      {
-        id: "status",
-        header: "Status",
-        accessor: "statusRank",
-        sortable: true,
-        width: "minmax(105px, 0.62fr)",
-        cell: ({ row }) => (
-          <PlatformLabel variant={getStatusVariant(row.status)}>{row.statusLabel}</PlatformLabel>
-        ),
-      },
-      {
-        id: "owner",
-        header: "Owner",
-        accessor: (row) => getOwnerIdentity(row).name,
-        sortable: true,
-        width: "minmax(170px, 0.9fr)",
-        hideBelow: 860,
-        cell: ({ row }) => {
-          const owner = getOwnerIdentity(row);
-          return (
-            <ResourceOverviewIdentityCell
-              title={owner.name}
-              imageUrl={owner.avatarUrl}
-              fallback={owner.fallback}
-              iconClassName="is-creator"
-            />
-          );
+  const columns = useMemo(
+    () => createResourceOverviewColumns<MetronomeOverviewRow>({
+      name: {
+        getVisual: (row) => {
+          if (row.visualKind === "loop") {
+            return {
+              icon: <RefreshCw width={16} height={16} strokeWidth={1.9} />,
+              iconClassName: "is-metronome is-loop",
+            };
+          }
+          if (row.visualKind === "mission-control") {
+            return {
+              icon: <RefreshCcwDot width={16} height={16} strokeWidth={1.9} />,
+              iconClassName: "is-metronome is-mission-control",
+            };
+          }
+          return {
+            icon: <Metronome width={16} height={16} strokeWidth={1.8} />,
+            iconClassName: "is-metronome",
+          };
         },
       },
-      {
-        id: "lastRun",
-        header: "Last run",
-        accessor: (row) => row.sortTimestamp || 0,
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(125px, 0.72fr)",
-        cell: ({ row }) => (
-          <ResourceOverviewValue title={row.lastRunTitle}>{row.lastRunLabel}</ResourceOverviewValue>
-        ),
-      },
-    ],
+    }),
     [],
   );
 
@@ -271,7 +227,7 @@ export function MetronomesOverviewPage({
         ariaLabel: "Metronomes",
         className: "resource-overview-table is-metronomes",
         variant: "catalog-ui",
-        sorting: { defaultValue: { id: "lastRun", direction: "desc" } },
+        sorting: { defaultValue: { id: "updated", direction: "desc" } },
         selection: {
           enabled: true,
           isRowSelectable: (row) => !row.isHiddenTeamShared,
@@ -291,7 +247,7 @@ export function MetronomesOverviewPage({
             placeholder: "Search metronomes",
             getSearchText: (row) =>
               row.searchText ||
-              [row.name, row.statusLabel, row.triggerLabel, getOwnerIdentity(row).name].join(" "),
+              [row.name, row.description, row.statusLabel, row.triggerLabel, row.creatorName].join(" "),
           },
           primaryAction: {
             label: "Metronome",

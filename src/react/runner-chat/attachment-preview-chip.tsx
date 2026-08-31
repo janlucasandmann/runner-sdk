@@ -1,13 +1,17 @@
 import {
-  LoaderCircle as LucideLoaderCircle,
   LibraryBig as LucideLibraryBig,
+  LoaderCircle as LucideLoaderCircle,
   MessageSquare as LucideMessageSquare,
   MessageSquareText as LucideMessageSquareText,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   PlatformAttachmentPreview,
   type PlatformAttachmentPreviewVariant,
 } from "../../platform-ui/components/composite/attachments/index.js";
+import {
+  PlatformFileExplorerFileIcon,
+  resolvePlatformFileExplorerFileKind,
+} from "../../platform-ui/components/composite/file-explorer/index.js";
 import { RunnerImagePreviewSurface } from "../runner-image-preview-surface.js";
 import {
   LazyMediaPreviewMount,
@@ -28,10 +32,6 @@ import { isRunnerEmailContextAttachment } from "./turn-attachments.js";
 
 const RUNNER_EMAIL_ATTACHMENT_FILE_ICON_URL = new URL(
   "../../platform-ui/components/thread-components/assets/email-attachment.webp",
-  import.meta.url,
-).toString();
-const RUNNER_TEXT_FILE_ICON_URL = new URL(
-  "../../platform-ui/components/thread-components/assets/txtfile.png",
   import.meta.url,
 ).toString();
 const RUNNER_IMAGE_FILE_ICON_URL = new URL(
@@ -66,6 +66,13 @@ export function RunnerAttachmentPreviewChip({
     : "";
   const previewUrl = getAttachmentPreviewUrl(attachment);
   const isImage = attachment.type === "image";
+  const attachmentMimeType = isLocalAttachmentRecord(attachment)
+    ? attachment.file.type
+    : attachment.mimeType;
+  const attachmentFileKind = resolvePlatformFileExplorerFileKind({
+    name: filename,
+    mimeType: attachmentMimeType,
+  });
   const isGithubAttachment = isGithubAttachmentSelection(attachment);
   const referenceType = attachment.referenceType;
   const isPromptReference = referenceType === "prompt";
@@ -123,7 +130,12 @@ export function RunnerAttachmentPreviewChip({
         />
       );
     }
-    return <img src={RUNNER_TEXT_FILE_ICON_URL} alt="" aria-hidden="true" draggable={false} />;
+    return (
+      <PlatformFileExplorerFileIcon
+        kind={attachmentFileKind}
+        className="runner-attachment-file-icon"
+      />
+    );
   }
 
   const attachmentTypeLabel = isPromptReference
@@ -132,11 +144,11 @@ export function RunnerAttachmentPreviewChip({
       ? "Thread"
       : isKnowledgeReference
         ? "Knowledge"
-      : isEmailContextAttachment
-        ? "Email"
-        : isGithubAttachment && attachment.githubSelectionType === "repo"
-          ? "Repository"
-          : "File";
+        : isEmailContextAttachment
+          ? "Email"
+          : isGithubAttachment && attachment.githubSelectionType === "repo"
+            ? "Repository"
+            : "File";
   const branchMetadata = githubBranch ? <span title={githubBranch}>{githubBranch}</span> : null;
   const imageContent = previewUrl ? (
     <LazyMediaPreviewMount

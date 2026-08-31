@@ -474,8 +474,7 @@ export const METRONOME_INSPECTOR_04_FRAGMENT = String.raw`                      
                               Object.entries(fieldTypeLabels).map(([type, label]) =>
                                 React.createElement("option", { key: type, value: type }, label)
                               )
-                            ),
-                            React.createElement(ChevronDown, { className: "playground-database-browser-select-chevron", width: 16, height: 16, strokeWidth: 1.9 })
+                            )
                           )
                         )
                       ),
@@ -1231,8 +1230,7 @@ export const METRONOME_INSPECTOR_04_FRAGMENT = String.raw`                      
                 renderSelectedNodeSettings()
                 )
 		              ),
-              renderMetronomeAttachmentModalPortal(),
-              renderMetronomeFieldTooltipPortal()
+              renderMetronomeAttachmentModalPortal()
 		            );
           };
 `;

@@ -1,4 +1,4 @@
-import { Bot, Cpu, Layers3, Loader2, Play, ShieldCheck } from "lucide-react";
+import { Bot, Cpu, Layers3, Loader2, Play, ShieldCheck } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
@@ -83,7 +83,7 @@ export function TestRunCreateModal({
       return;
     }
     if (enabledCaseCount === 0) {
-      setError("The published version has no enabled test cases.");
+      setError("The published version has no enabled scenarios.");
       return;
     }
     if (requiresEnvironment && !environmentId) {
@@ -162,7 +162,7 @@ export function TestRunCreateModal({
             <strong>{publishedVersion ? `v${publishedVersion.version} · ${publishedVersion.label}` : "Not published"}</strong>
           </div>
           <div>
-            <span>Enabled cases</span>
+            <span>Enabled scenarios</span>
             <strong>{enabledCaseCount}</strong>
           </div>
         </div>

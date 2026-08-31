@@ -9,6 +9,10 @@ import {
 import { readPlatformCompositionSource } from "../../../../apps/platform/testing/platform-composition-source.mjs";
 
 assert.match(PLAYGROUND_TESTS_CSS, /\.resource-overview-page\.is-tests/);
+assert.match(
+  PLAYGROUND_TESTS_CSS,
+  /\.tests-detail-page:is\(\.is-overview-tab,\s*\.is-cases-tab\)\s*\{[\s\S]*?max-width:\s*calc\(var\(--platform-page-content-max-width,\s*87\.5rem\)\s*-\s*88px\)/,
+);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestPlanId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /selectedTestCaseId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.state, /testsOverviewScope/);
@@ -16,6 +20,7 @@ assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestsPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestCaseDetailPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestRawConfigurationPage/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.navigation, /openTestRunTechnicalDetailsPage/);
+assert.match(TESTS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: TestsSidebarIcon/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyCapture, /testCaseId/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "case"/);
 assert.match(TESTS_APP_SCRIPT_FRAGMENTS.historyRestore, /entry\.mode === "configuration"/);
@@ -127,7 +132,8 @@ assert.match(detailSource, /PlatformSwitch/);
 assert.match(detailSource, /PlatformButtonSelector/);
 assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformLabel/);
-assert.match(detailSource, /onRowActivate=\{\(testCase\) => onOpenCase/);
+assert.match(detailSource, /TestScenarioWorkspace/);
+assert.match(detailSource, /onTry=\{onTryScenarios\}/);
 assert.match(detailSource, /publishVersion/);
 assert.match(detailSource, /PlatformResourceVersionLabel/);
 assert.match(detailSource, /PlatformVersionHistorySidebar/);
@@ -199,7 +205,9 @@ assert.match(runDetailSource, /PlatformButtonSelector/);
 assert.doesNotMatch(runDetailSource, /tests-run-summary-card/);
 assert.match(runDetailSource, /showXAxisLabels=\{false\}/);
 assert.match(runDetailSource, /label: "Pass rate"/);
-assert.match(runDetailSource, /Case results/);
+assert.match(runDetailSource, /Failures first/);
+assert.match(runDetailSource, /Attempt history/);
+assert.match(runDetailSource, /onCancel/);
 assert.match(runDetailSource, /getRowActions=/);
 assert.match(runDetailSource, /label: expandedResultIds\.has\(result\.id\) \? "Collapse" : "Expand"/);
 assert.doesNotMatch(runDetailSource, /tests-run-case-output__icon/);
@@ -304,9 +312,9 @@ assert.match(
 );
 assert.doesNotMatch(caseDetailSource, /PlatformServiceDetailPropertyList|PlatformUiCard/);
 assert.match(caseDetailSource, /Save Changes/);
-assert.match(caseDetailSource, /import \{ Bookmark,[\s\S]*?from "lucide-react"/);
+assert.match(caseDetailSource, /import \{ Bookmark,[\s\S]*?from "../../../platform-ui/components/ui/hugeicons-compat.js"/);
 assert.match(caseDetailSource, /<Bookmark width=\{14\} height=\{14\}/);
-assert.match(caseDetailSource, /Delete Case/);
+assert.match(caseDetailSource, /Delete Scenario/);
 
 const caseCodeEditorSource = await fs.readFile(
   new URL("./client/page/test-case-code-editor.tsx", import.meta.url),

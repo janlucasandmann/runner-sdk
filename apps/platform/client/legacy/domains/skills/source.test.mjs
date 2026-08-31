@@ -20,7 +20,7 @@ assert.deepEqual(
 );
 assert.equal(
   createHash("sha256").update(SKILLS_PAGE_SCRIPT).digest("hex"),
-  "6e0aadbcbe6414c3055090cfbfaac4682ac8a556543f207c406772ee617ab208",
+  "5a408567660b95bab234e0cede1c2f30fc54c7fa8c4008aea74e83e04fb1d72f",
   "The Skills fragment composition must remain byte-compatible with the reviewed controller.",
 );
 
@@ -45,7 +45,7 @@ for (const functionName of [
   "renderSkillSettingsComposition",
   "renderSkillTitleActions",
   "renderSkillSendToTeamModal",
-  "renderSkillVersionChangesSurface",
+  "renderSkillVersionChangesModal",
   "renderSkillVersionEditDialog",
   "renderSkillVersionSaveDialog",
 ]) {
@@ -123,8 +123,18 @@ assert.match(
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,
-  /const rows = scopedOverviewSkills\.map[\s\S]{0,240}getSelectedSkillOwnerIdentity\(skill\)[\s\S]{0,1400}ownerName: String\(ownerIdentity\?\.name[\s\S]{0,200}ownerAvatarUrl: String\(ownerIdentity\?\.avatarUrl/,
+  /const rows = scopedOverviewSkills\.map[\s\S]{0,700}getSelectedSkillOwnerIdentity\(skill\)[\s\S]{0,1700}ownerName: String\(ownerIdentity\?\.name[\s\S]{0,200}ownerAvatarUrl: String\(ownerIdentity\?\.avatarUrl/,
   "Skill overview rows must carry the authoritative owner identity.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /const rows = scopedOverviewSkills\.map[\s\S]{0,500}skill\?\.isCustom[\s\S]{0,500}Date\.parse[\s\S]{0,2600}updatedLabel: formatPlatformResourceUpdatedAt\(updatedAt\)/,
+  "Skill Overview must format real custom Skill updates while leaving system dates unavailable.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /icon: renderSkillIcon\(skill,[\s\S]{0,140}iconColor: skill\?\.isCustom[\s\S]{0,140}getSelectedSkillIconColor\(skill\?\.metadata\)/,
+  "Skill Overview rows must carry the same persisted icon color used by Skill details.",
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,
@@ -143,8 +153,13 @@ assert.match(
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,
-  /React\.createElement\(PlatformServiceDetailPropertyList[\s\S]{0,1500}label: "Creator"[\s\S]{0,1500}label: "Owner"/,
-  "Skill Settings must use the centralized service detail property list for its sidebar.",
+  /details: \{[\s\S]{0,100}variant: "standard"[\s\S]{0,900}creator: \{[\s\S]{0,900}owner: \{/,
+  "Skill Settings must use the centralized standard details contract for Creator and Owner.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /function renderSkillIdentitySection\(skillResourceMetadata\) \{[\s\S]{0,180}React\.createElement\(PlatformFileResourceIdentity,[\s\S]{0,420}React\.createElement\(ProjectIconPicker,[\s\S]{0,2600}descriptionAriaLabel: "Skill description"/,
+  "Skill Code must use the shared editable file-resource identity header.",
 );
 assert.doesNotMatch(
   SKILLS_PAGE_SCRIPT,
@@ -153,12 +168,42 @@ assert.doesNotMatch(
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,
-  /label: "Owner"[\s\S]{0,700}React\.createElement\(PlatformOwnerSelector,[\s\S]{0,900}onTransfer: transferSelectedSkillOwner/,
+  /details: \{[\s\S]{0,100}variant: "standard"[\s\S]{0,260}updatedAt: selectedSkill\.isCustom[\s\S]{0,140}selectedSkill\.updatedAt \|\| selectedSkill\.createdAt \|\| null[\s\S]{0,80}: null/,
+  "Skill Settings must show custom Skill update timestamps and no synthetic date for system Skills.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /scope: false,\s+primaryActions:/,
+  "Skill Settings must explicitly disable the centralized Scope attribute.",
+);
+assert.doesNotMatch(
+  SKILLS_PAGE_SCRIPT,
+  /details: \{[\s\S]{0,100}variant: "standard"[\s\S]{0,420}id: "(?:status|created)"/,
+  "Skill Settings must not render Status or Created above the shared details attributes.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /React\.createElement\(RunnerSourceGithubConnectorSettings,[\s\S]{0,240}resourceKind: "skill"[\s\S]{0,900}onCreateRepository: createSelectedSkillGithubRepository,[\s\S]{0,180}onRepositoryChange: updateSelectedSkillGithubConnector/,
+  "Custom Skill Settings must reuse the centralized GitHub connector and exact-revision automation surface.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /skillGithubConnector = \{[\s\S]{0,220}schemaVersion: "1"[\s\S]{0,120}repository: normalizedRepository/,
+  "Skill GitHub connector policy must persist in versioned Skill metadata.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /resourceKind: "skill"[\s\S]{0,140}skillId: String\(selectedSkill\.id[\s\S]{0,240}files: Array\.from\(filesByPath\.values\(\)\)/,
+  "New Skill repositories must be seeded from the current immutable Skill source snapshot.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /ownerOptions,[\s\S]{0,220}onOwnerTransfer: selectedSkill\.isCustom \? transferSelectedSkillOwner/,
   "Skill Settings must use the centralized owner selector and authoritative transfer flow.",
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,
-  /React\.createElement\(PlatformPrimaryButton,[\s\S]{0,500}onClick: \(\) => onTestSkill\?\.\(selectedSkill\)[\s\S]{0,100}"Test Skill"/,
+  /primaryActions: \[\{[\s\S]{0,160}id: "test-skill"[\s\S]{0,120}label: "Test Skill"[\s\S]{0,260}onTestSkill\(selectedSkill\)/,
   "Skill Settings must expose its full-width Test Skill handoff action.",
 );
 assert.match(
@@ -173,8 +218,8 @@ assert.match(
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,
-  /if \(accessDetailFocused\)[\s\S]{0,500}sidebar: null/,
-  "A focused Skill access page must omit the ordinary Settings sidebar and deployment map.",
+  /connectors: skillConnectorsSection,[\s\S]{0,180}access: accessSettings,[\s\S]{0,120}accessDetailOpen: accessDetailFocused/,
+  "A focused Skill access page must delegate sidebar and optional-section collapse to the centralized Settings contract.",
 );
 assert.match(
   SKILLS_PAGE_SCRIPT,

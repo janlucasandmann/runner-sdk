@@ -64,7 +64,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects overview runtime",
     source: PROJECT_OVERVIEW_SCRIPT,
-    expectedSha256: "f29607de05d6a373c41d72a783b25b64a40e7d88cd3310e7a334015182ead71b",
+    expectedSha256: "5b03db4546834e3b60df33671879754d1f8adb3176791207e55c5eea252fa548",
     fragmentGroups: [
       {
         baseUrl: projectsOverviewUrl,
@@ -88,7 +88,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects actions runtime",
     source: PROJECTS_PAGE_ACTIONS_SCRIPT,
-    expectedSha256: "b066642e3b867358889a14c0908f192ce144b93322a98faa584a7d06cff1b903",
+    expectedSha256: "2004f39324d3353739760c5656011b7606d9ea30fd2a8f44e26ec7e2e76edb16",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -100,7 +100,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects data runtime",
     source: PROJECTS_PAGE_DATA_SCRIPT,
-    expectedSha256: "3fa88b8da75ff0b9acd7929bee7a1429d91fed0daccd06df631ae6ee22ee3e78",
+    expectedSha256: "7927e37bd2d7ee15f0dbd7dc24b04d0f89d75762a3fd9708668a592e0371c2d1",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -112,7 +112,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects shell runtime",
     source: PROJECTS_PAGE_SHELL_SCRIPT,
-    expectedSha256: "ee9d814ff85bffdc17206ad91934cb652c3adef1866116fa8081e8f051be0067",
+    expectedSha256: "baf767aa0d066e9c4502ed07d12bd51239287e83538f61f64eabdbda11ea0946",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -124,7 +124,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "7b84195a7b047117141fece13d712c593a944c1250d10fda542467d8959a3bf2",
+    expectedSha256: "33907afd5b51a7c57761438787d2de9ad186b3aa117833051ac0064d7c040d66",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -690,6 +690,18 @@ assert.match(
   PROJECT_OVERVIEW_SCRIPT,
   /const projectRecordForNavigation = sourceProjectRecord[\s\S]*?attachments: Array\.isArray\(overviewProjectAttachments\)[\s\S]*?linkedResources: Array\.isArray\(projectOverviewLinkedResources\)[\s\S]*?resourceTemplates: Array\.isArray\(projectOverviewPublishedTemplates\)[\s\S]*?onOpenProjectLinkedResource\([\s\S]*?projectRecord: projectRecordForNavigation,[\s\S]*?projectResourceSnapshot: \{[\s\S]*?serverResources:[\s\S]*?projectOverviewServerResourcesState\.items\.slice\(\)[\s\S]*?fileActivity:[\s\S]*?projectOverviewFileActivityState\.items\.slice\(\)[\s\S]*?sectionId: "resources"/,
 );
+assert.match(
+  PROJECTS_PAGE_SHELL_SCRIPT,
+  /const linkedResources = readResourceIndexItems\(\["linkedResources", "scopedResources"\]\)[\s\S]*?scopeManaged: true[\s\S]*?setProjectOverviewServerResourcesState\(\{[\s\S]*?linkedResources,/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /projectOverviewPersistedLinkedResources[\s\S]*?projectOverviewScopeManagedLinkedResources[\s\S]*?projectOverviewScopeManagedResourceKeys[\s\S]*?scopeManaged: true/,
+);
+assert.match(
+  PROJECT_OVERVIEW_SCRIPT,
+  /getRowActions: \(row\) => row\?\.isStrategyKnowledge \|\| row\?\.scopeManaged \? \[\] : \[/,
+);
 assert.doesNotMatch(
   PROJECTS_PAGE_DATA_SCRIPT,
   /handleProjectOverviewHomeTabChange\(projectNavViewRequest\?\.sectionId\)/,
@@ -750,6 +762,10 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
+  /function renderTaskDetailAgentSelectControl\([\s\S]*?return React\.createElement\(PlatformAgentSelector, \{/,
+);
+assert.match(
+  PROJECTS_PAGE_VIEWS_SCRIPT,
   /placeholder: "Change type\.\.\.",[\s\S]*?shortcut: "T"[\s\S]*?leading: renderTaskDetailTypeBadge\(option\.id\),[\s\S]*?trailing: option\.shortcut/,
 );
 assert.match(
@@ -758,11 +774,11 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /popoverId: "assignee"[\s\S]*?popupHeader: renderTaskActorModeSwitch\(\{\s*ariaLabel: "Assignee type",[\s\S]*?filteredTaskDetailAssignableActors\.map/,
+  /renderTaskDetailAgentSelectControl\(\{\s*popoverId: "assignee"[\s\S]*?assignableActors\.map[\s\S]*?avatarUrl: getTaskActorPhotoUrl\(actor\.id\)/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /popoverId: "reviewer"[\s\S]*?popupHeader: renderTaskActorModeSwitch\(\{\s*ariaLabel: "Reviewer type",[\s\S]*?filteredTaskDetailAssignableActors\.map/,
+  /renderTaskDetailAgentSelectControl\(\{\s*popoverId: "reviewer"[\s\S]*?assignableActors\.map[\s\S]*?avatarUrl: getTaskActorPhotoUrl\(actor\.id\)/,
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
@@ -4074,6 +4090,7 @@ const upstreamResponses = new Map([
         servers: [
           { id: "server_1", projectId: "project_1" },
           { id: "server_nested_project", project: { id: "project_1" } },
+          { id: "server_multi_scope", metadata: { projectScope: { projectIds: ["project_1", "project_2"] } } },
           { id: "server_2", projectId: "project_2" },
           { id: "server_unscoped" },
         ],
@@ -4088,6 +4105,37 @@ const upstreamResponses = new Map([
         metronomes: [
           { id: "metronome_1", metadata: { projectId: "project_1" } },
           { id: "metronome_unscoped" },
+        ],
+      },
+    },
+  ],
+  [
+    "/knowledge",
+    {
+      status: 200,
+      data: {
+        libraries: [
+          {
+            id: "knowledge_shared",
+            name: "Shared handbook",
+            metadata: {
+              projectScope: { projectIds: ["project_1", "project_2"] },
+            },
+          },
+          {
+            id: "knowledge_strategy",
+            name: "Project Strategy",
+            metadata: {
+              projectId: "project_1",
+              purpose: "project_knowledge",
+            },
+          },
+          {
+            id: "knowledge_other",
+            name: "Other handbook",
+            metadata: { projectId: "project_2" },
+          },
+          { id: "knowledge_independent", name: "Independent handbook", metadata: {} },
         ],
       },
     },
@@ -4110,7 +4158,7 @@ assert.equal(response.data.counts.files, 2);
 assert.equal(response.data.counts.connectors, 1);
 assert.deepEqual(
   response.data.servers.map((server) => server.id),
-  ["server_1", "server_nested_project"],
+  ["server_1", "server_nested_project", "server_multi_scope"],
 );
 assert.deepEqual(
   response.data.metronomes.map((metronome) => metronome.id),
@@ -4120,6 +4168,13 @@ assert.deepEqual(
   response.data.imagineResources.map((resource) => resource.id),
   ["file_1"],
 );
+assert.deepEqual(
+  response.data.linkedResources.map((resource) => resource.id),
+  ["knowledge_shared", "knowledge_strategy"],
+);
+assert.equal(response.data.linkedResources[0].scopeManaged, true);
+assert.equal(response.data.linkedResources[1].isStrategyKnowledge, true);
+assert.equal(response.data.counts.knowledgeLibraries, 2);
 
 upstreamResponses.set("/servers?projectId=project_1", {
   status: 200,

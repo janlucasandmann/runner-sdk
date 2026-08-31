@@ -1,4 +1,4 @@
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PlatformThreadScreen } from "../../platform-ui/components/thread-components/thread-screen/index.js";
 import { buildRunnerThreadScreenViewModel } from "../../thread/presentation.js";

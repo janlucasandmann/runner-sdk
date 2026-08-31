@@ -124,6 +124,134 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
             popupClassName: "playground-agents-detail-owner-menu playground-guardrails-detail-owner-menu",
             optionClassName: "playground-agents-detail-owner-option",
           });
+          const guardrailScopeProjectId = String(
+            selectedGuardrailSet.projectId
+            || selectedGuardrailSet.project_id
+            || guardrailResourceMetadata.projectId
+            || guardrailResourceMetadata.project_id
+            || ""
+          ).trim();
+          const guardrailSettings = {
+            ariaLabel: "Guardrail settings",
+            className: "guardrail-detail-page__settings-content",
+            identity: {
+              icon: React.createElement(Shield, {
+                width: 24,
+                height: 24,
+                strokeWidth: 1.8,
+                "aria-hidden": "true",
+              }),
+              title: String(selectedGuardrailSet.name || "Untitled Guardrail Set"),
+              description: String(selectedGuardrailSet.description || ""),
+              onTitleChange: selectedGuardrailSetReadonly
+                ? undefined
+                : (value) => updateGuardrailSet(selectedGuardrailSet.id, { name: value }),
+              onDescriptionChange: selectedGuardrailSetReadonly
+                ? undefined
+                : (value) => updateGuardrailSet(selectedGuardrailSet.id, { description: value }),
+              titlePlaceholder: "Untitled Guardrail Set",
+              descriptionPlaceholder: "Describe when this guardrail should be applied.",
+              titleAriaLabel: "Guardrail set name",
+              descriptionAriaLabel: "Guardrail description",
+              readOnly: selectedGuardrailSetReadonly,
+              trailing: selectedGuardrailSetReadonly
+                ? React.createElement(PlatformLabel, { variant: "gray" }, "Default Set")
+                : null,
+            },
+            details: {
+              variant: "standard",
+              customAttributes: [
+                {
+                  id: "status",
+                  label: "Status",
+                  value: React.createElement(PlatformLabel, { variant: "green" }, "Active"),
+                },
+                {
+                  id: "prompts",
+                  label: "Prompts",
+                  value: String(selectedGuardrailPrompts.length),
+                },
+                {
+                  id: "created",
+                  label: "Created",
+                  value: formatGuardrailDate(selectedGuardrailSet.createdAt),
+                },
+              ],
+              updatedAt: selectedGuardrailSet.updatedAt || selectedGuardrailSet.createdAt,
+              creator: {
+                value: String(
+                  guardrailCreatorIdentity.id
+                  || guardrailCreatorIdentity.userId
+                  || guardrailCreatorIdentity.email
+                  || "guardrail-creator"
+                ),
+                name: guardrailCreatorLabel,
+                email: String(guardrailCreatorIdentity.email || ""),
+                avatarUrl: String(guardrailCreatorIdentity.avatarUrl || ""),
+              },
+              owner: {
+                value: selectedGuardrailOwnerOption?.value || getGuardrailOwnerCandidateKey(guardrailOwnerIdentity),
+                name: guardrailOwnerLabel,
+                email: String(guardrailOwnerIdentity.email || ""),
+                avatarUrl: String(guardrailOwnerIdentity.avatarUrl || ""),
+              },
+              ownerOptions: guardrailOwnerOptions,
+              onOwnerTransfer: (_nextValue, option) => {
+                const nextOwner = option?.data?.candidate;
+                if (nextOwner) updateGuardrailOwner(nextOwner);
+              },
+              ownerSelectorProps: {
+                open: guardrailOwnerSelectorOpen,
+                onOpenChange: handleGuardrailOwnerSelectorOpenChange,
+                ariaLabel: "Choose guardrail owner",
+                resourceLabel: "guardrail",
+                alignment: "end",
+                popupAlignment: "right",
+                disabled: selectedGuardrailSetReadonly || !isCurrentGuardrailOwner(selectedGuardrailSet),
+                loading: guardrailOwnerCandidateState.status === "loading",
+                loadingContent: "Loading team members...",
+                emptyContent: "No human team members are available.",
+                popupWidth: 260,
+                popupMaxHeight: "min(320px, calc(100vh - 180px))",
+              },
+              scope: guardrailScopeProjectId ? {
+                values: [guardrailScopeProjectId],
+                options: [{
+                  value: guardrailScopeProjectId,
+                  label: String(
+                    selectedGuardrailSet.projectName
+                    || selectedGuardrailSet.project_name
+                    || guardrailResourceMetadata.projectName
+                    || guardrailResourceMetadata.project_name
+                    || guardrailScopeProjectId
+                  ),
+                  leading: React.createElement(FolderOpen, {
+                    width: 14,
+                    height: 14,
+                    strokeWidth: 1.8,
+                    "aria-hidden": "true",
+                  }),
+                }],
+                disabled: true,
+              } : {},
+              primaryActions: [{
+                id: "run-evaluation",
+                label: "Run Evaluation",
+                onSelect: () => setGuardrailDetailTab("evaluation"),
+              }],
+              className: "guardrail-detail-page__properties-card",
+            },
+            location: React.createElement(PlatformDeploymentMap, {
+              regionCode: guardrailDeploymentRegion,
+              title: "Deployment region",
+              className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map guardrail-detail-page__deployment-map",
+            }),
+            access: renderGuardrailAccessSettings(),
+            accessDetailOpen: Boolean(guardrailAccessTeamId),
+            detailsSidebarCollapsed: guardrailDetailSidebarCollapsed,
+            detailsSidebarAriaLabel: "Guardrail properties",
+            detailsSidebarClassName: "guardrail-detail-page__sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+          };
           const guardrailMetadataSection = React.createElement("section", {
               className: "guardrail-detail-page__identity",
               "aria-label": "Guardrail identity",
@@ -321,11 +449,7 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
                 React.createElement("div", {
                     className: "playground-files-browser-body playground-guardrails-browser-body is-detail-page",
                   },
-                  guardrailVersionChangesState
-                    ? React.createElement("div", {
-                        className: "playground-guardrails-detail playground-guardrails-version-changes-shell",
-                      }, renderGuardrailVersionChangesPage())
-                    : React.createElement(GuardrailDetailPage, {
+                  React.createElement(GuardrailDetailPage, {
                         activeTab: guardrailDetailTab,
                         metadata: guardrailMetadataSection,
                         notice: guardrailsBackendSyncState.error
@@ -336,9 +460,8 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
                           : null,
                         general: guardrailGeneralWorkspace,
                         evaluation: guardrailEvaluationWorkspace,
-                        settings: guardrailSettingsContent,
+                        settings: guardrailSettings,
                         sidebar: guardrailSettingsSidebar,
-                        sidebarCollapsed: guardrailDetailSidebarCollapsed,
                         evaluationScopeKey: String(selectedGuardrailSet.id || ""),
                         onEvaluationActivate: () => void loadGuardrailEvaluationData(),
                         onSettingsActivate: () => {
@@ -354,6 +477,7 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
               renderGuardrailShareTeamModal(),
               renderGuardrailVersionModal(),
               renderGuardrailVersionSaveDialog(),
+              renderGuardrailVersionChangesModal(),
               renderGuardrailVersionsSidebarPortal()
             )
           );

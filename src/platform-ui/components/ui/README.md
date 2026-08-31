@@ -9,9 +9,10 @@ Small, domain-agnostic primitives live in this directory. A UI component should 
 - `button`: primary and secondary action hierarchy and sizing.
 - `checkbox`: compact checked and indeterminate selection states.
 - `icon-button`: accessible icon-only controls with shared sizing and interaction states.
+- `input`: canonical single-line text inputs with shared sizing, focus, disabled, and invalid states.
 - `label`: compact categorical labels with shared color variants.
 - `search`: controlled search input with the shared icon, states, and control height.
-- `selector`: single-value and button-triggered popup selectors with consistent portaled surfaces and keyboard behavior.
+- `selector`: single-value and button-triggered popup selectors with consistent portaled surfaces and keyboard behavior, including the canonical searchable agent selector used by ticket details, workflow nodes, and task input.
 - `switch`: controlled segmented selection and keyboard behavior.
 - `ticket-item`: shared list and card presentation for tickets across backlog, board, activity, and nested work views.
 - `toggle`: compact controlled binary settings with accessible switch semantics.

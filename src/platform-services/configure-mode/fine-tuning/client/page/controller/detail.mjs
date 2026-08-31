@@ -834,6 +834,54 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
                   },
                 },
               };
+          const fineTuningCreator = resolvePlaygroundFineTuningPersonIdentity(
+            job.createdBy || job.conductedBy || currentFineTuningUser,
+            [currentFineTuningUser]
+          );
+          const fineTuningCreatorLabel = normalizePlaygroundFineTuningString(
+            fineTuningCreator.name || fineTuningCreator.email || fineTuningCreator.id || "Unknown"
+          );
+          const fineTuningOwnerModel = getFineTuningOwnerSelectorModel(job);
+          const fineTuningProjectId = normalizePlaygroundFineTuningString(job.projectId || job.project_id);
+          const settingsPrimaryActions = [];
+          if (threadId && typeof onOpenThread === "function") {
+            settingsPrimaryActions.push({
+              id: "open-thread",
+              label: "Open Thread",
+              onSelect: () => onOpenThread(threadId),
+            });
+          }
+          if (showStopButton) {
+            settingsPrimaryActions.push({
+              id: "stop-job",
+              label: isStopping ? "Stopping" : "Stop Job",
+              onSelect: () => stopFineTuningJob(job),
+              disabled: isStopping,
+            });
+          }
+          if (canAddOptimizationToBatches) {
+            settingsPrimaryActions.push({
+              id: "add-to-batches",
+              label: "Add to Batches",
+              onSelect: () => openBatchComposer({
+                name: (phase === "planned" ? "Optimize " : "Optimize again: ") + agentName,
+                description: phase === "planned"
+                  ? "Agent Optimization queued from its details page."
+                  : "A new Agent Optimization run based on this completed definition.",
+                targetKind: "agent_optimization",
+                targetResourceId: phase === "planned" ? job.id : null,
+                definition: batchDefinition,
+                startPolicy: "manual",
+              }),
+            });
+          }
+          if (!settingsPrimaryActions.length) {
+            settingsPrimaryActions.push({
+              id: "open-thread",
+              label: "Open Thread",
+              disabled: true,
+            });
+          }
           const sidebarActions = threadId && typeof onOpenThread === "function" || showStopButton || canAddOptimizationToBatches
             ? React.createElement("div", {
                 className: "platform-service-detail-page__sidebar-actions playground-fine-tuning-detail-sidebar-actions",
@@ -939,7 +987,78 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
                   descriptionAriaLabel: "Agent Optimization description",
                 },
                 details: {
-                  children: properties,
+                  variant: "standard",
+                  customAttributes: [
+                    {
+                      id: "status",
+                      label: "Status",
+                      value: React.createElement(PlatformLabel, { variant: statusVariant }, statusLabel),
+                    },
+                    { id: "agent", label: "Agent", value: agentValue },
+                    { id: "environment", label: "Environment", value: environmentValue },
+                    { id: "version", label: "Version", value: versionValue },
+                    {
+                      id: "iteration",
+                      label: "Iteration",
+                      value: Math.max(0, Number(job.currentIteration || 0) || 0) + " / " + maxIterations,
+                    },
+                    {
+                      id: "target",
+                      label: "Target",
+                      value: formatPlaygroundFineTuningPercent(targetPolicy.score) + " score · " + formatPlaygroundFineTuningPercent(targetPolicy.passRate) + " pass",
+                    },
+                    {
+                      id: "sets",
+                      label: "Evaluation Sets",
+                      value: String(Array.isArray(job.evaluationSets) ? job.evaluationSets.length : 0),
+                    },
+                    {
+                      id: "budget",
+                      label: "Budget",
+                      value: budgetLimitUsd > 0
+                        ? formatPlaygroundFineTuningUsdCost(budgetSpentUsd) + " / " + formatPlaygroundFineTuningUsdCost(budgetLimitUsd)
+                        : formatPlaygroundFineTuningUsdCost(budgetSpentUsd),
+                    },
+                    ...(job.stopReason ? [{
+                      id: "stop-reason",
+                      label: "Stop Reason",
+                      value: getFineTuningPhaseLabel(job.stopReason),
+                    }] : []),
+                    {
+                      id: "created",
+                      label: "Created",
+                      value: formatPlaygroundFineTuningDateTime(job.createdAt),
+                    },
+                  ],
+                  updatedAt: job.updatedAt || job.createdAt,
+                  creator: {
+                    value: normalizePlaygroundFineTuningString(
+                      fineTuningCreator.id || fineTuningCreator.userId || fineTuningCreator.email || "optimization-creator"
+                    ),
+                    name: fineTuningCreatorLabel,
+                    email: normalizePlaygroundFineTuningString(fineTuningCreator.email),
+                    avatarUrl: normalizePlaygroundFineTuningString(fineTuningCreator.avatarUrl),
+                  },
+                  owner: fineTuningOwnerModel.owner,
+                  ownerOptions: fineTuningOwnerModel.options,
+                  onOwnerTransfer: fineTuningOwnerModel.onTransfer,
+                  ownerSelectorProps: fineTuningOwnerModel.selectorProps,
+                  scope: fineTuningProjectId ? {
+                    values: [fineTuningProjectId],
+                    options: [{
+                      value: fineTuningProjectId,
+                      label: normalizePlaygroundFineTuningString(job.projectName || job.project_name || fineTuningProjectId),
+                      leading: React.createElement(FolderOpen, {
+                        width: 14,
+                        height: 14,
+                        strokeWidth: 1.8,
+                        "aria-hidden": "true",
+                      }),
+                    }],
+                    disabled: true,
+                    title: "This optimization inherits the project it was created for.",
+                  } : {},
+                  primaryActions: settingsPrimaryActions,
                   className: "playground-fine-tuning-detail-sidebar-card",
                 },
                 additionalSections: renderFineTuningInstructionsEditor(job),

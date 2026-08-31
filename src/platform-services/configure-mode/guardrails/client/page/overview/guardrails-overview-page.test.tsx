@@ -11,32 +11,34 @@ const rows: readonly GuardrailOverviewRow[] = [
   {
     id: "guardrail-default",
     name: "Platform Safety",
+    description: "Built-in platform safety constraints.",
     type: "default",
     typeLabel: "Default",
-    creatorLabel: "Computer Agents",
+    creatorName: "Computer Agents",
+    creatorAvatarUrl: "/computer-agents.png",
     creatorFallback: "CA",
     updatedAt: 1_720_000_000_000,
-    updatedLabel: "Jul 3, 2024",
   },
   {
     id: "guardrail-custom",
     name: "Publishing Policy",
+    description: "Checks publishing requests before execution.",
     type: "custom",
     typeLabel: "Custom",
-    creatorLabel: "Jan",
+    creatorName: "Jan",
+    creatorAvatarUrl: "/jan.png",
     creatorFallback: "J",
     updatedAt: 1_710_000_000_000,
-    updatedLabel: "Mar 9, 2024",
   },
   {
     id: "guardrail-custom-2",
     name: "Release Policy",
+    description: "Protects production releases.",
     type: "custom",
     typeLabel: "Custom",
-    creatorLabel: "Jan",
+    creatorName: "Jan",
     creatorFallback: "J",
     updatedAt: 1_700_000_000_000,
-    updatedLabel: "Nov 14, 2023",
   },
 ];
 
@@ -78,13 +80,20 @@ describe("GuardrailsOverviewPage", () => {
     expect(screen.queryByText("All Guardrails")).toBeNull();
     expect(screen.getByPlaceholderText("Search guardrails")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "Type" })).toBeNull();
+    expect(
+      screen.getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["", "Name", "Creator", "Updated", ""]);
     const customRow = screen.getByRole("row", { name: "Publishing Policy" });
     const setCell = customRow.querySelector(
       '.platform-data-table__cell[data-column-id="name"]',
     );
     expect(
       setCell?.querySelector(".resource-overview-identity__visual"),
-    ).toBeNull();
+    ).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
+    expect(screen.getByText("Checks publishing requests before execution.")).not.toBeNull();
+    expect(container.querySelector('img[src="/jan.png"]')).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "New Set" }));
     expect(onCreate).toHaveBeenCalledOnce();
@@ -122,5 +131,27 @@ describe("GuardrailsOverviewPage", () => {
 
     expect(onDelete).toHaveBeenCalledOnce();
     expect(onDelete).toHaveBeenCalledWith([rows[1], rows[2]]);
+  });
+
+  it("uses the centralized table loading state", () => {
+    const { container } = render(
+      <GuardrailsOverviewPage
+        rows={[]}
+        loading
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("status", { name: "Loading Guardrail sets…" }),
+    ).not.toBeNull();
+    expect(
+      container.querySelector(
+        '.platform-data-table__state.has-loading-state img[src="/img/spinner.svg"]',
+      ),
+    ).not.toBeNull();
   });
 });

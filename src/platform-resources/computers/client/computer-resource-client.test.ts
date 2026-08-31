@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createComputerResourceRepository,
   deleteComputerResource,
+  loadComputerDockerfile,
+  normalizeComputerDockerfileSource,
   saveComputerResource,
 } from "./computer-resource-client.js";
 
@@ -26,19 +28,70 @@ describe("Computer resource client", () => {
     } as unknown as Parameters<typeof createComputerResourceRepository>[0];
     const repository = createComputerResourceRepository(apiClient);
 
-    await expect(repository.list()).resolves.toEqual([
-      { id: "computer-1" },
-    ]);
-    expect(get).toHaveBeenCalledWith(
-      "/environments",
-      { signal: undefined },
+    await expect(repository.list()).resolves.toEqual([{ id: "computer-1" }]);
+    expect(get).toHaveBeenCalledWith("/environments", { signal: undefined });
+  });
+
+  it("loads the authoritative effective Dockerfile", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      response({
+        baseImage: "ubuntu:24.04",
+        dockerfileExtensions: "RUN apt-get update\n",
+        effectiveDockerfile: "FROM ubuntu:24.04\nRUN apt-get update\n",
+      }),
+    );
+
+    await expect(
+      loadComputerDockerfile({
+        backendUrl: "https://platform.example/",
+        fetchImpl: fetchImpl as typeof fetch,
+        computerId: "computer 1",
+      }),
+    ).resolves.toEqual({
+      baseImage: "ubuntu:24.04",
+      dockerfileExtensions: "RUN apt-get update\n",
+      effectiveDockerfile: "FROM ubuntu:24.04\nRUN apt-get update\n",
+    });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "https://platform.example/environments/computer%201/dockerfile",
+      expect.objectContaining({ method: "GET" }),
     );
   });
 
+  it("constructs a compatible full Dockerfile for older extension-only responses", () => {
+    expect(
+      normalizeComputerDockerfileSource({
+        data: {
+          base_image: "node:22",
+          dockerfile_extensions: "RUN npm install -g pnpm",
+        },
+      }),
+    ).toEqual({
+      baseImage: "node:22",
+      dockerfileExtensions: "RUN npm install -g pnpm",
+      effectiveDockerfile: "FROM node:22\n\nRUN npm install -g pnpm\n",
+    });
+  });
+
+  it("requires a computer id when loading Dockerfile source", async () => {
+    const apiClient = {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      delete: vi.fn(),
+    } as unknown as Parameters<typeof createComputerResourceRepository>[0];
+    await expect(
+      createComputerResourceRepository(apiClient).getDockerfile(""),
+    ).rejects.toThrow("A computer id is required.");
+  });
+
   it("creates and then fully updates a draft computer", async () => {
-    const fetchImpl = vi.fn()
+    const fetchImpl = vi
+      .fn()
       .mockResolvedValueOnce(response({ environment: { id: "computer 1" } }))
-      .mockResolvedValueOnce(response({ environment: { id: "computer 1", name: "Build" } }));
+      .mockResolvedValueOnce(
+        response({ environment: { id: "computer 1", name: "Build" } }),
+      );
     const result = await saveComputerResource({
       backendUrl: "https://platform.example/",
       fetchImpl: fetchImpl as typeof fetch,
@@ -65,9 +118,9 @@ describe("Computer resource client", () => {
   });
 
   it("updates existing computers with a single request", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      response({ environment: { id: "computer-1" } }),
-    );
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(response({ environment: { id: "computer-1" } }));
     const result = await saveComputerResource({
       backendUrl: "https://platform.example",
       fetchImpl: fetchImpl as typeof fetch,
@@ -81,13 +134,17 @@ describe("Computer resource client", () => {
   });
 
   it("uses the upstream delete error", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      response({ error: "Default computers cannot be deleted." }, 409),
-    );
-    await expect(deleteComputerResource({
-      backendUrl: "https://platform.example",
-      fetchImpl: fetchImpl as typeof fetch,
-      computerId: "default",
-    })).rejects.toThrow("Default computers cannot be deleted.");
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(
+        response({ error: "Default computers cannot be deleted." }, 409),
+      );
+    await expect(
+      deleteComputerResource({
+        backendUrl: "https://platform.example",
+        fetchImpl: fetchImpl as typeof fetch,
+        computerId: "default",
+      }),
+    ).rejects.toThrow("Default computers cannot be deleted.");
   });
 });

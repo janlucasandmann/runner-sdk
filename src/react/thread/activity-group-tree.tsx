@@ -6,7 +6,7 @@ import {
   ChevronRight,
   LoaderCircle,
   UserRound,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import type {

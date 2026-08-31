@@ -7,6 +7,8 @@ describe("createDevelopVoiceAgentOverviewRows", () => {
       agent: {
         id: "agent_voice",
         name: "Voice Concierge",
+        createdAt: "2026-08-28T09:00:00.000Z",
+        updatedAt: "2026-08-29T10:30:00.000Z",
         metadata: {
           creator: { id: "user_creator", name: "Creator Person" },
           owner: { id: "user_owner", name: "Owner Person" },
@@ -17,5 +19,7 @@ describe("createDevelopVoiceAgentOverviewRows", () => {
 
     expect(row.creator).toMatchObject({ id: "user_creator", name: "Creator Person" });
     expect(row.owner).toMatchObject({ id: "user_owner", name: "Owner Person" });
+    expect(row.createdAt).toBe("2026-08-28T09:00:00.000Z");
+    expect(row.updatedAt).toBe("2026-08-29T10:30:00.000Z");
   });
 });

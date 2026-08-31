@@ -1,15 +1,31 @@
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  BookOpen,
+  BookOpen01Icon,
+  Robot01Icon,
+  ShieldCheckIcon,
+} from "@hugeicons/core-free-icons";
+import {
   ChartNoAxesColumnIncreasing,
   Coins,
   type LucideIcon,
-  ShieldCheck,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   type PlatformHomeFeatureCard,
   PlatformHomePage,
   type PlatformHomeSection,
 } from "../../../../../platform-ui/pages/home/index.js";
+
+const ConfigureAgentsFeatureIcon: LucideIcon = (props) => (
+  <HugeiconsIcon icon={Robot01Icon} {...props} />
+);
+
+const ConfigureGovernanceFeatureIcon: LucideIcon = (props) => (
+  <HugeiconsIcon icon={ShieldCheckIcon} {...props} />
+);
+
+const ConfigureDocumentationIcon: LucideIcon = (props) => (
+  <HugeiconsIcon icon={BookOpen01Icon} {...props} />
+);
 
 export interface ConfigureHomeTeaserCard {
   id: string;
@@ -43,7 +59,7 @@ export function ConfigureHomeOverviewPage({
       title: "Create",
       description:
         "Build capable agents and give them persistent environments and reusable expertise.",
-      icon: cards.find((card) => card.id === "agents")?.icon || ShieldCheck,
+      icon: ConfigureAgentsFeatureIcon,
       iconTone: "blue",
       links: cards.map((card) => ({
         id: card.id,
@@ -57,7 +73,7 @@ export function ConfigureHomeOverviewPage({
       title: "Govern",
       description:
         "Monitor incoming work, measure agent quality, and enforce operating boundaries.",
-      icon: ShieldCheck,
+      icon: ConfigureGovernanceFeatureIcon,
       iconTone: "violet",
       links: [
         {
@@ -103,7 +119,7 @@ export function ConfigureHomeOverviewPage({
       action: {
         id: "all-documentation",
         label: "View all documentation",
-        icon: BookOpen,
+        icon: ConfigureDocumentationIcon,
         onClick: onOpenDocumentation,
       },
       items: [
@@ -148,7 +164,7 @@ export function ConfigureHomeOverviewPage({
         {
           id: "documentation",
           label: "Documentation",
-          icon: BookOpen,
+          icon: ConfigureDocumentationIcon,
           onClick: onOpenDocumentation,
         },
       ]}

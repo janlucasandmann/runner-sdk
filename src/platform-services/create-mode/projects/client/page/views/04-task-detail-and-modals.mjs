@@ -58,6 +58,49 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
             });
           }
 
+          function renderTaskDetailAgentSelectControl({
+            popoverId,
+            value,
+            valueLabel,
+            disabled = false,
+            isEmpty = false,
+            options = [],
+            emptyContent = "No matching agents or squads.",
+            searchPlaceholder = "Search agents...",
+          }) {
+            const normalizedPopoverId = String(popoverId || "agent").trim() || "agent";
+            return React.createElement(PlatformAgentSelector, {
+              value: String(value || ""),
+              options: Array.isArray(options) ? options : [],
+              onValueChange: (_nextValue, option) => {
+                if (typeof option?.data?.onSelect === "function") {
+                  option.data.onSelect();
+                }
+              },
+              ariaLabel: "Select ticket " + normalizedPopoverId.replace(/-/g, " "),
+              placeholder: valueLabel,
+              disabled,
+              open: taskDetailSelectPopover === normalizedPopoverId,
+              onOpenChange: (nextOpen) => {
+                setTaskDetailSelectPopover(nextOpen ? normalizedPopoverId : "");
+                setTaskDetailPopover("");
+                setTaskSkillsPopoverOpen(false);
+              },
+              alignment: "end",
+              popupAlignment: "right",
+              fullWidth: true,
+              searchPlaceholder,
+              searchAriaLabel: "Search ticket " + normalizedPopoverId + " options",
+              emptyContent,
+              popupWidth: "min(280px, calc(100vw - 48px))",
+              popupMaxWidth: "calc(100vw - 48px)",
+              popupMaxHeight: "min(320px, calc(100vh - 120px))",
+              className: "playground-tasks-detail-central-selector" + (isEmpty ? " is-empty" : ""),
+              triggerClassName: "playground-tasks-detail-central-selector-trigger",
+              popupClassName: "playground-tasks-detail-central-selector-popup playground-tasks-detail-assignee-selector-popup",
+            });
+          }
+
           function getTaskActivityActorComment(event) {
             return {
               id: event?.id || "",
@@ -1263,46 +1306,40 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                   : React.createElement("div", { className: "playground-tasks-detail-fact" },
                       React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Reviewer"),
                       React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                        renderTaskDetailSelectControl({
+                        renderTaskDetailAgentSelectControl({
                           popoverId: "reviewer",
                           value: draftTask.reviewRequired && resolvedTaskReviewerId ? resolvedTaskReviewerId : "__none__",
                           valueLabel: activeReviewerLabel,
                           disabled: isTaskConfigLocked,
                           isEmpty: !draftTask.reviewRequired,
-                          buttonContent: renderTaskDetailPersonValue(resolvedTaskReviewerId, activeReviewerLabel),
-                          popupClassName: "playground-tasks-detail-assignee-selector-popup",
-                          popupHeader: renderTaskActorModeSwitch({
-                            ariaLabel: "Reviewer type",
-                            value: taskDetailAssigneePopupMode,
-                            onValueChange: setTaskDetailAssigneePopupMode,
-                          }),
                           options: [
-                            createTaskDetailSelectorOption({
+                            {
                               value: "__none__",
-                              label: "No review",
-                              description: "Move directly to Done when work is done.",
-                              leading: React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar", "aria-hidden": "true" },
-                                React.createElement("span", { className: "playground-tasks-detail-person-menu-avatar-fallback" }, "No")
-                              ),
-                              onSelect: () => updateDraftTask((current) => ({
-                                ...current,
-                                reviewRequired: false,
-                                reviewerAgentId: null,
-                              }), { autosave: true }),
-                            }),
-                            ...filteredTaskDetailAssignableActors.map((actor) => {
-                              const mode = getPlaygroundTaskAssigneePopupMode(actor);
-                              return createTaskDetailSelectorOption({
-                                value: actor.id,
-                                label: getTaskAssigneeName(actor.id, actor.name || "Reviewer"),
-                                description: mode === "humans" ? "Human reviewer" : mode === "teams" ? "Agent squad reviewer" : "Agent reviewer",
-                                leading: renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
+                              name: "No review",
+                              searchText: "Move directly to Done when work is done.",
+                              data: {
                                 onSelect: () => updateDraftTask((current) => ({
                                   ...current,
-                                  reviewRequired: true,
-                                  reviewerAgentId: actor.id,
+                                  reviewRequired: false,
+                                  reviewerAgentId: null,
                                 }), { autosave: true }),
-                              });
+                              },
+                            },
+                            ...assignableActors.map((actor) => {
+                              const mode = getPlaygroundTaskAssigneePopupMode(actor);
+                              return {
+                                value: actor.id,
+                                name: getTaskAssigneeName(actor.id, actor.name || "Reviewer"),
+                                avatarUrl: getTaskActorPhotoUrl(actor.id),
+                                searchText: mode === "humans" ? "Human reviewer" : mode === "teams" ? "Agent squad reviewer" : "Agent reviewer",
+                                data: {
+                                  onSelect: () => updateDraftTask((current) => ({
+                                    ...current,
+                                    reviewRequired: true,
+                                    reviewerAgentId: actor.id,
+                                  }), { autosave: true }),
+                                },
+                              };
                             }),
                           ],
                         })
@@ -1393,29 +1430,24 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
                 React.createElement("div", { className: "playground-tasks-detail-fact is-assignee" },
                   React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "Assignee"),
                   React.createElement("div", { className: "playground-tasks-detail-fact-control" },
-                    renderTaskDetailSelectControl({
+                    renderTaskDetailAgentSelectControl({
                       popoverId: "assignee",
                       value: resolvedTaskAssigneeId,
                       valueLabel: activeAssigneeLabel,
                       disabled: isTaskConfigLocked,
                       isEmpty: !resolvedTaskAssigneeId,
-                      buttonContent: renderTaskDetailPersonValue(resolvedTaskAssigneeId, activeAssigneeLabel),
-                      popupClassName: "playground-tasks-detail-assignee-selector-popup",
-                      popupHeader: renderTaskActorModeSwitch({
-                        ariaLabel: "Assignee type",
-                        value: taskDetailAssigneePopupMode,
-                        onValueChange: setTaskDetailAssigneePopupMode,
-                      }),
                       emptyContent: "No assignees yet.",
-                      options: filteredTaskDetailAssignableActors.map((actor) => {
+                      options: assignableActors.map((actor) => {
                         const mode = getPlaygroundTaskAssigneePopupMode(actor);
-                        return createTaskDetailSelectorOption({
+                        return {
                           value: actor.id,
-                          label: getTaskAssigneeName(actor.id, actor.name || "Unknown"),
-                          description: mode === "humans" ? "Human" : mode === "teams" ? "Agent squad" : "Agent",
-                          leading: renderTaskActorAvatar(actor.id, "playground-tasks-detail-person-menu-avatar"),
-                          onSelect: () => updateDraftField("assigneeAgentId", actor.id, { autosave: true }),
-                        });
+                          name: getTaskAssigneeName(actor.id, actor.name || "Unknown"),
+                          avatarUrl: getTaskActorPhotoUrl(actor.id),
+                          searchText: mode === "humans" ? "Human" : mode === "teams" ? "Agent squad" : "Agent",
+                          data: {
+                            onSelect: () => updateDraftField("assigneeAgentId", actor.id, { autosave: true }),
+                          },
+                        };
                       }),
                     })
                   )

@@ -1,7 +1,7 @@
 import {
   Bookmark,
   FlaskConical,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { createPortal } from "react-dom";
 import {
   useCallback,

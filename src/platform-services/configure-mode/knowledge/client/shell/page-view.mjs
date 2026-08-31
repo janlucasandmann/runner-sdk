@@ -37,6 +37,7 @@ export const KNOWLEDGE_APP_PAGE_VIEW_SCRIPT = String.raw`        function render
             workspaceTeamMembers: teamPageMembers,
             workspaceTeamMembersTeamId: teamPageSelectedTeamId,
             activeOrganizationId: knowledgeOrganizationId,
+            projects: runnerWorkspaceProjects,
             onWorkspaceTeamsRequest: () => {
               if (
                 !teamPageLoading

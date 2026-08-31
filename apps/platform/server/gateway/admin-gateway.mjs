@@ -3,11 +3,11 @@ import { createDeploymentVmAdminClient } from "./deployment-vm-admin-client.mjs"
 import { readResponseJson } from "./http-utils.mjs";
 
 export function createAdminGateway(bindings) {
-    const { aiosOrigin, deploymentTopology, deploymentVmNameOverride, deploymentVmNamePrefix, deploymentVmProject, feedbackSummaryAdminEnvFileCandidates, feedbackSummaryAllowedEmail, fetchAiosApi, hasAiosSession, identityService, normalizeBackendUrl, parseUpstreamUrl, platformOrigin, port, sendJson, serveFeedbackSummaryPage, serveProductUsageSummaryPageV2, } = bindings;
+    const { aiosOrigin, deploymentTopology, deploymentVmAdminClient, deploymentVmNameOverride, deploymentVmNamePrefix, deploymentVmProject, feedbackSummaryAdminEnvFileCandidates, feedbackSummaryAllowedEmail, fetchAiosApi, hasAiosSession, identityService, normalizeBackendUrl, parseUpstreamUrl, platformOrigin, port, sendJson, serveAdminAccessDeniedPage, serveFeedbackSummaryPage, serveProductUsageSummaryPageV2, } = bindings;
     const {
         fetchFeedbackSummaryViaDeploymentVm,
         fetchProductUsageSummaryViaDeploymentVm,
-    } = createDeploymentVmAdminClient({
+    } = deploymentVmAdminClient || createDeploymentVmAdminClient({
         deploymentVmNameOverride,
         deploymentVmNamePrefix,
         deploymentVmProject,
@@ -20,11 +20,13 @@ export function createAdminGateway(bindings) {
         readAdminKey,
         readContactSalesApiToken,
         readFeedbackSummaryAdminKey,
+        readFeedbackSummaryAllowedEmails,
         redirectToFeedbackSummaryLogin,
         redirectToUsageSummaryLogin,
     } = createAdminAuthorization({
         aiosOrigin,
         feedbackSummaryAdminEnvFileCandidates,
+        feedbackSummaryAllowedEmail,
         fetchAiosApi,
         hasAiosSession,
         identityService,
@@ -63,6 +65,13 @@ export function createAdminGateway(bindings) {
     }
     async function proxyFeedbackSummaryGet(req, res) {
         try {
+            const allowedEmails = await readFeedbackSummaryAllowedEmails();
+            if (allowedEmails.length === 0) {
+                return sendJson(res, 503, {
+                    error: "Feedback summary is not configured",
+                    message: "PLATFORM_ADMIN_EMAIL or PLATFORM_ADMIN_EMAILS is missing on the platform server.",
+                });
+            }
             const session = await fetchFeedbackSummarySessionEmail(req);
             if (session.status === 401 || session.status === 403 || !session.email) {
                 return sendJson(res, 401, {
@@ -71,10 +80,10 @@ export function createAdminGateway(bindings) {
                     loginUrl: buildFeedbackSummaryLoginUrl(req),
                 });
             }
-            if (session.email !== feedbackSummaryAllowedEmail) {
-                return sendJson(res, 401, {
-                    error: "Unauthorized",
-                    message: "Sign in with the feedback summary admin account.",
+            if (!allowedEmails.includes(session.email)) {
+                return sendJson(res, 403, {
+                    error: "Forbidden",
+                    message: "The signed-in account does not have access to feedback summary.",
                     loginUrl: buildFeedbackSummaryLoginUrl(req, { signedOut: true }),
                 });
             }
@@ -103,11 +112,11 @@ export function createAdminGateway(bindings) {
                 try {
                     const fallback = await fetchFeedbackSummaryViaDeploymentVm(requestUrl.search);
                     if (fallback.status >= 200 && fallback.status < 300) {
-                        parsed = fallback.parsed;
-                        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-                            parsed.viewer = { email: session.email };
+                        const fallbackPayload = fallback.parsed;
+                        if (fallbackPayload && typeof fallbackPayload === "object" && !Array.isArray(fallbackPayload)) {
+                            fallbackPayload.viewer = { email: session.email };
                         }
-                        return sendJson(res, fallback.status, parsed);
+                        return sendJson(res, fallback.status, fallbackPayload);
                     }
                 }
                 catch (fallbackError) {
@@ -140,6 +149,13 @@ export function createAdminGateway(bindings) {
     }
     async function proxyProductUsageSummaryGet(req, res) {
         try {
+            const allowedEmails = await readFeedbackSummaryAllowedEmails();
+            if (allowedEmails.length === 0) {
+                return sendJson(res, 503, {
+                    error: "Product usage summary is not configured",
+                    message: "PLATFORM_ADMIN_EMAIL or PLATFORM_ADMIN_EMAILS is missing on the platform server.",
+                });
+            }
             const session = await fetchFeedbackSummarySessionEmail(req);
             if (session.status === 401 || session.status === 403 || !session.email) {
                 return sendJson(res, 401, {
@@ -148,10 +164,10 @@ export function createAdminGateway(bindings) {
                     loginUrl: buildUsageSummaryLoginUrl(req),
                 });
             }
-            if (session.email !== feedbackSummaryAllowedEmail) {
-                return sendJson(res, 401, {
-                    error: "Unauthorized",
-                    message: "Sign in with the product usage admin account.",
+            if (!allowedEmails.includes(session.email)) {
+                return sendJson(res, 403, {
+                    error: "Forbidden",
+                    message: "The signed-in account does not have access to product usage summary.",
                     loginUrl: buildUsageSummaryLoginUrl(req, { signedOut: true }),
                 });
             }
@@ -180,11 +196,11 @@ export function createAdminGateway(bindings) {
                 try {
                     const fallback = await fetchProductUsageSummaryViaDeploymentVm(requestUrl.search);
                     if (fallback.status >= 200 && fallback.status < 300) {
-                        parsed = fallback.parsed;
-                        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-                            parsed.viewer = { email: session.email };
+                        const fallbackPayload = fallback.parsed;
+                        if (fallbackPayload && typeof fallbackPayload === "object" && !Array.isArray(fallbackPayload)) {
+                            fallbackPayload.viewer = { email: session.email };
                         }
-                        return sendJson(res, fallback.status, parsed);
+                        return sendJson(res, fallback.status, fallbackPayload);
                     }
                     if (fallback.status === 404) {
                         return sendJson(res, 502, {
@@ -277,6 +293,13 @@ export function createAdminGateway(bindings) {
             });
         }
         try {
+            const allowedEmails = await readFeedbackSummaryAllowedEmails();
+            if (allowedEmails.length === 0) {
+                return sendJson(res, 503, {
+                    error: "Contact sales summary is not configured",
+                    message: "PLATFORM_ADMIN_EMAIL or PLATFORM_ADMIN_EMAILS is missing on the platform server.",
+                });
+            }
             const session = await fetchFeedbackSummarySessionEmail(req);
             if (session.status === 401 || session.status === 403 || !session.email) {
                 return sendJson(res, 401, {
@@ -285,10 +308,10 @@ export function createAdminGateway(bindings) {
                     loginUrl: buildUsageSummaryLoginUrl(req),
                 });
             }
-            if (session.email !== feedbackSummaryAllowedEmail) {
-                return sendJson(res, 401, {
-                    error: "Unauthorized",
-                    message: "Sign in with the product usage admin account.",
+            if (!allowedEmails.includes(session.email)) {
+                return sendJson(res, 403, {
+                    error: "Forbidden",
+                    message: "The signed-in account does not have access to contact sales summary.",
                     loginUrl: buildUsageSummaryLoginUrl(req, { signedOut: true }),
                 });
             }
@@ -325,13 +348,21 @@ export function createAdminGateway(bindings) {
     }
     async function handleFeedbackSummaryPageRequest(req, res) {
         try {
+            const allowedEmails = await readFeedbackSummaryAllowedEmails();
+            if (allowedEmails.length === 0) {
+                sendJson(res, 503, {
+                    error: "Feedback summary is not configured",
+                    message: "PLATFORM_ADMIN_EMAIL or PLATFORM_ADMIN_EMAILS is missing on the platform server.",
+                });
+                return;
+            }
             const session = await fetchFeedbackSummarySessionEmail(req);
             if (session.status === 401 || session.status === 403 || !session.email) {
                 redirectToFeedbackSummaryLogin(req, res);
                 return;
             }
-            if (session.email !== feedbackSummaryAllowedEmail) {
-                redirectToFeedbackSummaryLogin(req, res, { signedOut: true });
+            if (!allowedEmails.includes(session.email)) {
+                serveAdminAccessDeniedPage(res);
                 return;
             }
             serveFeedbackSummaryPage(res);
@@ -342,13 +373,21 @@ export function createAdminGateway(bindings) {
     }
     async function handleProductUsageSummaryPageRequest(req, res) {
         try {
+            const allowedEmails = await readFeedbackSummaryAllowedEmails();
+            if (allowedEmails.length === 0) {
+                sendJson(res, 503, {
+                    error: "Product usage summary is not configured",
+                    message: "PLATFORM_ADMIN_EMAIL or PLATFORM_ADMIN_EMAILS is missing on the platform server.",
+                });
+                return;
+            }
             const session = await fetchFeedbackSummarySessionEmail(req);
             if (session.status === 401 || session.status === 403 || !session.email) {
                 redirectToUsageSummaryLogin(req, res);
                 return;
             }
-            if (session.email !== feedbackSummaryAllowedEmail) {
-                redirectToUsageSummaryLogin(req, res, { signedOut: true });
+            if (!allowedEmails.includes(session.email)) {
+                serveAdminAccessDeniedPage(res);
                 return;
             }
             serveProductUsageSummaryPageV2(res);

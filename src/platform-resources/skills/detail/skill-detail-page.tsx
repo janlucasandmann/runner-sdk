@@ -4,6 +4,7 @@ import {
   PlatformServiceDetailFrame,
   PlatformServiceDetailPage,
 } from "../../../platform-ui/pages/details/index.js";
+import type { PlatformResourceSettingsPageProps } from "../../../platform-ui/pages/settings/index.js";
 
 export type SkillDetailTab = "code" | "settings";
 
@@ -12,7 +13,7 @@ export interface SkillDetailPageProps {
   metadata?: ReactNode;
   notice?: ReactNode;
   code: ReactNode;
-  settings: ReactNode;
+  settings: PlatformResourceSettingsPageProps;
   sidebar?: ReactNode;
   sidebarCollapsed?: boolean;
   className?: string;
@@ -35,7 +36,7 @@ export function SkillDetailPage({
     return (
       <PlatformServiceDetailFrame className="skill-detail-page__settings-frame">
         <PlatformServiceDetailPage
-          properties={sidebar}
+          settings={settings}
           sidebarCollapsed={sidebarCollapsed}
           ariaLabel="Skill details"
           sidebarAriaLabel="Skill properties"
@@ -44,7 +45,7 @@ export function SkillDetailPage({
           sidebarClassName="skill-detail-page__sidebar"
           propertiesCardClassName="skill-detail-page__properties-card"
         >
-          {settings}
+          {null}
         </PlatformServiceDetailPage>
       </PlatformServiceDetailFrame>
     );
@@ -56,7 +57,7 @@ export function SkillDetailPage({
       metadata={metadata}
       notice={notice}
       code={code}
-      settings={settings}
+      settings={null}
       sidebar={sidebar}
       sidebarCollapsed={sidebarCollapsed}
       ariaLabel="Skill details"

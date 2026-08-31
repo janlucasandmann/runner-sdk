@@ -8,6 +8,10 @@ export {
   type MarkdownResourceDetailPageProps,
 } from "./markdown-resource-detail-page.js";
 export {
+  PlatformFileResourceIdentity,
+  type PlatformFileResourceIdentityProps,
+} from "./platform-file-resource-identity.js";
+export {
   PlatformServiceDetailFrame,
   PlatformServiceDetailPage,
   PlatformServiceDetailProperty,

@@ -2,15 +2,15 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PlatformVersionChangesPage } from "./platform-version-changes-page.js";
+import { PlatformVersionChangesModal } from "./platform-version-changes-modal.js";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-describe("PlatformVersionChangesPage", () => {
-  it("renders prompt-style header spacing and centralized minimal selectors", () => {
+describe("PlatformVersionChangesModal", () => {
+  it("renders the large centralized modal with minimal version selectors", () => {
     const onLeftVersionChange = vi.fn();
     const onRightVersionChange = vi.fn();
     const options = [
@@ -19,7 +19,9 @@ describe("PlatformVersionChangesPage", () => {
     ];
 
     render(
-      <PlatformVersionChangesPage
+      <PlatformVersionChangesModal
+        open
+        onClose={vi.fn()}
         title="Changes"
         subtitle="Compare saved prompt versions."
         leftSelector={{
@@ -37,6 +39,8 @@ describe("PlatformVersionChangesPage", () => {
       />,
     );
 
+    const dialog = screen.getByRole("dialog", { name: "Changes" });
+    expect(dialog.classList.contains("is-size-full")).toBe(true);
     expect(screen.getByRole("heading", { name: "Changes" })).not.toBeNull();
     expect(screen.getByText("Compare saved prompt versions.")).not.toBeNull();
     expect(screen.getByText("Versions")).not.toBeNull();

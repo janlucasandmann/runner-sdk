@@ -1,7 +1,7 @@
 import {
   FileText as LucideFileText,
   Presentation as LucidePresentation,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { useEffect, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {

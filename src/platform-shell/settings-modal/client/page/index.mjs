@@ -40,9 +40,7 @@ export function createSettingsModalPageScript(options = {}) {
           const requestedSettingsSection = options.section || settingsSection;
           const normalizedSettingsSection = requestedSettingsSection;
 	          const billingSectionIds = ["costs-plans", "costs-plan-options", "costs-records", "costs-overview"];
-          const effectiveSettingsSection = normalizedSettingsSection === "api"
-            ? "profile"
-            : !isOrganizationBillingSurface && billingSectionIds.includes(normalizedSettingsSection)
+          const effectiveSettingsSection = !isOrganizationBillingSurface && billingSectionIds.includes(normalizedSettingsSection)
               ? "profile"
               : normalizedSettingsSection;
 	          const navigateSettingsSection = typeof options.onSectionChange === "function"
@@ -52,6 +50,7 @@ export function createSettingsModalPageScript(options = {}) {
 	            { id: "profile", label: "Account", title: "Account" },
 	            { id: "notifications", label: "Notifications", title: "Notifications" },
 	            { id: "password", label: "Password", title: "Password" },
+	            { id: "api", label: "API Keys", title: "API Keys" },
 	            { id: "data-controls", label: "Data Controls", title: "Data Controls" },
 	            { id: "delete", label: "Delete Account", title: "Delete Account" },
 	          ];
@@ -2897,6 +2896,7 @@ ${apiKeysLegacySettingsCase}            case "design":
             { id: "profile", label: "Account", Icon: UserRound },
             { id: "notifications", label: "Notifications", Icon: Bell },
             { id: "password", label: "Password", Icon: KeyRound },
+            { id: "api", label: "API Keys", Icon: Code2 },
             { id: "data-controls", label: "Data Controls", Icon: Database },
             { id: "delete", label: "Delete Account", Icon: Trash2, isDanger: true },
           ];

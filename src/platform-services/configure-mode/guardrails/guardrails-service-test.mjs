@@ -168,7 +168,7 @@ assert.match(
 assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view, /activeTab: guardrailDetailTab/);
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
-  /sidebarCollapsed: guardrailDetailSidebarCollapsed/,
+  /detailsSidebarCollapsed: guardrailDetailSidebarCollapsed/,
 );
 assert.match(
   GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.view,
@@ -232,7 +232,7 @@ assert.match(
   GUARDRAILS_PAGE_CSS,
   /\.guardrail-detail-page__identity-value[\s\S]{0,120}\.playground-team-member-avatar\s*\{[\s\S]{0,100}width: 20px;[\s\S]{0,80}height: 20px;[\s\S]{0,80}flex: 0 0 20px;/,
 );
-assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT, /function renderGuardrailVersionChangesPage/);
+assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT, /function renderGuardrailVersionChangesModal/);
 assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailsBackendLoadRef/);
 assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailDetailSidebarCollapsedBeforeVersionsRef/);
 assert.match(GUARDRAILS_APP_STATE_SCRIPT, /guardrailDetailSidebarCollapsed/);
@@ -270,6 +270,7 @@ assert.match(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /String\(proxy
 assert.doesNotMatch(GUARDRAILS_PAGE_RUNTIME_SCRIPT_FRAGMENTS.evaluation, /String\(backendUrl \|\| ""\)/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.historyCapture, /guardrailId: selectedGuardrailSetId/);
 assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Guardrails"/);
+assert.match(GUARDRAILS_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: GuardrailsSidebarIcon/);
 assert.match(GUARDRAILS_AGENT_DOMAIN_SCRIPT, /function buildPlaygroundAgentGuardrailBundle/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailsSection\(options = \{\}\)/);
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /function renderAgentGuardrailTable\(options = \{\}\)/);
@@ -291,7 +292,7 @@ assert.doesNotMatch(GUARDRAILS_AGENT_PAGE_SCRIPT, /trailing: React\.createElemen
 assert.match(GUARDRAILS_AGENT_PAGE_SCRIPT, /pagination: \{\}/);
 assert.match(GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.versionDiffPayload, /invisiblePromptAdaptations/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.page, /\.playground-guardrails-page/);
-assert.match(GUARDRAILS_STYLE_FRAGMENTS.versionChanges, /\.playground-guardrails-version-changes-page/);
+assert.match(GUARDRAILS_STYLE_FRAGMENTS.versionChanges, /\.playground-guardrails-version-changes-modal__content/);
 assert.match(GUARDRAILS_STYLE_FRAGMENTS.agentIntegration, /\.playground-agents-detail-guardrails-section/);
 assert.equal(GUARDRAILS_PAGE_CSS, GUARDRAILS_STYLE_FRAGMENTS.page);
 

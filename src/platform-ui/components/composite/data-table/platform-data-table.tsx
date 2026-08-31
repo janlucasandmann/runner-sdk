@@ -40,7 +40,8 @@ import {
   List,
   ListFilter,
   Plus,
-} from "lucide-react";
+  Trash2,
+} from "../../ui/hugeicons-compat.js";
 import {
   getNextPlatformDataTableSort,
   normalizePlatformDataTableIds,
@@ -48,7 +49,6 @@ import {
   togglePlatformDataTableVisibleSelection,
 } from "./data-table-state.js";
 import { useAnimatedHeight } from "./use-animated-height.js";
-import { DotLoader } from "../../ui/dot-loader/index.js";
 import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
 import { PlatformCheckbox } from "../../ui/checkbox/platform-checkbox.js";
 import { PlatformSearch } from "../../ui/search/platform-search.js";
@@ -71,6 +71,10 @@ const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const DEFAULT_CATALOG_INITIAL_ROW_COUNT = 20;
 const DEFAULT_CATALOG_ROW_INCREMENT = 10;
 const VIEWPORT_GUTTER = 8;
+const DELETE_ACTION_ID = "delete";
+const DELETE_ACTION_ARIA_SHORTCUTS =
+  "Meta+Backspace Meta+Delete Control+Backspace Control+Delete";
+const DELETE_ACTION_SHORTCUT_LABEL = "⌘ ⌫";
 
 interface FloatingAnchor {
   x: number;
@@ -91,6 +95,35 @@ function joinClassNames(
   ...values: Array<string | null | undefined | false>
 ): string {
   return values.filter(Boolean).join(" ");
+}
+
+function isEditableShortcutTarget(target: EventTarget | null): boolean {
+  if (typeof Element === "undefined" || !(target instanceof Element)) {
+    return false;
+  }
+  return Boolean(
+    target.closest('input, textarea, select, [contenteditable="true"]'),
+  );
+}
+
+function isDeleteShortcut(event: globalThis.KeyboardEvent): boolean {
+  return (
+    (event.metaKey || event.ctrlKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    (event.key === "Backspace" || event.key === "Delete")
+  );
+}
+
+function isDeleteAction<TData>(
+  action: PlatformDataTableAction<TData>,
+): boolean {
+  const actionId = action.id.trim().toLowerCase();
+  return (
+    actionId === DELETE_ACTION_ID ||
+    actionId.startsWith(`${DELETE_ACTION_ID}-`) ||
+    actionId.startsWith(`${DELETE_ACTION_ID}_`)
+  );
 }
 
 function formatCellValue(value: unknown): ReactNode {
@@ -250,6 +283,7 @@ export function PlatformDataTable<TData>({
   const incrementalRequestInFlightRef = useRef(false);
   const progressiveRevealInFlightRef = useRef(false);
   const previousProgressiveRowIdsRef = useRef<readonly string[]>([]);
+  const hoveredRowIdRef = useRef<string | null>(null);
   const rowMenuRef = useRef<HTMLDivElement | null>(null);
   const toolbarMenuRef = useRef<HTMLDivElement | null>(null);
   const rowSelectionControlRefs = useRef(
@@ -1018,6 +1052,100 @@ export function PlatformDataTable<TData>({
     setToolbarMenu(null);
   }, []);
 
+  const createRowActionContext = useCallback(
+    (row: TData, rowId: string): PlatformDataTableActionContext<TData> => {
+      const useSelectedRows = selectedIds.has(rowId) && selectedRows.length > 1;
+      const targetRows = useSelectedRows ? selectedRows : [row];
+      return {
+        row,
+        rowId,
+        rows: targetRows,
+        rowIds: new Set(
+          targetRows.map((targetRow) => getRowId(targetRow)),
+        ),
+        selectedRows,
+        selectedIds,
+        closeMenu: closeMenus,
+      };
+    },
+    [closeMenus, getRowId, selectedIds, selectedRows],
+  );
+
+  const invokeRowAction = useCallback(
+    (
+      action: PlatformDataTableAction<TData>,
+      context: PlatformDataTableActionContext<TData>,
+    ) => {
+      if (action.disabled) return;
+      if (!action.keepOpen) closeMenus();
+      try {
+        const result = action.onSelect(context);
+        if (result && typeof result.catch === "function") {
+          result.catch((actionError) =>
+            console.error("[PlatformDataTable] Row action failed", actionError),
+          );
+        }
+      } catch (actionError) {
+        console.error("[PlatformDataTable] Row action failed", actionError);
+      }
+    },
+    [closeMenus],
+  );
+
+  useEffect(() => {
+    if (typeof document === "undefined" || !getRowActions) return undefined;
+
+    const handleDeleteShortcut = (event: globalThis.KeyboardEvent) => {
+      const rowId = hoveredRowIdRef.current;
+      if (
+        !rowId ||
+        event.repeat ||
+        event.isComposing ||
+        isEditableShortcutTarget(event.target) ||
+        !isDeleteShortcut(event)
+      ) {
+        return;
+      }
+
+      const row = data.find((candidate) => getRowId(candidate) === rowId);
+      if (!row || isRowDisabled?.(row)) return;
+      const deleteAction = resolveRowActions(row, rowId).find(
+        (action) => !action.hidden && isDeleteAction(action),
+      );
+      if (!deleteAction || deleteAction.disabled) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      invokeRowAction(
+        deleteAction,
+        createRowActionContext(row, rowId),
+      );
+    };
+
+    document.addEventListener("keydown", handleDeleteShortcut, true);
+    return () => {
+      document.removeEventListener("keydown", handleDeleteShortcut, true);
+    };
+  }, [
+    createRowActionContext,
+    data,
+    getRowActions,
+    getRowId,
+    invokeRowAction,
+    isRowDisabled,
+    resolveRowActions,
+  ]);
+
+  useEffect(() => {
+    const hoveredRowId = hoveredRowIdRef.current;
+    if (
+      hoveredRowId &&
+      !data.some((candidate) => getRowId(candidate) === hoveredRowId)
+    ) {
+      hoveredRowIdRef.current = null;
+    }
+  }, [data, getRowId]);
+
   useEffect(() => {
     if (!rowMenu && !toolbarMenu) return;
     const handlePointerDown = (event: PointerEvent) => {
@@ -1689,27 +1817,22 @@ export function PlatformDataTable<TData>({
 
   const renderBody = () => {
     let stateContent: ReactNode = null;
-    if (loading)
-      stateContent = loadingState
-        ? createElement(
-            "div",
-            { className: "platform-data-table__state is-loading has-custom-loading-state" },
-            loadingState,
-          )
-        : createElement(
-            "div",
-            { className: "platform-data-table__state is-loading", role: "status" },
-            createElement(DotLoader, {
-              className: "platform-data-table__dot-loader",
-              dotCount: 9,
-              dotSize: 3,
-              gap: 2,
-              speed: 800,
-              color: "currentColor",
-            }),
-            createElement("span", null, "Loading"),
-          );
-    else if (error)
+    if (loading) {
+      stateContent = createElement(
+        "div",
+        {
+          className: joinClassNames(
+            "platform-data-table__state is-loading has-loading-state",
+            Boolean(loadingState) && "has-custom-loading-state",
+          ),
+        },
+        loadingState ||
+          createElement(PlatformLoadingState, {
+            centered: true,
+            message: `Loading ${ariaLabel}…`,
+          }),
+      );
+    } else if (error)
       stateContent = createElement(
         "div",
         { className: "platform-data-table__state is-error", role: "alert" },
@@ -2032,9 +2155,15 @@ export function PlatformDataTable<TData>({
             style: { gridTemplateColumns },
             onClick: onRowActivate ? handleActivate : undefined,
             onKeyDown: handleRowKeyDown,
-            onPointerEnter: onRowPointerEnter
-              ? () => onRowPointerEnter(row)
-              : undefined,
+            onPointerEnter: () => {
+              hoveredRowIdRef.current = rowId;
+              onRowPointerEnter?.(row);
+            },
+            onPointerLeave: () => {
+              if (hoveredRowIdRef.current === rowId) {
+                hoveredRowIdRef.current = null;
+              }
+            },
             onFocus: onRowFocus ? () => onRowFocus(row) : undefined,
             draggable: rowDraggable,
             onDragStart: rowDraggable
@@ -2276,26 +2405,13 @@ export function PlatformDataTable<TData>({
     const actions = resolveRowActions(row, rowMenu.rowId).filter(
       (action) => !action.hidden,
     );
-    const useSelectedRows =
-      selectedIds.has(rowMenu.rowId) && selectedRows.length > 1;
-    const targetRows = useSelectedRows ? selectedRows : [row];
-    const targetIds = new Set(
-      targetRows.map((targetRow) => getRowId(targetRow)),
-    );
-    const context: PlatformDataTableActionContext<TData> = {
-      row,
-      rowId: rowMenu.rowId,
-      rows: targetRows,
-      rowIds: targetIds,
-      selectedRows,
-      selectedIds,
-      closeMenu: closeMenus,
-    };
+    const context = createRowActionContext(row, rowMenu.rowId);
     const customContent = renderRowMenu?.({ ...context, actions });
     const content =
       customContent ||
-      actions.map((action: PlatformDataTableAction<TData>) =>
-        createElement(
+      actions.map((action: PlatformDataTableAction<TData>) => {
+        const deleteAction = isDeleteAction(action);
+        return createElement(
           "button",
           {
             key: action.id,
@@ -2303,42 +2419,48 @@ export function PlatformDataTable<TData>({
             role: "menuitem",
             className: joinClassNames(
               "platform-data-table__menu-item",
-              action.danger && "is-danger",
-              action.separatorBefore && "has-separator",
+              (action.danger || deleteAction) && "is-danger",
+              (action.separatorBefore || deleteAction) && "has-separator",
+              deleteAction && "is-delete",
             ),
             disabled: action.disabled,
-            onClick: () => {
-              if (action.disabled) return;
-              if (!action.keepOpen) closeMenus();
-              const result = action.onSelect(context);
-              if (result && typeof result.catch === "function") {
-                result.catch((actionError) =>
-                  console.error(
-                    "[PlatformDataTable] Row action failed",
-                    actionError,
-                  ),
-                );
-              }
-            },
+            "aria-keyshortcuts": deleteAction
+              ? DELETE_ACTION_ARIA_SHORTCUTS
+              : undefined,
+            onClick: () => invokeRowAction(action, context),
           },
           createElement(
             "span",
             { className: "platform-data-table__menu-icon" },
-            renderIcon(action.icon, "", 15),
+            renderIcon(
+              action.icon || (deleteAction ? Trash2 : undefined),
+              "",
+              15,
+            ),
           ),
           createElement(
             "span",
             { className: "platform-data-table__menu-label" },
             action.label,
           ),
-        ),
-      );
+          deleteAction
+            ? createElement(
+                "span",
+                {
+                  className: "platform-data-table__menu-shortcut",
+                  "aria-hidden": true,
+                },
+                DELETE_ACTION_SHORTCUT_LABEL,
+              )
+            : null,
+        );
+      });
     return createPortal(
       createElement(
         PlatformPopupSurface,
         {
           ref: rowMenuRef,
-          className: "platform-data-table__floating-menu",
+          className: "platform-data-table__floating-menu is-portaled",
           mode: "fixed",
           variant: "minimal",
           animation: "down-in",
@@ -2421,7 +2543,7 @@ export function PlatformDataTable<TData>({
         PlatformPopupSurface,
         {
           ref: toolbarMenuRef,
-          className: "platform-data-table__floating-menu",
+          className: "platform-data-table__floating-menu is-portaled",
           mode: "fixed",
           variant: "minimal",
           animation: "down-in",

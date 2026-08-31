@@ -51,12 +51,20 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
               ? String(config.triggerType || subtype || "thread_event").trim() || "thread_event"
               : "";
             const normalizedThreadCommand = (value) => {
-              const rawValue = String(value || "").trim();
-              if (!rawValue) return "@";
-              return rawValue.startsWith("@") ? rawValue : "@" + rawValue;
+              return normalizeMetronomeThreadTriggerCommand(value) || "@";
             };
             const closeMetronomeDynamicContentPicker = () => {
-              setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+              setMetronomeDynamicContentPicker({ fieldKey: "", query: "", anchorPoint: null });
+            };
+            const getMetronomeInspectorPickerAnchorPoint = (event) => {
+              const trigger = event?.currentTarget;
+              const inspector = trigger?.closest?.(".playground-metronome-node-inspector");
+              const inspectorRect = inspector?.getBoundingClientRect?.();
+              if (!inspectorRect) return null;
+              return {
+                x: inspectorRect.left,
+                y: inspectorRect.top,
+              };
             };
             const insertMetronomeRichFieldText = (fieldKey, insertion, options = {}) => {
               const textarea = promptExtensionTextareaRef.current;
@@ -123,11 +131,10 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
               setActiveMetronomeRichTextField(fieldKey);
               closeMetronomeAttachmentPopover({ immediate: true });
               closeMetronomePromptPicker();
-              setIsMetronomeAgentSelectorOpen(false);
-              setIsMetronomeWorkspaceSelectorOpen(false);
               setMetronomeDynamicContentPicker({
                 fieldKey,
                 query: "",
+                anchorPoint: getMetronomeInspectorPickerAnchorPoint(event),
               });
               window.setTimeout(() => {
                 const textarea = promptExtensionTextareaRef.current;
@@ -156,12 +163,11 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
               setActiveMetronomeRichTextField(fieldKey);
               closeMetronomeAttachmentPopover({ immediate: true });
               closeMetronomeDynamicContentPicker();
-              setIsMetronomeAgentSelectorOpen(false);
-              setIsMetronomeWorkspaceSelectorOpen(false);
               setMetronomePromptPicker({
                 fieldKey,
                 query: "",
                 selectingPromptId: "",
+                anchorPoint: getMetronomeInspectorPickerAnchorPoint(event),
               });
             };
             const insertMetronomePromptItem = async (fieldKey, prompt) => {
@@ -219,237 +225,43 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                 }));
               }
             };
-            const openMetronomeFieldTooltip = (copy, event) => {
-              const nextCopy = String(copy || "").trim();
-              const rect = event?.currentTarget?.getBoundingClientRect?.();
-              if (!nextCopy || !rect) return;
-              setMetronomeFieldTooltipPortal({
-                copy: nextCopy,
-                rect: {
-                  left: rect.left,
-                  right: rect.right,
-                  top: rect.top,
-                  bottom: rect.bottom,
-                  width: rect.width,
-                  height: rect.height,
-                },
-              });
-            };
-            const closeMetronomeFieldTooltip = () => {
-              setMetronomeFieldTooltipPortal({ copy: "", rect: null });
-            };
-            const renderMetronomeFieldTooltipPortal = () => {
-              const copy = String(metronomeFieldTooltipPortal.copy || "").trim();
-              const rect = metronomeFieldTooltipPortal.rect;
-              if (!copy || !rect) return null;
-              const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
-              const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 768;
-              const tooltipWidth = Math.min(260, Math.max(220, viewportWidth - 24));
-              const rightSideLeft = rect.right + 8;
-              const leftSideLeft = rect.left - tooltipWidth - 8;
-              const tooltipLeft = rightSideLeft + tooltipWidth <= viewportWidth - 12
-                ? rightSideLeft
-                : Math.max(12, leftSideLeft);
-              const tooltipTop = Math.max(12, Math.min(rect.top + (rect.height / 2) - 20, viewportHeight - 84));
-              const tooltip = React.createElement(PlatformPopupSurface, {
-                className: "playground-metronome-field-tooltip-popover is-portal",
-                mode: "fixed",
-                style: {
-                  left: tooltipLeft + "px",
-                  top: tooltipTop + "px",
-                  width: tooltipWidth + "px",
-                },
-              }, copy);
-              return typeof document !== "undefined" && typeof createPortal === "function"
-                ? createPortal(tooltip, document.body)
-                : tooltip;
-            };
             const renderMetronomeFieldTooltip = (copy) => copy
-              ? React.createElement("span", {
-                  className: "playground-metronome-field-tooltip",
-                  tabIndex: 0,
-                  "aria-label": copy,
-                  onMouseEnter: (event) => openMetronomeFieldTooltip(copy, event),
-                  onMouseLeave: closeMetronomeFieldTooltip,
-                  onFocus: (event) => openMetronomeFieldTooltip(copy, event),
-                  onBlur: closeMetronomeFieldTooltip,
-                  onKeyDown: (event) => {
-                    if (event.key === "Escape") {
-                      closeMetronomeFieldTooltip();
-                    }
-                  },
-                },
-                  React.createElement(Info, { width: 11, height: 11, strokeWidth: 2 })
-                )
+              ? React.createElement(MetronomeInspectorInfoTooltip, {
+                  ariaLabel: "More information",
+                  description: copy,
+                })
               : null;
             const renderMetronomeFieldTitle = (title, tooltip) => React.createElement(MetronomeInspectorFieldTitle, {
               title,
               tooltip: renderMetronomeFieldTooltip(tooltip),
             });
-            const normalizeMetronomeInspectorSelectOption = (option) => {
-              const source = option && typeof option === "object" ? option : { value: option, label: option };
-              const value = String(source.value ?? source.id ?? "").trim();
-              const label = String(source.label ?? source.name ?? source.title ?? source.id ?? source.value ?? "").trim();
-              return {
-                ...source,
-                value,
-                id: value,
-                label: label || value,
-                description: String(source.description || source.copy || source.subtitle || "").trim(),
-              };
-            };
             const renderMetronomeInspectorSelect = ({
               id,
               value,
               options = [],
               onChange,
               placeholder = "Select...",
-              searchPlaceholder = "Select a model...",
+              searchPlaceholder = "Search options...",
               disabled = false,
             } = {}) => {
               const selectId = String(id || "").trim();
-              const normalizedOptions = [];
-              const seenOptionKeys = new Set();
-              (Array.isArray(options) ? options : []).forEach((option) => {
-                const normalizedOption = normalizeMetronomeInspectorSelectOption(option);
-                const optionKey = normalizedOption.value || normalizedOption.label;
-                if (!optionKey || seenOptionKeys.has(optionKey)) return;
-                seenOptionKeys.add(optionKey);
-                normalizedOptions.push(normalizedOption);
-              });
-              const selectedValue = String(value ?? "").trim();
-              const selectedOption = normalizedOptions.find((option) => option.value === selectedValue) || null;
-              const selectedLabel = selectedOption?.label || String(placeholder || "Select...");
-              const isOpen = Boolean(selectId && metronomeInspectorSelectPopover.id === selectId);
-              const isClosing = Boolean(isOpen && metronomeInspectorSelectPopover.closing);
-              const query = isOpen ? String(metronomeInspectorSelectPopover.query || "") : "";
-              const normalizedQuery = query.trim().toLowerCase();
-              const filteredOptions = normalizedOptions.filter((option) => {
-                if (!normalizedQuery) return true;
-                return [option.label, option.description, option.value]
-                  .join(" ")
-                  .toLowerCase()
-                  .includes(normalizedQuery);
-              });
-              const rect = isOpen && metronomeInspectorSelectPopover.rect ? metronomeInspectorSelectPopover.rect : null;
-              const popupWidth = rect ? Math.min(Math.max(rect.width, 250), 320) : 280;
-              const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
-              const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 768;
-              const popupLeft = rect
-                ? Math.max(12, Math.min(rect.right - popupWidth, viewportWidth - popupWidth - 12))
-                : 12;
-              const popupTop = rect ? Math.min(rect.bottom + 8, viewportHeight - 220) : 80;
-              const popupMaxHeight = rect ? Math.max(180, Math.min(360, viewportHeight - popupTop - 12)) : 320;
-              const popup = isOpen
-                ? React.createElement(PlatformPopupSurface, {
-                    className: "playground-metronome-inspector-select-popup",
-                    animation: isClosing ? "down-out" : "down-in",
-                    style: {
-                      position: "fixed",
-                      left: popupLeft + "px",
-                      top: popupTop + "px",
-                      width: popupWidth + "px",
-                      maxHeight: popupMaxHeight + "px",
-                      zIndex: 100000,
-                    },
-                    onMouseDown: (event) => event.stopPropagation(),
-                    onPointerDown: (event) => event.stopPropagation(),
-                    onClick: (event) => event.stopPropagation(),
-                  },
-                    React.createElement("label", { className: "playground-metronome-inspector-select-search" },
-                      React.createElement(Search, { width: 14, height: 14, strokeWidth: 1.8 }),
-                      React.createElement(MetronomeInspectorInput, {
-                        type: "search",
-                        value: query,
-                        placeholder: searchPlaceholder,
-                        autoFocus: true,
-                        onChange: (event) => setMetronomeInspectorSelectPopover((current) => ({
-                          ...current,
-                          query: event.target.value,
-                          closing: false,
-                        })),
-                        onKeyDown: stopMetronomeInputKeyPropagation,
-                        onKeyUp: stopMetronomeInputKeyPropagation,
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-metronome-inspector-select-list" },
-                      filteredOptions.length
-                        ? filteredOptions.map((option) => {
-                            const isSelected = option.value === selectedValue;
-                            return React.createElement("button", {
-                              key: option.value || option.label,
-                              type: "button",
-                              className: "playground-metronome-inspector-select-option" + (isSelected ? " is-selected" : ""),
-                              onClick: () => {
-                                if (typeof onChange === "function") {
-                                  onChange(option.value, option);
-                                }
-                                closeMetronomeInspectorSelectPopover();
-                              },
-                            },
-                              React.createElement("span", { className: "playground-metronome-inspector-select-option-check" },
-                                isSelected ? React.createElement(Check, { width: 13, height: 13, strokeWidth: 1.9 }) : null
-                              ),
-                              React.createElement("span", { className: "playground-metronome-inspector-select-option-copy" },
-                                React.createElement("span", { className: "playground-metronome-inspector-select-option-label" }, option.label),
-                                option.description
-                                  ? React.createElement("span", { className: "playground-metronome-inspector-select-option-description" }, option.description)
-                                  : null
-                              )
-                            );
-                          })
-                        : React.createElement("div", { className: "playground-metronome-inspector-select-empty" }, "No matching options.")
-                    )
-                  )
-                : null;
-              const popupLayer = popup && typeof document !== "undefined" && typeof createPortal === "function"
-                ? createPortal(popup, document.body)
-                : popup;
-              return React.createElement(React.Fragment, null,
-                React.createElement("button", {
-                  type: "button",
-                  className: "playground-metronome-select playground-metronome-custom-select-trigger" + (isOpen ? " is-open" : ""),
-                  disabled: disabled || !selectId,
-                  "aria-haspopup": "listbox",
-                  "aria-expanded": isOpen ? "true" : "false",
-                  onMouseDown: (event) => event.preventDefault(),
-                  onClick: (event) => {
-                    event.stopPropagation();
-                    if (disabled || !selectId) return;
-                    const nextOpen = !isOpen || isClosing;
-                    const nextRect = event.currentTarget?.getBoundingClientRect?.();
-                    setIsMetronomeAgentSelectorOpen(false);
-                    setIsMetronomeWorkspaceSelectorOpen(false);
-                    closeMetronomeSchedulePopover({ immediate: true });
-                    if (!nextOpen) {
-                      closeMetronomeInspectorSelectPopover();
-                      return;
-                    }
-                    if (metronomeInspectorSelectCloseTimerRef.current && typeof window !== "undefined") {
-                      window.clearTimeout(metronomeInspectorSelectCloseTimerRef.current);
-                      metronomeInspectorSelectCloseTimerRef.current = null;
-                    }
-                    setMetronomeInspectorSelectPopover({
-                      id: selectId,
-                      rect: nextRect
-                        ? {
-                            left: nextRect.left,
-                            right: nextRect.right,
-                            top: nextRect.top,
-                            bottom: nextRect.bottom,
-                            width: nextRect.width,
-                          }
-                        : null,
-                      query: "",
-                      closing: false,
-                    });
-                  },
+              return React.createElement(MetronomeInspectorSelect, {
+                key: selectId,
+                value,
+                options,
+                onValueChange: (nextValue, option) => {
+                  if (typeof onChange === "function") onChange(nextValue, option);
                 },
-                  React.createElement("span", { className: "playground-metronome-custom-select-trigger-label" }, selectedLabel),
-                  React.createElement(ChevronsUpDown, { className: "playground-metronome-custom-select-trigger-icon", width: 13, height: 13, strokeWidth: 1.55 })
-                ),
-                popupLayer
-              );
+                ariaLabel: searchPlaceholder,
+                placeholder,
+                searchPlaceholder,
+                className: "playground-metronome-select",
+                disabled: disabled || !selectId,
+                onOpenChange: (nextOpen) => {
+                  if (!nextOpen) return;
+                  closeMetronomeSchedulePopover({ immediate: true });
+                },
+              });
             };
             const renderMetronomeDataBindingSelect = ({
               title,
@@ -660,18 +472,29 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                   return items.length ? { ...group, items } : null;
                 })
                 .filter(Boolean);
-              return React.createElement(MetronomeInspectorToolbarPopup, {
+              return React.createElement(MetronomeInspectorPickerPopup, {
                 open: isOpen,
-                animation: "down-in",
+                title: "Dynamic content",
+                description: "Insert outputs from upstream nodes or workflow context.",
+                onClose: closeMetronomeDynamicContentPicker,
+                showHeader: false,
+                placement: "left-start",
+                portalAnchorPoint: metronomeDynamicContentPicker.anchorPoint || null,
                 rootClassName: "playground-metronome-dynamic-content-popup-shell",
                 surfaceClassName: "playground-metronome-dynamic-content-picker",
                 surfaceProps: {
-                  role: "dialog",
-                  "aria-label": "Dynamic content",
-                  width: "min(360px, calc(100vw - 24px))",
-                  maxHeight: "min(520px, calc(100dvh - 24px))",
-                  onMouseDown: (event) => event.stopPropagation(),
-                  onPointerDown: (event) => event.stopPropagation(),
+                  "data-metronome-inspector-side": "left",
+                },
+                searchHeader: {
+                  showSearchIcon: true,
+                  value: metronomeDynamicContentPicker.query || "",
+                  onChange: (event) => setMetronomeDynamicContentPicker((current) => ({
+                    ...current,
+                    query: event.target.value,
+                  })),
+                  placeholder: "Search outputs and context",
+                  autoFocus: isOpen,
+                  "aria-label": "Search dynamic content",
                 },
                 trigger: React.createElement("button", {
                   type: "button",
@@ -685,37 +508,8 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                   onClick: (event) => openMetronomeDynamicContentPicker(fieldKey, event),
                 }, React.createElement(Zap, { width: 14, height: 14, strokeWidth: iconStrokeWidth })),
               },
-                React.createElement("div", { className: "playground-metronome-dynamic-content-picker-header" },
-                  React.createElement("div", null,
-                    React.createElement("div", { className: "playground-metronome-dynamic-content-picker-title" },
-                      React.createElement("span", null, "Dynamic content")
-                    ),
-                    React.createElement("div", { className: "playground-metronome-dynamic-content-picker-copy" },
-                      "Insert outputs from upstream nodes or workflow context."
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-dynamic-content-picker-close",
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: closeMetronomeDynamicContentPicker,
-                    title: "Close",
-                    "aria-label": "Close dynamic content",
-                  }, React.createElement(X, { width: 14, height: 14, strokeWidth: 2.4 }))
-                ),
-                React.createElement(PlatformPopupSearchHeader, {
-                  containerClassName: "playground-metronome-dynamic-content-search",
-                  showSearchIcon: true,
-                  value: metronomeDynamicContentPicker.query || "",
-                  onChange: (event) => setMetronomeDynamicContentPicker((current) => ({
-                    ...current,
-                    query: event.target.value,
-                  })),
-                  placeholder: "Search outputs and context",
-                  "aria-label": "Search dynamic content",
-                }),
                 searchableGroups.length
-                  ? React.createElement("div", { className: "playground-metronome-dynamic-content-list" },
+                  ? React.createElement("div", { className: "playground-metronome-inspector-picker-list" },
                       searchableGroups.map((group) => React.createElement("div", {
                         key: group.id,
                         className: "playground-metronome-dynamic-content-group",
@@ -728,23 +522,18 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                                 ? React.createElement("span", { className: "playground-metronome-dynamic-content-group-subtitle" }, group.subtitle)
                                 : null
                             ),
-                        group.items.map((item) => React.createElement("button", {
+                        group.items.map((item) => React.createElement(MetronomeInspectorPickerRow, {
                           key: group.id + ":" + item.path,
-                          type: "button",
-                          className: "playground-metronome-dynamic-content-row",
+                          label: item.label || item.path,
+                          description: item.token || item.path,
+                          trailing: item.type || "value",
                           onMouseDown: (event) => event.preventDefault(),
                           onClick: () => insertMetronomeDynamicContentItem(fieldKey, item),
                           title: item.token || item.path,
-                        },
-                          React.createElement("span", { className: "playground-metronome-dynamic-content-row-main" },
-                            React.createElement("span", { className: "playground-metronome-dynamic-content-row-label" }, item.label || item.path),
-                            React.createElement("span", { className: "playground-metronome-dynamic-content-row-path" }, item.token || item.path)
-                          ),
-                          React.createElement("span", { className: "playground-metronome-dynamic-content-row-type" }, item.type || "value")
-                        ))
+                        }))
                       ))
                     )
-                  : React.createElement("div", { className: "playground-metronome-dynamic-content-empty" },
+                  : React.createElement(MetronomeInspectorPickerState, null,
                       normalizedQuery
                         ? "No matching dynamic content."
                         : "Connect an upstream node to expose its outputs here."
@@ -775,40 +564,20 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                 onMouseDown: (event) => event.preventDefault(),
                 onClick: (event) => openMetronomePromptPicker(fieldKey, event),
               }, React.createElement(MessageSquareText, { width: 14, height: 14, strokeWidth: iconStrokeWidth }));
-              return React.createElement(MetronomeInspectorToolbarPopup, {
+              return React.createElement(MetronomeInspectorPickerPopup, {
                 open: isOpen,
+                title: "Prompts",
+                description: "Insert a reusable prompt into these instructions.",
+                onClose: closeMetronomePromptPicker,
+                showHeader: false,
+                placement: "left-start",
+                portalAnchorPoint: metronomePromptPicker.anchorPoint || null,
                 rootClassName: "playground-metronome-prompt-picker-popup-shell",
-                surfaceClassName: "playground-metronome-dynamic-content-picker playground-metronome-prompt-picker",
+                surfaceClassName: "playground-metronome-prompt-picker",
                 surfaceProps: {
-                  role: "dialog",
-                  "aria-label": "Prompts",
-                  width: "min(360px, calc(100vw - 24px))",
-                  maxHeight: "min(520px, calc(100dvh - 24px))",
-                  onMouseDown: (event) => event.stopPropagation(),
-                  onPointerDown: (event) => event.stopPropagation(),
+                  "data-metronome-inspector-side": "left",
                 },
-                trigger,
-              },
-                React.createElement("div", { className: "playground-metronome-dynamic-content-picker-header" },
-                  React.createElement("div", null,
-                    React.createElement("div", { className: "playground-metronome-dynamic-content-picker-title" },
-                      React.createElement("span", null, "Prompts")
-                    ),
-                    React.createElement("div", { className: "playground-metronome-dynamic-content-picker-copy" },
-                      "Insert a reusable prompt into these instructions."
-                    )
-                  ),
-                  React.createElement("button", {
-                    type: "button",
-                    className: "playground-metronome-dynamic-content-picker-close",
-                    onMouseDown: (event) => event.preventDefault(),
-                    onClick: closeMetronomePromptPicker,
-                    title: "Close",
-                    "aria-label": "Close prompts",
-                  }, React.createElement(X, { width: 14, height: 14, strokeWidth: 2.4 }))
-                ),
-                React.createElement(PlatformPopupSearchHeader, {
-                  containerClassName: "playground-metronome-dynamic-content-search",
+                searchHeader: {
                   showSearchIcon: true,
                   autoFocus: isOpen,
                   value: metronomePromptPicker.query || "",
@@ -818,41 +587,37 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                   })),
                   placeholder: "Search prompts",
                   "aria-label": "Search prompts",
-                }),
+                },
+                trigger,
+              },
                 metronomePromptPickerState.status === "loading"
-                  ? React.createElement("div", { className: "playground-metronome-dynamic-content-empty playground-metronome-prompt-picker-state" },
+                  ? React.createElement(MetronomeInspectorPickerState, { className: "playground-metronome-prompt-picker-state" },
                       React.createElement(Loader2, { className: "is-spinning", width: 15, height: 15, strokeWidth: 1.9 }),
                       React.createElement("span", null, "Loading prompts...")
                     )
                   : prompts.length
-                    ? React.createElement("div", { className: "playground-metronome-dynamic-content-list" },
+                    ? React.createElement("div", { className: "playground-metronome-inspector-picker-list" },
                         metronomePromptPickerState.error
                           ? React.createElement("div", { className: "playground-metronome-prompt-picker-error" }, metronomePromptPickerState.error)
                           : null,
                         prompts.map((prompt) => {
                           const isSelecting = metronomePromptPicker.selectingPromptId === prompt.id;
-                          return React.createElement("button", {
+                          return React.createElement(MetronomeInspectorPickerRow, {
                             key: prompt.id,
-                            type: "button",
-                            className: "playground-metronome-dynamic-content-row playground-metronome-prompt-picker-row" + (isSelecting ? " is-loading" : ""),
+                            className: "playground-metronome-prompt-picker-row" + (isSelecting ? " is-loading" : ""),
+                            label: prompt.name,
+                            description: prompt.description || "Reusable prompt",
+                            trailing: isSelecting
+                              ? React.createElement(Loader2, { className: "is-spinning", width: 11, height: 11, strokeWidth: 1.9 })
+                              : "Prompt",
                             disabled: Boolean(metronomePromptPicker.selectingPromptId),
                             onMouseDown: (event) => event.preventDefault(),
                             onClick: () => void insertMetronomePromptItem(fieldKey, prompt),
                             title: prompt.name,
-                          },
-                            React.createElement("span", { className: "playground-metronome-dynamic-content-row-main" },
-                              React.createElement("span", { className: "playground-metronome-dynamic-content-row-label" }, prompt.name),
-                              React.createElement("span", { className: "playground-metronome-dynamic-content-row-path" }, prompt.description || "Reusable prompt")
-                            ),
-                            React.createElement("span", { className: "playground-metronome-dynamic-content-row-type" },
-                              isSelecting
-                                ? React.createElement(Loader2, { className: "is-spinning", width: 11, height: 11, strokeWidth: 1.9 })
-                                : "Prompt"
-                            )
-                          );
+                          });
                         })
                       )
-                    : React.createElement("div", { className: "playground-metronome-dynamic-content-empty playground-metronome-prompt-picker-state" },
+                    : React.createElement(MetronomeInspectorPickerState, { className: "playground-metronome-prompt-picker-state" },
                         metronomePromptPickerState.error
                           || (normalizedQuery ? "No matching prompts." : "No prompts are available yet.")
                       )
@@ -1097,29 +862,26 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                 || metronomeAgentOptions[0]
                 || null;
               const agentOptions = metronomeAgentOptions.map((agent) => {
-                const selectorMode = getMetronomeAgentSelectorMode(agent);
+                const agentName = agent.name || "Agent";
                 return {
-                  id: agent.id,
-                  label: agent.name || "Agent",
-                  description: selectorMode === "teams"
-                    ? "Team agent"
-                    : selectorMode === "humans"
-                      ? "Human collaborator"
-                      : "Agent",
+                  value: agent.id,
+                  name: agentName,
+                  avatarUrl: getMetronomeProfileImageUrl(agent),
                 };
               });
-              return React.createElement("div", {
-                className: "playground-metronome-inspector-selector-field",
+              return React.createElement(MetronomeInspectorField, {
+                className: "playground-metronome-inspector-selector-field playground-metronome-agent-selector-field",
               },
                 renderMetronomeFieldTitle(selectorTitle),
-                renderMetronomeInspectorSelect({
-                  id: "thread-agent-" + (selectedNodeId || "selected"),
+                React.createElement(PlatformAgentSelector, {
                   value: selectedAgent?.id || config.agentId || "",
                   options: agentOptions,
                   placeholder: metronomeAgentOptions.length ? "Select agent" : "No agents available",
                   searchPlaceholder: "Select an agent...",
+                  searchAriaLabel: "Select an agent",
+                  ariaLabel: "Select workflow agent",
                   disabled: isActiveWorkflowBuiltIn || !metronomeAgentOptions.length,
-                  onChange: (nextAgentId) => {
+                  onValueChange: (nextAgentId) => {
                     const nextAgent = metronomeAgentOptions.find((agent) => agent.id === nextAgentId) || null;
                     if (!nextAgent) return;
                     updateSelectedNodeConfigPatch({
@@ -1127,6 +889,20 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                       agentName: nextAgent.name || "",
                     });
                   },
+                  alignment: "end",
+                  popupAlignment: "right",
+                  fullWidth: true,
+                  popupWidth: "min(280px, calc(100vw - 48px))",
+                  popupMaxWidth: "calc(100vw - 48px)",
+                  popupMaxHeight: "min(320px, calc(100vh - 120px))",
+                  className: "playground-metronome-select playground-metronome-inspector-central-selector playground-metronome-agent-central-selector",
+                  triggerClassName: "playground-metronome-inspector-central-selector-trigger",
+                  popupClassName: "playground-metronome-inspector-central-selector-popup playground-metronome-agent-selector-popup",
+                  onOpenChange: (nextOpen) => {
+                    if (nextOpen) closeMetronomeSchedulePopover({ immediate: true });
+                  },
+                  onKeyDown: stopMetronomeInputKeyPropagation,
+                  onKeyUp: stopMetronomeInputKeyPropagation,
                 })
               );
             };
@@ -1160,8 +936,8 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                   };
                 }),
               ];
-              return React.createElement("div", {
-                className: "playground-metronome-inspector-selector-field",
+              return React.createElement(MetronomeInspectorField, {
+                className: "playground-metronome-inspector-selector-field playground-metronome-workspace-selector-field",
               },
                 renderMetronomeFieldTitle(selectorTitle),
                 renderMetronomeInspectorSelect({
@@ -1219,47 +995,7 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                   ...patch,
                 });
               };
-              const scheduleRect = isMetronomeSchedulePopoverOpen && metronomeSchedulePopoverRect
-                ? metronomeSchedulePopoverRect
-                : null;
-              const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1024;
-              const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 768;
-              const schedulePopoverWidth = Math.min(320, Math.max(260, viewportWidth - 40));
-              const schedulePopoverLeft = scheduleRect
-                ? Math.max(12, Math.min(scheduleRect.right - schedulePopoverWidth, viewportWidth - schedulePopoverWidth - 12))
-                : Math.max(12, viewportWidth - schedulePopoverWidth - 24);
-              const schedulePopoverTop = scheduleRect
-                ? Math.min(scheduleRect.bottom + 8, Math.max(12, viewportHeight - 300))
-                : 80;
-              const schedulePopoverMaxHeight = Math.max(260, Math.min(460, viewportHeight - schedulePopoverTop - 12));
-              const schedulePopover = isMetronomeSchedulePopoverOpen
-                ? React.createElement(PlatformPopupSurface, {
-                    className: "playground-metronome-schedule-popover",
-                    animation: isMetronomeSchedulePopoverClosing ? "down-out" : "down-in",
-                    style: {
-                      left: schedulePopoverLeft + "px",
-                      top: schedulePopoverTop + "px",
-                      width: schedulePopoverWidth + "px",
-                      maxHeight: schedulePopoverMaxHeight + "px",
-                    },
-                    onPointerDown: (event) => event.stopPropagation(),
-                  },
-                    React.createElement("div", { className: "playground-metronome-schedule-popover-header" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-metronome-schedule-popover-action",
-                        onClick: () => closeMetronomeSchedulePopover(),
-                        "aria-label": "Close schedule",
-                      }, React.createElement(X, { width: 15, height: 15, strokeWidth: 1.9 })),
-                      React.createElement("div", { className: "playground-metronome-schedule-popover-title" }, "Schedule"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-metronome-schedule-popover-action",
-                        onClick: () => closeMetronomeSchedulePopover(),
-                        "aria-label": "Apply schedule",
-                      }, React.createElement(Check, { width: 15, height: 15, strokeWidth: 1.9 }))
-                    ),
-                    React.createElement("div", { className: "playground-metronome-schedule-popover-body" },
+              const schedulePopoverContent = React.createElement("div", { className: "playground-metronome-schedule-popover-body" },
                       React.createElement("div", { className: "tb-popup-panel-section tb-popup-panel-section-attach-header playground-metronome-schedule-mode-section" },
                         React.createElement("div", { className: "tb-popup-nav" },
                           React.createElement("button", {
@@ -1334,12 +1070,7 @@ export const METRONOME_INSPECTOR_01_FRAGMENT = String.raw`
                             )
                           : null
                       )
-                    )
-                  )
-                : null;
-              const schedulePopoverLayer = schedulePopover && typeof document !== "undefined" && typeof createPortal === "function"
-                ? createPortal(schedulePopover, document.body)
-                : schedulePopover;
+                    );
               return React.createElement("div", { className: "playground-metronome-schedule-settings playground-tasks-detail-facts playground-tasks-schedule-timing-card" + (isMetronomeSchedulePopoverOpen ? " is-popover-open" : "") },
                 React.createElement("div", { className: "playground-tasks-detail-facts-header" },
                   React.createElement("div", { className: "playground-tasks-detail-section-title" }, "Schedule")

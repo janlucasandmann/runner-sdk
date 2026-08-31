@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpDown, Check, HardDrive, Monitor, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowUpDown, Check, HardDrive, Monitor, Search, SlidersHorizontal } from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import { PlatformPopupSurface } from "../../composite/popup/index.js";
 import { LogHeader, LogPanel } from "./log-card.js";

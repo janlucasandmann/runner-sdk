@@ -15,7 +15,7 @@ import {
   Trash2,
   Workflow,
   X,
-} from "lucide-react";
+} from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   type ReactNode,
   useEffect,

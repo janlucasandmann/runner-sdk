@@ -1,8 +1,9 @@
 import {
   Star as LucideStar,
   UsersRound as LucideUsersRound,
-  type LucideIcon,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
+import type { ComponentType } from "react";
+import { IconStar } from "./icons.js";
 
 export type RunnerComposerPlanTier =
   | "sandbox"
@@ -51,10 +52,10 @@ export function normalizeRunnerComposerPlanTier(
 
 export function getRunnerComposerPlanDisplay(
   tierId: unknown,
-): { label: string; Icon: LucideIcon } {
+): { label: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }> } {
   switch (normalizeRunnerComposerPlanTier(tierId)) {
     case "enterprise":
-      return { label: "Enterprise Plan", Icon: LucideStar };
+      return { label: "Enterprise Plan", Icon: IconStar };
     case "team":
       return { label: "Team Plan", Icon: LucideUsersRound };
     case "builder":

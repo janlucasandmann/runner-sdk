@@ -3,7 +3,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import { ChevronDown, EllipsisVertical } from "lucide-react";
+import { ChevronDown, EllipsisVertical } from "../../ui/hugeicons-compat.js";
 import {
   PlatformDefaultWidget,
   type PlatformDefaultWidgetProps,

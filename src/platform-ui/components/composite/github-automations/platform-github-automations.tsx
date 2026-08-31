@@ -1,16 +1,22 @@
-import { Globe, Rocket, ScanEye, ShieldCheck } from "lucide-react";
+import { Globe, PackageCheck, Rocket, ScanEye, ShieldCheck } from "../../ui/hugeicons-compat.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformSelector } from "../../ui/selector/index.js";
 import { PlatformToggle } from "../../ui/toggle/index.js";
 import { PlatformModal } from "../modal/index.js";
 
-export type PlatformGitHubAutomationScopeType = "organization" | "project" | "function" | "web_app";
+export type PlatformGitHubAutomationScopeType =
+  | "organization"
+  | "project"
+  | "function"
+  | "web_app"
+  | "skill";
 export type PlatformGitHubAutomationKind =
   | "security_scan"
   | "pull_request_review"
   | "deploy_function"
-  | "deploy_web_app";
+  | "deploy_web_app"
+  | "sync_skill";
 
 export interface PlatformGitHubAutomationAgentOption {
   id: string;
@@ -49,6 +55,7 @@ export interface PlatformGitHubAutomationsProps {
   environmentId?: string;
   defaultBranch?: string;
   automationKinds?: readonly PlatformGitHubAutomationKind[];
+  showHeading?: boolean;
   onBindingsChange?: (bindings: readonly PlatformGitHubAutomationBinding[]) => void;
 }
 
@@ -84,6 +91,12 @@ const AUTOMATIONS: readonly AutomationDefinition[] = [
     description: "Create and deploy a new Web App version from the exact GitHub revision.",
     icon: Globe,
   },
+  {
+    kind: "sync_skill",
+    title: "Skill updates",
+    description: "Synchronize and publish the Skill from the exact merged GitHub revision.",
+    icon: PackageCheck,
+  },
 ];
 
 const PR_EVENT_OPTIONS = [
@@ -102,19 +115,23 @@ function isDeploymentAutomationKind(kind: PlatformGitHubAutomationKind): boolean
   return kind === "deploy_function" || kind === "deploy_web_app";
 }
 
+function isExactRevisionAutomationKind(kind: PlatformGitHubAutomationKind): boolean {
+  return isDeploymentAutomationKind(kind) || kind === "sync_skill";
+}
+
 function defaultConfiguration(
   kind: PlatformGitHubAutomationKind,
   environmentId = "",
   defaultBranch = "",
 ): PlatformGitHubAutomationConfiguration {
   return {
-    events: isDeploymentAutomationKind(kind)
+    events: isExactRevisionAutomationKind(kind)
       ? ["pull_request.merged"]
       : [
           ...PR_EVENT_OPTIONS.map(([event]) => event),
           ...(kind === "security_scan" ? ["push"] : []),
         ],
-    branches: isDeploymentAutomationKind(kind) && defaultBranch ? [defaultBranch] : [],
+    branches: isExactRevisionAutomationKind(kind) && defaultBranch ? [defaultBranch] : [],
     pathIncludes: [],
     pathExcludes: [],
     agentId: "",
@@ -126,6 +143,8 @@ function defaultConfiguration(
           ? "Synchronize the Function from this exact GitHub revision, publish a new immutable version, and deploy it."
           : kind === "deploy_web_app"
             ? "Synchronize the Web App from this exact GitHub revision, publish a new immutable version, and deploy it."
+            : kind === "sync_skill"
+              ? "Synchronize the Skill from this exact GitHub revision and publish a new immutable Skill version."
             : "",
     publishReview: kind === "pull_request_review",
   };
@@ -179,6 +198,7 @@ export function PlatformGitHubAutomations({
   environmentId = "",
   defaultBranch = "",
   automationKinds,
+  showHeading = true,
   onBindingsChange,
 }: PlatformGitHubAutomationsProps) {
   const [bindings, setBindings] = useState<PlatformGitHubAutomationBinding[]>([]);
@@ -234,7 +254,7 @@ export function PlatformGitHubAutomations({
   );
   const visibleAutomations = useMemo(() => {
     if (!automationKinds?.length) {
-      return AUTOMATIONS.filter((automation) => !isDeploymentAutomationKind(automation.kind));
+      return AUTOMATIONS.filter((automation) => !isExactRevisionAutomationKind(automation.kind));
     }
     const visibleKinds = new Set(automationKinds);
     return AUTOMATIONS.filter((automation) => visibleKinds.has(automation.kind));
@@ -294,7 +314,7 @@ export function PlatformGitHubAutomations({
     const configuration =
       existing?.configuration || defaultConfiguration(kind, environmentId, defaultBranch);
     if (
-      (kind === "pull_request_review" || isDeploymentAutomationKind(kind)) &&
+      (kind === "pull_request_review" || isExactRevisionAutomationKind(kind)) &&
       enabled &&
       !configuration.agentId
     ) {
@@ -329,7 +349,7 @@ export function PlatformGitHubAutomations({
         <PlatformPrimaryButton
           disabled={
             savingKind === activeKind ||
-            ((activeKind === "pull_request_review" || isDeploymentAutomationKind(activeKind)) &&
+            ((activeKind === "pull_request_review" || isExactRevisionAutomationKind(activeKind)) &&
               !draft.agentId)
           }
           onClick={async () => {
@@ -344,11 +364,16 @@ export function PlatformGitHubAutomations({
     ) : null;
 
   return (
-    <div className="platform-github-automations" data-github-automation-scope={scopeType}>
-      <div className="platform-github-automations__heading">
-        <strong>Automations</strong>
-        <span>Run exact-revision actions when GitHub events occur.</span>
-      </div>
+    <div
+      className={`platform-github-automations${showHeading ? "" : " without-heading"}`}
+      data-github-automation-scope={scopeType}
+    >
+      {showHeading ? (
+        <div className="platform-github-automations__heading">
+          <strong>Automations</strong>
+          <span>Run exact-revision actions when GitHub events occur.</span>
+        </div>
+      ) : null}
       {error ? (
         <div className="platform-github-automations__error" role="alert">
           {error}
@@ -399,7 +424,7 @@ export function PlatformGitHubAutomations({
           <div className="platform-github-automation-configuration">
             <div className="platform-github-automation-configuration__section">
               <strong>Run when</strong>
-              {(isDeploymentAutomationKind(activeKind)
+              {(isExactRevisionAutomationKind(activeKind)
                 ? DEPLOY_EVENT_OPTIONS
                 : PR_EVENT_OPTIONS
               ).map(([eventName, label]) => (
@@ -475,21 +500,21 @@ export function PlatformGitHubAutomations({
                   />
                 </div>
               </>
-            ) : isDeploymentAutomationKind(activeKind) ? (
+            ) : isExactRevisionAutomationKind(activeKind) ? (
               <>
                 <div className="platform-github-automation-configuration__field">
-                  <span>Deployment Agent</span>
+                  <span>{activeKind === "sync_skill" ? "Skill maintenance Agent" : "Deployment Agent"}</span>
                   <PlatformSelector
                     fullWidth
                     value={draft.agentId}
-                    ariaLabel="Deployment Agent"
+                    ariaLabel={activeKind === "sync_skill" ? "Skill maintenance Agent" : "Deployment Agent"}
                     placeholder="Select an Agent"
                     options={agentSelectorOptions}
                     onValueChange={(agentId) => setDraft({ ...draft, agentId })}
                   />
                 </div>
                 <label className="platform-github-automation-configuration__field">
-                  <span>Deployment instructions</span>
+                  <span>{activeKind === "sync_skill" ? "Update instructions" : "Deployment instructions"}</span>
                   <textarea
                     rows={5}
                     value={draft.instructions}

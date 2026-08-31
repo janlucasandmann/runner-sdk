@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "../../ui/hugeicons-compat.js";
 import { Fragment, type ReactNode, useEffect, useId, useRef } from "react";
 
 import { PlatformPopup, type PlatformPopupAnchorPoint } from "../popup/index.js";

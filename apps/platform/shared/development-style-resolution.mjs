@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 
 import { resolveLegacyBrowserSourcePath } from "./legacy-source-resolution.mjs";
@@ -14,6 +15,8 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/activity-workspace/activity-workspace.css",
   "src/platform-ui/components/composite/comments/comments.css",
   "src/platform-ui/components/composite/connector-action-detail/connector-action-detail.css",
+  "src/platform-ui/components/composite/connector-configuration/connector-configuration.css",
+  "src/platform-ui/components/composite/github-automations/github-automations.css",
   "src/platform-ui/components/composite/popup/popup.css",
   "src/platform-ui/components/composite/profile-image-picker/profile-image-picker.css",
   "src/platform-ui/components/composite/owner-selector/owner-selector.css",
@@ -38,6 +41,7 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-ui/components/composite/detail-tab-bar/detail-tab-bar.css",
   "src/platform-ui/components/composite/detail-sidebar/detail-sidebar.css",
   "src/platform-ui/components/composite/resource-header-actions/resource-header-actions.css",
+  "src/platform-ui/components/composite/resource-source-control/resource-source-control.css",
   "src/platform-ui/components/composite/floating-sidebar/floating-sidebar.css",
   "src/platform-ui/components/composite/version-history-sidebar/version-history-sidebar.css",
   "src/platform-ui/components/composite/versioning/version-save-dialog.css",
@@ -52,7 +56,9 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
   "src/platform-services/develop-mode/evidence-agents/client/page/evidence-agents.css",
   "src/platform-ui/pages/permissions/permission-page.css",
   "src/platform-resources/agents/detail/agent-publish-control.css",
+  "src/platform-resources/computers/detail/computer-detail-page.css",
   "src/platform-resources/skills/detail/skill-detail-page.css",
+  "src/react/runner-chat/function-github-connector-settings.css",
   "src/platform-resources/prompts/detail/prompt-detail-page.css",
   "src/platform-resources/tags/detail/tag-detail-page.css",
   "src/platform-resources/plugins/external-agent-triggers/external-agent-triggers-page.css",
@@ -62,6 +68,15 @@ export const PLATFORM_PAGE_STYLE_SOURCE_PATHS = Object.freeze([
 const AGGREGATE_STYLE_SOURCES = new Map([
   ["/dist/platform-ui/pages/styles.css", PLATFORM_PAGE_STYLE_SOURCE_PATHS],
 ]);
+
+export async function loadPlatformPageStyleBundle(packageRoot) {
+  const sources = await Promise.all(
+    PLATFORM_PAGE_STYLE_SOURCE_PATHS.map((relativePath) =>
+      fs.readFile(path.resolve(packageRoot, relativePath), "utf8"),
+    ),
+  );
+  return `${sources.join("\n\n")}\n`;
+}
 
 export function resolveDevelopmentStyleSourcePaths(packageRoot, specifier) {
   const cleanSpecifier = String(specifier || "").split("?")[0];

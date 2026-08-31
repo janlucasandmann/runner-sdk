@@ -1,4 +1,4 @@
-import { Eye } from "lucide-react";
+import { Eye } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 import {
   PlatformDataTable,

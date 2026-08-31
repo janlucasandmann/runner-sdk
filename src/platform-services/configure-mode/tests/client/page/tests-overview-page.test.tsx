@@ -71,7 +71,9 @@ describe("TestsOverviewPage", () => {
     expect(screen.getByText("Verify the release candidate.")).not.toBeNull();
     expect(screen.getByText("Jane Doe")).not.toBeNull();
     expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
-    expect(container.querySelector(".lucide-flask-conical")).not.toBeNull();
+    expect(container.querySelector(".hugeicons-flask-conical")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Test Plan" }));
     expect(onCreate).toHaveBeenCalledOnce();

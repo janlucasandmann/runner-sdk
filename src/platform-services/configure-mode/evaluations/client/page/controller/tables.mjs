@@ -136,7 +136,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_TABLES_SCRIPT = String.raw`        func
         }
 
         function renderEvaluationSetCreatorCell(set) {
-          const explicitCreator = normalizePlaygroundEvaluationPersonIdentity(set?.creator || set?.createdBy || set?.created_by || {});
+          const explicitCreator = resolvePlaygroundEvaluationCreatorIdentity(set, [currentEvaluationCreator]);
           const creator = explicitCreator.name || explicitCreator.email || explicitCreator.id || explicitCreator.userId
             ? explicitCreator
             : normalizePlaygroundEvaluationPersonIdentity({});

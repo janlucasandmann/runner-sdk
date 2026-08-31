@@ -574,7 +574,7 @@
               onSelectVersion: (versionId) => void restoreAgentVersion(versionId),
               onPublishVersion: (versionId) => void publishAgentVersion(versionId),
               canPublishVersion: (version) => canPublishAgentVersion(version),
-              onViewChanges: () => openAgentVersionChangesPage(),
+              onViewChanges: () => openAgentVersionChangesModal(),
               getVersionCreatedAt: (version) => {
                 const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
                 return timestamp ? formatAgentVersionTimestamp(timestamp) : "-";
@@ -590,7 +590,7 @@
                   id: "compare",
                   label: "View Changes",
                   icon: Code2,
-                  onSelect: () => openAgentVersionChangesPage(version.id),
+                  onSelect: () => openAgentVersionChangesModal(version.id),
                 },
                 {
                   id: "delete",
@@ -698,7 +698,7 @@
             });
           }
   
-          function renderAgentVersionChangesPage() {
+          function renderAgentVersionChangesModal() {
             if (!agentVersionChangesState) {
               return null;
             }
@@ -725,7 +725,7 @@
               value: source.id,
               label: source.label,
             }));
-            return renderPlaygroundVersionChangesPage({
+            return renderPlaygroundVersionChangesModal({
               title: "Changes",
               leftSelector: {
                 value: displayLeftSource.id,
@@ -741,12 +741,10 @@
               },
               actions: renderAgentPublishAction(),
               files: diffFiles,
-              backIcon: ArrowLeft,
-              backText: "Back",
-              backLabel: "Back to agent details",
-              onBack: closeAgentVersionChangesPage,
+              closeButtonLabel: "Close agent version changes",
+              onClose: closeAgentVersionChangesModal,
               emptyMessage: "No differences from the current editor.",
-              className: "playground-agents-version-changes-page",
+              className: "playground-agents-version-changes-modal__content",
             });
           }
   

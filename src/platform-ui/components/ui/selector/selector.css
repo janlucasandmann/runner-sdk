@@ -69,6 +69,11 @@
   height: 14px;
   flex: 0 0 14px;
   color: rgba(255, 255, 255, 0.46);
+  transition: transform 140ms ease;
+}
+
+.platform-selector__chevrons.is-open {
+  transform: rotate(180deg);
 }
 
 .platform-selector__popup {
@@ -235,6 +240,76 @@
   line-height: 1.45;
 }
 
+.platform-agent-selector,
+.platform-agent-selector__popup-content {
+  font-size: 12px;
+}
+
+.platform-agent-selector__identity {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-agent-selector__selected-name,
+.platform-agent-selector__option-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-agent-selector__avatar {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 24px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.platform-agent-selector__avatar.is-compact {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+}
+
+.platform-agent-selector__avatar-fallback {
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.platform-agent-selector__avatar-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.platform-agent-selector__popup-content,
+.platform-agent-selector__listbox {
+  min-width: 0;
+}
+
+.platform-agent-selector__option {
+  font-size: 12px;
+}
+
+.platform-agent-selector__footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
 .platform-button-selector {
   --platform-button-selector-popup-trigger-width: 28px;
   position: relative;
@@ -344,6 +419,17 @@
   margin-right: -1px;
   margin-left: -1px;
   background: rgba(255, 255, 255, 0.18);
+}
+
+.platform-button-selector__chevron {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  transition: transform 140ms ease;
+}
+
+.platform-button-selector__chevron.is-open {
+  transform: rotate(180deg);
 }
 
 .platform-button-selector__group.is-primary .platform-button-selector__divider {

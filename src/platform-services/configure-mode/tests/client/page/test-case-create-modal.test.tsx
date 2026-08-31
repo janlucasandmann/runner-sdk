@@ -21,10 +21,10 @@ describe("TestCaseCreateModal", () => {
     fireEvent.change(screen.getByPlaceholderText("Production readiness"), {
       target: { value: "Release smoke" },
     });
-    fireEvent.change(screen.getByLabelText("New test case command"), {
+    fireEvent.change(screen.getByLabelText("New scenario command"), {
       target: { value: "npm test" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Add case" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Scenario" }));
 
     expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({
       id: "release-smoke",
@@ -32,6 +32,38 @@ describe("TestCaseCreateModal", () => {
       kind: "command",
       command: "npm test",
       tags: ["smoke"],
+    }));
+  });
+
+  it("binds workflow Tests to workflow scenarios without exposing command execution", () => {
+    const onCreate = vi.fn();
+    render(
+      <TestCaseCreateModal
+        open
+        existingCases={[]}
+        testTargetType="workflow"
+        testTargetId="workflow-1"
+        onClose={vi.fn()}
+        onCreate={onCreate}
+      />,
+    );
+
+    expect(screen.queryByLabelText("New scenario command")).toBeNull();
+    expect(screen.getByText("Workflow run")).not.toBeNull();
+    expect(screen.queryByLabelText("Deterministic contract target")).toBeNull();
+    fireEvent.change(screen.getByPlaceholderText("Production readiness"), {
+      target: { value: "Successful checkout workflow" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add Scenario" }));
+
+    expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "contract",
+      command: "",
+      request: expect.objectContaining({
+        target: "metronome_workflow",
+        workflowId: "workflow-1",
+        input: null,
+      }),
     }));
   });
 });

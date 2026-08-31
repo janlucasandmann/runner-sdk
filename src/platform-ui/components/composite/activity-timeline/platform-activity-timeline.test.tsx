@@ -48,8 +48,8 @@ describe("PlatformActivityTimeline", () => {
     expect(html).toContain("platform-comment-card__avatar");
     expect(html).toContain("platform-comment-composer");
     expect(html).toContain('aria-label="Attach files"');
-    expect(html).toContain("lucide-paperclip");
-    expect(html).toContain("lucide-arrow-up");
+    expect(html).toContain("hugeicons-paperclip");
+    expect(html).toContain("hugeicons-arrow-up");
   });
 
   it("supports a timeline without a composer", () => {
@@ -175,7 +175,7 @@ describe("PlatformActivityTimeline", () => {
 
     expect(html).toContain("has-actions");
     expect(html).toContain('aria-label="Comment actions"');
-    expect(html).toContain("lucide-ellipsis");
+    expect(html).toContain("hugeicons-ellipsis");
     expect(html).not.toContain("platform-activity-timeline__edit-form");
   });
 

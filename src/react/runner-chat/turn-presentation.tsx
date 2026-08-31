@@ -1,4 +1,4 @@
-import { Cloud as LucideCloud } from "lucide-react";
+import { Cloud as LucideCloud } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { CSSProperties } from "react";
 import { renderTurnAgentAvatar } from "./run-summary-presentation.js";
 

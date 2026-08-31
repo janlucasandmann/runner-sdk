@@ -9,6 +9,66 @@
   background: rgba(255, 255, 255, 0.075);
 }
 
+.platform-connector-configuration.is-plain {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.platform-connector-configuration.is-plain .platform-connector-configuration__header,
+.platform-connector-configuration.is-plain .platform-connector-configuration__row {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.platform-connector-configuration.is-plain > .platform-connector-configuration__row:first-child {
+  border-top: 0;
+}
+
+.platform-connector-configuration__section {
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-connector-configuration__section + .platform-connector-configuration__section {
+  margin-top: 32px;
+}
+
+.platform-connector-configuration__section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0 12px;
+}
+
+.platform-connector-configuration__section-heading h2,
+.platform-connector-configuration__section-heading p {
+  margin: 0;
+}
+
+.platform-connector-configuration__section-heading h2 {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-connector-configuration__section-heading p {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.platform-connector-configuration__section-content {
+  min-width: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-connector-configuration__section-content > .platform-connector-configuration__row:first-child {
+  border-top: 0;
+}
+
 .platform-connector-configuration__header,
 .platform-connector-configuration__row {
   display: grid;
@@ -117,5 +177,9 @@
 
   .platform-connector-configuration__header-actions {
     justify-content: space-between;
+  }
+
+  .platform-connector-configuration__section + .platform-connector-configuration__section {
+    margin-top: 24px;
   }
 }

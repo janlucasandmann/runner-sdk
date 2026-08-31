@@ -4202,6 +4202,10 @@
                                       emptyStateAfterComposer: showInitialThreadWelcome ? renderInitialThreadWelcome("after") : undefined,
                                       composerProjectTasks: showInitialThreadWelcome ? welcomeComposerTaskPreviews : undefined,
                                       selectedComposerProjectTask: showInitialThreadWelcome ? selectedWelcomeComposerTaskPreview : null,
+                                      composerWorkflowTriggers: showInitialThreadWelcome ? metronomeComposerWorkflowTriggers : undefined,
+                                      onComposerWorkflowTriggerSubmit: showInitialThreadWelcome
+                                        ? handleComposerMetronomeWorkflowTriggerSubmit
+                                        : undefined,
                                       composerPlanTierId: settingsCurrentTierId || accountTierId || "sandbox",
                                       composerOrganizations: getComposerOrganizationOptions(),
                                       composerOrganizationId: getActiveComposerOrganizationId(),

@@ -42,7 +42,7 @@ describe("runner log boxes", () => {
     const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
 
     expect(markup).toContain("Read skill description of Mission Control");
-    expect(markup).toContain("lucide-square-mouse-pointer");
+    expect(markup).toContain("hugeicons-square-mouse-pointer");
     expect(markup).not.toContain("txtfile.png");
     expect(markup).not.toContain("/workspace/.claude/skills");
   });
@@ -119,7 +119,7 @@ describe("runner log boxes", () => {
 
     expect(markup).toContain("Called help on Tasks");
     expect(markup).not.toContain("tb-log-compact-action-detail");
-    expect(markup).toContain("lucide-circle-question-mark");
+    expect(markup).toContain("hugeicons-circle-question-mark");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("usage: manage-tasks.py");
   });
@@ -150,7 +150,7 @@ describe("runner log boxes", () => {
     const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
 
     expect(markup).toContain("Read Knowledge Library knowledge_library_123");
-    expect(markup).toContain("lucide-library-big");
+    expect(markup).toContain("hugeicons-library-big");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("Project Strategy");
   });
@@ -176,7 +176,7 @@ describe("runner log boxes", () => {
     const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
 
     expect(markup).toContain("Read Knowledge Library knowledge_library_123");
-    expect(markup).toContain("lucide-library-big");
+    expect(markup).toContain("hugeicons-library-big");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("CURRENT_VERSION_ID");
     expect(markup).not.toContain("DOC COUNT");
@@ -209,7 +209,7 @@ for lib in d.get('data', []):
     const markup = renderToStaticMarkup(<RunnerWorkLogEntry log={log} />);
 
     expect(markup).toContain("Read Knowledge Library knowledge_qcyS4Tz0IMeoz_2Ml9Wag");
-    expect(markup).toContain("lucide-library-big");
+    expect(markup).toContain("hugeicons-library-big");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("CURRENT_VERSION_ID");
   });
@@ -239,7 +239,7 @@ for lib in d.get('data', []):
 
     expect(markup).toContain("Listed tasks in My New Project");
     expect(markup).toContain("tb-log-project-resource-icon is-task");
-    expect(markup).toContain("lucide-bookmark");
+    expect(markup).toContain("hugeicons-bookmark");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("Define project goal");
   });
@@ -269,7 +269,7 @@ for lib in d.get('data', []):
 
     expect(markup).toContain("Listed milestones in My New Project");
     expect(markup).toContain("tb-log-project-resource-icon is-milestone");
-    expect(markup).toContain("lucide-milestone");
+    expect(markup).toContain("hugeicons-milestone");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("Research foundation");
   });
@@ -326,7 +326,7 @@ EOF`,
 
     expect(markup).toContain("Searched session logs");
     expect(markup).toContain("for manage-tasks.py");
-    expect(markup).toContain("lucide-search");
+      expect(markup).toContain("hugeicons-search");
     expect(markup).not.toContain("Command Output");
     expect(markup).not.toContain("sandboxStatus");
   });

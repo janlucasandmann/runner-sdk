@@ -1,4 +1,4 @@
-import { Bookmark, Plus, Trash2 } from "lucide-react";
+import { Bookmark, Plus, Trash2 } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,
@@ -20,11 +20,13 @@ import {
   applyTestCaseTargetKind,
   applyTestCasePresentation,
   getTestCaseCategory,
+  getTestCaseTypeOptionsForTestTarget,
   getTestCaseExecutionProfile,
   getTestCaseTargetKind,
+  getTestTargetScenarioPolicy,
   TEST_CASE_CATEGORY_OPTIONS,
-  TEST_CASE_TYPE_OPTIONS,
   validateTestCaseConfiguration,
+  validateTestCaseTargetCompatibility,
   type TestCaseCategory,
   type TestCaseDefinition,
   type TestPlan,
@@ -40,6 +42,7 @@ import {
   type TestCaseCodeSources,
 } from "./test-case-code-files.js";
 import { TestCaseDefinitionBuilder } from "./test-case-definition-builder.js";
+import { useTestTargetResources } from "./use-test-target-resources.js";
 import {
   TestPlanSaveModal,
   type TestPlanSaveOutcome,
@@ -246,10 +249,7 @@ export function TestCaseDetailPage({
   const [builderError, setBuilderError] = useState("");
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [functions, setFunctions] = useState<TestWorkspaceResourceOption[]>([]);
-  const [workflows, setWorkflows] = useState<TestWorkspaceResourceOption[]>([]);
   const [workflowVersions, setWorkflowVersions] = useState<TestWorkspaceResourceOption[]>([]);
-  const [resourcesLoading, setResourcesLoading] = useState(false);
   const [versionsLoading, setVersionsLoading] = useState(false);
   const identityChangeRef = useRef(onCaseIdentityChange);
   const committedCodeSourcesRef = useRef<TestCaseCodeSources>(
@@ -258,6 +258,9 @@ export function TestCaseDetailPage({
   const controlsPortalTarget = usePortalTarget(controlsPortalId);
   const sectionControlsPortalTarget = usePortalTarget(sectionControlsPortalId);
   const targetKind = getTestCaseTargetKind(draft);
+  const targetPolicy = getTestTargetScenarioPolicy(plan.targetType);
+  const testCaseTypeOptions = getTestCaseTypeOptionsForTestTarget(plan.targetType);
+  const targetResources = useTestTargetResources(api);
   const request = draft.request && typeof draft.request === "object" && !Array.isArray(draft.request)
     ? draft.request
     : {};
@@ -320,26 +323,6 @@ export function TestCaseDetailPage({
 
   useEffect(() => {
     let cancelled = false;
-    if (typeof api.listFunctions !== "function" || typeof api.listMetronomes !== "function") {
-      return undefined;
-    }
-    setResourcesLoading(true);
-    void Promise.allSettled([
-      api.listFunctions(plan.projectId || ""),
-      api.listMetronomes(plan.projectId || ""),
-    ]).then(([functionResult, workflowResult]) => {
-      if (cancelled) return;
-      setFunctions(functionResult.status === "fulfilled" ? functionResult.value : []);
-      setWorkflows(workflowResult.status === "fulfilled" ? workflowResult.value : []);
-      setResourcesLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [api, plan.projectId]);
-
-  useEffect(() => {
-    let cancelled = false;
     setWorkflowVersions([]);
     if (!workflowId || typeof api.listMetronomeVersions !== "function") return undefined;
     setVersionsLoading(true);
@@ -361,7 +344,7 @@ export function TestCaseDetailPage({
   const normalizedRetries = Number(draft.retries);
   const configurationError = validateTestCaseConfiguration(draft);
   const settingsError = !draft.name.trim()
-    ? "A case name is required."
+    ? "A scenario name is required."
     : !Number.isInteger(normalizedTimeout) || normalizedTimeout <= 0
       ? "Timeout must be a positive whole number of milliseconds."
       : !Number.isInteger(normalizedRetries) || normalizedRetries < 0
@@ -372,7 +355,27 @@ export function TestCaseDetailPage({
             ? "Every secret reference needs a value."
             : "";
   const codeError = Object.values(codeErrors).find(Boolean) || "";
-  const validationError = codeError || builderError || settingsError || configurationError;
+  const compatibilityError = validateTestCaseTargetCompatibility(
+    draft,
+    plan.targetType,
+    plan.targetId,
+  );
+  const resourceError = targetKind === "computer_agents_function"
+    ? targetResources.functionsError
+    : targetKind === "metronome_workflow"
+      ? targetResources.workflowsError
+      : "";
+  const resourcesLoading = targetKind === "computer_agents_function"
+    ? targetResources.functionsLoading
+    : targetKind === "metronome_workflow"
+      ? targetResources.workflowsLoading
+      : false;
+  const validationError = codeError
+    || builderError
+    || settingsError
+    || compatibilityError
+    || resourceError
+    || configurationError;
   const executionProfile = getTestCaseExecutionProfile(draft);
   const category = getTestCaseCategory(draft);
 
@@ -487,7 +490,7 @@ export function TestCaseDetailPage({
       onCaseIdentityChange?.(nextCase);
       setSaveModalOpen(false);
     } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : "Failed to save the test case.";
+      const message = nextError instanceof Error ? nextError.message : "Failed to save the scenario.";
       setError(message);
       setSaveError(message);
     } finally {
@@ -511,7 +514,7 @@ export function TestCaseDetailPage({
       } as Partial<TestPlan>);
       onDeleted(mergeUpdatedPlan(plan, updated, definition));
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Failed to delete the test case.");
+      setError(nextError instanceof Error ? nextError.message : "Failed to delete the scenario.");
       setBusyAction("");
     }
   }
@@ -523,8 +526,8 @@ export function TestCaseDetailPage({
           type="text"
           className="tests-case-detail-title-input"
           value={draft.name}
-          placeholder="Case name"
-          aria-label="Case name"
+          placeholder="Scenario name"
+          aria-label="Scenario name"
           onChange={(event) => setDraft((current) => ({
             ...current,
             name: event.currentTarget.value,
@@ -532,12 +535,13 @@ export function TestCaseDetailPage({
         />
         <PlatformSelector
           value={targetKind}
-          options={TEST_CASE_TYPE_OPTIONS}
+          options={testCaseTypeOptions}
           ariaLabel="Test type"
           alignment="end"
           popupAlignment="right"
           popupWidth="min(330px, calc(100vw - 48px))"
           className="tests-case-detail-type-selector"
+          disabled={targetPolicy.locked}
           onValueChange={(value) => setDraft((current) => (
             applyTestCaseTargetKind(current, value)
           ))}
@@ -547,8 +551,8 @@ export function TestCaseDetailPage({
         type="text"
         className="file-resource-detail-page__description-input tests-case-detail-description-input"
         value={draft.description}
-        placeholder="Describe what this case verifies."
-        aria-label="Case description"
+        placeholder="Describe what this scenario verifies."
+        aria-label="Scenario description"
         onChange={(event) => setDraft((current) => ({
           ...current,
           description: event.currentTarget.value,
@@ -560,8 +564,8 @@ export function TestCaseDetailPage({
   const definitionBuilder = (
     <TestCaseDefinitionBuilder
       testCase={draft}
-      functions={functions}
-      workflows={workflows}
+      functions={targetResources.functions}
+      workflows={targetResources.workflows}
       workflowVersions={workflowVersions}
       resourcesLoading={resourcesLoading}
       versionsLoading={versionsLoading}
@@ -574,7 +578,7 @@ export function TestCaseDetailPage({
 
   const caseSettings = (
     <div className="tests-case-detail-settings-content">
-      <h2 className="tests-case-detail-settings-title">Case Settings</h2>
+      <h2 className="tests-case-detail-settings-title">Scenario Settings</h2>
       <section className="tests-case-detail-configuration">
         <div className="tests-case-detail-configuration-row">
           <span className="tests-case-detail-configuration-label">Category</span>
@@ -582,7 +586,7 @@ export function TestCaseDetailPage({
             value={category}
             options={TEST_CASE_CATEGORY_OPTIONS}
             onValueChange={changeCategory}
-            ariaLabel="Select test case category"
+            ariaLabel="Select scenario category"
             alignment="end"
             popupAlignment="right"
             popupWidth="min(330px, calc(100vw - 48px))"
@@ -601,7 +605,7 @@ export function TestCaseDetailPage({
               ...current,
               enabled: value !== "disabled",
             }))}
-            ariaLabel="Select test case state"
+            ariaLabel="Select scenario state"
             alignment="end"
             popupAlignment="right"
             className="tests-case-detail-setting-selector"
@@ -690,8 +694,8 @@ export function TestCaseDetailPage({
 
       <section className="tests-case-detail-settings-section tests-case-detail-danger-section">
         <header>
-          <h3>Delete case</h3>
-          <p>Permanently remove this case from the Test Plan.</p>
+          <h3>Delete scenario</h3>
+          <p>Permanently remove this scenario from the Test.</p>
         </header>
         <PlatformSecondaryButton
           type="button"
@@ -701,7 +705,7 @@ export function TestCaseDetailPage({
           onClick={() => void deleteCase()}
         >
           <Trash2 width={14} height={14} aria-hidden="true" />
-          {busyAction === "delete" ? "Deleting…" : "Delete Case"}
+          {busyAction === "delete" ? "Deleting…" : "Delete Scenario"}
         </PlatformSecondaryButton>
       </section>
     </div>
@@ -761,7 +765,7 @@ export function TestCaseDetailPage({
         { value: "code", label: "Code" },
       ]}
       onValueChange={(value) => setActiveTab(value === "code" ? "code" : "general")}
-      ariaLabel="Test case section"
+      ariaLabel="Test scenario section"
     />
   );
 
@@ -777,7 +781,7 @@ export function TestCaseDetailPage({
         notice={activeTab === "code" ? validationNotice : null}
         code={codeEditor}
         settings={general}
-        ariaLabel="Test case details"
+        ariaLabel="Test scenario details"
         className="tests-case-detail-page"
         contentClassName="tests-case-detail-page__content"
         codeClassName="tests-case-detail-page__code"

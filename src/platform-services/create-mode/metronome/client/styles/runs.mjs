@@ -4,27 +4,6 @@ export const METRONOME_RUNS_CSS = String.raw`
         min-height: 0;
       }
 
-      .playground-metronome-settings-content {
-        min-width: 0;
-      }
-
-      .playground-metronome-settings-stack {
-        display: grid;
-        align-content: start;
-        gap: 24px;
-        min-width: 0;
-        padding: 0;
-      }
-
-      .playground-metronome-settings-sidebar {
-        padding-top: 0;
-      }
-
-      .playground-metronome-settings-trigger-button.platform-button {
-        width: 100%;
-        margin-top: 8px;
-      }
-
       .playground-metronome-settings-budget-section {
         box-sizing: border-box;
         padding: 20px;

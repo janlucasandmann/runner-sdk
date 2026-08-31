@@ -422,7 +422,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
           setEvaluationOwnerSelectorOpen(Boolean(nextOpen));
           if (nextOpen) void loadEvaluationOwnerCandidates(activeSet);
         };
-        const renderEvaluationOwnerSelector = (set = activeSet) => {
+        const getEvaluationOwnerSelectorModel = (set = activeSet) => {
           const ownerIdentity = getEvaluationOwnerIdentity(set);
           const ownerLabel = String(ownerIdentity.name || ownerIdentity.email || ownerIdentity.id || "Owner").trim();
           const ownerOptions = getEvaluationOwnerCandidates(set).map((candidate) => {
@@ -448,7 +448,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
             getEvaluationPersonIdentityKeys(option.data?.candidate).some((key) => ownerIdentityKeys.has(key))
           ) || null;
           const candidateState = evaluationOwnerCandidateStateBySetId?.[set?.id] || {};
-          return React.createElement(PlatformOwnerSelector, {
+          return {
             owner: {
               value: selectedOption?.value || getEvaluationOwnerCandidateKey(ownerIdentity),
               name: ownerLabel,
@@ -456,27 +456,38 @@ export const EVALUATIONS_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        cons
               avatarUrl: ownerIdentity.avatarUrl || "",
             },
             options: ownerOptions,
-            open: evaluationOwnerSelectorOpen,
-            onOpenChange: handleEvaluationOwnerSelectorOpenChange,
             onTransfer: (_nextValue, option) => {
               const nextOwner = option?.data?.candidate;
               if (nextOwner) updateEvaluationOwner(nextOwner);
             },
-            ariaLabel: "Choose evaluation owner",
-            resourceLabel: "evaluation",
-            alignment: "end",
-            popupAlignment: "right",
-            disabled: !isCurrentEvaluationOwner(set),
-            loading: candidateState.status === "loading",
-            loadingContent: "Loading team members...",
-            emptyContent: "No human team members are available.",
-            popupWidth: 260,
-            popupMaxHeight: "min(320px, calc(100vh - 180px))",
-            fullWidth: true,
-            className: "platform-resource-detail-sidebar__owner-selector playground-evaluations-detail-owner-selector",
-            triggerClassName: "playground-evaluations-detail-owner-trigger",
-            popupClassName: "playground-agents-detail-owner-menu playground-evaluations-detail-owner-menu",
-            optionClassName: "playground-agents-detail-owner-option",
+            selectorProps: {
+              open: evaluationOwnerSelectorOpen,
+              onOpenChange: handleEvaluationOwnerSelectorOpenChange,
+              ariaLabel: "Choose evaluation owner",
+              resourceLabel: "evaluation",
+              alignment: "end",
+              popupAlignment: "right",
+              disabled: !isCurrentEvaluationOwner(set),
+              loading: candidateState.status === "loading",
+              loadingContent: "Loading team members...",
+              emptyContent: "No human team members are available.",
+              popupWidth: 260,
+              popupMaxHeight: "min(320px, calc(100vh - 180px))",
+              fullWidth: true,
+              className: "platform-resource-detail-sidebar__owner-selector playground-evaluations-detail-owner-selector",
+              triggerClassName: "playground-evaluations-detail-owner-trigger",
+              popupClassName: "playground-agents-detail-owner-menu playground-evaluations-detail-owner-menu",
+              optionClassName: "playground-agents-detail-owner-option",
+            },
+          };
+        };
+        const renderEvaluationOwnerSelector = (set = activeSet) => {
+          const model = getEvaluationOwnerSelectorModel(set);
+          return React.createElement(PlatformOwnerSelector, {
+            owner: model.owner,
+            options: model.options,
+            onTransfer: model.onTransfer,
+            ...model.selectorProps,
           });
         };
         const getEvaluationTeamRolePermissionSet = (teamId, roleId, set = activeSet) => {

@@ -104,7 +104,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
             onSelectVersion: (versionId) => void restoreEvaluationVersion(versionId),
             onPublishVersion: (versionId) => void publishEvaluationVersion(versionId),
             canPublishVersion: (version) => canPublishEvaluationVersion(version),
-            onViewChanges: () => openEvaluationVersionChangesPage(),
+            onViewChanges: () => openEvaluationVersionChangesModal(),
             getVersionCreatedAt: (version) => {
               const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
               return timestamp ? formatPlaygroundEvaluationDate(timestamp) : "-";
@@ -120,7 +120,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
                 id: "compare",
                 label: "View Changes",
                 icon: Code2,
-                onSelect: () => openEvaluationVersionChangesPage(version.id),
+                onSelect: () => openEvaluationVersionChangesModal(version.id),
               },
               {
                 id: "delete",
@@ -222,7 +222,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
           });
         }
 
-        function renderEvaluationVersionChangesPage() {
+        function renderEvaluationVersionChangesModal() {
           if (!evaluationVersionChangesState || !activeSet) {
             return null;
           }
@@ -243,7 +243,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
             value: source.id,
             label: source.label,
           }));
-          return renderPlaygroundVersionChangesPage({
+          return renderPlaygroundVersionChangesModal({
             title: "Changes",
             leftSelector: {
               value: leftSource.id,
@@ -259,12 +259,10 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSION_DIALOGS_SCRIPT = String.raw`   
             },
             actions: renderEvaluationPublishSplitButton(),
             files: diffFiles,
-            backIcon: ArrowLeft,
-            backText: "Back",
-            backLabel: "Back to evaluation",
-            onBack: closeEvaluationVersionChangesPage,
+            closeButtonLabel: "Close evaluation version changes",
+            onClose: closeEvaluationVersionChangesModal,
             emptyMessage: "No differences from the current editor.",
-            className: "playground-evaluations-version-changes-page",
+            className: "playground-evaluations-version-changes-modal__content",
           });
         }
 

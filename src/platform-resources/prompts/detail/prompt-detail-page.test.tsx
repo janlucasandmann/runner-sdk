@@ -40,7 +40,11 @@ describe("PromptDetailPage", () => {
             onDescriptionChange: () => undefined,
           },
           details: {
-            attributes: [{ id: "updated", label: "Updated", value: "Today" }],
+            variant: "standard",
+            updatedAt: "2026-08-29T10:30:00.000Z",
+            creator: { value: "creator-1", name: "Creator Name" },
+            owner: { value: "owner-1", name: "Owner Name" },
+            primaryActions: [{ id: "start", label: "New Thread", onSelect: () => undefined }],
           },
           location: <div>Storage region</div>,
           access: <div>Prompt access settings</div>,
@@ -71,7 +75,10 @@ describe("PromptDetailPage", () => {
     expect(screen.getByText("Storage region")).not.toBeNull();
     expect(screen.getByText("Prompt access settings")).not.toBeNull();
     expect(screen.getByRole("complementary", { name: "Prompt properties" })).not.toBeNull();
+    expect(screen.getByText("Scope")).not.toBeNull();
     expect(screen.getByText("Updated")).not.toBeNull();
+    expect(screen.getByText("Creator")).not.toBeNull();
+    expect(screen.getByText("Owner")).not.toBeNull();
     expect(screen.queryByText("Prompt identity")).toBeNull();
     expect(screen.queryByText("Prompt Markdown editor")).toBeNull();
   });

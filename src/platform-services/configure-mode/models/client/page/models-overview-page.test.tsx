@@ -190,7 +190,19 @@ describe("ModelsOverviewPage", () => {
     const rowActions = screen.getByRole("button", { name: "Open actions for Model One" });
     await user.click(rowActions);
     expect(screen.getByRole("menuitem", { name: "Create Agent" })).not.toBeNull();
-    await user.click(screen.getByRole("menuitem", { name: "View Details" }));
+    expect(
+      (screen.getByRole("menuitem", { name: "Duplicate" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole("menuitem", { name: "Share" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole("menuitem", { name: "Delete" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    await user.click(screen.getByRole("menuitem", { name: "Edit" }));
     expect(await screen.findByRole("dialog", { name: "Model One" })).not.toBeNull();
     expect(screen.getByText("Provider-managed")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Close model details" }));

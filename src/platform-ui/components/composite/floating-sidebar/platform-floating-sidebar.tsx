@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "../../ui/hugeicons-compat.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 
 export type PlatformFloatingSidebarCloseReason = "close-button" | "escape";

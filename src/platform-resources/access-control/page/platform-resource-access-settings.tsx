@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,

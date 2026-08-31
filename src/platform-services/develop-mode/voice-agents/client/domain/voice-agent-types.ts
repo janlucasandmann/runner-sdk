@@ -13,6 +13,8 @@ export interface DevelopVoiceAgentOverviewRow {
   instructions: string;
   phoneNumber: string;
   phoneStatus: string;
+  createdAt?: string;
+  updatedAt?: string;
   creator: DevelopResourceIdentity;
   owner: DevelopResourceIdentity;
   enabled: boolean;

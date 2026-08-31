@@ -33,7 +33,7 @@ import {
   Table2,
   TextQuote,
   Underline,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,

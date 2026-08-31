@@ -1,4 +1,4 @@
-import { Circle, CircleCheck, ExternalLink, LoaderCircle, Plug } from "lucide-react";
+import { Circle, CircleCheck, ExternalLink, LoaderCircle, Plug } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useRef } from "react";
 import { ConnectionIdentityIcon } from "../../platform-resources/shared/connections/connection-identity-icon.js";
 import {

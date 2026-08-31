@@ -92,6 +92,15 @@ export interface RunnerChatConnectorOption {
   onConnect?: () => Promise<boolean | void> | boolean | void;
 }
 
+export interface RunnerChatWorkflowTriggerOption {
+  id: string;
+  workflowId?: string;
+  name: string;
+  command: string;
+  description?: string;
+  nodeId?: string;
+}
+
 export interface RunnerChatExternalRunRequest {
   token: string | number;
   threadId: string;
@@ -154,6 +163,12 @@ export interface RunnerChatComposerSubmitPayload {
   connectors?: Record<string, unknown> | null;
   knowledgeContext?: RunnerKnowledgeContext | null;
   quotedSelection?: RunnerQuotedSelection | null;
+}
+
+export interface RunnerChatWorkflowTriggerSubmitPayload
+  extends RunnerChatComposerSubmitPayload {
+  workflow: RunnerChatWorkflowTriggerOption;
+  command: string;
 }
 
 export interface RunnerChatProjectTaskSubmitPayload
@@ -235,8 +250,9 @@ export interface RunnerChatGithubRepositoryCreateInput {
   description?: string;
   functionId?: string;
   webAppId?: string;
+  skillId?: string;
   resourceId?: string;
-  resourceKind?: "function" | "web_app";
+  resourceKind?: "function" | "web_app" | "skill";
   private?: boolean;
   commitMessage?: string;
   files: RunnerChatGithubRepositorySourceFile[];
@@ -445,6 +461,7 @@ export interface RunnerChatProps {
   enabledSkillIds?: string[];
   skillDefaults?: RunnerChatSkillDefaults;
   computerAgents?: RunnerChatComputerAgentsConfig;
+  composerWorkflowTriggers?: RunnerChatWorkflowTriggerOption[];
   uploadFiles?: (files: File[]) => Promise<RunnerAttachment[]>;
   mapFileToAttachment?: (
     file: File,
@@ -495,6 +512,11 @@ export interface RunnerChatProps {
    */
   onComposerSubmit?: (
     payload: RunnerChatComposerSubmitPayload,
+    // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the compatibility callback API.
+  ) => Promise<boolean | void> | boolean | void;
+  /** Starts a selected workflow directly, without creating an intermediary thread. */
+  onComposerWorkflowTriggerSubmit?: (
+    payload: RunnerChatWorkflowTriggerSubmitPayload,
     // biome-ignore lint/suspicious/noConfusingVoidType: Preserves the compatibility callback API.
   ) => Promise<boolean | void> | boolean | void;
   /**

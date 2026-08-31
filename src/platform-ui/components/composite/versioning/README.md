@@ -24,9 +24,10 @@ The package also re-exports `PlatformVersionLabel` and
 `PlatformVersionHistorySidebar` so resource modules can import the complete
 versioning surface from one stable entry point.
 
-`PlatformVersionChangesPage` owns the shared comparison surface: prompt-style
-resource heading, compact file/change summary, centralized minimal selectors
-for choosing base and target versions, and the canonical diff-file list.
+`PlatformVersionChangesModal` owns the shared comparison surface: a large,
+viewport-safe centralized modal with a compact file/change summary, minimal
+selectors for choosing base and target versions, and the canonical diff-file
+list. Opening Changes never replaces the resource detail page beneath it.
 Legacy resource screens delegate to this component through their compatibility
 renderer instead of maintaining a second visual implementation.
 

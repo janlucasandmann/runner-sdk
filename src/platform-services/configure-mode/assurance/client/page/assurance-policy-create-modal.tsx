@@ -1,4 +1,4 @@
-import { Loader2, Plus, ShieldCheck } from "lucide-react";
+import { Loader2, Plus, ShieldCheck } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";

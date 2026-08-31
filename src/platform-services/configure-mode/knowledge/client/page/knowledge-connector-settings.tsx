@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 
 import { beginPlatformPluginConnection } from "../../../../../platform-resources/plugins/connections/index.js";

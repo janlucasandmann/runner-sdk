@@ -3,6 +3,7 @@ import {
   getRunnerComposerPlanDisplay,
   normalizeRunnerComposerPlanTier,
 } from "./composer-plan.js";
+import { IconStar } from "./icons.js";
 
 describe("composer plan presentation", () => {
   it("normalizes historical plan aliases", () => {
@@ -17,5 +18,9 @@ describe("composer plan presentation", () => {
     expect(getRunnerComposerPlanDisplay("sandbox").label).toBe(
       "Upgrade to Builder",
     );
+  });
+
+  it("uses the Hugeicons star for the enterprise plan control", () => {
+    expect(getRunnerComposerPlanDisplay("enterprise").Icon).toBe(IconStar);
   });
 });

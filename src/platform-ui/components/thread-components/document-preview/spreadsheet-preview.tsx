@@ -1,6 +1,6 @@
 import {
   Table2 as LucideTable2,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {

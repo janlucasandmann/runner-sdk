@@ -50,7 +50,7 @@ export const EVALUATIONS_STYLE_FOUNDATION = String.raw`
         width: min(280px, calc(100vw - 32px));
       }
 
-      .playground-evaluations-version-changes-page {
+      .playground-evaluations-version-changes-modal__content {
         padding-top: 24px;
       }
 

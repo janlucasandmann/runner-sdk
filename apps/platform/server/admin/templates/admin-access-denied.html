@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin access required</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #050505;
+        color: rgba(255,255,255,.92);
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      }
+      main {
+        width: min(420px, 100%);
+        text-align: center;
+      }
+      .icon {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 18px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 12px;
+        background: rgba(255,255,255,.06);
+        font-size: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 1.25;
+      }
+      p {
+        margin: 10px 0 22px;
+        color: rgba(255,255,255,.56);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      button {
+        min-width: 150px;
+        height: 38px;
+        border: 0;
+        border-radius: 9px;
+        padding: 0 16px;
+        background: #fff;
+        color: #080808;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="icon" aria-hidden="true">↪</div>
+      <h1>This account does not have access</h1>
+      <p>
+        You are signed in, but this operational page is restricted to configured
+        administrators. Switch accounts to continue.
+      </p>
+      <button id="switch-account" type="button">Switch account</button>
+    </main>
+    <script>
+      const AIOS_ORIGIN = __PLATFORM_AIOS_ORIGIN_JSON__;
+      document.getElementById("switch-account").addEventListener("click", () => {
+        const loginUrl = new URL("/login", AIOS_ORIGIN);
+        loginUrl.searchParams.set("redirect", window.location.href);
+        loginUrl.searchParams.set("signed_out", "1");
+        window.location.assign(loginUrl.toString());
+      });
+    </script>
+  </body>
+</html>

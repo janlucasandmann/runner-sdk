@@ -1,13 +1,18 @@
-export const API_KEYS_CREATE_SCRIPT = `        async function handleSettingsCreateApiKey() {
+export const API_KEYS_CREATE_SCRIPT = `        async function handleSettingsCreateApiKey(input = {}) {
           if (!hasSessionAuth) {
             handleSignInWithComputerAgents();
-            return;
+            return false;
           }
 
-          const keyName = String(settingsNewKeyName || "").trim();
+          const keyName = String(input?.name || "").trim();
           if (!keyName) {
-            return;
+            return false;
           }
+
+          const keyDescription = String(input?.description || "").trim();
+          const keyPermissions = Array.isArray(input?.permissions) && input.permissions.length > 0
+            ? input.permissions.map((permission) => String(permission || "").trim()).filter(Boolean)
+            : ["*"];
 
           setSettingsCreateKeyLoading(true);
           setSettingsApiKeysError("");
@@ -20,8 +25,8 @@ export const API_KEYS_CREATE_SCRIPT = `        async function handleSettingsCrea
               },
               body: JSON.stringify({
                 name: keyName,
-                description: String(settingsNewKeyDescription || "").trim() || undefined,
-                permissions: SETTINGS_API_KEY_SCOPE_PRESETS[settingsNewKeyScopePreset]?.permissions || ["*"],
+                description: keyDescription || undefined,
+                permissions: keyPermissions.length > 0 ? keyPermissions : ["*"],
               }),
             });
             const data = await response.json().catch(() => ({}));
@@ -34,9 +39,6 @@ export const API_KEYS_CREATE_SCRIPT = `        async function handleSettingsCrea
             if (typeof data?.id === "string" && data.id.trim() && typeof data?.key === "string" && data.key.trim()) {
               setSettingsRevealableApiKeys((current) => ({ ...current, [data.id.trim()]: data.key.trim() }));
             }
-            setSettingsNewKeyName("");
-            setSettingsNewKeyDescription("");
-            setSettingsNewKeyScopePreset("full");
             setSettingsApiKeyDialogOpen(false);
             invalidateApiKeysOverviewAnalytics({
               backendUrl: proxyBackendBase,
@@ -45,8 +47,10 @@ export const API_KEYS_CREATE_SCRIPT = `        async function handleSettingsCrea
             });
             setDevelopApiKeysAnalyticsRefreshToken((current) => current + 1);
             await loadSettingsApiKeys({ force: true });
+            return true;
           } catch (error) {
             setSettingsApiKeysError(error instanceof Error ? error.message : "Failed to create API key.");
+            return false;
           } finally {
             setSettingsCreateKeyLoading(false);
           }

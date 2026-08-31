@@ -1,4 +1,4 @@
-import { Plug } from "lucide-react";
+import { Plug } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 import { ConnectionIdentityIcon } from "../../platform-resources/shared/connections/connection-identity-icon.js";
 import { resolveRunnerMessageConnectorOptions } from "./composer-connectors.js";

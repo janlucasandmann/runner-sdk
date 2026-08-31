@@ -4,6 +4,8 @@
           backendUrl,
           requestHeaders,
           environments,
+          agents = [],
+          github = null,
           projectId,
           apiKey,
           upstreamUrl,

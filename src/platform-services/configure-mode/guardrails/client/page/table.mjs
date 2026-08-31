@@ -41,14 +41,13 @@ export const GUARDRAILS_PAGE_TABLE_SCRIPT = `          function renderGuardrails
                 return {
                   id,
                   name,
+                  description: String(set?.description || "").trim(),
                   type: isDefaultSet ? "default" : "custom",
                   typeLabel: isDefaultSet ? "Default" : "Custom",
-                  creatorLabel,
+                  creatorName: creatorLabel,
                   creatorAvatarUrl: canRenderAvatarImage(creator.avatarUrl) ? creator.avatarUrl : "",
                   creatorFallback: getAccountInitials(creatorLabel),
                   updatedAt: Number.isFinite(updatedDate.getTime()) ? updatedDate.getTime() : 0,
-                  updatedLabel: formatGuardrailDate(updatedValue),
-                  updatedTitle: Number.isFinite(updatedDate.getTime()) ? updatedDate.toLocaleString() : "",
                   searchText: [name, set?.description, promptSearchText, creatorLabel, isDefaultSet ? "Default" : "Custom", id]
                     .filter(Boolean)
                     .join(" "),

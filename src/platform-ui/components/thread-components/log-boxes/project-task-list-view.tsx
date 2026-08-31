@@ -1,4 +1,4 @@
-import { Bookmark } from "lucide-react";
+import { Bookmark } from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import {
   parseRunnerProjectTaskListDetails,

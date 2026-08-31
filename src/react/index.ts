@@ -6,7 +6,11 @@ export {
   RunnerFunctionGithubConnectorSettings,
   RunnerSourceGithubConnectorSettings,
 } from "./runner-chat/function-github-connector-settings.js";
-export { RunnerProjectGithubRepositorySettings } from "./runner-chat/project-github-repository-settings.js";
+export {
+  RunnerGithubRepositorySettings,
+  RunnerProjectGithubRepositorySettings,
+  RunnerResourceGithubRepositorySettings,
+} from "./runner-chat/project-github-repository-settings.js";
 export { RunnerProjectConnectorResourceSettings } from "./runner-chat/project-connector-resource-settings.js";
 export {
   RunnerKnowledgeNotionResourceSettings,
@@ -71,6 +75,8 @@ export type {
   RunnerChatSchedulePreset,
   RunnerChatSkill,
   RunnerChatWorkspaceConfig,
+  RunnerChatWorkflowTriggerOption,
+  RunnerChatWorkflowTriggerSubmitPayload,
   RunnerThreadTaskListItem,
   RunnerThreadTaskListSummary,
 } from "./runner-chat.js";

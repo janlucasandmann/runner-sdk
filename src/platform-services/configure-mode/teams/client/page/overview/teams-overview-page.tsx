@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, SquarePen, UsersRound } from "lucide-react";
+import { ChevronRight, Plus, SquarePen, UsersRound } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,

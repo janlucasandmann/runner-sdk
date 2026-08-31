@@ -1,5 +1,5 @@
 import { type CSSProperties } from "react";
-import { Zap } from "lucide-react";
+import { Zap } from "../../ui/hugeicons-compat.js";
 import {
   PlatformDefaultWidget,
   type PlatformDefaultWidgetProps,

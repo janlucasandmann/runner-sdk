@@ -2,7 +2,7 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { type CSSProperties, type ReactNode, useEffect, useId, useState } from "react";
 
 import { PlatformSecondaryButton } from "../../ui/button/index.js";

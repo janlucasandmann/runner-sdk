@@ -1,0 +1,155 @@
+.platform-resource-source-control {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.platform-resource-source-control.without-heading {
+  border-top: 0;
+}
+
+.platform-resource-source-control__heading,
+.platform-resource-source-control__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 68px;
+  padding: 10px 18px;
+}
+
+.platform-resource-source-control__heading > div,
+.platform-resource-source-control__status > div:first-child,
+.platform-resource-source-control__modal-section,
+.platform-resource-source-control__trigger > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.platform-resource-source-control strong,
+.platform-resource-source-control__modal-section > strong,
+.platform-resource-source-control__trigger strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.platform-resource-source-control span,
+.platform-resource-source-control__modal-section > span,
+.platform-resource-source-control__trigger span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.platform-resource-source-control__path {
+  width: min(360px, 42vw);
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.platform-resource-source-control__status {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.platform-resource-source-control__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.platform-resource-source-control__actions svg,
+.platform-resource-source-control__actions img,
+.platform-resource-source-control__loading img {
+  width: 14px;
+  height: 14px;
+}
+
+.platform-resource-source-control__actions img,
+.platform-resource-source-control__loading img {
+  animation: platform-resource-source-control-spin 0.8s linear infinite;
+}
+
+.platform-resource-source-control__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 10px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+.platform-resource-source-control__error {
+  margin: 0;
+  padding: 0 18px 12px;
+  color: #ff9b9b;
+  font-size: 12px;
+}
+
+.platform-resource-source-control__setup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 68px;
+  padding: 10px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.platform-resource-source-control__setup > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.platform-resource-source-control__modal-section {
+  gap: 10px;
+  padding: 2px 0 18px;
+}
+
+.platform-resource-source-control__modal-section + .platform-resource-source-control__modal-section {
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.platform-resource-source-control__trigger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 54px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+@keyframes platform-resource-source-control-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 720px) {
+  .platform-resource-source-control__heading,
+  .platform-resource-source-control__status,
+  .platform-resource-source-control__setup {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .platform-resource-source-control__actions,
+  .platform-resource-source-control__path {
+    width: 100%;
+  }
+}

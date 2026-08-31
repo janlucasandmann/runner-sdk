@@ -2,22 +2,38 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import {
-  PlatformServiceDetailProperty,
-  PlatformServiceDetailPropertyList,
-} from "../../../platform-ui/pages/details/index.js";
 import { SkillDetailPage } from "./skill-detail-page.js";
 
 afterEach(cleanup);
 
 describe("SkillDetailPage", () => {
+  const settings = {
+    identity: {
+      icon: <span>S</span>,
+      title: "Skill",
+      description: "Skill description",
+      readOnly: true,
+    },
+    details: {
+      variant: "standard" as const,
+      customAttributes: [{ id: "skill", label: "Skill", value: "Skill properties" }],
+      updatedAt: "2026-08-30T10:00:00.000Z",
+      creator: { value: "creator", name: "Creator" },
+      owner: { value: "owner", name: "Owner" },
+      scope: false as const,
+      primaryActions: [{ id: "test", label: "Test Skill", onSelect: () => undefined }] as const,
+      className: "platform-service-detail-page__sidebar-card",
+    },
+    access: <div>Skill access settings</div>,
+  };
+
   it("uses the shared detail shell and renders the code workspace", () => {
     const { container } = render(
       <SkillDetailPage
         activeTab="code"
         metadata={<div>Skill identity</div>}
         code={<div>Skill source workspace</div>}
-        settings={<div>Skill access settings</div>}
+        settings={settings}
         sidebar={<div>Skill properties</div>}
       />,
     );
@@ -43,19 +59,13 @@ describe("SkillDetailPage", () => {
       <SkillDetailPage
         activeTab="settings"
         code={<div>Skill source workspace</div>}
-        settings={<div>Skill access settings</div>}
-        sidebar={(
-          <PlatformServiceDetailPropertyList>
-            <PlatformServiceDetailProperty label="Owner">
-              Skill properties
-            </PlatformServiceDetailProperty>
-          </PlatformServiceDetailPropertyList>
-        )}
+        settings={settings}
       />,
     );
 
     expect(screen.getByText("Skill access settings")).not.toBeNull();
     expect(screen.getByText("Skill properties")).not.toBeNull();
+    expect(screen.queryByText("Scope")).toBeNull();
     expect(screen.queryByText("Skill source workspace")).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(

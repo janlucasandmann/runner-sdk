@@ -1129,12 +1129,6 @@ export const METRONOME_INSPECTOR_03_FRAGMENT = String.raw`              if (isMe
                 credentialVaultId && !isCredentialSecretsLoading && !credentialVaultSecrets.length
                   ? React.createElement(MetronomeInspectorFieldHint, { as: "p", className: "playground-metronome-firecrawl-credential-hint" }, "No credentials found in this secrets resource yet.")
                   : null,
-                !credentialVaultId
-                  ? React.createElement(MetronomeInspectorFieldHint, { as: "p", className: "playground-metronome-firecrawl-credential-hint" }, "Managed by Computer Agents and billed as usage.")
-                  : null,
-                !metronomeSecretVaultOptions.length
-                  ? React.createElement(MetronomeInspectorFieldHint, { as: "p", className: "playground-metronome-firecrawl-credential-hint" }, "Create a Secrets resource in Develop mode to use your own Firecrawl key.")
-                  : null,
                 isSearch
                   ? React.createElement(React.Fragment, null,
                       renderMetronomeDataBindingSelect({

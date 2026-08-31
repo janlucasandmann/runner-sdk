@@ -6,7 +6,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import { Search } from "lucide-react";
+import { Search } from "../../ui/hugeicons-compat.js";
 
 function joinPlatformPopupSearchHeaderClassNames(
   ...classNames: Array<string | false | null | undefined>

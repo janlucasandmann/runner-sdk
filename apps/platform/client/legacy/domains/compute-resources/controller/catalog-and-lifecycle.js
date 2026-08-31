@@ -2684,7 +2684,20 @@
             }
             setDraftEnvironment(normalizedSeedEnvironment);
             void loadEnvironmentDetails(selectedEnvironmentId);
-          }, [environmentDetailsById, loadEnvironmentDetails, orderedEnvironments, resourceMode, selectedEnvironmentId]);
+            void loadEnvironmentDockerfileSource(selectedEnvironmentId).catch(() => {});
+          }, [environmentDetailsById, loadEnvironmentDetails, loadEnvironmentDockerfileSource, orderedEnvironments, resourceMode, selectedEnvironmentId]);
+
+          useEffect(() => {
+            if (
+              resourceMode !== "computers"
+              || normalizedEnvironmentDetailTab !== "runtime"
+              || !selectedEnvironmentId
+              || selectedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID
+            ) {
+              return;
+            }
+            void loadEnvironmentDockerfileSource(selectedEnvironmentId, { force: true }).catch(() => {});
+          }, [loadEnvironmentDockerfileSource, normalizedEnvironmentDetailTab, resourceMode, selectedEnvironmentId]);
 
           useEffect(() => {
             if (resourceMode !== "servers") {

@@ -1,4 +1,4 @@
-import { ChevronRight, CircleStop, LoaderCircle } from "lucide-react";
+import { ChevronRight, CircleStop, LoaderCircle } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { selectRunnerThreadRunWorkingLabel } from "../../thread/selectors.js";
 import type { RunnerThreadProjection, RunnerThreadRun } from "../../thread/types.js";
 import { isRunnerThreadRunActive } from "./run-activity-card.js";

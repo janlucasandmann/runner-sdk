@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { Copy } from "../../ui/hugeicons-compat.js";
 import {
   useEffect,
   useState,

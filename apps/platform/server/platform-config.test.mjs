@@ -21,11 +21,18 @@ function validOidcEnvironment(overrides = {}) {
 }
 
 test("uses fail-closed administrator configuration and portable local roots", () => {
-  const config = createPlatformConfig({});
+  const config = createPlatformConfig({
+    DEPLOYMENT_STAGE: "prod",
+  });
 
   assert.equal(config.feedbackSummaryAllowedEmail, "");
   assert.ok(path.isAbsolute(config.aiosHostingRoot));
   assert.ok(path.isAbsolute(config.playgroundSystemSkillsRoot));
+  assert.ok(
+    config.feedbackSummaryAdminEnvFileCandidates.some(
+      (candidate) => candidate.endsWith(path.join("web", "hosting", ".env.dev")),
+    ),
+  );
   assert.ok(config.githubOauthAllowedOrigins.includes("http://localhost:4177"));
   assert.equal(
     config.connectorOauthAllowedOrigins,
@@ -33,7 +40,21 @@ test("uses fail-closed administrator configuration and portable local roots", ()
   );
   assert.equal(config.executionDispatcher.enabled, false);
   assert.equal(config.deploymentProfileId, "cloud-saas-v1");
-  assert.equal(config.deploymentStage, "dev");
+  assert.equal(config.deploymentStage, "prod");
+});
+
+test("does not load development environment files for a production origin", () => {
+  const config = createPlatformConfig({
+    DEPLOYMENT_STAGE: "prod",
+    PLATFORM_APP_ORIGIN: "https://platform.example.test",
+  });
+
+  assert.equal(
+    config.feedbackSummaryAdminEnvFileCandidates.some(
+      (candidate) => candidate.endsWith(path.join("web", "hosting", ".env.dev")),
+    ),
+    false,
+  );
 });
 
 test("normalizes explicit origins, paths, and administrator settings", () => {

@@ -5,7 +5,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { Check } from "lucide-react";
+import { Check } from "../../ui/hugeicons-compat.js";
 import { PlatformPopup } from "../popup/index.js";
 
 export interface PlatformProfileImageOption {

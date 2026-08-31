@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 import { ResourceDetailPage } from "../../../platform-ui/pages/details/index.js";
+import {
+  PlatformResourceSettingsPage,
+  type PlatformResourceSettingsPageProps,
+} from "../../../platform-ui/pages/settings/index.js";
 import { AgentPermissionsPage, type AgentPermissionsPageProps } from "./agent-permissions-page.js";
 
 export type AgentDetailTab = "general" | "insights" | "evaluation" | "guardrails" | "permissions" | "settings";
@@ -11,6 +15,7 @@ export interface AgentDetailPageProps {
   sidebarCollapsed?: boolean;
   sidebarPopoverOpen?: boolean;
   permissions?: AgentPermissionsPageProps;
+  settings?: PlatformResourceSettingsPageProps;
   ariaLabel?: string;
   sidebarAriaLabel?: string;
   className?: string;
@@ -23,10 +28,14 @@ export function AgentDetailPage({
   sidebarCollapsed = false,
   sidebarPopoverOpen = false,
   permissions,
+  settings,
   ariaLabel = "Agent details",
   sidebarAriaLabel = "Agent settings",
   className = "",
 }: AgentDetailPageProps) {
+  if (activeTab === "settings" && settings) {
+    return <PlatformResourceSettingsPage {...settings} />;
+  }
   return (
     <ResourceDetailPage<AgentDetailTab>
       sidebar={sidebar}

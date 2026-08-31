@@ -15,7 +15,7 @@ import {
   Ellipsis,
   Rows3,
   Trash2,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,

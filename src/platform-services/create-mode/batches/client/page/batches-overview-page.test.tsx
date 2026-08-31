@@ -131,7 +131,7 @@ describe("BatchesOverviewPage", () => {
     expect(onStart).toHaveBeenCalledWith(heldJob);
 
     await user.click(screen.getByRole("button", { name: "Open actions for Review repository" }));
-    expect(screen.getByRole("menuitem", { name: "Delete" }).classList.contains("is-danger")).toBe(false);
+    expect(screen.getByRole("menuitem", { name: "Delete" }).classList.contains("is-danger")).toBe(true);
   });
 
   it("filters jobs from the app-header scope switch and renders the owner identity", async () => {

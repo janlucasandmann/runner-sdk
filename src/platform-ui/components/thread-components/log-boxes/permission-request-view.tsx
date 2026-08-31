@@ -1,4 +1,4 @@
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, X } from "../../ui/hugeicons-compat.js";
 import { useState } from "react";
 import type { RunnerLog } from "../../../../types.js";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";

@@ -122,6 +122,79 @@ describe("tryRouteRunnerCommunicatorMessage", () => {
     expect(options.postMessage).not.toHaveBeenCalled();
   });
 
+  it("routes completed-thread questions back to the worker", async () => {
+    const options = createOptions();
+    options.activeRunId = null;
+    options.hasRoutableActiveRun = false;
+    options.content = "Why didnt you recognize it in the first run?";
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          decision: { route: "communicator" },
+          suggestedTransport: "activity_message",
+          targetRunActive: false,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    const handled = await tryRouteRunnerCommunicatorMessage({
+      ...options,
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    expect(handled).toBe(false);
+    expect(options.postMessage).not.toHaveBeenCalled();
+  });
+
+  it("routes idle status questions back to the worker when classification is unavailable", async () => {
+    const options = createOptions();
+    options.activeRunId = null;
+    options.hasRoutableActiveRun = false;
+
+    const handled = await tryRouteRunnerCommunicatorMessage({
+      ...options,
+      fetchImpl: vi.fn().mockRejectedValue(new Error("Not deployed")) as typeof fetch,
+    });
+
+    expect(handled).toBe(false);
+    expect(options.postMessage).not.toHaveBeenCalled();
+  });
+
+  it("allows explicitly addressed communicator questions on completed threads", async () => {
+    const options = createOptions();
+    options.activeRunId = null;
+    options.hasRoutableActiveRun = false;
+    options.content = "@communicator summarize the previous run";
+    options.postMessage.mockResolvedValue(createCommunicatorResult("The run completed."));
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          decision: { route: "communicator" },
+          suggestedTransport: "activity_message",
+          targetRunActive: false,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+
+    const handled = await tryRouteRunnerCommunicatorMessage({
+      ...options,
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    expect(handled).toBe(true);
+    expect(options.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ intendedRoute: "communicator" }),
+    );
+  });
+
   it("restores the composer when communicator delivery cannot be confirmed", async () => {
     const options = createOptions();
     options.postMessage.mockRejectedValue(new Error("Delivery unavailable"));

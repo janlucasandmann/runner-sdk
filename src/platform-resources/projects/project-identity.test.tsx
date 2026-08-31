@@ -9,6 +9,11 @@ import {
 } from "./project-identity.js";
 import { PlatformProjectIdentityApi } from "./project-identity-api.js";
 import { PlatformProjectIdentityIcon } from "./project-identity-icon.js";
+import {
+  getPlatformResourceProjectScopeIds,
+  isPlatformProjectStrategyKnowledgeMetadata,
+  withPlatformResourceProjectScope,
+} from "./project-scope.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -119,5 +124,65 @@ describe("project identity resources", () => {
 
     rerender(<PlatformProjectIdentityIcon icon="emoji:🚀" size={24} />);
     expect(container.querySelector("[data-platform-project-icon='emoji:🚀']")?.textContent).toBe("🚀");
+  });
+
+  it("normalizes legacy and multi-project resource scopes", () => {
+    expect(getPlatformResourceProjectScopeIds({ projectId: "project-1" })).toEqual([
+      "project-1",
+    ]);
+    expect(getPlatformResourceProjectScopeIds({
+      projectScope: { projectIds: ["project-1", "project-2", "project-1"] },
+    })).toEqual(["project-1", "project-2"]);
+
+    const metadata = withPlatformResourceProjectScope(
+      { purpose: "research" },
+      [
+        {
+          id: "project-1",
+          name: "Launch",
+          icon: "rocket",
+          color: "#5f6bdc",
+          projectType: "blank",
+        },
+        {
+          id: "project-2",
+          name: "Research",
+          icon: "telescope",
+          color: "#8d83ff",
+          projectType: "research_knowledge",
+        },
+      ],
+    );
+    expect(getPlatformResourceProjectScopeIds(metadata)).toEqual(["project-1", "project-2"]);
+    expect(metadata).toMatchObject({
+      purpose: "research",
+      projectId: "project-1",
+      projectName: "Launch",
+      projectIds: ["project-1", "project-2"],
+    });
+
+    const independent = withPlatformResourceProjectScope(metadata, []);
+    expect(getPlatformResourceProjectScopeIds(independent)).toEqual([]);
+    expect(independent).not.toHaveProperty("projectId");
+  });
+
+  it("identifies only lifecycle-managed Project Strategy Knowledge metadata", () => {
+    expect(isPlatformProjectStrategyKnowledgeMetadata({
+      purpose: "project_knowledge",
+      projectId: "project-1",
+    })).toBe(true);
+    expect(isPlatformProjectStrategyKnowledgeMetadata({
+      purpose: "project_strategy_and_documentation",
+      projectId: "project-1",
+    })).toBe(true);
+    expect(isPlatformProjectStrategyKnowledgeMetadata({
+      schemaVersion: "computer_agents_project_knowledge_v1",
+      managedBy: "mission_control",
+      projectId: "project-1",
+    })).toBe(true);
+    expect(isPlatformProjectStrategyKnowledgeMetadata({
+      purpose: "research",
+      projectId: "project-1",
+    })).toBe(false);
   });
 });

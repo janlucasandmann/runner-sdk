@@ -1,27 +1,24 @@
-import { ChevronRight, Plus, SquarePen, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, ShieldCheck, SquarePen, Trash2 } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
-  PlatformDataTableColumn,
 } from "../../../../../../platform-ui/components/composite/data-table/index.js";
 import {
-  ResourceOverviewIdentityCell,
+  createResourceOverviewColumns,
   ResourceOverviewPage,
-  ResourceOverviewValue,
 } from "../../../../../../platform-ui/pages/overview/index.js";
 import { GuardrailsOverviewGuide } from "./guardrails-overview-guide.js";
 
 export interface GuardrailOverviewRow {
   id: string;
   name: string;
+  description: string;
   type: "default" | "custom";
   typeLabel: string;
-  creatorLabel: string;
+  creatorName: string;
   creatorAvatarUrl?: string;
   creatorFallback?: string;
   updatedAt: number;
-  updatedLabel: string;
-  updatedTitle?: string;
   searchText?: string;
 }
 
@@ -46,56 +43,15 @@ export function GuardrailsOverviewPage({
   onRename,
   onDelete,
 }: GuardrailsOverviewPageProps) {
-  const columns = useMemo<PlatformDataTableColumn<GuardrailOverviewRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Set",
-        accessor: "name",
-        sortable: true,
-        width: "minmax(230px, 1.3fr)",
-        cell: ({ row }) => (
-          <span className="resource-overview-identity__title">{row.name}</span>
-        ),
+  const columns = useMemo(
+    () => createResourceOverviewColumns<GuardrailOverviewRow>({
+      name: {
+        getVisual: () => ({
+          icon: <ShieldCheck width={16} height={16} strokeWidth={1.8} />,
+          iconClassName: "is-guardrail",
+        }),
       },
-      {
-        id: "type",
-        header: "Type",
-        accessor: "typeLabel",
-        sortable: true,
-        width: "minmax(105px, 0.56fr)",
-        cell: ({ row }) => <ResourceOverviewValue>{row.typeLabel}</ResourceOverviewValue>,
-      },
-      {
-        id: "creator",
-        header: "Creator",
-        accessor: "creatorLabel",
-        sortable: true,
-        width: "minmax(170px, 0.85fr)",
-        hideBelow: 760,
-        cell: ({ row }) => (
-          <ResourceOverviewIdentityCell
-            title={row.creatorLabel}
-            imageUrl={row.creatorAvatarUrl}
-            fallback={row.creatorFallback}
-            iconClassName="is-creator"
-            size="compact"
-          />
-        ),
-      },
-      {
-        id: "updated",
-        header: "Updated",
-        accessor: "updatedAt",
-        sortable: true,
-        sortDescFirst: true,
-        width: "minmax(120px, 0.62fr)",
-        hideBelow: 900,
-        cell: ({ row }) => (
-          <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>
-        ),
-      },
-    ],
+    }),
     [],
   );
 
@@ -150,7 +106,7 @@ export function GuardrailsOverviewPage({
             placeholder: "Search guardrails",
             getSearchText: (row) =>
               row.searchText ||
-              `${row.name} ${row.typeLabel} ${row.creatorLabel} ${row.updatedLabel}`,
+              `${row.name} ${row.description} ${row.typeLabel} ${row.creatorName}`,
           },
           primaryAction: { label: "New Set", icon: Plus, onClick: onCreate },
         },

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getAssurancePolicyCreatorIdentity,
   initializeAssurancePolicyIdentityMetadata,
+  resolveAssurancePolicyCreatorIdentity,
 } from "./assurance-identity.js";
 
 describe("assurance identity metadata", () => {
@@ -47,5 +48,23 @@ describe("assurance identity metadata", () => {
       },
     );
     expect(metadata.creator).toMatchObject({ id: "user_original" });
+  });
+
+  it("enriches an id-only creator from a known identity", () => {
+    expect(
+      resolveAssurancePolicyCreatorIdentity(
+        { metadata: { creator: "user_current" } },
+        [{
+          id: "user_current",
+          userId: "user_current",
+          name: "Current User",
+          avatarUrl: "/current-user.png",
+        }],
+      ),
+    ).toMatchObject({
+      id: "user_current",
+      name: "Current User",
+      avatarUrl: "/current-user.png",
+    });
   });
 });

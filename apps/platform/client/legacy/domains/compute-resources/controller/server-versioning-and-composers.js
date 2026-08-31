@@ -558,7 +558,7 @@
                 onClick: () => {
                   setServerPublishMenuOpen(false);
                   setServerVersionsHeaderMenuOpen(false);
-                  openServerVersionChangesPage();
+                  openServerVersionChangesModal();
                 },
               });
             }
@@ -1050,7 +1050,7 @@
             return activeVersion ? getServerVersionCompareVersionSourceId(activeVersion.id) : SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID;
           }
   
-          function openServerVersionChangesPage(versionId, options = {}) {
+          function openServerVersionChangesModal(versionId, options = {}) {
             const normalizedVersionId = String(versionId || "").trim();
             const versions = readDraftServerVersions();
             if (!versions.length && !draftServer) {
@@ -1064,14 +1064,14 @@
             const leftSourceId = explicitLeftSourceId || fallbackLeftSourceId;
             const rightSourceId = explicitRightSourceId || SERVER_VERSION_COMPARE_CURRENT_EDITOR_ID;
             setOpenServerVersionMenuId("");
-            setServerVersionsSidebarOpen(true);
+            setServerVersionsSidebarOpen(false);
             setServerVersionChangesState({
               leftSourceId,
               rightSourceId,
             });
           }
   
-          function closeServerVersionChangesPage() {
+          function closeServerVersionChangesModal() {
             setServerVersionChangesState(null);
           }
   

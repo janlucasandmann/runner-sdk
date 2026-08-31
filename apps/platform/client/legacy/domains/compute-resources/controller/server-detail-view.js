@@ -3716,7 +3716,7 @@
                   onSelectVersion: restoreAuthoritativeServerVersion,
                   onPublishVersion: (versionId) => void publishAuthoritativeServerVersion(versionId),
                   canPublishVersion: (version) => canPublishServerVersion(version),
-                  onViewChanges: () => openServerVersionChangesPage(),
+                  onViewChanges: () => openServerVersionChangesModal(),
                   getVersionCreatedAt: (version) => {
                     const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
                     return timestamp ? formatEnvironmentVersionTimestamp(timestamp) : "-";
@@ -3732,7 +3732,7 @@
                       id: "compare",
                       label: "View Changes",
                       icon: Code2,
-                      onSelect: () => openServerVersionChangesPage(version.id),
+                      onSelect: () => openServerVersionChangesModal(version.id),
                     },
                     {
                       id: "delete",
@@ -3787,7 +3787,7 @@
                     type: "button",
                     className: "playground-metronome-secondary-button playground-metronome-publish-new-button playground-agents-version-compare-button",
                     disabled: serverVersionState.status === "loading" || !versions.length,
-                    onClick: () => openServerVersionChangesPage(),
+                    onClick: () => openServerVersionChangesModal(),
                   },
                     React.createElement(Code2, { width: 13, height: 13, strokeWidth: 1.8 }),
                     React.createElement("span", null, "View Changes")
@@ -3804,7 +3804,7 @@
                     id: "compare",
                     label: "View Changes",
                     icon: Code2,
-                    onClick: () => openServerVersionChangesPage(version.id),
+                    onClick: () => openServerVersionChangesModal(version.id),
                   },
                   {
                     id: "restore",
@@ -3918,7 +3918,7 @@
               });
             }
   
-            function renderServerVersionChangesPage() {
+            function renderServerVersionChangesModal() {
               if (!serverVersionChangesState) {
                 return null;
               }
@@ -3939,11 +3939,10 @@
                 value: source.id,
                 label: source.label,
               }));
-              return renderPlaygroundVersionChangesPage({
+              return renderPlaygroundVersionChangesModal({
                 title: "Changes",
-                backText: "Back to " + serverKindLabel,
-                backLabel: "Back to " + serverKindLabel,
-                onBack: closeServerVersionChangesPage,
+                closeButtonLabel: "Close " + serverKindLabel.toLowerCase() + " version changes",
+                onClose: closeServerVersionChangesModal,
                 leftSelector: {
                   value: leftSource.id,
                   options: compareOptions,
@@ -4199,6 +4198,271 @@
             const sourceServerDetailSidebar = isSourceDeployableServer
               ? sourceServerPropertiesSidebar
               : null;
+            const sourceServerCreatorKey = getDatabaseOwnerIdentityKey(serverCreatorIdentity)
+              || String(serverCreatorIdentity?.id || serverCreatorIdentity?.userId || serverCreatorIdentity?.email || "server-creator");
+            const sourceServerScopeIds = getPlatformResourceProjectScopeIds(draftServer);
+            const sourceServerResourceSettings = isSourceDeployableServer
+              ? {
+                  ariaLabel: serverKindLabel + " settings",
+                  className: "playground-server-resource-settings is-" + (isFunctionServer ? "function" : isApiServer ? "api" : "web-app"),
+                  identity: {
+                    icon: React.createElement(isFunctionServer ? FunctionSquare : isApiServer ? Server : Globe, {
+                      width: 24,
+                      height: 24,
+                      strokeWidth: 1.8,
+                    }),
+                    title: String(draftServer.name || ""),
+                    description: String(draftServer.description || ""),
+                    onTitleChange: isServerTemplatePreview
+                      ? undefined
+                      : (value) => updateServerField("name", value),
+                    onDescriptionChange: isServerTemplatePreview
+                      ? undefined
+                      : (value) => updateServerField("description", value),
+                    onTitleBlur: isServerTemplatePreview
+                      ? undefined
+                      : () => void commitDraftServerIfDirty(),
+                    onDescriptionBlur: isServerTemplatePreview
+                      ? undefined
+                      : () => void commitDraftServerIfDirty(),
+                    titlePlaceholder: isFunctionServer ? "Untitled function" : isApiServer ? "Untitled API" : "Untitled web app",
+                    descriptionPlaceholder: isFunctionServer
+                      ? "Describe what this function does."
+                      : isApiServer
+                        ? "Describe what this API does."
+                        : "Describe what this web app does.",
+                    titleAriaLabel: serverKindLabel + " name",
+                    descriptionAriaLabel: serverKindLabel + " description",
+                    readOnly: isServerTemplatePreview,
+                    className: "playground-source-server-settings-identity",
+                    iconClassName: "playground-source-server-code-identity-icon",
+                  },
+                  details: {
+                    variant: "standard",
+                    customAttributes: [
+                      {
+                        id: "status",
+                        label: "Status",
+                        value: React.createElement(PlatformLabel, {
+                          variant: sourceServerDeploymentVariant,
+                        }, sourceServerDeploymentLabel),
+                      },
+                      {
+                        id: "url",
+                        label: "URL",
+                        value: sourceServerUrlValue,
+                        className: "playground-server-detail-sidebar-url-row",
+                      },
+                      !isFunctionServer ? {
+                        id: "runtime",
+                        label: "Runtime",
+                        value: String(draftServer.runtime || "nodejs22"),
+                      } : null,
+                      !isFunctionServer ? {
+                        id: "authentication",
+                        label: "Authentication",
+                        value: functionApiKeyAuthEnabled ? "API key required" : "Public",
+                      } : null,
+                      !isWebAppServer && sourceServerSourceLabel ? {
+                        id: "source",
+                        label: "Source",
+                        value: sourceServerSourceLabel,
+                      } : null,
+                      {
+                        id: "created",
+                        label: "Created",
+                        value: formatPlaygroundFileDate(draftServer.createdAt),
+                      },
+                    ].filter(Boolean),
+                    updatedAt: draftServer.updatedAt || draftServer.createdAt,
+                    creator: {
+                      value: sourceServerCreatorKey,
+                      name: String(serverCreatorIdentity?.name || serverCreatorIdentity?.email || "Unknown user"),
+                      email: String(serverCreatorIdentity?.email || ""),
+                      avatarUrl: String(serverCreatorIdentity?.avatarUrl || ""),
+                    },
+                    owner: {
+                      value: serverOwnerIdentityKey || "server-owner",
+                      name: serverOwnerLabel,
+                      email: String(serverOwnerIdentity?.email || ""),
+                      avatarUrl: String(serverOwnerIdentity?.avatarUrl || ""),
+                    },
+                    ownerOptions: serverOwnerOptions,
+                    onOwnerTransfer: async (_nextValue, option) => {
+                      const selectedOwner = option?.data?.candidate;
+                      if (selectedOwner) await handleServerOwnerSelect(selectedOwner);
+                    },
+                    ownerSelectorProps: {
+                      open: serverOwnerPopoverOpen,
+                      onOpenChange: setServerOwnerPopoverOpen,
+                      ariaLabel: "Choose " + serverKindLabel.toLowerCase() + " owner",
+                      resourceLabel: serverKindLabel.toLowerCase(),
+                      alignment: "end",
+                      popupAlignment: "right",
+                      fullWidth: true,
+                      disabled: !isCurrentUserServerOwner(draftServer) || serverSaveState.isSaving,
+                      loading: serverSharedTeamIds.length > 0 && serverOwnerMissingTeamIds.length > 0,
+                      loadingContent: "Loading team members...",
+                      emptyContent: serverSharedTeamIds.length === 0
+                        ? "Grant a team access before choosing an owner."
+                        : "No human team members are available.",
+                      popupWidth: 260,
+                      popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                    },
+                    scope: sourceServerScopeIds.length > 0 ? {
+                      values: sourceServerScopeIds,
+                      options: sourceServerScopeIds.map((projectId) => ({
+                        value: projectId,
+                        label: String(draftServer?.metadata?.projectName || draftServer?.projectName || "Project"),
+                        leading: React.createElement(FolderOpen, {
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                          "aria-hidden": "true",
+                        }),
+                      })),
+                      disabled: true,
+                    } : {},
+                    primaryActions: [
+                      {
+                        id: "deploy",
+                        label: serverDeploymentState.isDeploying ? "Deploying..." : "Deploy",
+                        onSelect: () => handleDeployServer(),
+                        disabled: isServerTemplatePreview
+                          || serverDeploymentState.isDeploying
+                          || isSourceServerDecommissioning
+                          || serverSaveState.isSaving,
+                      },
+                      {
+                        id: isWebAppServer ? "open-app" : "test-invoke",
+                        label: isWebAppServer ? "Open App" : "Test Invoke",
+                        onSelect: () => {
+                          if (isWebAppServer) {
+                            if (draftServer.serviceUrl) window.open(draftServer.serviceUrl, "_blank", "noopener,noreferrer");
+                            return;
+                          }
+                          void handleInvokeServer();
+                        },
+                        disabled: serverDeploymentState.isInvoking || !draftServer.serviceUrl,
+                      },
+                    ],
+                    className: "playground-server-detail-properties-card",
+                  },
+                  location: serverDeploymentMapSection,
+                  connectors: sourceConnectorsSection,
+                  additionalSections: React.createElement(React.Fragment, null,
+                    isFunctionServer ? functionInvokeSection : null,
+                    customDomainSection,
+                    connectionsSection
+                  ),
+                  access: serverSettingsPermissionContent || serverTeamAccessTable,
+                  accessDetailOpen: Boolean(serverPermissionTeamId),
+                  detailsSidebarAriaLabel: (draftServer.name || serverKindLabel) + " properties",
+                  detailsSidebarClassName: "playground-server-resource-settings__sidebar",
+                }
+              : undefined;
+            const buildManagedServerResourceSettings = ({
+              icon,
+              customAttributes = [],
+              primaryActions,
+              connectors = null,
+              additionalSections = null,
+              access = serverSettingsPermissionContent || serverTeamAccessTable,
+              className = "",
+            }) => ({
+              ariaLabel: serverKindLabel + " settings",
+              className: "playground-server-resource-settings" + (className ? " " + className : ""),
+              identity: {
+                icon,
+                title: String(draftServer.name || ""),
+                description: String(draftServer.description || ""),
+                onTitleChange: isServerTemplatePreview
+                  ? undefined
+                  : (value) => updateServerField("name", value),
+                onDescriptionChange: isServerTemplatePreview
+                  ? undefined
+                  : (value) => updateServerField("description", value),
+                onTitleBlur: isServerTemplatePreview
+                  ? undefined
+                  : () => void commitDraftServerIfDirty(),
+                onDescriptionBlur: isServerTemplatePreview
+                  ? undefined
+                  : () => void commitDraftServerIfDirty(),
+                titlePlaceholder: "Untitled " + serverKindLabel.toLowerCase(),
+                descriptionPlaceholder: "Describe this " + serverKindLabel.toLowerCase() + ".",
+                titleAriaLabel: serverKindLabel + " name",
+                descriptionAriaLabel: serverKindLabel + " description",
+                readOnly: isServerTemplatePreview,
+                className: "playground-managed-server-settings-identity",
+                iconClassName: "playground-source-server-code-identity-icon",
+              },
+              details: {
+                variant: "standard",
+                customAttributes: [...customAttributes, {
+                  id: "created",
+                  label: "Created",
+                  value: formatPlaygroundFileDate(draftServer.createdAt),
+                }],
+                updatedAt: draftServer.updatedAt || draftServer.createdAt,
+                creator: {
+                  value: sourceServerCreatorKey,
+                  name: String(serverCreatorIdentity?.name || serverCreatorIdentity?.email || "Unknown user"),
+                  email: String(serverCreatorIdentity?.email || ""),
+                  avatarUrl: String(serverCreatorIdentity?.avatarUrl || ""),
+                },
+                owner: {
+                  value: serverOwnerIdentityKey || "server-owner",
+                  name: serverOwnerLabel,
+                  email: String(serverOwnerIdentity?.email || ""),
+                  avatarUrl: String(serverOwnerIdentity?.avatarUrl || ""),
+                },
+                ownerOptions: serverOwnerOptions,
+                onOwnerTransfer: async (_nextValue, option) => {
+                  const selectedOwner = option?.data?.candidate;
+                  if (selectedOwner) await handleServerOwnerSelect(selectedOwner);
+                },
+                ownerSelectorProps: {
+                  open: serverOwnerPopoverOpen,
+                  onOpenChange: setServerOwnerPopoverOpen,
+                  ariaLabel: "Choose " + serverKindLabel.toLowerCase() + " owner",
+                  resourceLabel: serverKindLabel.toLowerCase(),
+                  alignment: "end",
+                  popupAlignment: "right",
+                  fullWidth: true,
+                  disabled: !isCurrentUserServerOwner(draftServer) || serverSaveState.isSaving,
+                  loading: serverSharedTeamIds.length > 0 && serverOwnerMissingTeamIds.length > 0,
+                  loadingContent: "Loading team members...",
+                  emptyContent: serverSharedTeamIds.length === 0
+                    ? "Grant a team access before choosing an owner."
+                    : "No human team members are available.",
+                  popupWidth: 260,
+                  popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                },
+                scope: sourceServerScopeIds.length > 0 ? {
+                  values: sourceServerScopeIds,
+                  options: sourceServerScopeIds.map((projectId) => ({
+                    value: projectId,
+                    label: String(draftServer?.metadata?.projectName || draftServer?.projectName || "Project"),
+                    leading: React.createElement(FolderOpen, {
+                      width: 14,
+                      height: 14,
+                      strokeWidth: 1.8,
+                      "aria-hidden": "true",
+                    }),
+                  })),
+                  disabled: true,
+                } : {},
+                primaryActions,
+                className: "playground-server-detail-properties-card",
+              },
+              location: serverDeploymentMapSection,
+              connectors,
+              additionalSections,
+              access,
+              accessDetailOpen: Boolean(serverPermissionTeamId),
+              detailsSidebarAriaLabel: (draftServer.name || serverKindLabel) + " properties",
+              detailsSidebarClassName: "playground-server-resource-settings__sidebar",
+            });
             const renderSourceServerDetailContent = (content, className = "") =>
               React.createElement("div", {
                   className: "playground-server-detail-content" + (className ? " " + className : ""),
@@ -4240,7 +4504,7 @@
               ? React.createElement(SourceDeployableServerDetailPage, {
                   resourceKind: isFunctionServer ? "function" : isApiServer ? "api" : "web-app",
                   contentByTab: sourceServerDetailContentByTab,
-                  overrideContent: serverVersionChangesState ? renderServerVersionChangesPage() : undefined,
+                  settings: sourceServerResourceSettings,
                   sidebar: sourceServerDetailSidebar,
                   activeTab: normalizedServerDetailTab,
                   sidebarCollapsed: sourceServerSidebarCollapsed,
@@ -4268,9 +4532,7 @@
                 )
               : null;
   
-            const activeServerEditorContent = serverVersionChangesState
-              ? renderServerVersionChangesPage()
-              : React.createElement("div", { className: serverDetailContentClassName },
+            const activeServerEditorContent = React.createElement("div", { className: serverDetailContentClassName },
                   serverSaveState.error
                     ? React.createElement("div", { className: "playground-environments-error playground-environments-editor-notice" }, serverSaveState.error)
                     : null,
@@ -4434,10 +4696,42 @@
                 )
               );
               const paymentsDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
+              const paymentsResourceSettings = buildManagedServerResourceSettings({
+                icon: React.createElement(ReceiptText, { width: 24, height: 24, strokeWidth: 1.8 }),
+                customAttributes: [
+                  {
+                    id: "status",
+                    label: "Status",
+                    value: React.createElement(PlatformLabel, { variant: paymentsStatusVariant }, paymentsStatus),
+                  },
+                  { id: "stripe-account", label: "Stripe Account", value: paymentsMetadata.stripeAccountId || "Not connected" },
+                  { id: "mode", label: "Mode", value: String(paymentsMetadata.mode || "test").toUpperCase() },
+                  { id: "currency", label: "Currency", value: paymentsCurrency },
+                  { id: "payments", label: "Payments", value: String(Math.max(0, Number(paymentsMetadata.totalPaymentCount || 0))) },
+                  { id: "earned", label: "Earned", value: formatPlaygroundPaymentMoney(paymentsMetadata.totalEarnedCents, paymentsCurrency) },
+                ],
+                primaryActions: [
+                  {
+                    id: "connect-stripe",
+                    label: paymentsMetadata.stripeAccountId ? "Continue Setup" : "Connect Stripe",
+                    onSelect: () => connectPaymentsResource(draftServer.id),
+                    disabled: serverSaveState.isSaving || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  },
+                  {
+                    id: "sync-status",
+                    label: "Sync Status",
+                    onSelect: () => syncPaymentsResource(draftServer.id),
+                    disabled: serverSaveState.isSaving || !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  },
+                ],
+                additionalSections: connectionsSection,
+                className: "is-payments-settings",
+              });
               const paymentsDetailWorkspace = React.createElement(DevelopServerDetailPage, {
                   tabs: [],
                   activeTab: normalizedPaymentsDetailTab,
                   onTabChange: () => undefined,
+                  settings: paymentsResourceSettings,
                   sidebar: paymentsDetailSidebar,
                   sidebarCollapsed: paymentsDetailSidebarCollapsed,
                   ariaLabel: "Payments details for " + (draftServer.name || "Untitled payments resource"),
@@ -4751,6 +5045,21 @@
 	              )
 	            );
 	            const secretsDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
+	            const secretsResourceSettings = buildManagedServerResourceSettings({
+	              icon: React.createElement(Vault, { width: 24, height: 24, strokeWidth: 1.8 }),
+	              customAttributes: [
+	                { id: "secrets", label: "Secrets", value: String(totalSecrets) },
+	                { id: "location", label: "Location", value: secretsStorageLocation },
+	              ],
+	              primaryActions: [{
+	                id: "new-secret",
+	                label: "New Secret",
+	                onSelect: () => openServerSecretComposer(null),
+	                disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+	              }],
+	              additionalSections: connectionsSection,
+	              className: "is-secrets-settings",
+	            });
 	            const secretsEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main playground-managed-data-detail-main playground-secrets-detail-main" + (
 	              normalizedSecretsDetailTab === "secrets" ? " is-managed-data-list-tab is-secrets-tab" : ""
 	            );
@@ -4764,6 +5073,7 @@
 	                tabs: [],
 	                activeTab: normalizedSecretsDetailTab,
 	                onTabChange: () => undefined,
+	                settings: secretsResourceSettings,
 	                sidebar: secretsDetailSidebar,
 	                sidebarCollapsed: secretsDetailSidebarCollapsed,
 	                sidebarAutoCollapseTabs: ["secrets"],
@@ -5656,10 +5966,51 @@
               const agentRuntimeDetailContentClassName = "playground-server-detail-content playground-agent-runtime-detail-content" + (
                 normalizedAgentRuntimeDetailTab === "threads" ? " is-managed-data-list-tab is-agent-runtime-threads-tab" : ""
               );
+              const agentRuntimeResourceSettings = buildManagedServerResourceSettings({
+                icon: React.createElement(Bot, { width: 24, height: 24, strokeWidth: 1.8 }),
+                customAttributes: [
+                  {
+                    id: "agent",
+                    label: "Agent",
+                    value: selectedAgentRuntimeAgent?.name || agentRuntimeConfig.agentId || "Not selected",
+                  },
+                  {
+                    id: "computer",
+                    label: "Computer",
+                    value: selectedAgentRuntimeEnvironment?.name || "Not selected",
+                  },
+                  {
+                    id: "execution",
+                    label: "Execution",
+                    value: agentRuntimeConfig.executionMode === "sync" ? "Sync" : "Async",
+                  },
+                  { id: "runs", label: "Runs", value: String(totalRuns) },
+                ],
+                primaryActions: [
+                  {
+                    id: "new-thread",
+                    label: "New Thread",
+                    onSelect: openAgentRuntimeRunComposer,
+                    disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                  },
+                  {
+                    id: "deploy",
+                    label: serverDeploymentState.isDeploying ? "Deploying..." : "Deploy",
+                    onSelect: () => handleDeployServer(),
+                    disabled: serverDeploymentState.isDeploying || serverSaveState.isSaving,
+                  },
+                ],
+                additionalSections: React.createElement(React.Fragment, null,
+                  agentRuntimeSettingsSection,
+                  connectionsSection
+                ),
+                className: "is-agent-runtime-settings",
+              });
               const agentRuntimeDetailWorkspace = React.createElement(DevelopServerDetailPage, {
                   tabs: [],
                   activeTab: normalizedAgentRuntimeDetailTab,
                   onTabChange: () => undefined,
+                  settings: agentRuntimeResourceSettings,
                   sidebar: agentRuntimeDetailSidebar,
                   sidebarCollapsed: agentRuntimeDetailSidebarCollapsed,
                   sidebarAutoCollapseTabs: ["threads"],
@@ -5916,6 +6267,21 @@
                 )
               );
               const authDetailSidebarCollapsed = Boolean(serverDetailsCollapsed);
+              const authResourceSettings = buildManagedServerResourceSettings({
+                icon: React.createElement(KeyRound, { width: 24, height: 24, strokeWidth: 1.8 }),
+                customAttributes: [
+                  { id: "users", label: "Users", value: String(authUsers.length) },
+                  { id: "location", label: "Location", value: authStorageLocation },
+                ],
+                primaryActions: [{
+                  id: "add-user",
+                  label: "Add User",
+                  onSelect: openServerAuthUserComposer,
+                  disabled: !draftServer.id || draftServer.id === PLAYGROUND_SERVER_DRAFT_ID,
+                }],
+                additionalSections: connectionsSection,
+                className: "is-auth-settings",
+              });
               const authEditorMainClassName = "playground-environments-editor-main playground-tasks-detail-main playground-managed-data-detail-main playground-auth-detail-main" + (
                 normalizedAuthDetailTab === "users" ? " is-managed-data-list-tab is-auth-users-tab" : ""
               );
@@ -5929,6 +6295,7 @@
                   tabs: [],
                   activeTab: normalizedAuthDetailTab,
                   onTabChange: () => undefined,
+                  settings: authResourceSettings,
                   sidebar: authDetailSidebar,
                   sidebarCollapsed: authDetailSidebarCollapsed,
                   sidebarAutoCollapseTabs: ["users"],
@@ -6115,6 +6482,7 @@
                 serverDeploymentHelpModal,
                 serverCustomDomainModal,
                 serverRuntimePreviewModal,
+                renderServerVersionChangesModal(),
                 renderServerVersionModal(),
                 renderServerVersionsSidebarPortal(),
                 renderAuthoritativeServerVersionSaveDialog()
@@ -6148,6 +6516,7 @@
               serverDeploymentHelpModal,
               serverCustomDomainModal,
               serverRuntimePreviewModal,
+              renderServerVersionChangesModal(),
               renderServerVersionModal(),
               renderServerVersionsSidebarPortal()
             );

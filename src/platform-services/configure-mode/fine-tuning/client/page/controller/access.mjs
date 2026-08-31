@@ -20,16 +20,17 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
 
         function getFineTuningOwnerIdentity(job = selectedJob) {
           const metadata = getFineTuningAccessMetadata(job);
-          const owner = [
+          const storedOwner = [
             metadata.owner,
             job?.owner,
             job?.createdBy,
             job?.conductedBy,
-            currentFineTuningUser,
           ]
             .map(normalizePlaygroundFineTuningPersonIdentity)
             .find((candidate) => candidate.id || candidate.userId || candidate.email || candidate.name);
-          return owner || normalizePlaygroundFineTuningPersonIdentity(currentFineTuningUser);
+          return storedOwner
+            ? resolvePlaygroundFineTuningPersonIdentity(storedOwner, [currentFineTuningUser])
+            : normalizePlaygroundFineTuningPersonIdentity(currentFineTuningUser);
         }
 
         function getFineTuningIdentityKeys(identity) {
@@ -166,7 +167,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
           setFineTuningOwnerSelectorOpen(false);
         }
 
-        function renderFineTuningOwnerSelector(job = selectedJob) {
+        function getFineTuningOwnerSelectorModel(job = selectedJob) {
           const owner = getFineTuningOwnerIdentity(job);
           const ownerLabel = String(owner.name || owner.email || owner.id || "Owner").trim();
           const options = getFineTuningOwnerCandidates(job).map((candidate) => ({
@@ -182,7 +183,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
             getFineTuningIdentityKeys(option.data?.candidate).some((key) => ownerKeys.has(key))
           );
           const candidateState = fineTuningOwnerCandidatesByJobId?.[job?.id] || {};
-          return React.createElement(PlatformOwnerSelector, {
+          return {
             owner: {
               value: selectedOption?.value || getFineTuningIdentityKey(owner),
               name: ownerLabel,
@@ -190,29 +191,41 @@ export const FINE_TUNING_PAGE_CONTROLLER_ACCESS_SCRIPT = String.raw`        func
               avatarUrl: owner.avatarUrl || "",
             },
             options,
-            open: fineTuningOwnerSelectorOpen,
-            onOpenChange: (nextOpen) => {
-              if (nextOpen && !isCurrentFineTuningOwner(job)) return;
-              setFineTuningOwnerSelectorOpen(Boolean(nextOpen));
-              if (nextOpen) void loadFineTuningOwnerCandidates(job);
-            },
             onTransfer: (_nextValue, option) => {
               const nextOwner = option?.data?.candidate;
               if (nextOwner) updateFineTuningOwner(job, nextOwner);
             },
-            ariaLabel: "Choose optimization owner",
-            resourceLabel: "optimization job",
-            alignment: "start",
-            popupAlignment: "right",
-            disabled: !isCurrentFineTuningOwner(job),
-            loading: candidateState.status === "loading",
-            loadingContent: "Loading team members...",
-            emptyContent: "No human team members are available.",
-            popupWidth: 260,
-            className: "playground-fine-tuning-owner-selector",
-            triggerClassName: "playground-fine-tuning-owner-trigger",
-            popupClassName: "playground-agents-detail-owner-menu playground-fine-tuning-owner-menu",
-            optionClassName: "playground-agents-detail-owner-option",
+            selectorProps: {
+              open: fineTuningOwnerSelectorOpen,
+              onOpenChange: (nextOpen) => {
+                if (nextOpen && !isCurrentFineTuningOwner(job)) return;
+                setFineTuningOwnerSelectorOpen(Boolean(nextOpen));
+                if (nextOpen) void loadFineTuningOwnerCandidates(job);
+              },
+              ariaLabel: "Choose optimization owner",
+              resourceLabel: "optimization job",
+              alignment: "start",
+              popupAlignment: "right",
+              disabled: !isCurrentFineTuningOwner(job),
+              loading: candidateState.status === "loading",
+              loadingContent: "Loading team members...",
+              emptyContent: "No human team members are available.",
+              popupWidth: 260,
+              className: "playground-fine-tuning-owner-selector",
+              triggerClassName: "playground-fine-tuning-owner-trigger",
+              popupClassName: "playground-agents-detail-owner-menu playground-fine-tuning-owner-menu",
+              optionClassName: "playground-agents-detail-owner-option",
+            },
+          };
+        }
+
+        function renderFineTuningOwnerSelector(job = selectedJob) {
+          const model = getFineTuningOwnerSelectorModel(job);
+          return React.createElement(PlatformOwnerSelector, {
+            owner: model.owner,
+            options: model.options,
+            onTransfer: model.onTransfer,
+            ...model.selectorProps,
           });
         }
 

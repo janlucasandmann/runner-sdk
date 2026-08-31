@@ -1257,8 +1257,8 @@
               skillResourceMetadata,
               Boolean(selectedSkillAccessTeam)
             );
-            const skillSettingsTabContent = skillSettingsComposition.content;
-            const skillSettingsSidebar = skillSettingsComposition.sidebar;
+            const skillSettingsTabContent = skillSettingsComposition;
+            const skillSettingsSidebar = null;
             const skillVersionsSidebar = selectedSkill.isCustom && !selectedSkill.isDraft
               ? React.createElement(PlatformVersionHistorySidebar, {
                   open: skillVersionsOpen,
@@ -1280,31 +1280,30 @@
                   onSelectVersion: (versionId) => void restoreSelectedSkillVersion(versionId),
                   onPublishVersion: (versionId) => void publishSelectedSkillVersion(versionId),
                   canPublishVersion: (version) => canPublishSelectedSkillVersion(version),
-                  onViewChanges: () => openSkillVersionChangesPage(),
+                  onViewChanges: () => openSkillVersionChangesModal(),
                   getVersionActions: (version) => getSelectedSkillVersionActions(version),
                   getVersionCreatedAt: (version) => formatRelativeThreadTime(
                     version?.createdAt || version?.updatedAt || version?.publishedAt
                   ) || "—",
                 })
               : null;
-            const skillVersionChangesSurface = renderSkillVersionChangesSurface(skillDetailTopNavAction);
+            const skillVersionChangesModal = renderSkillVersionChangesModal(skillDetailTopNavAction);
 
             return React.createElement(React.Fragment, null,
               skillsTopNavActions,
-              skillVersionChangesSurface
-                ? skillVersionChangesSurface
-                : React.createElement(React.Fragment, null,
-                    renderSkillTitleActions(),
-                    React.createElement(SkillDetailPage, {
-                      activeTab: skillDetailTab,
-                      metadata: skillMetadataSection,
-                      notice: skillCodeNotice,
-                      code: skillCodeWorkspace,
-                      settings: skillSettingsTabContent,
-                      sidebar: skillSettingsSidebar,
-                      className: "playground-skills-detail-page",
-                    })
-                  ),
+              React.createElement(React.Fragment, null,
+                renderSkillTitleActions(),
+                React.createElement(SkillDetailPage, {
+                  activeTab: skillDetailTab,
+                  metadata: skillMetadataSection,
+                  notice: skillCodeNotice,
+                  code: skillCodeWorkspace,
+                  settings: skillSettingsTabContent,
+                  sidebar: skillSettingsSidebar,
+                  className: "playground-skills-detail-page",
+                })
+              ),
+              skillVersionChangesModal,
               skillVersionsSidebar,
               renderSkillVersionSaveDialog(),
               renderSkillVersionEditDialog(),
@@ -1317,7 +1316,10 @@
               ? createPortal(renderSkillsCreateAction(), topNavActionsContainer)
               : null;
             const rows = scopedOverviewSkills.map((skill) => {
-              const updatedAt = Date.parse(String(skill?.updatedAt || skill?.createdAt || ""));
+              const parsedUpdatedAt = skill?.isCustom
+                ? Date.parse(String(skill?.updatedAt || skill?.createdAt || ""))
+                : Number.NaN;
+              const updatedAt = Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : 0;
               const ownerIdentity = getSelectedSkillOwnerIdentity(skill);
               const systemSkillFamilyId = String(
                 skill?.systemFamilyId
@@ -1332,6 +1334,9 @@
                 description: String(skill?.description || ""),
                 searchText: [skill?.name, skill?.description, skill?.id].filter(Boolean).join(" "),
                 icon: renderSkillIcon(skill, "playground-environments-list-item-icon"),
+                iconColor: skill?.isCustom
+                  ? getSelectedSkillIconColor(skill?.metadata)
+                  : undefined,
                 isComputerAgents: systemSkillFamilyId === "computer_agents",
                 isActive: skill?.isActive !== false,
                 isCustom: Boolean(skill?.isCustom),
@@ -1350,8 +1355,9 @@
                 ).trim(),
                 ownerName: String(ownerIdentity?.name || "").trim(),
                 ownerAvatarUrl: String(ownerIdentity?.avatarUrl || "").trim(),
-                updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
-                updatedLabel: formatRelativeThreadTime(skill?.updatedAt || skill?.createdAt) || (skill?.isCustom ? "Recently" : "System"),
+                updatedAt,
+                updatedLabel: formatPlatformResourceUpdatedAt(updatedAt),
+                updatedTitle: updatedAt ? new Date(updatedAt).toLocaleString() : "",
               };
             });
   

@@ -4,6 +4,8 @@ import { PlatformDetailSidebar } from "../../components/composite/detail-sidebar
 import {
   PlatformResourceDetailSidebar,
   type PlatformResourceDetailSidebarProps,
+  PlatformResourceSettingsDetailsSidebar,
+  type PlatformResourceSettingsDetailsSidebarProps,
 } from "../../components/composite/resource-detail-sidebar/index.js";
 
 export interface PlatformResourceSettingsIdentityProps {
@@ -12,6 +14,8 @@ export interface PlatformResourceSettingsIdentityProps {
   description: string;
   onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
+  onTitleBlur?: (title: string) => void;
+  onDescriptionBlur?: (description: string) => void;
   titlePlaceholder?: string;
   descriptionPlaceholder?: string;
   titleAriaLabel?: string;
@@ -22,6 +26,7 @@ export interface PlatformResourceSettingsIdentityProps {
   className?: string;
   iconClassName?: string;
   iconStyle?: CSSProperties;
+  iconAriaHidden?: boolean;
 }
 
 export interface PlatformResourceSettingsPageProps<
@@ -29,7 +34,14 @@ export interface PlatformResourceSettingsPageProps<
   TData = unknown,
 > {
   identity: PlatformResourceSettingsIdentityProps;
-  details: PlatformResourceDetailSidebarProps<TValue, TData>;
+  details:
+    | (PlatformResourceSettingsDetailsSidebarProps<TValue, TData> & {
+        variant: "standard";
+      })
+    | (PlatformResourceDetailSidebarProps<TValue, TData> & {
+        /** @deprecated Migrate Settings pages to the standard details contract. */
+        variant?: "legacy";
+      });
   access: ReactNode;
   location?: ReactNode;
   connectors?: ReactNode;
@@ -71,6 +83,8 @@ export function PlatformResourceSettingsIdentity({
   description,
   onTitleChange,
   onDescriptionChange,
+  onTitleBlur,
+  onDescriptionBlur,
   titlePlaceholder = "Resource name",
   descriptionPlaceholder = "Describe this resource",
   titleAriaLabel = "Resource name",
@@ -81,6 +95,7 @@ export function PlatformResourceSettingsIdentity({
   className = "",
   iconClassName = "",
   iconStyle,
+  iconAriaHidden = true,
 }: PlatformResourceSettingsIdentityProps) {
   const titleReadOnly = readOnly || !onTitleChange;
   const descriptionReadOnly = readOnly || !onDescriptionChange;
@@ -101,7 +116,7 @@ export function PlatformResourceSettingsIdentity({
           iconClassName,
         )}
         style={iconStyle}
-        aria-hidden="true"
+        aria-hidden={iconAriaHidden}
       >
         {icon}
       </span>
@@ -125,6 +140,7 @@ export function PlatformResourceSettingsIdentity({
           onChange={(event) => {
             onTitleChange?.(normalizeResourceTitle(event.currentTarget.value));
           }}
+          onBlur={(event) => onTitleBlur?.(normalizeResourceTitle(event.currentTarget.value))}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.nativeEvent.isComposing) {
               event.preventDefault();
@@ -142,6 +158,7 @@ export function PlatformResourceSettingsIdentity({
           placeholder={descriptionPlaceholder}
           aria-label={descriptionAriaLabel}
           onChange={(event) => onDescriptionChange?.(event.currentTarget.value)}
+          onBlur={(event) => onDescriptionBlur?.(event.currentTarget.value)}
         />
       </div>
       {trailing ? (
@@ -231,7 +248,11 @@ export function PlatformResourceSettingsPage<TValue extends string = string, TDa
             detailsSidebarClassName,
           )}
         >
-          <PlatformResourceDetailSidebar<TValue, TData> {...details} />
+          {details.variant === "standard" ? (
+            <PlatformResourceSettingsDetailsSidebar<TValue, TData> {...details} />
+          ) : (
+            <PlatformResourceDetailSidebar<TValue, TData> {...details} />
+          )}
         </PlatformDetailSidebar>
       ) : null}
     </section>

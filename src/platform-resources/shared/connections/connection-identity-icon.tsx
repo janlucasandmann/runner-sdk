@@ -1,4 +1,4 @@
-import { Cable } from "lucide-react";
+import { Cable } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 
 export type ConnectionIdentityKind = "tags" | "plugins";

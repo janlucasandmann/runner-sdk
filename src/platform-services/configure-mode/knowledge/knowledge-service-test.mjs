@@ -67,7 +67,7 @@ test("Knowledge execution context preserves scoped proposal access and provenanc
 });
 
 test("Knowledge shell owns the complete Configure navigation lifecycle", () => {
-  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /LibraryBig/);
+  assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: KnowledgeSidebarIcon/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.navigation, /openKnowledgeDocumentPage/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyCapture, /selectedKnowledgeLibraryId/);
   assert.match(KNOWLEDGE_APP_SCRIPT_FRAGMENTS.historyRestore, /openKnowledgePage/);

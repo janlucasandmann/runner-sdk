@@ -54,7 +54,7 @@ describe("test plan draft", () => {
       '{"setup":{"command":"prepare"},"cases":[],"teardown":{"command":"cleanup"}}',
     );
     expect(parsed.definition).toBeNull();
-    expect(parsed.error).toContain("explicit test cases");
+    expect(parsed.error).toContain("explicit scenarios");
 
     const legacyDefinition = {
       ...createDefaultTestPlanDefinition(),

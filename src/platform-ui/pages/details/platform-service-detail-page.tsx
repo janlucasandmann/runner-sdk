@@ -8,9 +8,12 @@ import { ResourceDetailPage } from "./resource-detail-page.js";
 
 export type PlatformServiceDetailVariant = "resource" | "run";
 
-export interface PlatformServiceDetailPageProps {
+export interface PlatformServiceDetailPageProps<
+  TValue extends string = string,
+  TData = unknown,
+> {
   children: ReactNode;
-  settings?: PlatformResourceSettingsPageProps;
+  settings?: PlatformResourceSettingsPageProps<TValue, TData>;
   properties?: ReactNode;
   actions?: ReactNode;
   sidebarContent?: ReactNode;
@@ -113,7 +116,10 @@ export function PlatformServiceDetailProperty({
   );
 }
 
-export function PlatformServiceDetailPage({
+export function PlatformServiceDetailPage<
+  TValue extends string = string,
+  TData = unknown,
+>({
   children,
   settings,
   properties,
@@ -129,7 +135,7 @@ export function PlatformServiceDetailPage({
   propertiesCardClassName = "",
   actionsCardClassName = "",
   variant = "resource",
-}: PlatformServiceDetailPageProps) {
+}: PlatformServiceDetailPageProps<TValue, TData>) {
   const isRun = variant === "run";
   const hasResourceSettings = Boolean(settings);
   const resolvedSidebar = hasResourceSettings ? null : sidebarContent === undefined ? (
@@ -165,7 +171,7 @@ export function PlatformServiceDetailPage({
   return (
     <ResourceDetailPage
       tabs={[]}
-      sidebarCollapsed={sidebarCollapsed || hasResourceSettings}
+      sidebarCollapsed={!hasResourceSettings && sidebarCollapsed}
       sidebar={resolvedSidebar}
       ariaLabel={ariaLabel}
       tabAriaLabel={isRun ? "Run sections" : "Service sections"}

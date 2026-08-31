@@ -475,6 +475,10 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
               status: "idle",
               error: "",
               items: normalizedProjectId && current?.projectId === normalizedProjectId ? current.items : [],
+	              linkedResources: normalizedProjectId && current?.projectId === normalizedProjectId
+	                && Array.isArray(current?.linkedResources)
+	                  ? current.linkedResources
+	                  : [],
 	            }));
 	            return;
 	          }
@@ -496,6 +500,9 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             items: current?.projectId === normalizedProjectId && Array.isArray(current?.items)
               ? current.items
               : [],
+	            linkedResources: current?.projectId === normalizedProjectId && Array.isArray(current?.linkedResources)
+	              ? current.linkedResources
+	              : [],
           }));
 
           try {
@@ -521,6 +528,12 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
             };
             const serverResources = readResourceIndexItems(["serverResources", "servers", "resources"]);
             const metronomeResources = readResourceIndexItems(["metronomes", "workflows"]);
+            const linkedResources = readResourceIndexItems(["linkedResources", "scopedResources"])
+              .filter((resource) => resource && typeof resource === "object" && !Array.isArray(resource))
+              .map((resource) => ({
+                ...resource,
+                scopeManaged: true,
+              }));
             const normalizedServerResources = serverResources.map((server) => {
                 const normalizedKind = canonicalizePlaygroundServerKind(server?.kind);
                 const endpoint = [
@@ -611,6 +624,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
               status: "ready",
               error: "",
               items: nextItems,
+              linkedResources,
             });
           } catch (error) {
             if (projectOverviewServerResourcesLoadKeyRef.current !== loadKey) {
@@ -623,6 +637,9 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
               items: current?.projectId === normalizedProjectId && Array.isArray(current?.items)
                 ? current.items
                 : [],
+	              linkedResources: current?.projectId === normalizedProjectId && Array.isArray(current?.linkedResources)
+	                ? current.linkedResources
+	                : [],
             }));
           }
 		        }, [backendUrl, requestHeaders, requestHeadersKey, selectedProjectId, taskView]);
@@ -640,6 +657,7 @@ export const PROJECTS_SHELL_02_FRAGMENT = `            "",
                 status: "error",
                 error: error instanceof Error ? error.message : "Failed to load project resources.",
                 items: [],
+                linkedResources: [],
               });
             });
 

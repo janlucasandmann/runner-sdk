@@ -613,16 +613,7 @@
               );
             }
   
-            const agentVersionChangesPage = renderAgentVersionChangesPage();
-            if (agentVersionChangesPage) {
-              return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                  React.createElement("div", { className: "playground-agents-detail-content is-agent-overview-general is-agent-version-changes" },
-                    agentVersionChangesPage
-                  )
-                )
-              );
-            }
+            const agentVersionChangesModal = renderAgentVersionChangesModal();
   
             const modelMeta = getPlaygroundAgentModelMeta(draftAgent.model, resolvedAgentModelOptions);
             const enabledSkills = Array.isArray(draftAgent.enabledSkills) ? draftAgent.enabledSkills : [];
@@ -3135,6 +3126,308 @@
                     ? agentSettingsGuardrailsSection
                     : agentAccessSettingsSection
                 );
+            const agentSettingsAccessSection = agentAccessPrincipalId
+              ? agentAccessSettingsSection
+              : normalizedAgentSettingsTableMode === "guardrails"
+                ? agentSettingsGuardrailsSection
+                : agentAccessSettingsSection;
+            const agentSettingsMetadata = getAgentMetadataRecord(draftAgent);
+            const agentGithubConnector = agentSettingsMetadata.agentGithubConnector
+              && typeof agentSettingsMetadata.agentGithubConnector === "object"
+              && !Array.isArray(agentSettingsMetadata.agentGithubConnector)
+                ? agentSettingsMetadata.agentGithubConnector
+                : {};
+            const agentGithubRepository = agentGithubConnector.repository
+              && typeof agentGithubConnector.repository === "object"
+              && !Array.isArray(agentGithubConnector.repository)
+                ? agentGithubConnector.repository
+                : null;
+            const updateAgentGithubConnector = async (repository) => {
+              if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+                throw new Error("Save this Agent before configuring its GitHub connector.");
+              }
+              const normalizedRepository = repository && typeof repository === "object"
+                ? {
+                    id: String(repository.id || "").trim(),
+                    name: String(repository.name || "").trim(),
+                    repoFullName: String(repository.repoFullName || "").trim(),
+                    ref: String(repository.ref || "main").trim() || "main",
+                    accountId: String(repository.accountId || "").trim(),
+                    branchPrefix: String(repository.branchPrefix ?? "computer-agents/").trim(),
+                    createPullRequests: repository.createPullRequests !== false,
+                    forcePushCommits: repository.forcePushCommits === true,
+                  }
+                : null;
+              if (normalizedRepository && !/^[^/\s]+\/[^/\s]+$/.test(normalizedRepository.repoFullName)) {
+                throw new Error("Choose a valid GitHub repository.");
+              }
+              const metadata = { ...agentSettingsMetadata };
+              if (normalizedRepository) {
+                metadata.agentGithubConnector = { schemaVersion: "1", repository: normalizedRepository };
+              } else {
+                delete metadata.agentGithubConnector;
+              }
+              return persistAgentRecordFromAction({ ...draftAgent, metadata }, "Failed to save the Agent connector.");
+            };
+            const createAgentGithubRepository = async (options = {}) => {
+              if (!draftAgent?.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID) {
+                throw new Error("Save this Agent before creating its GitHub repository.");
+              }
+              const createRepository = computerAgents?.github?.createRepository;
+              if (typeof createRepository !== "function") {
+                throw new Error("GitHub repository creation is unavailable. Reconnect GitHub and try again.");
+              }
+              const resourceName = String(options.name || draftAgent.name || "Computer Agents Agent").trim();
+              const agentConfig = {
+                schemaVersion: 1,
+                model: draftAgent.model,
+                executionEngine: draftAgent.executionEngine,
+                reasoningEffort: draftAgent.reasoningEffort,
+                enabledSkills: Array.isArray(draftAgent.enabledSkills) ? draftAgent.enabledSkills : [],
+                deepResearchModel: draftAgent.deepResearchModel || null,
+                voice: {
+                  mode: draftAgent.voiceMode,
+                  provider: draftAgent.voiceProvider,
+                  model: draftAgent.voiceModel,
+                  id: draftAgent.voiceId,
+                  languageHint: draftAgent.voiceLanguageHint,
+                },
+              };
+              const created = await createRepository({
+                name: resourceName,
+                description: String(draftAgent.description || "").trim() || "Source for the " + resourceName + " Computer Agents Agent.",
+                resourceId: String(draftAgent.id),
+                resourceKind: "agent",
+                agentId: String(draftAgent.id),
+                private: true,
+                commitMessage: "Initialize " + resourceName + " Agent source",
+                files: [
+                  {
+                    path: ".computer-agents/resource.json",
+                    content: JSON.stringify({
+                      schemaVersion: 1,
+                      provider: "computer-agents",
+                      resourceKind: "agent",
+                      resourceId: String(draftAgent.id),
+                      name: draftAgent.name,
+                      description: draftAgent.description,
+                    }, null, 2) + "\n",
+                  },
+                  { path: "AGENT.md", content: String(draftAgent.instructions || "") },
+                  { path: "agent.json", content: JSON.stringify(agentConfig, null, 2) + "\n" },
+                ],
+              }, { accountId: String(options.accountId || "").trim() || undefined });
+              return {
+                id: String(created?.id || "").trim(),
+                name: String(created?.name || "").trim(),
+                repoFullName: String(created?.repoFullName || "").trim(),
+                ref: String(created?.ref || "main").trim() || "main",
+                accountId: String(options.accountId || "").trim(),
+                branchPrefix: "computer-agents/",
+                createPullRequests: true,
+                forcePushCommits: false,
+              };
+            };
+            const agentConnectorsSection = !isDefaultAgentConfigurationLocked
+              ? React.createElement(RunnerSourceGithubConnectorSettings, {
+                  resourceId: String(draftAgent.id || "").trim(),
+                  resourceKind: "agent",
+                  resourceName: String(draftAgent.name || "").trim(),
+                  repository: agentGithubRepository,
+                  github: computerAgents?.github || null,
+                  apiBaseUrl: backendUrl,
+                  requestHeaders,
+                  automationEnvironmentId: String(preferredEnvironmentId || "").trim(),
+                  automationAgentOptions: (Array.isArray(agents) ? agents : [])
+                    .filter((agent) => agent?.id)
+                    .map((agent) => ({ id: String(agent.id), label: String(agent.name || agent.id) })),
+                  disabled: !draftAgent.id || draftAgent.id === PLAYGROUND_AGENT_DRAFT_ID || saveState.isSaving,
+                  onCreateRepository: createAgentGithubRepository,
+                  onRepositoryChange: updateAgentGithubConnector,
+                })
+              : null;
+            const agentSettingsCreatorIdentity = normalizeAgentPersonIdentity(
+              agentSettingsMetadata.creator
+              || draftAgent.creator
+              || draftAgent.createdBy
+              || draftAgent.created_by
+              || agentCurrentUserIdentity,
+              agentCurrentUserIdentity
+            );
+            const agentSettingsOwnerIdentity = resolvedAgentOwnerIdentity || agentOwnerIdentity || agentSettingsCreatorIdentity;
+            const agentSettingsOwnerKeys = new Set(
+              getAgentIdentityMatchKeys(agentSettingsOwnerIdentity, agentSettingsOwnerIdentity)
+            );
+            const agentSettingsOwnerOptions = enrichedAgentOwnerCandidateRows.map((candidate) => {
+              const candidateKeys = getAgentIdentityMatchKeys(candidate, candidate);
+              const value = String(candidate.userId || candidate.email || candidate.id || candidateKeys[0] || "").trim().toLowerCase();
+              const name = getTrustedDisplayName(candidate.name, candidate.email)
+                || candidate.email
+                || "Team member";
+              return {
+                value: value || name.toLowerCase(),
+                name,
+                email: String(candidate.email || ""),
+                avatarUrl: String(candidate.avatarUrl || ""),
+                data: { candidate, candidateKeys },
+              };
+            });
+            const selectedAgentSettingsOwnerOption = agentSettingsOwnerOptions.find((option) =>
+              option.data.candidateKeys.some((key) => agentSettingsOwnerKeys.has(key))
+            ) || null;
+            const agentProjectScopeIds = getPlatformResourceProjectScopeIds(draftAgent);
+            const agentProjectScopeOptions = (Array.isArray(projects) ? projects : [])
+              .map((project) => normalizePlatformProjectIdentity(project))
+              .filter(Boolean)
+              .map((project) => ({
+                value: project.id,
+                label: project.name,
+                leading: React.createElement(PlatformProjectIdentityIcon, {
+                  icon: project.icon,
+                  size: 14,
+                  strokeWidth: 1.8,
+                  style: { color: project.color },
+                }),
+              }));
+            const agentSettings = normalizedAgentDetailTab === "settings" ? {
+              ariaLabel: (isTeamAgent ? "Squad" : "Agent") + " settings",
+              className: "playground-agent-resource-settings",
+              identity: {
+                icon: React.createElement(PlatformProfileImagePicker, {
+                  value: agentProfilePhotoUrl,
+                  hoverValue: agentProfileHoverPhotoUrl,
+                  fallback: getAccountInitials(draftAgent.name || (isTeamAgent ? "Squad" : "Agent")),
+                  options: PLAYGROUND_AGENT_PROFILE_PRESET_OPTIONS,
+                  editable: canEditAgentProfilePhoto,
+                  ariaLabel: "Choose agent profile picture",
+                  className: "profile-editor-avatar playground-agents-profile-avatar playground-agents-detail-profile-image-picker",
+                  onChange: handleAgentProfilePhotoSelection,
+                }),
+                iconAriaHidden: false,
+                title: String(draftAgent.name || ""),
+                description: String(draftAgent.description || ""),
+                onTitleChange: isDefaultAgentConfigurationLocked
+                  ? undefined
+                  : (value) => updateAgentField("name", value),
+                onDescriptionChange: isDefaultAgentConfigurationLocked
+                  ? undefined
+                  : (value) => updateAgentField("description", value),
+                titlePlaceholder: isTeamAgent ? "Squad" : "Agent",
+                descriptionPlaceholder: isTeamAgent
+                  ? "Describe what this squad is responsible for"
+                  : "Describe what this agent is responsible for",
+                titleAriaLabel: isTeamAgent ? "Squad name" : "Agent name",
+                descriptionAriaLabel: isTeamAgent ? "Squad description" : "Agent description",
+                readOnly: isDefaultAgentConfigurationLocked,
+              },
+              details: {
+                variant: "standard",
+                customAttributes: [
+                  {
+                    id: "model",
+                    label: "Model",
+                    value: agentPrimaryModelControl,
+                    className: "is-model",
+                  },
+                  {
+                    id: "engine",
+                    label: "Engine",
+                    value: renderAgentExecutionEngineSelector(),
+                  },
+                  {
+                    id: "voice",
+                    label: "Voice",
+                    value: renderAgentVoiceSelector(),
+                  },
+                  {
+                    id: "created",
+                    label: "Created",
+                    value: formatPlaygroundFileDate(draftAgent.createdAt),
+                  },
+                ],
+                updatedAt: draftAgent.updatedAt || draftAgent.createdAt,
+                creator: {
+                  value: getAgentIdentityMatchKeys(agentSettingsCreatorIdentity, agentSettingsCreatorIdentity)[0] || "agent-creator",
+                  name: getTrustedDisplayName(agentSettingsCreatorIdentity.name, agentSettingsCreatorIdentity.email)
+                    || agentSettingsCreatorIdentity.email
+                    || "Unknown",
+                  email: String(agentSettingsCreatorIdentity.email || ""),
+                  avatarUrl: String(agentSettingsCreatorIdentity.avatarUrl || ""),
+                },
+                owner: {
+                  value: selectedAgentSettingsOwnerOption?.value
+                    || getAgentIdentityMatchKeys(agentSettingsOwnerIdentity, agentSettingsOwnerIdentity)[0]
+                    || "agent-owner",
+                  name: getTrustedDisplayName(agentSettingsOwnerIdentity.name, agentSettingsOwnerIdentity.email)
+                    || agentSettingsOwnerIdentity.email
+                    || "Owner",
+                  email: String(agentSettingsOwnerIdentity.email || ""),
+                  avatarUrl: String(agentSettingsOwnerIdentity.avatarUrl || ""),
+                },
+                ownerOptions: agentSettingsOwnerOptions,
+                onOwnerTransfer: isDefaultAgentConfigurationLocked
+                  ? undefined
+                  : (_nextValue, option) => {
+                      const nextOwner = option?.data?.candidate;
+                      if (nextOwner) handleAgentOwnerSelect(nextOwner);
+                    },
+                ownerSelectorProps: {
+                  open: agentOwnerPopoverOpen,
+                  onOpenChange: handleAgentOwnerPopoverOpenChange,
+                  ariaLabel: "Choose agent owner",
+                  resourceLabel: "agent",
+                  alignment: "end",
+                  popupAlignment: "right",
+                  fullWidth: true,
+                  disabled: isDefaultAgentConfigurationLocked,
+                  loading: agentSettingsOwnerOptions.length === 0
+                    && (workspaceTeamsLoading || (agentOwnerPopoverOpen && agentOwnerMissingTeamIds.length > 0)),
+                  loadingContent: "Loading team members...",
+                  emptyContent: "No team members available.",
+                  popupWidth: 260,
+                  popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                },
+                scope: {
+                  values: agentProjectScopeIds,
+                  options: agentProjectScopeOptions,
+                  onValuesChange: isDefaultAgentConfigurationLocked
+                    ? undefined
+                    : (values) => updateDraftAgent((current) => withPlatformResourceProjectScope(current, values)),
+                  ariaLabel: "Choose agent scope",
+                  disabled: isDefaultAgentConfigurationLocked,
+                },
+                primaryActions: [
+                  {
+                    id: "start-thread",
+                    label: "Start a Thread",
+                    onSelect: handleAgentProfileNewThread,
+                    disabled: !agentDetailHasPersistedId
+                      || saveState.isSaving
+                      || typeof onStartThreadWithAgent !== "function",
+                  },
+                  {
+                    id: "share-team",
+                    label: "Share with a Team",
+                    onSelect: () => openAgentSendToTeamModal(draftAgent),
+                    disabled: !agentDetailHasPersistedId || isDefaultAgentConfigurationLocked,
+                  },
+                  {
+                    id: "use-api",
+                    label: "Use via API",
+                    onSelect: openAgentApiModal,
+                    disabled: !agentDetailHasPersistedId,
+                  },
+                ],
+                className: "playground-agents-detail-about-card",
+              },
+              additionalSections: agentSettingsPermissionsSummary,
+              connectors: agentConnectorsSection,
+              access: agentSettingsAccessSection,
+              accessDetailOpen: Boolean(agentAccessPrincipalId),
+              detailsSidebarCollapsed: agentDetailSidebarCollapsed,
+              detailsSidebarAriaLabel: isTeamAgent ? "Squad settings" : "Agent settings",
+              detailsSidebarClassName: "playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+            } : undefined;
             const agentDetailActiveSection = normalizedAgentDetailTab === "permissions"
               ? null
               : normalizedAgentDetailTab === "settings"
@@ -3163,18 +3456,22 @@
                     updateDraftAgent((current) => ({ ...current, permissionSet }));
                   },
                 },
+                settings: agentSettings,
                 ariaLabel: (isTeamAgent ? "Squad" : "Agent") + " details for " + (draftAgent.name || "Untitled"),
                 sidebarAriaLabel: isTeamAgent ? "Squad settings" : "Agent settings",
               },
               agentDetailActiveSection
             );
   
-              return React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
-                React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                  React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails" || normalizedAgentDetailTab === "settings") ? " is-agent-overview-general" : "") },
-                    agentDetailWorkspaceSection
-                  ),
-  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}              )
+              return React.createElement(React.Fragment, null,
+                React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
+                  React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
+                    React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails" || normalizedAgentDetailTab === "settings") ? " is-agent-overview-general" : "") },
+                      agentDetailWorkspaceSection
+                    ),
+  ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}                )
+                ),
+                agentVersionChangesModal
               );
           }
   

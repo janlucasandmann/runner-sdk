@@ -8,7 +8,7 @@ import {
   RefreshCw,
   ShieldCheck,
   XCircle,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";

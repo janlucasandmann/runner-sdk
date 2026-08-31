@@ -1,4 +1,4 @@
-import { ChevronRight, Link2, Unlink } from "lucide-react";
+import { ChevronRight, Link2, Unlink } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import { type ReactNode, useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,

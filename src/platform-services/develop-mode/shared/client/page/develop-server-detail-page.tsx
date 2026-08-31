@@ -2,16 +2,25 @@ import { ChartColumnIncreasing, Code2, History, Settings, Terminal } from "lucid
 import type { ReactNode } from "react";
 import type { PlatformDetailTab } from "../../../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import { ResourceDetailPage } from "../../../../../platform-ui/pages/details/index.js";
+import {
+  PlatformResourceSettingsPage,
+  type PlatformResourceSettingsPageProps,
+} from "../../../../../platform-ui/pages/settings/index.js";
 
 export type DevelopServerDetailTab = "usage" | "code" | "logs" | "history" | "settings";
 
-export interface DevelopServerDetailPageProps<TTab extends string = DevelopServerDetailTab> {
+export interface DevelopServerDetailPageProps<
+  TTab extends string = DevelopServerDetailTab,
+  TValue extends string = string,
+  TData = unknown,
+> {
   header?: ReactNode;
   headerActions?: ReactNode;
   tabs?: readonly PlatformDetailTab<TTab>[];
   tabBarActions?: ReactNode;
   sidebarToggle?: ReactNode;
   children: ReactNode;
+  settings?: PlatformResourceSettingsPageProps<TValue, TData>;
   sidebar?: ReactNode;
   activeTab: TTab;
   onTabChange: (tab: TTab) => void;
@@ -39,13 +48,18 @@ const DEVELOP_SERVER_DETAIL_TABS = [
 
 const DEVELOP_SERVER_SIDEBAR_AUTO_COLLAPSE_TABS: readonly DevelopServerDetailTab[] = ["code"];
 
-export function DevelopServerDetailPage<TTab extends string = DevelopServerDetailTab>({
+export function DevelopServerDetailPage<
+  TTab extends string = DevelopServerDetailTab,
+  TValue extends string = string,
+  TData = unknown,
+>({
   header,
   headerActions,
   tabs,
   tabBarActions,
   sidebarToggle,
   children,
+  settings,
   sidebar,
   activeTab,
   onTabChange,
@@ -61,11 +75,12 @@ export function DevelopServerDetailPage<TTab extends string = DevelopServerDetai
   tabBarActionsClassName = "",
   contentClassName = "",
   sidebarClassName = "",
-}: DevelopServerDetailPageProps<TTab>) {
+}: DevelopServerDetailPageProps<TTab, TValue, TData>) {
   const resolvedTabs = (tabs ?? DEVELOP_SERVER_DETAIL_TABS) as readonly PlatformDetailTab<TTab>[];
   const resolvedSidebarAutoCollapseTabs = sidebarAutoCollapseTabs
     ?? (DEVELOP_SERVER_SIDEBAR_AUTO_COLLAPSE_TABS as readonly unknown[] as readonly TTab[]);
   const isCodeTab = activeTab === "code";
+  const hasResourceSettings = activeTab === "settings" && Boolean(settings);
 
   return (
     <ResourceDetailPage<TTab>
@@ -76,20 +91,22 @@ export function DevelopServerDetailPage<TTab extends string = DevelopServerDetai
       onTabChange={onTabChange}
       tabBarActions={tabBarActions}
       sidebarToggle={sidebarToggle}
-      sidebar={sidebar}
+      sidebar={hasResourceSettings ? undefined : sidebar}
       sidebarCollapsed={sidebarCollapsed}
       sidebarAutoCollapseTabs={resolvedSidebarAutoCollapseTabs}
       ariaLabel={ariaLabel}
       tabAriaLabel={tabAriaLabel}
       sidebarAriaLabel={sidebarAriaLabel}
-      className={`playground-server-detail-page${isCodeTab ? " is-code-tab" : ""}${className ? ` ${className}` : ""}`}
+      className={`playground-server-detail-page${isCodeTab ? " is-code-tab" : ""}${hasResourceSettings ? " has-resource-settings" : ""}${className ? ` ${className}` : ""}`}
       headerClassName={headerClassName}
       tabBarClassName={`playground-agents-overview-tabs playground-agents-detail-tabs playground-server-detail-tabs${tabBarClassName ? ` ${tabBarClassName}` : ""}`}
       tabBarActionsClassName={`playground-agents-detail-tab-actions playground-server-detail-tab-actions${tabBarActionsClassName ? ` ${tabBarActionsClassName}` : ""}`}
       contentClassName={`playground-server-detail-page__content${isCodeTab ? " is-code-tab" : ""}${contentClassName ? ` ${contentClassName}` : ""}`}
       sidebarClassName={`playground-project-overview-sidebar playground-agents-detail-sidebar playground-server-detail-sidebar${sidebarPopoverOpen ? " is-popover-open" : ""}${sidebarClassName ? ` ${sidebarClassName}` : ""}`}
     >
-      {children}
+      {hasResourceSettings && settings
+        ? <PlatformResourceSettingsPage {...settings} />
+        : children}
     </ResourceDetailPage>
   );
 }

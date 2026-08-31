@@ -71,8 +71,21 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     min-height: 0;
   }
 
+  /*
+   * The Settings composition owns 44px inline gutters inside its 87.5rem
+   * shell. Keep the Overview grid on that same visible content measure even
+   * though its gutters are supplied by the surrounding detail frame.
+   */
+  .tests-detail-page:is(.is-overview-tab, .is-cases-tab) {
+    max-width: calc(var(--platform-page-content-max-width, 87.5rem) - 88px);
+  }
+
   .tests-detail-content {
     min-width: 0;
+  }
+
+  .tests-detail-page.is-overview-tab .tests-detail-content {
+    gap: 24px;
   }
 
   .tests-raw-configuration-page {
@@ -272,6 +285,158 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
 
   .tests-cases-table .platform-data-table__toolbar-title {
     font-size: 18px;
+  }
+
+  .tests-scenario-workspace {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+    min-height: min(720px, calc(100vh - 150px));
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-scenario-workspace__sidebar {
+    min-width: 0;
+    padding: 12px 10px 20px 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-scenario-workspace__sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 32px;
+    padding: 0 8px 8px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .tests-scenario-workspace__list {
+    display: grid;
+    gap: 2px;
+  }
+
+  .tests-scenario-workspace__list > button {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .tests-scenario-workspace__list > button:hover,
+  .tests-scenario-workspace__list > button.is-active {
+    background: rgba(255, 255, 255, 0.075);
+  }
+
+  .tests-scenario-workspace__list > button > span {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .tests-scenario-workspace__list strong,
+  .tests-scenario-workspace__list small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tests-scenario-workspace__list strong {
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-scenario-workspace__list small {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 10px;
+    font-weight: 400;
+  }
+
+  .tests-scenario-workspace__list i {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  .tests-scenario-workspace__list i.is-passed { background: #69d78a; }
+  .tests-scenario-workspace__list i.is-failed,
+  .tests-scenario-workspace__list i.is-error { background: #ff7474; }
+  .tests-scenario-workspace__list i.is-running,
+  .tests-scenario-workspace__list i.is-queued { background: #4da3ff; }
+
+  .tests-scenario-workspace__editor {
+    min-width: 0;
+    padding: 18px 0 40px 24px;
+  }
+
+  .tests-scenario-workspace__editor-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .tests-scenario-workspace__identity {
+    display: grid;
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 6px;
+  }
+
+  .tests-scenario-workspace__identity > input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  .tests-scenario-workspace__identity > span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 11px;
+  }
+
+  .tests-scenario-workspace__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tests-scenario-workspace__actions .platform-button {
+    margin-left: 6px;
+  }
+
+  .tests-scenario-workspace__description.platform-instructions-editor {
+    margin: 0 0 18px;
+  }
+
+  .tests-scenario-workspace__description .platform-instructions-editor__prosemirror {
+    min-height: 64px;
   }
 
   .tests-detail-run-button {
@@ -1089,6 +1254,74 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     gap: 18px;
   }
 
+  .tests-create-modal__targets {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .tests-create-modal__targets legend {
+    margin: 0 0 10px;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .tests-create-modal__target-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tests-create-modal__target-grid > button {
+    display: flex;
+    min-width: 0;
+    min-height: 64px;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.025);
+    color: rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    text-align: left;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  }
+
+  .tests-create-modal__target-grid > button:hover,
+  .tests-create-modal__target-grid > button.is-active {
+    border-color: rgba(77, 163, 255, 0.42);
+    background: rgba(77, 163, 255, 0.1);
+    color: #4da3ff;
+  }
+
+  .tests-create-modal__target-grid > button > svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+  }
+
+  .tests-create-modal__target-grid > button > span {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .tests-create-modal__target-grid strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tests-create-modal__target-grid small {
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.35;
+  }
+
   .tests-form-field {
     display: grid;
     align-content: start;
@@ -1243,6 +1476,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     gap: 10px;
   }
 
+  .tests-case-method-grid.is-locked {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .tests-case-method-card {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -1258,6 +1495,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     text-align: left;
     cursor: pointer;
     transition: border-color 140ms ease, background 140ms ease;
+  }
+
+  .tests-case-method-card.is-locked {
+    min-height: 82px;
+    cursor: default;
   }
 
   .tests-case-method-card:hover,
@@ -1692,6 +1934,53 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     color: rgba(255, 255, 255, 0.72);
   }
 
+  .tests-run-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tests-run-attempt-history {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0;
+  }
+
+  .tests-run-attempt-history > span {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tests-run-attempt-history > div {
+    display: grid;
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .tests-run-attempt-history strong,
+  .tests-run-attempt-history small,
+  .tests-run-attempt-history p {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 400;
+  }
+
+  .tests-run-attempt-history strong { color: rgba(255, 255, 255, 0.78); }
+  .tests-run-attempt-history small { color: rgba(255, 255, 255, 0.42); }
+  .tests-run-attempt-history p {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.58);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .tests-run-verification-card.platform-ui-card {
     display: flex;
     align-items: flex-start;
@@ -1748,7 +2037,49 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
     gap: 7px;
   }
 
+  .tests-report-import-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .tests-report-import-modal__editor {
+    min-height: 280px;
+    margin-top: 12px;
+  }
+
+  .tests-report-import-modal__editor .platform-instructions-editor__editor {
+    min-height: 240px;
+  }
+
   @media (max-width: 780px) {
+    .tests-create-modal__target-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tests-scenario-workspace {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tests-scenario-workspace__sidebar {
+      padding-right: 0;
+      border-right: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+    }
+
+    .tests-scenario-workspace__editor {
+      padding-left: 0;
+    }
+
+    .tests-scenario-workspace__editor-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .tests-scenario-workspace__actions {
+      flex-wrap: wrap;
+    }
+
     .tests-case-detail-identity {
       padding: 20px;
     }
@@ -1848,6 +2179,10 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
       align-items: flex-start;
     }
 
+    .tests-report-import-modal__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
     .tests-case-settings-list__row {
       grid-template-columns: minmax(0, 1fr) 30px;
     }
@@ -1856,5 +2191,11 @@ export const PLAYGROUND_TESTS_CSS = String.raw`
       grid-column: 1 / -1;
     }
 
+  }
+
+  @media (max-width: 760px) {
+    .tests-detail-page:is(.is-overview-tab, .is-cases-tab) {
+      width: calc(100% - 8px);
+    }
   }
 `;

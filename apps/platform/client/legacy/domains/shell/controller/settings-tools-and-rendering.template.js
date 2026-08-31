@@ -4895,6 +4895,8 @@
                 backendUrl: proxyBackendBase,
                 requestHeaders,
                 environments: realEnvironments,
+                agents: realAgents.length > 0 ? realAgents : demoAgents,
+                github: demoComputerAgents.github,
                 projectId: settingsProjectRoutingId,
                 apiKey: effectiveApiKey,
                 upstreamUrl: resolvedUpstreamUrl,

@@ -37,6 +37,7 @@ export const ComputerDetailPage = lazyNamed(
   () => import("../../platform-resources/computers/detail/computer-detail-page.js"),
   "ComputerDetailPage",
 );
+export { PlatformFileResourceIdentity } from "../../platform-ui/pages/details/index.js";
 export const ProjectDetailPage = lazyNamed(
   () => import("../../platform-services/create-mode/projects/client/detail/project-detail-page.js"),
   "ProjectDetailPage",
@@ -258,6 +259,7 @@ export const DevelopApiKeysOverviewPage = lazyNamed(
     import("../../platform-services/develop-mode/api-keys/client/page/api-keys-overview-page.js"),
   "DevelopApiKeysOverviewPage",
 );
+export { ApiKeyCreateDialog } from "../../platform-services/develop-mode/api-keys/client/management/index.js";
 export const DevelopHomeOverviewPage = lazyNamed(
   () =>
     import(

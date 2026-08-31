@@ -93,7 +93,7 @@ describe("Knowledge activity logs", () => {
       name: "Open Knowledge library Project Research",
     });
     expect(screen.getByText("Updated Knowledge Library Project Research")).toBeTruthy();
-    expect(updateLine.querySelector(".lucide-library-big")).toBeTruthy();
+    expect(updateLine.querySelector(".hugeicons-library-big")).toBeTruthy();
     fireEvent.click(updateLine);
     expect(onKnowledgeLibraryPreviewClick).toHaveBeenCalledWith({
       libraryId: "knowledge_library_123",

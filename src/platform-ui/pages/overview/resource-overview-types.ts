@@ -11,6 +11,7 @@ import type { PlatformDataTableProps } from "../../components/composite/data-tab
 export type ResourceOverviewPeriod = "day" | "week" | "month";
 export type ResourceOverviewSeriesType = PlatformAnalyticsChartType;
 export type ResourceOverviewValueKind = PlatformAnalyticsValueKind;
+export type ResourceOverviewRowActionMode = "resource" | "custom";
 
 export interface ResourceOverviewPeriodOption {
   id: ResourceOverviewPeriod;
@@ -29,6 +30,12 @@ interface ResourceOverviewPageBaseProps<TData> {
   periodOptions?: readonly ResourceOverviewPeriodOption[];
   headerActions?: ReactNode;
   className?: string;
+  /**
+   * Resource catalogs receive Edit, Duplicate, Share, and Delete by default.
+   * Use custom only for non-resource tables with a deliberately specialized
+   * action contract, such as API keys.
+   */
+  rowActionMode?: ResourceOverviewRowActionMode;
 }
 
 interface ResourceOverviewAnalyticsPageProps {

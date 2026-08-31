@@ -1,4 +1,4 @@
-import { AlertCircle, Check, Clock3, CornerDownRight, Route } from "lucide-react";
+import { AlertCircle, Check, Clock3, CornerDownRight, Route } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { RunnerThreadRoutingReceipt } from "../../thread/types.js";
 
 export interface RunnerThreadRoutingReceiptProps {

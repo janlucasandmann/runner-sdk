@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   PlatformConnectorConfiguration,
   PlatformConnectorConfigurationRow,
+  PlatformConnectorConfigurationSection,
 } from "../../platform-ui/components/composite/connector-configuration/index.js";
 import {
   type PlatformGitHubAutomationAgentOption,
@@ -9,6 +10,10 @@ import {
   type PlatformGitHubAutomationScopeType,
   PlatformGitHubAutomations,
 } from "../../platform-ui/components/composite/github-automations/index.js";
+import {
+  PlatformResourceSourceControl,
+  type PlatformResourceSourceControlKind,
+} from "../../platform-ui/components/composite/resource-source-control/index.js";
 import { PlatformToggle } from "../../platform-ui/components/ui/toggle/index.js";
 import type { RunnerChatOption } from "./agent-options.js";
 import { RunnerGithubBranchSelector } from "./github-branch-selector.js";
@@ -42,9 +47,25 @@ export interface RunnerProjectGithubRepositorySettingsProps {
   refName?: string | null;
   repoFullName: string;
   requestHeaders?: Record<string, string> | null;
+  sourceControlResourceId?: string;
+  sourceControlResourceKind?: PlatformResourceSourceControlKind;
 }
 
-export function RunnerProjectGithubRepositorySettings({
+export type RunnerGithubRepositorySettingsVariant = "project" | "resource";
+
+export interface RunnerGithubRepositorySettingsProps
+  extends RunnerProjectGithubRepositorySettingsProps {
+  variant?: RunnerGithubRepositorySettingsVariant;
+}
+
+/**
+ * Canonical GitHub repository settings surface.
+ *
+ * Project repositories expose execution policy first. Resource repositories
+ * expose durable two-way source lifecycle policy first while retaining the
+ * same advanced branch controls and automation implementation underneath.
+ */
+export function RunnerGithubRepositorySettings({
   accountId,
   apiBaseUrl,
   automationAgentOptions,
@@ -62,7 +83,10 @@ export function RunnerProjectGithubRepositorySettings({
   refName,
   repoFullName,
   requestHeaders,
-}: RunnerProjectGithubRepositorySettingsProps) {
+  sourceControlResourceId,
+  sourceControlResourceKind,
+  variant = "project",
+}: RunnerGithubRepositorySettingsProps) {
   const resolvedBranchPrefix = String(branchPrefix ?? "computer-agents/");
   const resolvedAutomationScopeId = String(automationScopeId || projectId || "").trim();
   const resolvedAutomationScopeType = automationScopeType || (projectId ? "project" : undefined);
@@ -78,32 +102,60 @@ export function RunnerProjectGithubRepositorySettings({
     void onChange({ branchPrefix: normalizedPrefix });
   }
 
-  return (
-    <PlatformConnectorConfiguration
-      className="playground-project-github-repository-settings"
-      data-project-github-repository={repoFullName}
-      title={repoFullName}
-      actionLabel={`Actions for ${repoFullName}`}
-      onDisconnect={onDisconnect}
-    >
-      <PlatformConnectorConfigurationRow
-        title="Base branch"
-        description="Branch agents use as the starting point for work in this repository."
-      >
-        <div className="playground-project-github-repository-settings__branch">
-          <RunnerGithubBranchSelector
-            accountId={accountId}
-            repoFullName={repoFullName}
-            value={refName || "main"}
-            fetchBranches={fetchBranches}
-            fullWidth={false}
-            triggerClassName="playground-project-github-repository-settings__branch-trigger"
-            popupClassName="playground-project-github-repository-settings__branch-popup"
-            onValueChange={(ref) => void onChange({ ref })}
-          />
-        </div>
-      </PlatformConnectorConfigurationRow>
+  const sourceControl = sourceControlResourceKind && sourceControlResourceId ? (
+    <PlatformResourceSourceControl
+      apiBaseUrl={apiBaseUrl}
+      requestHeaders={requestHeaders}
+      resourceKind={sourceControlResourceKind}
+      resourceId={sourceControlResourceId}
+      repositoryFullName={repoFullName}
+      baseBranch={refName || "main"}
+      branchPrefix={resolvedBranchPrefix}
+      createPullRequests={createPullRequests !== false}
+      forcePush={forcePushCommits === true}
+      showHeading={variant !== "resource"}
+    />
+  ) : null;
 
+  const automations = resolvedAutomationScopeType && resolvedAutomationScopeId ? (
+    <PlatformGitHubAutomations
+      apiBaseUrl={apiBaseUrl}
+      requestHeaders={requestHeaders}
+      scopeType={resolvedAutomationScopeType}
+      scopeId={resolvedAutomationScopeId}
+      repositoryFullName={repoFullName}
+      agentOptions={automationAgentOptions}
+      environmentId={automationEnvironmentId}
+      defaultBranch={refName || "main"}
+      automationKinds={automationKinds}
+      showHeading={variant !== "resource"}
+    />
+  ) : null;
+
+  const baseBranchRow = (
+    <PlatformConnectorConfigurationRow
+      title="Base branch"
+      description={variant === "resource"
+        ? "Branch used as the exact-revision boundary for imports and version creation."
+        : "Branch agents use as the starting point for work in this repository."}
+    >
+      <div className="playground-project-github-repository-settings__branch">
+        <RunnerGithubBranchSelector
+          accountId={accountId}
+          repoFullName={repoFullName}
+          value={refName || "main"}
+          fetchBranches={fetchBranches}
+          fullWidth={false}
+          triggerClassName="playground-project-github-repository-settings__branch-trigger"
+          popupClassName="playground-project-github-repository-settings__branch-popup"
+          onValueChange={(ref) => void onChange({ ref })}
+        />
+      </div>
+    </PlatformConnectorConfigurationRow>
+  );
+
+  const agentGitBehavior = (
+    <>
       <PlatformConnectorConfigurationRow
         title="Branch prefix"
         description="Prefix agents use when they create branches in this repository."
@@ -126,7 +178,7 @@ export function RunnerProjectGithubRepositorySettings({
 
       <PlatformConnectorConfigurationRow
         title="Pull requests"
-        description="Choose whether completed changes should be proposed as pull requests."
+        description="Choose whether completed agent changes should be proposed as pull requests."
       >
         <PlatformToggle
           className="playground-project-github-repository-settings__toggle"
@@ -138,7 +190,7 @@ export function RunnerProjectGithubRepositorySettings({
 
       <PlatformConnectorConfigurationRow
         title="Force-push commits"
-        description="Always use force-with-lease when agents update branches in this repository."
+        description="Permit a force update only when Computer Agents is selected to resolve a source conflict."
       >
         <PlatformToggle
           className="playground-project-github-repository-settings__toggle"
@@ -147,20 +199,66 @@ export function RunnerProjectGithubRepositorySettings({
           onCheckedChange={(checked) => void onChange({ forcePushCommits: checked })}
         />
       </PlatformConnectorConfigurationRow>
+    </>
+  );
 
-      {resolvedAutomationScopeType && resolvedAutomationScopeId ? (
-        <PlatformGitHubAutomations
-          apiBaseUrl={apiBaseUrl}
-          requestHeaders={requestHeaders}
-          scopeType={resolvedAutomationScopeType}
-          scopeId={resolvedAutomationScopeId}
-          repositoryFullName={repoFullName}
-          agentOptions={automationAgentOptions}
-          environmentId={automationEnvironmentId}
-          defaultBranch={refName || "main"}
-          automationKinds={automationKinds}
-        />
-      ) : null}
+  return (
+    <PlatformConnectorConfiguration
+      className={`playground-project-github-repository-settings is-${variant}`}
+      data-project-github-repository={repoFullName}
+      data-github-repository-settings-variant={variant}
+      surface={variant === "resource" ? "plain" : "contained"}
+      showHeader={variant !== "resource"}
+      title={repoFullName}
+      actionLabel={`Actions for ${repoFullName}`}
+      onDisconnect={onDisconnect}
+    >
+      {variant === "resource" ? (
+        <>
+          <PlatformConnectorConfigurationSection
+            title="Version synchronization"
+            description="Keep Computer Agents versions aligned with exact revisions on the repository base branch."
+          >
+            {baseBranchRow}
+            {sourceControl}
+          </PlatformConnectorConfigurationSection>
+
+          {automations ? (
+            <PlatformConnectorConfigurationSection
+              title="Automations"
+              description="Run checks, reviews, and exact-revision actions when GitHub events occur."
+            >
+              {automations}
+            </PlatformConnectorConfigurationSection>
+          ) : null}
+
+          <PlatformConnectorConfigurationSection
+            title="Agent Git behavior"
+            description="Define how agents create branches, propose changes, and update repository history."
+          >
+            {agentGitBehavior}
+          </PlatformConnectorConfigurationSection>
+        </>
+      ) : (
+        <>
+          {baseBranchRow}
+          {agentGitBehavior}
+          {sourceControl}
+          {automations}
+        </>
+      )}
     </PlatformConnectorConfiguration>
   );
+}
+
+export function RunnerProjectGithubRepositorySettings(
+  props: RunnerProjectGithubRepositorySettingsProps,
+) {
+  return <RunnerGithubRepositorySettings {...props} variant="project" />;
+}
+
+export function RunnerResourceGithubRepositorySettings(
+  props: RunnerProjectGithubRepositorySettingsProps,
+) {
+  return <RunnerGithubRepositorySettings {...props} variant="resource" />;
 }

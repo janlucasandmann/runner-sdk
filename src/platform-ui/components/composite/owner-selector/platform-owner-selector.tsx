@@ -235,6 +235,7 @@ export function PlatformOwnerSelector<
   includeOrganizationMembers = true,
 }: PlatformOwnerSelectorProps<TValue, TData>) {
   const [pendingOption, setPendingOption] = useState<PlatformOwnerOption<TValue, TData> | null>(null);
+  const [query, setQuery] = useState("");
   const organizationDirectory = usePlatformOrganizationMemberDirectory();
   const organizationOptions = useMemo<PlatformOwnerOption<TValue, TData>[]>(() => (
     includeOrganizationMembers
@@ -272,16 +273,10 @@ export function PlatformOwnerSelector<
   );
   const normalizedOptions = useMemo(() => mergedOptions.map((option) => {
     const displayName = getPlatformOwnerDisplayName(option);
-    const hasDistinctEmail = Boolean(
-      option.email && option.email.toLowerCase() !== displayName.toLowerCase(),
-    );
     return {
       value: option.value,
       label: displayName,
-      description: option.description ?? (hasDistinctEmail ? option.email : undefined),
-      ariaLabel: option.ariaLabel || (
-        hasDistinctEmail ? `${displayName}, ${option.email}` : displayName
-      ),
+      ariaLabel: displayName,
       disabled: option.disabled || option.value === owner.value,
       leading: <PlatformOwnerAvatar identity={option} />,
     };
@@ -290,13 +285,10 @@ export function PlatformOwnerSelector<
     () => new Map(mergedOptions.map((option) => [option.value, option])),
     [mergedOptions],
   );
-  const shouldResolvePersistedIdentity = !hasTrustedOwnerName(owner);
-
   useEffect(() => {
     if (
       !includeOrganizationMembers
       || !organizationDirectory.organizationId
-      || (!open && !shouldResolvePersistedIdentity)
     ) return undefined;
 
     // Child effects run before the provider's cache-key synchronization effect.
@@ -311,10 +303,8 @@ export function PlatformOwnerSelector<
     };
   }, [
     includeOrganizationMembers,
-    open,
     organizationDirectory.ensureLoaded,
     organizationDirectory.organizationId,
-    shouldResolvePersistedIdentity,
   ]);
 
   const selectedOption = normalizedOptions.find((option) => option.value === owner.value);
@@ -323,13 +313,16 @@ export function PlatformOwnerSelector<
     : [{
         value: owner.value,
         label: getPlatformOwnerDisplayName(resolvedOwner),
-        description: resolvedOwner.email || undefined,
-        ariaLabel: resolvedOwner.email
-          ? `${getPlatformOwnerDisplayName(resolvedOwner)}, ${resolvedOwner.email}`
-          : getPlatformOwnerDisplayName(resolvedOwner),
+        ariaLabel: getPlatformOwnerDisplayName(resolvedOwner),
         disabled: true,
         leading: <PlatformOwnerAvatar identity={resolvedOwner} />,
       }, ...normalizedOptions];
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const visibleSelectorOptions = normalizedQuery
+    ? selectorOptions.filter((option) =>
+        String(option.label).toLocaleLowerCase().includes(normalizedQuery),
+      )
+    : selectorOptions;
 
   const resolvedConfirmationTitle = pendingOption
     ? resolveContent(confirmationTitle, pendingOption)
@@ -337,14 +330,14 @@ export function PlatformOwnerSelector<
     : "Transfer ownership?";
   const resolvedConfirmationDescription = pendingOption
     ? resolveContent(confirmationDescription, pendingOption)
-      || `Transfer ownership to ${pendingOption.name}? This action is irreversible. You will lose your owner permission entitlements immediately and cannot take the owner role back yourself.`
+      || `Transfer ownership to ${getPlatformOwnerDisplayName(pendingOption)}? This action is irreversible. You will lose your owner permission entitlements immediately and cannot take the owner role back yourself.`
     : null;
 
   return (
     <>
       <PlatformSelector
         value={owner.value}
-        options={selectorOptions}
+        options={visibleSelectorOptions}
         onValueChange={(value) => {
           const nextOwner = ownerOptionByValue.get(value);
           if (nextOwner) setPendingOption(nextOwner);
@@ -356,9 +349,7 @@ export function PlatformOwnerSelector<
             <PlatformOwnerAvatar identity={resolvedOwner} />
             <span
               className="platform-owner-selector__name"
-              title={resolvedOwner.email
-                ? `${getPlatformOwnerDisplayName(resolvedOwner)} · ${resolvedOwner.email}`
-                : getPlatformOwnerDisplayName(resolvedOwner)}
+              title={getPlatformOwnerDisplayName(resolvedOwner)}
             >
               {getPlatformOwnerDisplayName(resolvedOwner)}
             </span>
@@ -375,6 +366,7 @@ export function PlatformOwnerSelector<
         open={open}
         onOpenChange={(nextOpen) => {
           if (nextOpen && includeOrganizationMembers) void organizationDirectory.ensureLoaded();
+          if (!nextOpen) setQuery("");
           onOpenChange?.(nextOpen);
         }}
         alignment={alignment}
@@ -382,6 +374,13 @@ export function PlatformOwnerSelector<
         fullWidth={fullWidth}
         popupWidth={popupWidth}
         popupMaxHeight={popupMaxHeight}
+        popupSearch={{
+          value: query,
+          onChange: (event) => setQuery(event.currentTarget.value),
+          placeholder: "Search people",
+          "aria-label": "Search owners",
+          showSearchIcon: true,
+        }}
         className={joinClassNames("platform-owner-selector", className)}
         triggerClassName={joinClassNames("platform-owner-selector__trigger", triggerClassName)}
         popupClassName={joinClassNames("platform-owner-selector__popup", popupClassName)}

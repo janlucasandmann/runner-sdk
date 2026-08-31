@@ -6,7 +6,7 @@ import {
   Plus,
   TerminalSquare,
   Trash2,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,
@@ -75,6 +75,13 @@ interface ScenarioStepEditorProps {
 const REQUEST_METHOD_OPTIONS = ["GET", "POST", "PUT", "PATCH", "DELETE"].map(
   (value) => ({ value, label: value }),
 );
+
+const BROWSER_SCREENSHOT_OPTIONS = [
+  { value: "on_failure", label: "On failure" },
+  { value: "final", label: "Final state" },
+  { value: "each_step", label: "Every step" },
+  { value: "off", label: "Disabled" },
+] as const;
 
 const SCENARIO_TARGET_OPTIONS = [
   {
@@ -365,6 +372,10 @@ function WorkflowRequestFields({
 }) {
   const workflowId = String(request.workflowId || "");
   const versionId = String(request.workflowVersionId || "");
+  const selection = asRecord(request.selection);
+  const selectionType = ["full", "node", "slice"].includes(String(selection.type))
+    ? String(selection.type)
+    : "full";
   const versionOptions = [
     { value: "", label: "Latest published version", description: "Resolve the published version when the run starts." },
     ...withCurrentOption(workflowVersions, versionId, `Version · ${versionId}`),
@@ -410,6 +421,79 @@ function WorkflowRequestFields({
           />
         )}
       </div>
+      <div className="tests-case-builder__field is-span-2">
+        <span>Execution scope</span>
+        <PlatformSelector
+          value={selectionType}
+          options={[
+            {
+              value: "full",
+              label: "Entire workflow",
+              description: "Run the complete immutable workflow version.",
+            },
+            {
+              value: "node",
+              label: "One node",
+              description: "Run one node with its required boundary context.",
+            },
+            {
+              value: "slice",
+              label: "Connected slice",
+              description: "Run a selected connected set of workflow nodes.",
+            },
+          ]}
+          fullWidth
+          ariaLabel="Workflow test execution scope"
+          onValueChange={(value) => onChange({
+            ...request,
+            selection: value === "node"
+              ? { type: "node", nodeId: "" }
+              : value === "slice"
+                ? { type: "slice", nodeIds: [] }
+                : { type: "full" },
+          })}
+        />
+      </div>
+      {selectionType === "node" ? (
+        <label className="tests-case-builder__field is-span-2">
+          <span>Node ID</span>
+          <input
+            value={String(selection.nodeId || "")}
+            aria-label="Workflow test node ID"
+            placeholder="extract-results"
+            onChange={(event) => onChange({
+              ...request,
+              selection: {
+                ...selection,
+                type: "node",
+                nodeId: event.currentTarget.value,
+              },
+            })}
+          />
+          <small>The node is resolved against the selected immutable workflow version.</small>
+        </label>
+      ) : selectionType === "slice" ? (
+        <label className="tests-case-builder__field is-span-2">
+          <span>Node IDs</span>
+          <input
+            value={(Array.isArray(selection.nodeIds) ? selection.nodeIds : []).join(", ")}
+            aria-label="Workflow test slice node IDs"
+            placeholder="fetch-data, transform, publish"
+            onChange={(event) => onChange({
+              ...request,
+              selection: {
+                ...selection,
+                type: "slice",
+                nodeIds: event.currentTarget.value
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+              },
+            })}
+          />
+          <small>Comma-separated node IDs; connectivity is validated before the run starts.</small>
+        </label>
+      ) : null}
       <JsonValueField
         id={`${fieldId}:input`}
         label="Workflow input"
@@ -551,6 +635,113 @@ function EvidenceItem({
   );
 }
 
+function BrowserRequestFields({
+  testCase,
+  request,
+  onChange,
+}: {
+  testCase: TestCaseDefinition;
+  request: Record<string, unknown>;
+  onChange: (testCase: TestCaseDefinition) => void;
+}) {
+  const visualComparison = asRecord(request.visualComparison);
+  const visualEnabled = visualComparison.enabled === true;
+
+  function updateRequest(patch: Record<string, unknown>) {
+    onChange({
+      ...testCase,
+      request: { ...request, ...patch },
+    });
+  }
+
+  return (
+    <div className="tests-case-builder__fields">
+      <label className="tests-case-builder__field is-span-2">
+        <span>Start URL</span>
+        <input
+          type="url"
+          value={String(request.startUrl || "")}
+          placeholder="https://app.example.com"
+          aria-label="Browser start URL"
+          onChange={(event) => updateRequest({ startUrl: event.currentTarget.value })}
+        />
+      </label>
+      <div className="tests-case-builder__field">
+        <span>Screenshot evidence</span>
+        <PlatformSelector
+          value={String(request.screenshotMode || "on_failure")}
+          options={BROWSER_SCREENSHOT_OPTIONS}
+          fullWidth
+          ariaLabel="Browser screenshot evidence"
+          onValueChange={(screenshotMode) => updateRequest({ screenshotMode })}
+        />
+      </div>
+      <label className="tests-case-builder__field tests-case-builder__toggle-field">
+        <span>Visual comparison</span>
+        <PlatformToggle
+          checked={visualEnabled}
+          aria-label="Enable visual comparison"
+          onCheckedChange={(enabled) => updateRequest({
+            visualComparison: { ...visualComparison, enabled },
+          })}
+        />
+      </label>
+      {visualEnabled ? (
+        <>
+          <label className="tests-case-builder__field">
+            <span>Baseline artifact</span>
+            <input
+              value={String(visualComparison.baselineArtifactUri || "")}
+              placeholder="artifact://baseline/home.png"
+              aria-label="Visual baseline artifact"
+              onChange={(event) => updateRequest({
+                visualComparison: {
+                  ...visualComparison,
+                  baselineArtifactUri: event.currentTarget.value,
+                },
+              })}
+            />
+          </label>
+          <label className="tests-case-builder__field">
+            <span>Maximum changed pixels (%)</span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={String(visualComparison.maxDiffPercent ?? 0.1)}
+              aria-label="Maximum visual difference percent"
+              onChange={(event) => updateRequest({
+                visualComparison: {
+                  ...visualComparison,
+                  maxDiffPercent: Number(event.currentTarget.value),
+                },
+              })}
+            />
+          </label>
+        </>
+      ) : null}
+      <div className="tests-case-builder__field tests-case-builder__editor-field is-span-2">
+        <PlatformInstructionsEditor
+          title="Browser steps"
+          value={testCase.command}
+          onChange={(instructions) => onChange({
+            ...testCase,
+            command: instructions,
+            request: { ...request, instructions },
+          })}
+          placeholder="Describe the user journey, assertions, and evidence to retain."
+          ariaLabel="Browser journey instructions"
+          historyKey={`${testCase.id}:browser-instructions`}
+          variant="minimalistic-ui"
+          stickyHeader={false}
+          className="tests-case-builder__instructions-editor tests-case-builder__agent-editor"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function TestCaseDefinitionBuilder({
   testCase,
   functions,
@@ -614,7 +805,9 @@ export function TestCaseDefinitionBuilder({
           title={target === "command"
             ? "Command"
             : target === "agent"
-              ? "Verification task"
+              ? testCase.kind === "browser"
+                ? "Browser journey"
+                : "Verification task"
               : target === "service_topology"
                 ? "Scenario"
                 : target === "control_plane_readiness"
@@ -639,6 +832,12 @@ export function TestCaseDefinitionBuilder({
               codeLanguage="shell"
               codePath={`tests/cases/${testCase.id}/command.sh`}
               className="tests-case-builder__instructions-editor tests-case-builder__command-editor"
+            />
+          ) : target === "agent" && testCase.kind === "browser" ? (
+            <BrowserRequestFields
+              testCase={testCase}
+              request={request}
+              onChange={onChange}
             />
           ) : target === "agent" ? (
             <PlatformInstructionsEditor

@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Copy, Ellipsis, History, Info } from "lucide-react";
+import { Check, ChevronRight, Copy, Ellipsis, History, Info } from "../../ui/hugeicons-compat.js";
 import {
   type ButtonHTMLAttributes,
   createContext,

@@ -2,7 +2,7 @@ import {
   ChevronDown as LucideChevronDown,
   ChevronRight as LucideChevronRight,
   LoaderCircle as LucideLoaderCircle,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {

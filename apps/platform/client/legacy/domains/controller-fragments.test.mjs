@@ -429,6 +429,16 @@ assert.match(
   "Connector status fan-out must remain page-scoped and deferred until browser idle time.",
 );
 assert.match(
+  shellDataLifecycleSource,
+  /globalThis\.window\.computerAgentsOpenConnectors = handleOpenTagsShortcut/,
+  "Resource connector cards must navigate through the shell-owned Connectors entry point.",
+);
+assert.doesNotMatch(
+  skillDetailIdentityAndSettingsSource + agentDialogsSource,
+  /onViewAllConnectors:\s*handleOpenTagsShortcut/,
+  "Resource fragments must not reference shell-local navigation helpers directly.",
+);
+assert.match(
   shellSettingsToolsSource,
   /async function persistTagPluginCredentials\(resourceId, credentials\)[\s\S]{0,700}usesProviderManagedConnectorCredentials\(normalizedResourceId\)[\s\S]{0,120}return nextConfig;[\s\S]{0,160}saveTagDetailConfig/,
   "Starting a provider OAuth flow must not persist pending credentials through tag settings.",
@@ -684,7 +694,7 @@ for (const expectedSkillVersionAction of [
 }
 assert.match(
   skillVersioningSource,
-  /function renderSkillVersionChangesPage\(actions = null\)[\s\S]*?renderPlaygroundVersionChangesPage\(\{[\s\S]*?className: "playground-skills-version-changes-page"/,
+  /function renderSkillVersionChangesModal\(actions = null\)[\s\S]*?renderPlaygroundVersionChangesModal\(\{[\s\S]*?className: "playground-skills-version-changes-modal__content"/,
   "Skill versions must expose the shared source-comparison screen.",
 );
 assert.match(
@@ -694,7 +704,7 @@ assert.match(
 );
 assert.match(
   skillVersioningSource,
-  /function openSkillVersionChangesPage\(versionId\)[\s\S]{0,300}getDefaultSkillVersionCompareSourceIds\(versionId\)[\s\S]{0,200}setSkillVersionChangesState\(compareSourceIds\)/,
+  /function openSkillVersionChangesModal\(versionId\)[\s\S]{0,300}getDefaultSkillVersionCompareSourceIds\(versionId\)[\s\S]{0,200}setSkillVersionChangesState\(compareSourceIds\)/,
   "Opening Skill changes must use the meaningful default comparison pair.",
 );
 assert.match(

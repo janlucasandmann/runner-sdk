@@ -1,4 +1,4 @@
-import { Check, UsersRound } from "lucide-react";
+import { Check, UsersRound } from "../../ui/hugeicons-compat.js";
 import { useMemo, useRef } from "react";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformCheckbox } from "../../ui/checkbox/index.js";

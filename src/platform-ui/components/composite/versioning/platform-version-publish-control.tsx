@@ -1,4 +1,4 @@
-import { Circle, Rocket, type LucideIcon } from "lucide-react";
+import { Circle, Rocket, type LucideIcon } from "../../ui/hugeicons-compat.js";
 import type { ReactNode, Ref } from "react";
 import { PlatformButtonSelector } from "../../ui/selector/index.js";
 

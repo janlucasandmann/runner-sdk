@@ -5,7 +5,7 @@ import {
   SquareMousePointer,
   SquarePen,
   Trash2,
-} from "lucide-react";
+} from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, type ReactNode } from "react";
 import type {
   PlatformDataTableAction,
@@ -17,13 +17,16 @@ import type {
 } from "../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
 import {
+  createResourceOverviewColumns,
   ResourceOverviewCatalogIdentityCell,
   ResourceOverviewIdentityCell,
   ResourceOverviewPage,
   ResourceOverviewValue,
   type ResourceOverviewAnalyticsModel,
+  type ResourceOverviewIconStyle,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
+import { formatPlatformResourceUpdatedAt } from "../../../platform-ui/formatting/index.js";
 import { SkillsOverviewGuide } from "./skills-overview-guide.js";
 
 const COMPUTER_AGENTS_CREATOR_NAME = "Computer Agents";
@@ -36,6 +39,7 @@ export interface SkillOverviewRow {
   description?: string;
   searchText?: string;
   icon?: ReactNode;
+  iconColor?: string;
   isComputerAgents?: boolean;
   isActive: boolean;
   isCustom: boolean;
@@ -114,18 +118,22 @@ function getIdentityFallback(name: string): string {
     .join("");
 }
 
-function getOwnerIdentity(row: SkillOverviewRow): SkillOverviewIdentity {
+function getCreatorIdentity(row: SkillOverviewRow): SkillOverviewIdentity {
   const isSystemSkill = !row.isCustom;
-  const name = isSystemSkill
-    ? COMPUTER_AGENTS_CREATOR_NAME
-    : row.ownerName?.trim() || getCreatorName(row);
+  const name = getCreatorName(row);
   return {
     name,
     imageUrl: isSystemSkill
       ? COMPUTER_AGENTS_CREATOR_PROFILE_URL
-      : row.ownerAvatarUrl || row.creatorAvatarUrl,
+      : row.creatorAvatarUrl,
     fallback: getIdentityFallback(name),
   };
+}
+
+function getSkillIconStyle(row: SkillOverviewRow): ResourceOverviewIconStyle | undefined {
+  const iconColor = row.iconColor?.trim() || "";
+  if (!/^#[0-9a-f]{6}$/i.test(iconColor)) return undefined;
+  return { "--resource-overview-skill-icon-color": iconColor };
 }
 
 export function SkillsOverviewPage({
@@ -161,7 +169,7 @@ export function SkillsOverviewPage({
   sortableColumns = true,
   rowActions,
 }: SkillsOverviewPageProps) {
-  const resolveIdentity = identityColumn?.getIdentity || getOwnerIdentity;
+  const resolveIdentity = identityColumn?.getIdentity || getCreatorIdentity;
   const resolvedEmptyState = emptyState ?? (
     <PlatformEmptyState
       icon={SquareMousePointer}
@@ -174,55 +182,84 @@ export function SkillsOverviewPage({
       }}
     />
   );
-  const defaultColumns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => [
-    {
-      id: "name",
-      header: "Name",
-      accessor: "name",
-      sortable: sortableColumns,
-      width: "minmax(320px, 1.8fr)",
-      cell: ({ row }) => (
-        <ResourceOverviewCatalogIdentityCell
-          title={row.name}
-          description={row.description}
-          icon={row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
-          iconClassName={`is-skill${
+  const defaultColumns = useMemo<PlatformDataTableColumn<SkillOverviewRow>[]>(() => {
+    if (!identityColumn) {
+      return createResourceOverviewColumns<SkillOverviewRow>({
+        name: {
+          getVisual: (row) => ({
+            icon: row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />,
+            iconClassName: `is-skill${
+              row.isComputerAgents
+                || row.id.trim().toLowerCase() === "computer_agents"
+                ? " is-computer-agents"
+                : ""
+            }`,
+            iconStyle: getSkillIconStyle(row),
+          }),
+        },
+        creator: {
+          getName: (row) => getCreatorIdentity(row).name,
+          getAvatarUrl: (row) => getCreatorIdentity(row).imageUrl,
+          getFallback: (row) => getCreatorIdentity(row).fallback,
+        },
+      });
+    }
+
+    return [
+      {
+        id: "name",
+        header: "Name",
+        accessor: "name",
+        sortable: sortableColumns,
+        width: "minmax(320px, 1.8fr)",
+        cell: ({ row }) => (
+          <ResourceOverviewCatalogIdentityCell
+            title={row.name}
+            description={row.description}
+            icon={row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
+            iconClassName={`is-skill${
               row.isComputerAgents
                 || row.id.trim().toLowerCase() === "computer_agents"
                 ? " is-computer-agents"
                 : ""
             }`}
-        />
-      ),
-    },
-    {
-      id: identityColumn?.id || "owner",
-      header: identityColumn?.header || "Owner",
-      accessor: (row) => resolveIdentity(row).name,
-      width: "minmax(160px, 0.62fr)",
-      cell: ({ row }) => {
-        const identity = resolveIdentity(row);
-        return (
-          <ResourceOverviewIdentityCell
-            title={identity.name}
-            imageUrl={identity.imageUrl}
-            fallback={identity.fallback || getIdentityFallback(identity.name)}
-            iconClassName="is-creator"
+            iconStyle={getSkillIconStyle(row)}
           />
-        );
+        ),
       },
-    },
-    {
-      id: "updated",
-      header: "Updated",
-      accessor: (row) => row.updatedAt || 0,
-      sortable: sortableColumns,
-      sortDescFirst: true,
-      width: "minmax(120px, 0.48fr)",
-      hideBelow: 900,
-      cell: ({ row }) => <ResourceOverviewValue title={row.updatedTitle}>{row.updatedLabel}</ResourceOverviewValue>,
-    },
-  ], [identityColumn?.header, identityColumn?.id, resolveIdentity, sortableColumns]);
+      {
+        id: identityColumn.id || "owner",
+        header: identityColumn.header,
+        accessor: (row) => resolveIdentity(row).name,
+        width: "minmax(160px, 0.62fr)",
+        cell: ({ row }) => {
+          const identity = resolveIdentity(row);
+          return (
+            <ResourceOverviewIdentityCell
+              title={identity.name}
+              imageUrl={identity.imageUrl}
+              fallback={identity.fallback || getIdentityFallback(identity.name)}
+              iconClassName="is-creator"
+            />
+          );
+        },
+      },
+      {
+        id: "updated",
+        header: "Updated",
+        accessor: (row) => row.updatedAt || 0,
+        sortable: sortableColumns,
+        sortDescFirst: true,
+        width: "minmax(120px, 0.48fr)",
+        hideBelow: 900,
+        cell: ({ row }) => (
+          <ResourceOverviewValue title={row.updatedTitle}>
+            {formatPlatformResourceUpdatedAt(row.updatedAt)}
+          </ResourceOverviewValue>
+        ),
+      },
+    ];
+  }, [identityColumn, resolveIdentity, sortableColumns]);
   const columns = providedColumns || defaultColumns;
 
   const getRowActions = (row: SkillOverviewRow, state: { targetRows: readonly SkillOverviewRow[] }): readonly PlatformDataTableAction<SkillOverviewRow>[] => {

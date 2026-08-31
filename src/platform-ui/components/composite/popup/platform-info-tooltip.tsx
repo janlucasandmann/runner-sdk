@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Info } from "../../ui/hugeicons-compat.js";
 import {
   type HTMLAttributes,
   type ReactNode,

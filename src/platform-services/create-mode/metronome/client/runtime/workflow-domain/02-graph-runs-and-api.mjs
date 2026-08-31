@@ -657,6 +657,22 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
 
         function createMetronomeApiPayload(workflow) {
           const metadata = buildMetronomeWorkflowProjectMetadata(workflow);
+          const projectScope = metadata.projectScope
+            && typeof metadata.projectScope === "object"
+            && !Array.isArray(metadata.projectScope)
+            ? metadata.projectScope
+            : metadata.project_scope
+              && typeof metadata.project_scope === "object"
+              && !Array.isArray(metadata.project_scope)
+              ? metadata.project_scope
+              : null;
+          const hasExplicitProjectScope = Boolean(
+            projectScope
+            && (
+              Array.isArray(projectScope.projectIds)
+              || Array.isArray(projectScope.project_ids)
+            )
+          );
           const deployments = readMetronomeWorkflowDeployments(workflow);
           const activeDeploymentId = String(workflow?.activeDeploymentId || metadata.activeDeploymentId || metadata.active_deployment_id || deployments.find((deployment) => deployment.status === "active")?.id || "").trim();
           const activeDeployment = deployments.find((deployment) => deployment.id === activeDeploymentId) || null;
@@ -681,8 +697,16 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
             description: workflow?.description || "",
             status: workflow?.status || "draft",
             triggerSummary: workflow?.triggerSummary || deriveMetronomeTriggerSummary(workflow?.nodes || []),
-            ...(metadata.projectId ? { projectId: metadata.projectId, project_id: metadata.projectId } : {}),
-            ...(metadata.projectName ? { projectName: metadata.projectName, project_name: metadata.projectName } : {}),
+            ...(metadata.projectId
+              ? { projectId: metadata.projectId, project_id: metadata.projectId }
+              : hasExplicitProjectScope
+                ? { projectId: null, project_id: null }
+                : {}),
+            ...(metadata.projectName
+              ? { projectName: metadata.projectName, project_name: metadata.projectName }
+              : hasExplicitProjectScope
+                ? { projectName: null, project_name: null }
+                : {}),
             metadata: enrichedMetadata,
             definition: createMetronomeWorkflowDefinition(workflow, workflow?.nodes || [], workflow?.edges || []),
           };
@@ -919,8 +943,64 @@ export const METRONOME_WORKFLOW_DOMAIN_02_FRAGMENT = String.raw`            ...(
           };
         }
 
-        async function validateMetronomeDefinitionApi(definition, mode = "publish") {
-          const response = await fetch("/api/real/metronomes/validate", {
+        function normalizeMetronomeThreadTriggerCommand(value) {
+          const command = String(value || "").trim();
+          if (!command) return "";
+          return command.startsWith("@") ? command : "@" + command;
+        }
+
+        function listMetronomeThreadTriggerOptions(workflows, options = {}) {
+          const activeOnly = options.activeOnly !== false;
+          const dedupe = options.dedupe !== false;
+          const excludedWorkflowId = String(options.excludeWorkflowId || "").trim();
+          const seenCommands = new Set();
+          const result = [];
+          (Array.isArray(workflows) ? workflows : []).forEach((workflow) => {
+            const workflowId = String(workflow?.id || "").trim();
+            const workflowName = String(workflow?.name || "Untitled workflow").trim() || "Untitled workflow";
+            const workflowStatus = String(workflow?.status || "").trim().toLowerCase();
+            if (!workflowId || workflowId === excludedWorkflowId || (activeOnly && workflowStatus !== "active")) return;
+            const nodes = Array.isArray(workflow?.nodes)
+              ? workflow.nodes
+              : Array.isArray(workflow?.definition?.nodes)
+                ? workflow.definition.nodes
+                : [];
+            nodes.forEach((node) => {
+              const data = node?.data && typeof node.data === "object" ? node.data : node || {};
+              const config = data?.config && typeof data.config === "object" ? data.config : node?.config || {};
+              const kind = String(data?.kind || node?.kind || "").trim().toLowerCase();
+              const triggerType = String(config?.triggerType || config?.trigger_type || data?.subtype || node?.subtype || "").trim().toLowerCase();
+              if (kind !== "trigger" || !["thread_event", "thread", "thread_message", "thread_command"].includes(triggerType)) return;
+              const command = normalizeMetronomeThreadTriggerCommand(
+                config?.threadCommand
+                || config?.thread_command
+                || config?.triggerCommand
+                || config?.trigger_command
+                || config?.command
+              );
+              const commandKey = command.toLowerCase();
+              if (!command || (dedupe && seenCommands.has(commandKey))) return;
+              seenCommands.add(commandKey);
+              const nodeId = String(node?.id || "").trim();
+              result.push({
+                id: workflowId + ":" + (nodeId || commandKey),
+                workflowId,
+                name: workflowName,
+                command,
+                description: String(workflow?.description || "").trim(),
+                nodeId,
+              });
+            });
+          });
+          return result;
+        }
+
+        async function validateMetronomeDefinitionApi(definition, mode = "publish", workflowId = "") {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          const validationPath = normalizedWorkflowId
+            ? "/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/validate"
+            : "/api/real/metronomes/validate";
+          const response = await fetch(validationPath, {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },

@@ -16,6 +16,7 @@ describe("SourceDeployableServerDetailPage", () => {
   it.each([
     ["function", "is-function-server-detail"],
     ["web-app", "is-web-app-server-detail"],
+    ["api", "is-api-server-detail"],
   ] as const)("uses one detail composition for %s resources", (resourceKind, expectedClassName) => {
     const { container } = render(
       <SourceDeployableServerDetailPage
@@ -29,6 +30,42 @@ describe("SourceDeployableServerDetailPage", () => {
     expect(screen.getByText("Usage activity")).not.toBeNull();
     expect(container.querySelector(`.${expectedClassName}.is-source-server-usage-tab`)).not.toBeNull();
     expect(screen.queryByRole("navigation", { name: "Resource sections" })).toBeNull();
+  });
+
+  it("renders the canonical settings composition instead of the legacy settings body", () => {
+    const { container } = render(
+      <SourceDeployableServerDetailPage
+        resourceKind="function"
+        activeTab="settings"
+        contentByTab={contentByTab}
+        sidebar={<div>Legacy resource owner</div>}
+        settings={{
+          identity: {
+            icon: <span>F</span>,
+            title: "Webhook Function",
+            description: "Receives webhooks",
+            readOnly: true,
+          },
+          details: {
+            variant: "standard",
+            updatedAt: "2026-08-30T10:00:00.000Z",
+            creator: { value: "creator", name: "Creator" },
+            owner: { value: "owner", name: "Owner" },
+            scope: {},
+            primaryActions: [{ id: "deploy", label: "Deploy", onSelect: () => undefined }],
+          },
+          connectors: <div>GitHub connector</div>,
+          access: <div>Function access</div>,
+        }}
+      />,
+    );
+
+    expect(container.querySelector("[data-platform-resource-settings-page='true']")).not.toBeNull();
+    expect(screen.getByDisplayValue("Webhook Function")).not.toBeNull();
+    expect(screen.getByText("GitHub connector")).not.toBeNull();
+    expect(screen.getByText("Function access")).not.toBeNull();
+    expect(screen.queryByText("Deployment settings")).toBeNull();
+    expect(screen.queryByText("Legacy resource owner")).toBeNull();
   });
 
   it("uses the bounded full-screen code composition for both resource kinds", () => {

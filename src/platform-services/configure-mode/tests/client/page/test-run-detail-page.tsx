@@ -6,7 +6,8 @@ import {
   FileArchive,
   RefreshCw,
   ShieldCheck,
-} from "lucide-react";
+  Square,
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
@@ -47,6 +48,8 @@ interface TestRunDetailPageProps {
   refreshing?: boolean;
   onRefresh: () => void;
   onRunAgain: () => void;
+  onCancel?: () => Promise<void> | void;
+  onRetryFailed?: (scenarioIds: string[]) => Promise<void> | void;
   onOpenTechnicalDetails?: () => void;
 }
 
@@ -115,6 +118,8 @@ export function TestRunDetailPage({
   refreshing = false,
   onRefresh,
   onRunAgain,
+  onCancel,
+  onRetryFailed,
   onOpenTechnicalDetails = () => undefined,
 }: TestRunDetailPageProps) {
   const portalTarget = usePortalTarget(controlsPortalId);
@@ -123,6 +128,8 @@ export function TestRunDetailPage({
   const [expandedResultIds, setExpandedResultIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [actionBusy, setActionBusy] = useState("");
+  const [actionError, setActionError] = useState("");
   const toggleResultExpansion = useCallback((resultId: string) => {
     setExpandedResultIds((current) => {
       const next = new Set(current);
@@ -162,12 +169,39 @@ export function TestRunDetailPage({
   const publishedVersion = plan.versions?.find((version) => version.id === run.versionId);
   const versionLabel = publishedVersion ? `v${publishedVersion.version}` : "—";
   const inProgress = ["queued", "running"].includes(run.status);
+  const failureResults = results.filter((result) => (
+    result.status === "failed" || result.status === "error"
+  ));
+  const failureResultIds = failureResults
+    .map((result) => result.id)
+    .sort()
+    .join(":");
+  const sortedResults = [...results].sort((left, right) => {
+    const rank = (result: TestCaseResult) => (
+      result.status === "failed" || result.status === "error"
+        ? 0
+        : result.classification === "flaky"
+          ? 1
+          : result.status === "skipped"
+            ? 2
+            : 3
+    );
+    return rank(left) - rank(right);
+  });
+
+  useEffect(() => {
+    setExpandedResultIds(new Set(
+      results
+        .filter((result) => result.status === "failed" || result.status === "error")
+        .map((result) => result.id),
+    ));
+  }, [failureResultIds, run.id]);
 
   const resultColumns = useMemo<PlatformDataTableColumn<TestCaseResult>[]>(
     () => [
       {
         id: "case",
-        header: "Case",
+        header: "Scenario",
         accessor: "name",
         width: "minmax(260px, 1fr)",
         cell: ({ row }) => (
@@ -186,8 +220,10 @@ export function TestRunDetailPage({
         sortable: true,
         width: "minmax(120px, .24fr)",
         cell: ({ row }) => (
-          <PlatformLabel variant={statusLabelVariant(row.status)}>
-            {formatStatus(row.status)}
+          <PlatformLabel variant={statusLabelVariant(
+            row.classification === "flaky" ? "warning" : row.status,
+          )}>
+            {row.classification === "flaky" ? "Flaky" : formatStatus(row.status)}
           </PlatformLabel>
         ),
       },
@@ -252,7 +288,7 @@ export function TestRunDetailPage({
     metrics: [
       {
         id: "total",
-        label: "Cases",
+        label: "Scenarios",
         value: String(run.totalCount || results.length),
         color: "#8fc4ff",
       },
@@ -275,7 +311,7 @@ export function TestRunDetailPage({
         color: "#7657ff",
       },
     ],
-    labels: results.map((result, index) => `Case ${index + 1}: ${result.name}`),
+    labels: results.map((result, index) => `Scenario ${index + 1}: ${result.name}`),
     hasData: results.length > 0,
     series: [
       {
@@ -289,7 +325,7 @@ export function TestRunDetailPage({
       },
       {
         id: "passed",
-        label: "Passed cases",
+        label: "Passed scenarios",
         values: cumulativePassedCounts,
         color: "#9ff6ce",
         axis: "secondary" as const,
@@ -302,12 +338,26 @@ export function TestRunDetailPage({
       attributes={[
         {
           id: "status",
-          label: "Status",
+          label: "Verdict",
           value: (
-            <PlatformLabel variant={statusLabelVariant(run.status)}>
-              {formatStatus(run.status)}
+            <PlatformLabel variant={statusLabelVariant(run.verdict || run.status)}>
+              {formatStatus(run.verdict || run.status)}
             </PlatformLabel>
           ),
+        },
+        {
+          id: "execution-status",
+          label: "Execution",
+          value: formatStatus(run.executionStatus || (inProgress ? run.status : "completed")),
+        },
+        {
+          id: "execution-type",
+          label: "Run type",
+          value: run.executionType === "preview"
+            ? "Draft preview"
+            : run.executionType === "imported"
+              ? "Imported report"
+              : "Published version",
         },
         { id: "test-version", label: "Test version", value: versionLabel },
         { id: "environment", label: "Environment", value: environmentLabel },
@@ -340,19 +390,57 @@ export function TestRunDetailPage({
     />
   );
   const headerActions = (
-    <PlatformSecondaryButton
-      size="small"
-      disabled={refreshing}
-      onClick={onRefresh}
-    >
-      <RefreshCw
-        className={refreshing ? "tests-spin" : ""}
-        width={14}
-        height={14}
-        aria-hidden="true"
-      />
-      Refresh
-    </PlatformSecondaryButton>
+    <div className="tests-run-header-actions">
+      {inProgress && onCancel ? (
+        <PlatformSecondaryButton
+          size="small"
+          disabled={Boolean(actionBusy)}
+          onClick={() => {
+            setActionBusy("cancel");
+            setActionError("");
+            void Promise.resolve(onCancel())
+              .catch((nextError) => setActionError(
+                nextError instanceof Error ? nextError.message : "Failed to cancel the Test run.",
+              ))
+              .finally(() => setActionBusy(""));
+          }}
+        >
+          <Square width={12} height={12} aria-hidden="true" />
+          {actionBusy === "cancel" ? "Cancelling…" : "Cancel"}
+        </PlatformSecondaryButton>
+      ) : null}
+      {failureResults.length > 0 && onRetryFailed ? (
+        <PlatformSecondaryButton
+          size="small"
+          disabled={Boolean(actionBusy)}
+          onClick={() => {
+            setActionBusy("retry");
+            setActionError("");
+            void Promise.resolve(onRetryFailed(failureResults.map((result) => result.caseId)))
+              .catch((nextError) => setActionError(
+                nextError instanceof Error ? nextError.message : "Failed to retry the failed scenarios.",
+              ))
+              .finally(() => setActionBusy(""));
+          }}
+        >
+          <RefreshCw width={13} height={13} aria-hidden="true" />
+          {actionBusy === "retry" ? "Starting…" : `Retry failed (${failureResults.length})`}
+        </PlatformSecondaryButton>
+      ) : null}
+      <PlatformSecondaryButton
+        size="small"
+        disabled={refreshing}
+        onClick={onRefresh}
+      >
+        <RefreshCw
+          className={refreshing ? "tests-spin" : ""}
+          width={14}
+          height={14}
+          aria-hidden="true"
+        />
+        Refresh
+      </PlatformSecondaryButton>
+    </div>
   );
 
   return (
@@ -368,6 +456,9 @@ export function TestRunDetailPage({
         sidebarClassName="tests-detail-sidebar"
       >
         <div className="tests-detail-stack">
+          {actionError ? (
+            <p className="tests-form-error" role="alert">{actionError}</p>
+          ) : null}
           <PlatformAnalyticsSection
             variant="default"
             title="Result totals"
@@ -377,10 +468,10 @@ export function TestRunDetailPage({
           />
 
           <PlatformDataTable
-            rows={results}
+            rows={sortedResults}
             columns={resultColumns}
             getRowId={(result) => result.id}
-            ariaLabel="Test case results"
+            ariaLabel="Test scenario results"
             className="tests-results-table"
             variant="minimalistic-ui"
             surface="plain"
@@ -399,10 +490,25 @@ export function TestRunDetailPage({
             renderExpandedRow={({ row: result }) => (
               <div className="tests-run-case-output__body">
                 <dl className="tests-run-case-metadata">
-                  <div><dt>Attempt</dt><dd>{result.attempt}</dd></div>
+                  <div><dt>Attempts</dt><dd>{result.attemptCount || result.attempt}</dd></div>
                   <div><dt>Exit code</dt><dd>{result.exitCode ?? "—"}</dd></div>
                   <div><dt>Duration</dt><dd>{formatDuration(result.durationMs)}</dd></div>
                 </dl>
+                {(result.attempts?.length || 0) > 1 ? (
+                  <div className="tests-run-attempt-history">
+                    <span>Attempt history</span>
+                    {result.attempts?.map((attempt) => (
+                      <div key={`${attempt.caseId}:${attempt.attempt}`}>
+                        <strong>Attempt {attempt.attempt}</strong>
+                        <PlatformLabel variant={statusLabelVariant(attempt.status)}>
+                          {formatStatus(attempt.status)}
+                        </PlatformLabel>
+                        <small>{formatDuration(attempt.durationMs)}</small>
+                        <p>{attempt.summary}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="tests-result-evidence-grid">
                   <div>
                     <span>Command</span>
@@ -424,20 +530,20 @@ export function TestRunDetailPage({
               </div>
             )}
             toolbar={{
-              title: "Case results",
+              title: failureResults.length > 0 ? "Failures first" : "Scenario results",
               search: {
-                placeholder: "Search case results",
+                placeholder: "Search scenario results",
                 getSearchText: (result) => `${result.name} ${result.status} ${result.summary}`,
               },
             }}
             emptyState={(
               <PlatformEmptyState
                 icon={Clock3}
-                title={inProgress ? "Test execution in progress" : "No case results"}
+                title={inProgress ? "Test execution in progress" : "No scenario results"}
                 description={
                   inProgress
-                    ? "Results appear here as the worker completes each case."
-                    : "This run finished without recording individual case results."
+                    ? "Results appear here as the worker completes each scenario."
+                    : "This run finished without recording individual scenario results."
                 }
               />
             )}
@@ -485,7 +591,7 @@ export function TestRunDetailPage({
               <PlatformEmptyState
                 icon={FileArchive}
                 title="No retained artifacts"
-                description="No files or reports were saved for this run. Case diagnostics may still be available in Case results above."
+                description="No files or reports were saved for this run. Scenario diagnostics may still be available in the results above."
               />
             )}
           />

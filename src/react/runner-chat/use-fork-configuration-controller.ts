@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { orderOptionsWithPinnedTop, type RunnerChatOption } from "./agent-options.js";
 import type { LocalAttachment } from "./attachment-types.js";
@@ -143,20 +143,6 @@ export function useRunnerForkConfigurationController({
     resetForkConfiguration();
     return typeof restoreSelectedEnvironmentId === "string" ? restoreSelectedEnvironmentId : null;
   }, [pendingForkConfiguration, resetForkConfiguration]);
-
-  useEffect(() => {
-    if (!showForkEnvironmentPopup) return;
-
-    const handlePointerDown = (event: Event) => {
-      const target = event.target as Node | null;
-      if (environmentPopupRef.current && target && !environmentPopupRef.current.contains(target)) {
-        setShowForkEnvironmentPopup(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [showForkEnvironmentPopup]);
 
   const selectedExistingEnvironment =
     availableEnvironments.find((environment) => environment.id === forkTargetEnvironmentId) ||

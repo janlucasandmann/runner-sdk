@@ -9,7 +9,7 @@ import {
   UserRound,
   UsersRound,
   type LucideIcon,
-} from "lucide-react";
+} from "../../components/ui/hugeicons-compat.js";
 import { useEffect, useRef, useState } from "react";
 import { PlatformPopup } from "../../components/composite/popup/index.js";
 import { PlatformDetailSidebar } from "../../components/composite/detail-sidebar/index.js";

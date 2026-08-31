@@ -1,38 +1,37 @@
 import type { CSSProperties, RefObject } from "react";
 import {
   Brain as LucideBrain,
-  Building2 as LucideBuilding2,
   Check as LucideCheck,
   Monitor as LucideMonitor,
   Rocket as LucideRocket,
   X as LucideX,
-} from "lucide-react";
-import {
-  PlatformPopupSurface,
-  type PlatformPopupAnimation,
-} from "../../platform-ui/components/composite/popup/index.js";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
+import type { PlatformPopupAnimation } from "../../platform-ui/components/composite/popup/index.js";
 import { PlatformHoverLabel } from "../../platform-ui/components/ui/icon-button/index.js";
+import {
+  PlatformAgentAvatar,
+  PlatformAgentSelectorPopup,
+} from "../../platform-ui/components/ui/selector/index.js";
 import { PlatformSwitch } from "../../platform-ui/components/ui/switch/index.js";
 import {
   RUNNER_REASONING_EFFORT_OPTIONS,
-  getRunnerAgentOptionProviderType,
-  getRunnerAgentProviderIcon,
-  getRunnerAgentSelectorMode,
+  getRunnerAgentOptionPhotoUrl,
   getRunnerProjectEnvironmentId,
   getRunnerReasoningEffortOption,
   type RunnerChatOption,
   type RunnerChatProjectOption,
 } from "./agent-options.js";
-import { renderComposerPopupPortal } from "./composer-popup.js";
+import {
+  RunnerComposerPopupSurface,
+  renderComposerPopupPortal,
+} from "./composer-popup.js";
 import {
   IconCheck,
   IconChevronDown,
   IconChevronRight,
-  IconLayers,
-  IconUser,
+  IconCorporate,
 } from "./icons.js";
 import type {
-  RunnerAgentSelectorMode,
   RunnerReasoningEffortId,
   RunnerWorkspaceSelectorMode,
 } from "./voice-audio.js";
@@ -42,34 +41,6 @@ type ElementRef<T extends HTMLElement> = RefObject<T | null>;
 interface PopupPresentationProps {
   animation: PlatformPopupAnimation | false;
   popupStyle: CSSProperties | null;
-}
-
-function RunnerAgentOptionIcon({ agent }: { agent: RunnerChatOption }) {
-  const providerIcon = getRunnerAgentProviderIcon(
-    getRunnerAgentOptionProviderType(agent),
-  );
-  if (!providerIcon) {
-    return <IconUser className="tb-popup-icon" />;
-  }
-
-  const className = [
-    "tb-popup-icon",
-    "tb-popup-provider-icon",
-    providerIcon.className || "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <img
-      className={className}
-      src={providerIcon.src}
-      alt=""
-      title={providerIcon.alt}
-      aria-hidden="true"
-      draggable={false}
-    />
-  );
 }
 
 export interface RunnerComposerOrganizationSelectorProps
@@ -119,7 +90,7 @@ export function RunnerComposerOrganizationSelector({
         aria-label={`Organization: ${label}`}
         aria-expanded={open}
       >
-        <LucideBuilding2
+        <IconCorporate
           className="tb-composer-organization-icon"
           strokeWidth={1.45}
         />
@@ -131,7 +102,7 @@ export function RunnerComposerOrganizationSelector({
 
       {renderComposerPopupPortal(
         open ? (
-          <PlatformPopupSurface
+          <RunnerComposerPopupSurface
             ref={popupRef}
             className="tb-popup-menu-inline tb-popup-menu-inline-agent tb-popup-menu-inline-organization"
             animation={animation}
@@ -146,7 +117,7 @@ export function RunnerComposerOrganizationSelector({
                     className={`tb-popup-row tb-popup-row-select tb-popup-row-agent tb-popup-row-organization ${isSelected ? "selected" : ""}`.trim()}
                     onClick={() => onSelect(organization.id)}
                   >
-                    <LucideBuilding2
+                    <IconCorporate
                       className="tb-popup-icon"
                       strokeWidth={1.6}
                     />
@@ -160,7 +131,7 @@ export function RunnerComposerOrganizationSelector({
                 );
               })}
             </div>
-          </PlatformPopupSurface>
+          </RunnerComposerPopupSurface>
         ) : null,
         popupStyle,
       )}
@@ -170,16 +141,13 @@ export function RunnerComposerOrganizationSelector({
 
 export interface RunnerAgentSelectorControlProps
   extends PopupPresentationProps {
-  availableModes: RunnerAgentSelectorMode[];
   buttonRef: ElementRef<HTMLButtonElement>;
   displayedAgentLabel: string;
   hasApiKey: boolean;
   hidden: boolean;
   locked?: boolean;
-  mode: RunnerAgentSelectorMode;
   onCloseReasoning: () => void;
   onDoneReasoning: () => void;
-  onModeChange: (mode: RunnerAgentSelectorMode) => void;
   onOpenReasoning: () => void;
   onSelectAgent: (agentId: string) => void;
   onSelectReasoningEffort: (effort: RunnerReasoningEffortId) => void;
@@ -198,16 +166,13 @@ export interface RunnerAgentSelectorControlProps
 
 export function RunnerAgentSelectorControl({
   animation,
-  availableModes,
   buttonRef,
   displayedAgentLabel,
   hasApiKey,
   hidden,
   locked = false,
-  mode,
   onCloseReasoning,
   onDoneReasoning,
-  onModeChange,
   onOpenReasoning,
   onSelectAgent,
   onSelectReasoningEffort,
@@ -224,19 +189,14 @@ export function RunnerAgentSelectorControl({
   selectedAgentId,
   totalAgentCount,
 }: RunnerAgentSelectorControlProps) {
+  const selectedAgent = options.find((agent) => agent.id === selectedAgentId) || null;
+
   if (hidden || totalAgentCount === 0) {
     return null;
   }
 
   const selectedReasoningEffort =
     getRunnerReasoningEffortOption(reasoningEffort);
-  const emptyLabel =
-    mode === "teams"
-      ? "No teams available."
-      : mode === "humans"
-        ? "No humans available."
-        : "No agents available.";
-
   return (
     <div className="tb-selector-anchor tb-selector-anchor-agent">
       <PlatformHoverLabel
@@ -252,6 +212,13 @@ export function RunnerAgentSelectorControl({
           disabled={locked}
           aria-disabled={locked}
         >
+          {selectedAgent ? (
+            <PlatformAgentAvatar
+              name={selectedAgent.name}
+              avatarUrl={getRunnerAgentOptionPhotoUrl(selectedAgent)}
+              compact
+            />
+          ) : null}
           <span className="tb-inline-selector-label" title={displayedAgentLabel}>
             {displayedAgentLabel}
           </span>
@@ -264,9 +231,9 @@ export function RunnerAgentSelectorControl({
 
       {renderComposerPopupPortal(
         open ? (
-          <PlatformPopupSurface
+          <RunnerComposerPopupSurface
             ref={popupRef}
-            className="tb-popup-menu-inline tb-popup-menu-inline-agent"
+            className="platform-selector__popup tb-popup-menu-inline tb-popup-menu-inline-agent"
             animation={animation}
             animateHeight
           >
@@ -278,83 +245,48 @@ export function RunnerAgentSelectorControl({
                 </div>
               </div>
             ) : (
-              <>
-                <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
-                  <PlatformSwitch
-                    className="tb-popup-selector-switch"
-                    ariaLabel="Agent type"
-                    value={mode}
-                    options={availableModes.map((availableMode) => ({
-                      value: availableMode,
-                      label:
-                        availableMode === "teams"
-                          ? "Squads"
-                          : availableMode === "humans"
-                            ? "Humans"
-                            : "Agents",
-                    }))}
-                    onValueChange={(nextMode) => {
-                      onModeChange(nextMode as RunnerAgentSelectorMode);
-                    }}
-                  />
-                </div>
-                <div className="tb-popup-menu-inline-body tb-popup-menu-inline-body-agent">
-                  {options.length > 0 ? (
-                    options.map((agent) => {
-                      const isTeamAgent =
-                        getRunnerAgentSelectorMode(agent) === "teams";
-                      return (
-                        <button
-                          key={agent.id}
-                          type="button"
-                          className={`tb-popup-row tb-popup-row-select tb-popup-row-agent ${selectedAgentId === agent.id ? "selected" : ""}`}
-                          onClick={() => onSelectAgent(agent.id)}
-                        >
-                          {isTeamAgent ? (
-                            <IconLayers className="tb-popup-icon" />
-                          ) : (
-                            <RunnerAgentOptionIcon agent={agent} />
-                          )}
-                          <span className="tb-popup-label">{agent.name}</span>
-                          <span className="tb-popup-check-slot">
-                            {selectedAgentId === agent.id ? (
-                              <IconCheck className="tb-popup-check" />
-                            ) : null}
-                          </span>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="tb-popup-menu-inline-empty">
-                      <div className="tb-popup-empty-state">{emptyLabel}</div>
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className={`tb-popup-row tb-popup-row-core-action tb-agent-reasoning-effort-entry ${reasoningOpen ? "selected" : ""}`.trim()}
-                  onClick={onOpenReasoning}
-                >
-                  <LucideBrain
-                    className="tb-popup-icon"
-                    strokeWidth={1.75}
-                  />
-                  <span className="tb-popup-label">Reasoning effort</span>
-                  <span className="tb-popup-value">
-                    {selectedReasoningEffort.label}
-                  </span>
-                  <IconChevronRight className="tb-popup-chevron" />
-                </button>
-              </>
+              <PlatformAgentSelectorPopup
+                value={selectedAgentId}
+                options={options.map((agent) => ({
+                  value: agent.id,
+                  name: agent.name,
+                  avatarUrl: getRunnerAgentOptionPhotoUrl(agent),
+                  searchText: agent.description || "",
+                }))}
+                onValueChange={(agentId) => onSelectAgent(agentId)}
+                ariaLabel="Agents and squads"
+                searchPlaceholder="Search agents..."
+                searchAriaLabel="Search agents and squads"
+                emptyContent="No agents or squads match your search."
+                className="tb-composer-agent-selector-popup"
+                optionClassName="tb-composer-agent-option"
+                footer={(
+                  <button
+                    type="button"
+                    className={`tb-popup-row tb-popup-row-core-action tb-agent-reasoning-effort-entry ${reasoningOpen ? "selected" : ""}`.trim()}
+                    onClick={onOpenReasoning}
+                  >
+                    <LucideBrain
+                      className="tb-popup-icon"
+                      strokeWidth={1.75}
+                    />
+                    <span className="tb-popup-label">Reasoning effort</span>
+                    <span className="tb-popup-value">
+                      {selectedReasoningEffort.label}
+                    </span>
+                    <IconChevronRight className="tb-popup-chevron" />
+                  </button>
+                )}
+              />
             )}
-          </PlatformPopupSurface>
+          </RunnerComposerPopupSurface>
         ) : null,
         popupStyle,
       )}
 
       {renderComposerPopupPortal(
         reasoningOpen ? (
-          <PlatformPopupSurface
+          <RunnerComposerPopupSurface
             ref={reasoningPopupRef}
             className="tb-popup-menu-side tb-popup-menu-agent-reasoning"
             animation={reasoningPopupAnimation}
@@ -406,7 +338,7 @@ export function RunnerAgentSelectorControl({
                 }}
               />
             </div>
-          </PlatformPopupSurface>
+          </RunnerComposerPopupSurface>
         ) : null,
         reasoningPopupStyle,
       )}
@@ -489,7 +421,7 @@ export function RunnerWorkspaceSelectorControl({
 
       {renderComposerPopupPortal(
         open ? (
-          <PlatformPopupSurface
+          <RunnerComposerPopupSurface
             ref={popupRef}
             className="tb-popup-menu-inline tb-popup-menu-inline-right tb-popup-menu-inline-workspace"
             animation={animation}
@@ -604,7 +536,7 @@ export function RunnerWorkspaceSelectorControl({
                 </div>
               </>
             )}
-          </PlatformPopupSurface>
+          </RunnerComposerPopupSurface>
         ) : null,
         popupStyle,
       )}

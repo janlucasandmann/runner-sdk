@@ -1,4 +1,4 @@
-import { Building2, Check, ChevronRight, Plus, SquarePen } from "lucide-react";
+import { Building2, Check, ChevronRight, Plus, SquarePen } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,

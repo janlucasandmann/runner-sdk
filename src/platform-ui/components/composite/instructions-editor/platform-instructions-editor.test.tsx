@@ -493,7 +493,7 @@ describe("PlatformInstructionsEditor", () => {
     expect(menuSurface.getAttribute("data-platform-popup-variant")).toBe("minimal");
     expect(menuSurface.style.width).toBe("230px");
     const normalTextTrigger = screen.getByRole("menuitem", { name: "Normal text" });
-    expect(normalTextTrigger.querySelector(".lucide-type")).not.toBeNull();
+    expect(normalTextTrigger.querySelector(".hugeicons-type")).not.toBeNull();
     expect(screen.getByRole("menuitemcheckbox", { name: "Bold" })).not.toBeNull();
     expect(screen.getByRole("menuitemcheckbox", { name: "Italic" })).not.toBeNull();
     expect(screen.getByRole("menuitemcheckbox", { name: "Underline" })).not.toBeNull();
@@ -503,7 +503,7 @@ describe("PlatformInstructionsEditor", () => {
     const justifySelectionButton = screen.getByRole("menuitemcheckbox", {
       name: "Align justify",
     });
-    expect(justifySelectionButton.querySelector(".lucide-text-align-justify")).not.toBeNull();
+    expect(justifySelectionButton.querySelector(".hugeicons-align-justify")).not.toBeNull();
 
     const boldSelectionButton = screen.getByRole("menuitemcheckbox", { name: "Bold" });
     await user.click(boldSelectionButton);
@@ -1122,7 +1122,7 @@ describe("PlatformInstructionsEditor", () => {
     await user.click(screen.getByRole("textbox", { name: "Instructions" }));
     await user.click(screen.getByRole("button", { name: "Insert" }));
     expect(
-      screen.getByRole("menuitem", { name: "Divider" }).querySelector(".lucide-minus"),
+      screen.getByRole("menuitem", { name: "Divider" }).querySelector(".hugeicons-minus"),
     ).not.toBeNull();
     await user.click(screen.getByRole("menuitem", { name: "Divider" }));
 

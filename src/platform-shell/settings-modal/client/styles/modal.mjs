@@ -118,6 +118,18 @@ export const SETTINGS_MODAL_CSS = String.raw`
         margin: 2px 0 0;
       }
 
+      .playground-shell-settings-modal-api-keys-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .playground-shell-settings-modal-api-keys-header .platform-button {
+        flex: 0 0 auto;
+      }
+
       .playground-shell-settings-modal input:not([type]),
       .playground-shell-settings-modal input[type="text"],
       .playground-shell-settings-modal input[type="email"],

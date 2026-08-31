@@ -11,11 +11,11 @@ export {
   type PlatformVersionPublishControlProps,
 } from "./platform-version-publish-control.js";
 export {
-  PlatformVersionChangesPage,
+  PlatformVersionChangesModal,
   type PlatformVersionChangesFile,
-  type PlatformVersionChangesPageProps,
+  type PlatformVersionChangesModalProps,
   type PlatformVersionChangesSelector,
-} from "./platform-version-changes-page.js";
+} from "./platform-version-changes-modal.js";
 export {
   buildPlatformVersionNavigationGuard,
   PlatformVersionNavigationGuardRegistration,

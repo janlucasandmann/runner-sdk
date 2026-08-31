@@ -58,6 +58,7 @@ export interface SecurityRepositoryAccessSettingsProps {
     roleId: SecurityTeamRoleId,
     permissionSet: PlatformPermissionSet,
   ) => void;
+  onPermissionDetailOpenChange?: (open: boolean) => void;
 }
 
 export function SecurityRepositoryAccessSettings({
@@ -72,6 +73,7 @@ export function SecurityRepositoryAccessSettings({
   onAddTeamAccess,
   onRemoveTeamAccess,
   onSaveTeamRolePermissionSet,
+  onPermissionDetailOpenChange,
 }: SecurityRepositoryAccessSettingsProps) {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState<SecurityTeamRoleId>("member");
@@ -136,6 +138,11 @@ export function SecurityRepositoryAccessSettings({
       setSelectedTeamId("");
     }
   }, [selectedTeamId, sharedTeamIdSet]);
+
+  useEffect(() => {
+    onPermissionDetailOpenChange?.(Boolean(selectedTeamId));
+    return () => onPermissionDetailOpenChange?.(false);
+  }, [onPermissionDetailOpenChange, selectedTeamId]);
 
   const selectedTeam =
     selectedTeamId && !isPlatformSystemAccessPrincipalId(selectedTeamId)

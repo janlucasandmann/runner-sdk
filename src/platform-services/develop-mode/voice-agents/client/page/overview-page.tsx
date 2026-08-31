@@ -20,6 +20,7 @@ import type {
   PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
+import { PlatformSettingsSection } from "../../../../../platform-ui/components/composite/settings-section/index.js";
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import {
   PlatformPrimaryButton,
@@ -108,6 +109,7 @@ function VoiceAgentDetailPage({
   const modeLabel = getVoiceModeLabel(row.mode, modeOptions);
   const creator = row.creator || { name: "Unknown", email: "", avatarUrl: "" };
   const owner = row.owner || creator;
+  const VoiceAgentIcon = VOICE_AGENTS_RESOURCE_DEFINITION.icon;
 
   useEffect(() => {
     if (!controlsPortalId || typeof document === "undefined") {
@@ -369,13 +371,103 @@ function VoiceAgentDetailPage({
       </PlatformUiCard>
     </div>
   );
+  const resourceSettings = {
+    ariaLabel: `${row.name} Voice Agent settings`,
+    className: "playground-voice-agent-resource-settings",
+    identity: {
+      icon: <VoiceAgentIcon width={24} height={24} strokeWidth={1.8} />,
+      title: row.name,
+      description: row.description,
+      readOnly: true,
+      titleAriaLabel: "Voice Agent name",
+      descriptionAriaLabel: "Voice Agent description",
+    },
+    details: {
+      variant: "standard" as const,
+      customAttributes: [
+        {
+          id: "status",
+          label: "Status",
+          value: <PlatformLabel variant={statusVariant}>{row.enabled ? "Enabled" : "Disabled"}</PlatformLabel>,
+        },
+        { id: "mode", label: "Mode", value: modeLabel },
+        { id: "model", label: "Model", value: row.model },
+        { id: "voice", label: "Voice", value: row.voiceId || "Default" },
+        { id: "language", label: "Language", value: row.languageHint || "Automatic" },
+        { id: "phone", label: "Phone", value: row.phoneNumber || "Not provisioned" },
+        { id: "agent-id", label: "Agent ID", value: row.id },
+      ],
+      updatedAt: row.updatedAt || row.createdAt || null,
+      creator: {
+        value: creator.id || creator.userId || creator.email || "voice-agent-creator",
+        name: creator.name || creator.email || "Unknown",
+        avatarUrl: creator.avatarUrl,
+      },
+      owner: {
+        value: owner.id || owner.userId || owner.email || "voice-agent-owner",
+        name: owner.name || owner.email || "Unknown",
+        avatarUrl: owner.avatarUrl,
+      },
+      ownerOptions: [{
+        value: owner.id || owner.userId || owner.email || "voice-agent-owner",
+        name: owner.name || owner.email || "Unknown",
+        avatarUrl: owner.avatarUrl,
+      }],
+      ownerSelectorProps: {
+        ariaLabel: "Choose Voice Agent owner",
+        resourceLabel: "Voice Agent",
+        alignment: "end" as const,
+        popupAlignment: "right" as const,
+        fullWidth: true,
+        disabled: true,
+      },
+      scope: {},
+      primaryActions: [
+        {
+          id: "save",
+          label: row.isSaving ? "Saving..." : "Save Changes",
+          onSelect: async () => { await onSave(row); },
+          disabled: Boolean(row.isSaving),
+        },
+        {
+          id: "test",
+          label: row.isTesting ? "Creating Session..." : "Test Voice",
+          onSelect: async () => { await onTest(row); },
+          disabled: Boolean(row.isTesting) || !row.webEnabled,
+        },
+        {
+          id: row.phoneNumber ? "disable-phone" : "provision-phone",
+          label: row.phoneNumber ? "Disable Number" : "Provision Number",
+          onSelect: async () => {
+            if (row.phoneNumber) await onDisablePhone(row);
+            else await onProvision(row);
+          },
+          disabled: row.phoneNumber
+            ? Boolean(row.isDisabling)
+            : Boolean(row.isProvisioning) || !row.phoneEnabled,
+        },
+      ] as const,
+    },
+    additionalSections: settingsContent,
+    access: (
+      <PlatformSettingsSection
+        title="Access"
+        description="Voice sessions inherit access from the underlying Agent. Manage its teams and permissions from the Agent settings page."
+      >
+        <p className="playground-voice-agent-access-copy">
+          This Voice Agent uses the same access boundary as {row.name}.
+        </p>
+      </PlatformSettingsSection>
+    ),
+    detailsSidebarAriaLabel: `${row.name} properties`,
+  };
 
   return (
     <>
       {headerControls}
       <div className="playground-managed-data-detail-main playground-voice-agent-detail-main">
         <DevelopServerDetailPage<VoiceAgentDetailTab>
-          header={(
+          header={activeTab === "settings" ? undefined : (
             <div className="playground-server-detail-profile-section">
               <div className="playground-server-detail-title-row">
                 <h1 className="playground-voice-agent-detail-title">{row.name}</h1>
@@ -385,13 +477,14 @@ function VoiceAgentDetailPage({
           tabs={VOICE_AGENT_DETAIL_TABS}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          settings={resourceSettings}
           tabBarActions={(
             <PlatformSecondaryButton size="small" onClick={onBack}>
               <ArrowLeft width={14} height={14} strokeWidth={1.8} />
               <span>All Voice Agents</span>
             </PlatformSecondaryButton>
           )}
-          sidebarToggle={sidebarToggle}
+          sidebarToggle={activeTab === "settings" ? undefined : sidebarToggle}
           sidebar={sidebar}
           sidebarCollapsed={sidebarCollapsed}
           ariaLabel={`Voice Agent details for ${row.name}`}

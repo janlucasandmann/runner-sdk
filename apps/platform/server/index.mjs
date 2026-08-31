@@ -102,6 +102,7 @@ const {
 });
 const vncWebSocketProxy = createVncWebSocketProxy();
 const {
+  serveAdminAccessDeniedPage,
   serveEnvironmentGuiViewerPage,
   serveFeedbackSummaryPage,
   serveProductUsageSummaryPageV2,
@@ -138,6 +139,7 @@ const platformGateway = createPlatformGateway({
   notionOauthCallbackUri,
   platformOrigin,
   port,
+  serveAdminAccessDeniedPage,
   serveFeedbackSummaryPage,
   serveProductUsageSummaryPageV2,
   shouldForwardLocalCloudApiOverride,

@@ -1,15 +1,19 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { PlatformDataTableColumn } from "../../components/composite/data-table/index.js";
 import {
-  ResourceOverviewCatalogIdentityCell,
-  ResourceOverviewIdentityCell,
-  ResourceOverviewValue,
-} from "./resource-overview-cells.js";
+  formatPlatformResourceUpdatedAt,
+  getPlatformResourceUpdatedTimestamp,
+  type PlatformResourceUpdatedAt,
+} from "../../formatting/index.js";
+import { ResourceOverviewValue } from "./resource-overview-cells.js";
+import {
+  ResourceOverviewStandardCreatorCell,
+  type ResourceOverviewStandardIconStyle,
+  ResourceOverviewStandardNameCell,
+} from "./resource-overview-standard-cells.js";
 
-export type ResourceOverviewUpdatedAt = Date | number | string | null | undefined;
-export type ResourceOverviewIconStyle = CSSProperties & {
-  [property: `--${string}`]: string | number | undefined;
-};
+export type ResourceOverviewUpdatedAt = PlatformResourceUpdatedAt;
+export type ResourceOverviewIconStyle = ResourceOverviewStandardIconStyle;
 
 export interface ResourceOverviewStandardRow {
   name: string;
@@ -33,39 +37,23 @@ export interface ResourceOverviewColumnExtensions<TData> {
   afterUpdated?: readonly PlatformDataTableColumn<TData>[];
 }
 
-export interface CreateResourceOverviewColumnsOptions<
-  TData extends ResourceOverviewStandardRow,
-> {
+export interface ResourceOverviewCreatorResolver<TData> {
+  getName?: (row: TData) => string | null | undefined;
+  getAvatarUrl?: (row: TData) => string | null | undefined;
+  getFallback?: (row: TData) => string | null | undefined;
+}
+
+export interface CreateResourceOverviewColumnsOptions<TData extends ResourceOverviewStandardRow> {
   name: {
     getVisual: (row: TData) => ResourceOverviewNameVisual;
     className?: string;
   };
+  creator?: ResourceOverviewCreatorResolver<TData>;
   extensions?: ResourceOverviewColumnExtensions<TData>;
 }
 
-function getIdentityFallback(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() || "")
-    .join("");
-}
-
-function getUpdatedTimestamp(value: ResourceOverviewUpdatedAt): number {
-  if (value instanceof Date) return value.getTime();
-  if (typeof value === "number") return value;
-  return Date.parse(String(value || ""));
-}
-
-export function formatResourceOverviewUpdatedAt(
-  value: ResourceOverviewUpdatedAt,
-): string {
-  const timestamp = getUpdatedTimestamp(value);
-  if (!Number.isFinite(timestamp) || timestamp <= 0) return "—";
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-    new Date(timestamp),
-  );
+export function formatResourceOverviewUpdatedAt(value: ResourceOverviewUpdatedAt): string {
+  return formatPlatformResourceUpdatedAt(value);
 }
 
 /**
@@ -73,12 +61,18 @@ export function formatResourceOverviewUpdatedAt(
  * columns are deliberately fixed; consumers can add domain columns only via
  * extension slots, which preserves Name, Creator, and Updated everywhere.
  */
-export function createResourceOverviewColumns<
-  TData extends ResourceOverviewStandardRow,
->({
+export function createResourceOverviewColumns<TData extends ResourceOverviewStandardRow>({
   name,
+  creator,
   extensions = {},
 }: CreateResourceOverviewColumnsOptions<TData>): PlatformDataTableColumn<TData>[] {
+  const getCreatorName = (row: TData) => creator?.getName?.(row) ?? row.creatorName;
+  const getCreatorAvatarUrl = (row: TData) => (
+    creator?.getAvatarUrl?.(row) ?? row.creatorAvatarUrl
+  );
+  const getCreatorFallback = (row: TData) => (
+    creator?.getFallback?.(row) ?? row.creatorFallback
+  );
   const nameColumn: PlatformDataTableColumn<TData> = {
     id: "name",
     header: "Name",
@@ -88,7 +82,7 @@ export function createResourceOverviewColumns<
     cell: ({ row }) => {
       const visual = name.getVisual(row);
       return (
-        <ResourceOverviewCatalogIdentityCell
+        <ResourceOverviewStandardNameCell
           title={row.name}
           description={row.description}
           icon={visual.icon}
@@ -102,25 +96,21 @@ export function createResourceOverviewColumns<
   const creatorColumn: PlatformDataTableColumn<TData> = {
     id: "creator",
     header: "Creator",
-    accessor: (row) => row.creatorName || "Unknown",
+    accessor: (row) => getCreatorName(row)?.trim() || "Unknown",
     sortable: true,
     width: "minmax(160px, 0.65fr)",
-    cell: ({ row }) => {
-      const creatorName = row.creatorName?.trim() || "Unknown";
-      return (
-        <ResourceOverviewIdentityCell
-          title={creatorName}
-          imageUrl={row.creatorAvatarUrl || undefined}
-          fallback={row.creatorFallback?.trim() || getIdentityFallback(creatorName)}
-          iconClassName="is-creator"
-        />
-      );
-    },
+    cell: ({ row }) => (
+      <ResourceOverviewStandardCreatorCell
+        name={getCreatorName(row)}
+        avatarUrl={getCreatorAvatarUrl(row)}
+        fallback={getCreatorFallback(row)}
+      />
+    ),
   };
   const updatedColumn: PlatformDataTableColumn<TData> = {
     id: "updated",
     header: "Updated",
-    accessor: (row) => getUpdatedTimestamp(row.updatedAt),
+    accessor: (row) => getPlatformResourceUpdatedTimestamp(row.updatedAt),
     sortable: true,
     sortDescFirst: true,
     width: "minmax(140px, 0.55fr)",

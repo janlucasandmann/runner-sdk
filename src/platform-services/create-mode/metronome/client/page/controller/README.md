@@ -8,6 +8,7 @@ This directory contains interaction controllers and effect orchestration for the
 
 ## Contents
 
+- [`00-thread-command-availability.mjs`](00-thread-command-availability.mjs) — Live validation and workspace-scoped availability checks for thread-trigger commands.
 - [`01-dynamic-content-and-state.mjs`](01-dynamic-content-and-state.mjs) — State and projection logic for 01 Dynamic Content And State.
 - [`02-selection-and-lifecycle.mjs`](02-selection-and-lifecycle.mjs) — Focused implementation of 02 Selection And Lifecycle.
 

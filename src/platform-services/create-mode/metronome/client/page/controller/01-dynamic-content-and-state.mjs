@@ -500,20 +500,20 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
             setMetronomeVersionChangesState(null);
             setIsMetronomeVersionHistorySidebarOpen(true);
           }, [isActiveWorkflowBuiltIn]);
-          const openMetronomeVersionChangesPage = (versionId = "", options = {}) => {
+          const openMetronomeVersionChangesModal = (versionId = "", options = {}) => {
             if (isActiveWorkflowBuiltIn) return;
             const explicitLeftSourceId = String(options.leftSourceId || "").trim();
             const explicitRightSourceId = String(options.rightSourceId || "").trim();
             const fallbackLeftSourceId = getMetronomeVersionCompareSourceId(versionId)
               || getDefaultMetronomeVersionCompareLeftSourceId();
             setSelectedNodeId("");
-            setIsMetronomeVersionHistorySidebarOpen(true);
+            setIsMetronomeVersionHistorySidebarOpen(false);
             setMetronomeVersionChangesState({
               leftSourceId: explicitLeftSourceId || fallbackLeftSourceId,
               rightSourceId: explicitRightSourceId || METRONOME_VERSION_COMPARE_CURRENT_EDITOR_ID,
             });
           };
-          const closeMetronomeVersionChangesPage = () => {
+          const closeMetronomeVersionChangesModal = () => {
             setMetronomeVersionChangesState(null);
           };
           const handleMetronomeVersionCompareSourceChange = (side, sourceId) => {
@@ -1125,7 +1125,7 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               setMetronomePublishState({ status: "validating", message: "Checking workflow before publishing..." });
             }
             try {
-              const validation = await validateMetronomeDefinitionApi(definition, "publish");
+              const validation = await validateMetronomeDefinitionApi(definition, "publish", activeWorkflowId);
               if (!validation.ok) {
                 setMetronomePublishState({
                   status: "error",
@@ -1146,7 +1146,7 @@ export const METRONOME_CONTROLLER_01_FRAGMENT = String.raw`
               setMetronomePublishState(getMetronomePublishErrorState(error));
               return false;
             }
-          }, []);
+          }, [activeWorkflowId]);
 
           const publishActiveWorkflowVersion = useCallback(async (options = {}) => {
             if (!activeWorkflowId || !activeWorkflow) return false;

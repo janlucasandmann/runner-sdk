@@ -1,4 +1,4 @@
-import { Ellipsis, Unplug } from "lucide-react";
+import { Ellipsis, Unplug } from "../../ui/hugeicons-compat.js";
 import { type HTMLAttributes, type ReactNode, useEffect, useRef, useState } from "react";
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
@@ -9,6 +9,8 @@ export interface PlatformConnectorConfigurationProps
   title: ReactNode;
   metadata?: ReactNode;
   children?: ReactNode;
+  surface?: "contained" | "plain";
+  showHeader?: boolean;
   actionLabel?: string;
   disconnectLabel?: string;
   onDisconnect?: () => void | Promise<void>;
@@ -21,6 +23,13 @@ export interface PlatformConnectorConfigurationRowProps
   children?: ReactNode;
   pending?: boolean;
   pendingLabel?: string;
+}
+
+export interface PlatformConnectorConfigurationSectionProps
+  extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  title: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
 }
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -43,6 +52,8 @@ export function PlatformConnectorConfiguration({
   title,
   metadata,
   children,
+  surface = "contained",
+  showHeader = true,
   actionLabel = "Connector actions",
   disconnectLabel = "Disconnect connector",
   onDisconnect,
@@ -95,62 +106,69 @@ export function PlatformConnectorConfiguration({
   return (
     <section
       {...props}
-      className={joinClassNames("platform-connector-configuration", className)}
+      className={joinClassNames(
+        "platform-connector-configuration",
+        surface === "plain" && "is-plain",
+        className,
+      )}
       data-platform-connector-configuration="true"
+      data-platform-connector-configuration-surface={surface}
     >
-      <header className="platform-connector-configuration__header">
-        <div className="platform-connector-configuration__identity">{title}</div>
-        <div className="platform-connector-configuration__header-actions">
-          {metadata ? (
-            <div className="platform-connector-configuration__metadata">{metadata}</div>
-          ) : null}
-          {onDisconnect ? (
-            <PlatformPopup
-              open={menuOpen}
-              variant="minimal"
-              portal
-              placement="bottom-end"
-              animation="down-in"
-              rootRef={menuAnchorRef}
-              surfaceRef={menuSurfaceRef}
-              rootClassName="platform-connector-configuration__menu-anchor"
-              surfaceClassName="platform-connector-configuration__menu"
-              surfaceProps={{
-                role: "menu",
-                "aria-label": actionLabel,
-                width: 214,
-              }}
-              trigger={({ open }) => (
-                <PlatformIconButton
-                  type="button"
-                  size="compact"
-                  active={open}
-                  aria-label={actionLabel}
-                  aria-haspopup="menu"
-                  aria-expanded={open}
-                  disabled={disconnecting}
-                  onClick={() => setMenuOpen((current) => !current)}
-                >
-                  <Ellipsis aria-hidden="true" />
-                </PlatformIconButton>
-              )}
-            >
-              <button
-                type="button"
-                role="menuitem"
-                className="tb-popup-row"
-                disabled={disconnecting}
-                onClick={() => void disconnect()}
+      {showHeader ? (
+        <header className="platform-connector-configuration__header">
+          <div className="platform-connector-configuration__identity">{title}</div>
+          <div className="platform-connector-configuration__header-actions">
+            {metadata ? (
+              <div className="platform-connector-configuration__metadata">{metadata}</div>
+            ) : null}
+            {onDisconnect ? (
+              <PlatformPopup
+                open={menuOpen}
+                variant="minimal"
+                portal
+                placement="bottom-end"
+                animation="down-in"
+                rootRef={menuAnchorRef}
+                surfaceRef={menuSurfaceRef}
+                rootClassName="platform-connector-configuration__menu-anchor"
+                surfaceClassName="platform-connector-configuration__menu"
+                surfaceProps={{
+                  role: "menu",
+                  "aria-label": actionLabel,
+                  width: 214,
+                }}
+                trigger={({ open }) => (
+                  <PlatformIconButton
+                    type="button"
+                    size="compact"
+                    active={open}
+                    aria-label={actionLabel}
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    disabled={disconnecting}
+                    onClick={() => setMenuOpen((current) => !current)}
+                  >
+                    <Ellipsis aria-hidden="true" />
+                  </PlatformIconButton>
+                )}
               >
-                <Unplug className="tb-popup-icon" aria-hidden="true" />
-                <span className="tb-popup-label">
-                  {disconnecting ? "Disconnecting..." : disconnectLabel}
-                </span>
-              </button>
-            </PlatformPopup>
-          ) : null}
-        </div>
-      </header>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="tb-popup-row"
+                  disabled={disconnecting}
+                  onClick={() => void disconnect()}
+                >
+                  <Unplug className="tb-popup-icon" aria-hidden="true" />
+                  <span className="tb-popup-label">
+                    {disconnecting ? "Disconnecting..." : disconnectLabel}
+                  </span>
+                </button>
+              </PlatformPopup>
+            ) : null}
+          </div>
+        </header>
+      ) : null}
       {children}
     </section>
   );
@@ -190,5 +208,36 @@ export function PlatformConnectorConfigurationRow({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Semantic group for one coherent connector policy domain. The section owns
+ * hierarchy and spacing while rows continue to own individual controls.
+ */
+export function PlatformConnectorConfigurationSection({
+  title,
+  description,
+  children,
+  className = "",
+  ...props
+}: PlatformConnectorConfigurationSectionProps) {
+  return (
+    <section
+      {...props}
+      className={joinClassNames(
+        "platform-connector-configuration__section",
+        className,
+      )}
+      data-platform-connector-configuration-section="true"
+    >
+      <header className="platform-connector-configuration__section-heading">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <div className="platform-connector-configuration__section-content">
+        {children}
+      </div>
+    </section>
   );
 }

@@ -6,9 +6,15 @@ export type MetronomeOverviewStatus =
   | "removed"
   | "shared";
 
+export type MetronomeOverviewVisualKind =
+  | "metronome"
+  | "loop"
+  | "mission-control";
+
 export interface MetronomeOverviewRow {
   id: string;
   name: string;
+  description: string;
   searchText?: string;
   status: MetronomeOverviewStatus;
   statusLabel: string;
@@ -17,18 +23,17 @@ export interface MetronomeOverviewRow {
   ownerName: string;
   ownerAvatarUrl?: string;
   ownerFallback?: string;
-  /** @deprecated Transitional compatibility for previously loaded overview bundles. */
-  creatorName?: string;
-  /** @deprecated Transitional compatibility for previously loaded overview bundles. */
+  creatorName: string;
   creatorAvatarUrl?: string;
-  /** @deprecated Transitional compatibility for previously loaded overview bundles. */
   creatorFallback?: string;
+  updatedAt: number;
   lastRunAt?: number;
   sortTimestamp?: number;
   lastRunLabel: string;
   lastRunTitle?: string;
   runsToday: number;
   waitingApprovals: number;
+  visualKind?: MetronomeOverviewVisualKind;
   isBuiltIn?: boolean;
   isTeamShared?: boolean;
   isHiddenTeamShared?: boolean;

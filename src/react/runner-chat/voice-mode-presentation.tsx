@@ -1,7 +1,7 @@
 import {
   AudioLines as LucideAudioLines,
   LoaderCircle as LucideLoaderCircle,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { RunnerVoiceModeState } from "./use-voice-mode-session.js";
 import {
   isRunnerChatWebVoiceMode,

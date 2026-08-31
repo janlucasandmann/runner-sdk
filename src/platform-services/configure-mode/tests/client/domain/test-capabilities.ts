@@ -2,6 +2,7 @@ import type {
   TestCaseDefinition,
   TestCaseKind,
   TestPlanDefinition,
+  TestTargetType,
 } from "./test-types.js";
 
 export type TestCaseExecutionMethod = "command" | "contract" | "agent";
@@ -12,6 +13,10 @@ export type TestCaseTargetKind =
   | "metronome_workflow"
   | "service_topology"
   | "agent";
+export type DeterministicTestTargetKind = Exclude<
+  TestCaseTargetKind,
+  "command" | "agent"
+>;
 export type TestCaseCategory =
   | "smoke"
   | "integration"
@@ -66,8 +71,8 @@ export const TEST_CASE_EXECUTION_OPTIONS: readonly TestCaseExecutionOption[] = [
   {
     value: "command",
     label: "Command",
-    description: "Execute a shell command in a Computer Agents environment and use its real exit code.",
-    trust: "agent_reported",
+    description: "Execute the immutable command in the selected Computer workspace and capture its real exit code.",
+    trust: "verified_worker",
   },
   {
     value: "contract",
@@ -87,7 +92,7 @@ export const TEST_CASE_TYPE_OPTIONS: readonly TestCaseTypeOption[] = [
   {
     value: "command",
     label: "Command",
-    description: "Run a command in a selected Computer Agents environment.",
+    description: "Run an immutable, secret-redacted command in a selected Computer workspace.",
   },
   {
     value: "computer_agents_function",
@@ -151,6 +156,141 @@ export const DETERMINISTIC_TEST_TARGET_OPTIONS = [
 export const DETERMINISTIC_TEST_TARGETS = new Set(
   DETERMINISTIC_TEST_TARGET_OPTIONS.map((option) => option.value),
 );
+
+export interface TestTargetScenarioPolicy {
+  targetType: TestTargetType;
+  scenarioLabel: string;
+  description: string;
+  allowedExecutionMethods: readonly TestCaseExecutionMethod[];
+  allowedContractTargets: readonly DeterministicTestTargetKind[];
+  defaultExecutionMethod: TestCaseExecutionMethod;
+  defaultContractTarget: DeterministicTestTargetKind;
+  forcedCategory?: TestCaseCategory;
+  locked: boolean;
+}
+
+const ALL_EXECUTION_METHODS: readonly TestCaseExecutionMethod[] = [
+  "command",
+  "contract",
+  "agent",
+];
+const ALL_CONTRACT_TARGETS: readonly DeterministicTestTargetKind[] = [
+  "control_plane_readiness",
+  "computer_agents_function",
+  "metronome_workflow",
+  "service_topology",
+];
+
+const TEST_TARGET_SCENARIO_POLICIES: Readonly<Record<TestTargetType, TestTargetScenarioPolicy>> = {
+  function: {
+    targetType: "function",
+    scenarioLabel: "Function request",
+    description: "Invoke the selected Function directly and evaluate its structured response.",
+    allowedExecutionMethods: ["contract"],
+    allowedContractTargets: ["computer_agents_function"],
+    defaultExecutionMethod: "contract",
+    defaultContractTarget: "computer_agents_function",
+    locked: true,
+  },
+  workflow: {
+    targetType: "workflow",
+    scenarioLabel: "Workflow run",
+    description: "Run the selected Metronome workflow, node, or connected slice.",
+    allowedExecutionMethods: ["contract"],
+    allowedContractTargets: ["metronome_workflow"],
+    defaultExecutionMethod: "contract",
+    defaultContractTarget: "metronome_workflow",
+    locked: true,
+  },
+  web_app: {
+    targetType: "web_app",
+    scenarioLabel: "Browser journey",
+    description: "Exercise the selected web app through browser steps and visual evidence.",
+    allowedExecutionMethods: ["agent"],
+    allowedContractTargets: [],
+    defaultExecutionMethod: "agent",
+    defaultContractTarget: "control_plane_readiness",
+    forcedCategory: "browser",
+    locked: true,
+  },
+  repository: {
+    targetType: "repository",
+    scenarioLabel: "Repository command",
+    description: "Run a unit, integration, or end-to-end command in the selected repository workspace.",
+    allowedExecutionMethods: ["command"],
+    allowedContractTargets: [],
+    defaultExecutionMethod: "command",
+    defaultContractTarget: "control_plane_readiness",
+    locked: true,
+  },
+  agent: {
+    targetType: "agent",
+    scenarioLabel: "Agent behavior",
+    description: "Ask the selected Agent to complete a behavior and retain its evidence.",
+    allowedExecutionMethods: ["agent"],
+    allowedContractTargets: [],
+    defaultExecutionMethod: "agent",
+    defaultContractTarget: "control_plane_readiness",
+    forcedCategory: "agent",
+    locked: true,
+  },
+  project: {
+    targetType: "project",
+    scenarioLabel: "Project scenario",
+    description: "Compose command, Function, workflow, browser, and cross-resource scenarios.",
+    allowedExecutionMethods: ALL_EXECUTION_METHODS,
+    allowedContractTargets: ALL_CONTRACT_TARGETS,
+    defaultExecutionMethod: "command",
+    defaultContractTarget: "control_plane_readiness",
+    locked: false,
+  },
+  custom: {
+    targetType: "custom",
+    scenarioLabel: "Custom scenario",
+    description: "Choose the execution adapter that matches this scenario.",
+    allowedExecutionMethods: ALL_EXECUTION_METHODS,
+    allowedContractTargets: ALL_CONTRACT_TARGETS,
+    defaultExecutionMethod: "command",
+    defaultContractTarget: "control_plane_readiness",
+    locked: false,
+  },
+};
+
+export function getTestTargetScenarioPolicy(
+  targetType: TestTargetType,
+): TestTargetScenarioPolicy {
+  return TEST_TARGET_SCENARIO_POLICIES[targetType]
+    || TEST_TARGET_SCENARIO_POLICIES.custom;
+}
+
+export function getTestCaseTypeOptionsForTestTarget(
+  targetType: TestTargetType,
+): readonly TestCaseTypeOption[] {
+  if (targetType === "function") {
+    return TEST_CASE_TYPE_OPTIONS.filter((option) => option.value === "computer_agents_function");
+  }
+  if (targetType === "workflow") {
+    return TEST_CASE_TYPE_OPTIONS.filter((option) => option.value === "metronome_workflow");
+  }
+  if (targetType === "repository") {
+    return TEST_CASE_TYPE_OPTIONS.filter((option) => option.value === "command");
+  }
+  if (targetType === "web_app") {
+    return [{
+      value: "agent",
+      label: "Browser journey",
+      description: "Exercise the selected web app through browser steps and visual evidence.",
+    }];
+  }
+  if (targetType === "agent") {
+    return [{
+      value: "agent",
+      label: "Agent behavior",
+      description: "Verify the behavior of the selected Agent.",
+    }];
+  }
+  return TEST_CASE_TYPE_OPTIONS;
+}
 
 const CATEGORY_VALUES = new Set<TestCaseCategory>(
   TEST_CASE_CATEGORY_OPTIONS.map((option) => option.value),
@@ -217,7 +357,13 @@ export function getDefaultTestCaseRequest(
     return { target, functionId: "", method: "POST", path: "/", body: null };
   }
   if (target === "metronome_workflow") {
-    return { target, workflowId: "", workflowVersionId: null, input: null };
+    return {
+      target,
+      workflowId: "",
+      workflowVersionId: null,
+      input: null,
+      selection: { type: "full" },
+    };
   }
   if (target === "service_topology") {
     return { target, steps: [], stopOnFailure: true };
@@ -259,10 +405,134 @@ export function applyTestCaseTargetKind(
   };
 }
 
+export function configureTestCaseForTestTarget(
+  testCase: TestCaseDefinition,
+  targetType: TestTargetType,
+  targetId: string | null | undefined,
+): TestCaseDefinition {
+  const normalizedTargetId = String(targetId || "").trim();
+  if (targetType === "function") {
+    const next = applyTestCaseTargetKind(testCase, "computer_agents_function");
+    return {
+      ...next,
+      request: {
+        ...asRecord(next.request),
+        target: "computer_agents_function",
+        functionId: normalizedTargetId,
+      },
+    };
+  }
+  if (targetType === "workflow") {
+    const next = applyTestCaseTargetKind(testCase, "metronome_workflow");
+    return {
+      ...next,
+      request: {
+        ...asRecord(next.request),
+        target: "metronome_workflow",
+        workflowId: normalizedTargetId,
+      },
+    };
+  }
+  if (targetType === "web_app") {
+    const next = applyTestCasePresentation(testCase, "agent", "browser");
+    const request = asRecord(next.request);
+    return {
+      ...next,
+      kind: "browser",
+      request: {
+        ...request,
+        startUrl: String(request.startUrl || normalizedTargetId),
+        screenshotMode: String(request.screenshotMode || "on_failure"),
+        instructions: next.command,
+      },
+      agentId: "",
+    };
+  }
+  if (targetType === "repository") {
+    return applyTestCaseTargetKind(testCase, "command");
+  }
+  if (targetType === "agent") {
+    const next = applyTestCasePresentation(testCase, "agent", "agent");
+    return {
+      ...next,
+      kind: "agent",
+      agentId: normalizedTargetId,
+      request: next.command ? { ...asRecord(next.request), instructions: next.command } : {},
+    };
+  }
+  return testCase;
+}
+
+export function validateTestCaseTargetCompatibility(
+  testCase: TestCaseDefinition,
+  targetType: TestTargetType,
+  targetId: string | null | undefined,
+): string {
+  const normalizedTargetId = String(targetId || "").trim();
+  const scenarioTarget = getTestCaseTargetKind(testCase);
+  const request = asRecord(testCase.request);
+  if (targetType === "function") {
+    if (!normalizedTargetId) return "Select the Function this Test protects.";
+    if (
+      scenarioTarget !== "computer_agents_function"
+      || String(request.functionId || "").trim() !== normalizedTargetId
+    ) {
+      return "Function Tests can only contain scenarios bound to the selected Function.";
+    }
+  }
+  if (targetType === "workflow") {
+    if (!normalizedTargetId) return "Select the Metronome workflow this Test protects.";
+    if (
+      scenarioTarget !== "metronome_workflow"
+      || String(request.workflowId || "").trim() !== normalizedTargetId
+    ) {
+      return "Workflow Tests can only contain scenarios bound to the selected workflow.";
+    }
+  }
+  if (targetType === "web_app") {
+    if (scenarioTarget !== "agent" || testCase.kind !== "browser") {
+      return "Web app Tests can only contain browser journey scenarios.";
+    }
+    const startUrl = String(request.startUrl || "").trim();
+    if (normalizedTargetId && startUrl) {
+      try {
+        if (new URL(normalizedTargetId).origin !== new URL(startUrl).origin) {
+          return "Browser scenarios must stay on the selected web app origin.";
+        }
+      } catch {
+        return "The Test target and browser start URL must be valid web URLs.";
+      }
+    }
+  }
+  if (targetType === "repository" && scenarioTarget !== "command") {
+    return "Repository Tests can only contain workspace command scenarios.";
+  }
+  if (targetType === "agent") {
+    if (scenarioTarget !== "agent" || testCase.kind === "browser") {
+      return "Agent Tests can only contain Agent behavior scenarios.";
+    }
+    if (normalizedTargetId && testCase.agentId !== normalizedTargetId) {
+      return "Agent scenarios must remain bound to the selected Agent.";
+    }
+  }
+  return "";
+}
+
 export function getTestCaseExecutionProfile(
   testCase: TestCaseDefinition,
 ): TestCaseExecutionProfile {
   const target = getTestCaseTargetKind(testCase);
+  if (target === "command") {
+    return {
+      method: "deterministic",
+      executor: "platform_worker",
+      label: "Verified command worker",
+      description: "The durable worker executes the exact immutable command in the selected Computer workspace and captures its exit code with secret-redacted evidence.",
+      trust: "verified_worker",
+      requiresEnvironment: true,
+      attestationEligible: true,
+    };
+  }
   if (target === "control_plane_readiness") {
     return {
       method: "deterministic",
@@ -354,9 +624,21 @@ function validateDeterministicRequest(request: Record<string, unknown>): string 
   if (target === "control_plane_readiness") return "";
   if (target === "computer_agents_function") return validateFunctionRequest(request);
   if (target === "metronome_workflow") {
-    return String(request.workflowId || "").trim()
-      ? ""
-      : "Select a Metronome workflow.";
+    if (!String(request.workflowId || "").trim()) {
+      return "Select a Metronome workflow.";
+    }
+    const selection = asRecord(request.selection);
+    const selectionType = String(selection.type || "full").trim().toLowerCase();
+    if (selectionType === "node" && !String(selection.nodeId || "").trim()) {
+      return "Enter the workflow node ID to test.";
+    }
+    if (
+      selectionType === "slice"
+      && !(Array.isArray(selection.nodeIds) && selection.nodeIds.length > 0)
+    ) {
+      return "Enter at least one workflow node ID for the connected slice.";
+    }
+    return "";
   }
   if (target !== "service_topology") {
     return "Choose a supported deterministic target or convert this case to agent-guided verification.";
@@ -387,9 +669,40 @@ function validateDeterministicRequest(request: Record<string, unknown>): string 
   return "";
 }
 
+function validateBrowserRequest(request: Record<string, unknown>): string {
+  const startUrl = String(request.startUrl || "").trim();
+  if (!startUrl) return "Enter the browser journey start URL.";
+  try {
+    const parsed = new URL(startUrl);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return "The browser start URL must use http or https.";
+    }
+  } catch {
+    return "Enter a valid browser start URL.";
+  }
+  const screenshotMode = String(request.screenshotMode || "on_failure");
+  if (!["off", "on_failure", "final", "each_step"].includes(screenshotMode)) {
+    return "Choose a supported screenshot evidence policy.";
+  }
+  const visualComparison = asRecord(request.visualComparison);
+  if (visualComparison.enabled === true) {
+    if (!String(visualComparison.baselineArtifactUri || "").trim()) {
+      return "Select a baseline artifact for visual comparison.";
+    }
+    const maxDiffPercent = Number(visualComparison.maxDiffPercent ?? 0.1);
+    if (!Number.isFinite(maxDiffPercent) || maxDiffPercent < 0 || maxDiffPercent > 100) {
+      return "Visual difference tolerance must be between 0 and 100 percent.";
+    }
+  }
+  return "";
+}
+
 export function isSupportedDeterministicTestCase(testCase: TestCaseDefinition): boolean {
-  return testCase.enabled !== false
-    && testCase.kind === "contract"
+  if (testCase.enabled === false) return false;
+  if (getTestCaseTargetKind(testCase) === "command") {
+    return Boolean(testCase.command.trim());
+  }
+  return testCase.kind === "contract"
     && !validateDeterministicRequest(asRecord(testCase.request));
 }
 
@@ -404,6 +717,9 @@ export function validateTestCaseConfiguration(testCase: TestCaseDefinition): str
   }
   if (target === "agent" && !testCase.command.trim()) {
     return "Describe the verification workflow for the executor agent.";
+  }
+  if (target === "agent" && testCase.kind === "browser") {
+    return validateBrowserRequest(request);
   }
   return [
     "computer_agents_function",
@@ -422,7 +738,12 @@ export function getTestPlanExecutionProfile(
   const agentCount = enabledCases.length - deterministicCount;
   if (enabledCases.length > 0 && agentCount === 0) {
     const attestationEligible = deterministicCases.every(
-      (testCase) => getTestCaseTargetKind(testCase) === "control_plane_readiness",
+      (testCase) => ["command", "control_plane_readiness"].includes(
+        getTestCaseTargetKind(testCase),
+      ),
+    );
+    const requiresEnvironment = deterministicCases.some(
+      (testCase) => getTestCaseTargetKind(testCase) === "command",
     );
     return {
       method: "deterministic",
@@ -431,7 +752,7 @@ export function getTestPlanExecutionProfile(
         ? "Every enabled case is executed directly and can receive independently verified readiness evidence."
         : "Every enabled case is executed directly by a supported deterministic adapter without an LLM.",
       trust: attestationEligible ? "verified_worker" : "runner_captured",
-      requiresEnvironment: false,
+      requiresEnvironment,
     };
   }
   if (deterministicCount > 0 && agentCount > 0) {

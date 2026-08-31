@@ -106,7 +106,7 @@ export function parseTestPlanDefinition(value: string): ParsedTestPlanDefinition
     ) {
       return {
         definition: null,
-        error: "Test lifecycle commands are not supported. Model preparation and cleanup as explicit test cases.",
+        error: "Test lifecycle commands are not supported. Model preparation and cleanup as explicit scenarios.",
       };
     }
     return {

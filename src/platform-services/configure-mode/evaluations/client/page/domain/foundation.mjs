@@ -171,6 +171,37 @@ export const EVALUATIONS_PAGE_FOUNDATION_SCRIPT = String.raw`
         return String(identity.name || identity.email || identity.id || identity.userId || "").trim();
       }
 
+      function resolvePlaygroundEvaluationCreatorIdentity(source = {}, knownIdentities = []) {
+        const creator = getPlaygroundEvaluationCreatorIdentity(source);
+        const creatorKeys = new Set([
+          creator.userId,
+          creator.email,
+          creator.id,
+        ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean));
+        const candidates = (Array.isArray(knownIdentities) ? knownIdentities : [knownIdentities])
+          .map((identity) => normalizePlaygroundEvaluationPersonIdentity(identity))
+          .filter((identity) => identity.id || identity.userId || identity.email || identity.name);
+        const matchingIdentity = candidates.find((identity) => {
+          const identityKeys = [identity.userId, identity.email, identity.id]
+            .map((value) => String(value || "").trim().toLowerCase())
+            .filter(Boolean);
+          if (identityKeys.some((key) => creatorKeys.has(key))) return true;
+          const creatorName = String(creator.name || "").trim().toLowerCase();
+          const identityName = String(identity.name || "").trim().toLowerCase();
+          return Boolean(!creatorKeys.size && creatorName && identityName && creatorName === identityName);
+        });
+        if (!matchingIdentity) return creator;
+        const creatorName = String(creator.name || "").trim();
+        const creatorNameIsIdentifier = creatorKeys.has(creatorName.toLowerCase());
+        return {
+          id: creator.id || matchingIdentity.id,
+          userId: creator.userId || matchingIdentity.userId,
+          name: matchingIdentity.name || (creatorNameIsIdentifier ? "" : creatorName),
+          email: matchingIdentity.email || creator.email,
+          avatarUrl: matchingIdentity.avatarUrl || creator.avatarUrl,
+        };
+      }
+
       function normalizePlaygroundEvaluationOptimizationRole(value) {
         const role = String(value || "").trim().toLowerCase();
         return role === "validation" || role === "holdout" ? role : "train";

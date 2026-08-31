@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Check } from "lucide-react";
+import { Check } from "../../ui/hugeicons-compat.js";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";
 import {
   formatPlatformVersionLabel,

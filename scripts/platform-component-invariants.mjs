@@ -22,6 +22,7 @@ const compositeComponents = [
   "code-editor-workspace",
   "code-preview-box",
   "connector-action-detail",
+  "connector-settings",
   "data-table",
   "deployment-map",
   "detail-sidebar",
@@ -159,6 +160,7 @@ const canonicalExports = new Map([
     "./platform-ui/components/ui/icon-button",
     "./dist/platform-ui/components/ui/icon-button/index.js",
   ],
+  ["./platform-ui/components/ui/input", "./dist/platform-ui/components/ui/input/index.js"],
   ["./platform-ui/components/ui/label", "./dist/platform-ui/components/ui/label/index.js"],
   [
     "./platform-ui/components/ui/version-label",
@@ -195,6 +197,10 @@ const canonicalExports = new Map([
   [
     "./platform-ui/components/composite/connector-action-detail",
     "./dist/platform-ui/components/composite/connector-action-detail/index.js",
+  ],
+  [
+    "./platform-ui/components/composite/connector-settings",
+    "./dist/platform-ui/components/composite/connector-settings/index.js",
   ],
   [
     "./platform-ui/components/composite/data-table",

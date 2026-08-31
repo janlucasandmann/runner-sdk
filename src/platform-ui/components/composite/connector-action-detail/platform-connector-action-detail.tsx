@@ -8,7 +8,7 @@ import {
   Plus,
   Search,
   Trash2,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { CSSProperties } from "react";
 
 import { PlatformLabel, type PlatformLabelVariant } from "../../ui/label/index.js";

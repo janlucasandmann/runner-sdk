@@ -422,6 +422,14 @@ export function createPlatformConfig(env = process.env) {
     ? configuredRuntimeEnvFiles
     : [
         path.join(aiosHostingRoot, ".env.local"),
+        ...(env.NODE_ENV === "development"
+          || deploymentStage === "dev"
+          || isLocalOrigin(platformOrigin)
+          ? [
+              path.join(aiosHostingRoot, ".env.development"),
+              path.join(aiosHostingRoot, ".env.dev"),
+            ]
+          : []),
         path.join(aiosHostingRoot, ".env.production"),
         path.join(aiosHostingRoot, ".env"),
         path.join(cloudInfrastructureRoot, ".env"),

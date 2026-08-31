@@ -166,6 +166,8 @@ describe("KnowledgeOverviewPage", () => {
     ).toEqual(["", "Name", "Documents", "Creator", "Updated", ""]);
     expect(screen.getByText("Shared product conventions and decisions.")).not.toBeNull();
     expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
     expect(screen.getByPlaceholderText("Search knowledge libraries")).not.toBeNull();
     expect(screen.queryByRole("columnheader", { name: "Version" })).toBeNull();
   });
@@ -202,7 +204,7 @@ describe("KnowledgeOverviewPage", () => {
     expect(loadingState.classList.contains("is-centered")).toBe(true);
     expect(
       container.querySelector(
-        '.platform-data-table__state.has-custom-loading-state img[src="/img/spinner.svg"]',
+        '.platform-data-table__state.has-loading-state img[src="/img/spinner.svg"]',
       ),
     ).not.toBeNull();
   });

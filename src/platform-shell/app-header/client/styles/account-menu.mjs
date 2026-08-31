@@ -7,7 +7,7 @@ export const APP_HEADER_ACCOUNT_MENU_CSS = `      .account-menu {
       }
 
       .account-menu.is-sidebar-open {
-        left: 14px;
+        left: 11px;
         bottom: 80px;
       }
 
@@ -21,6 +21,14 @@ export const APP_HEADER_ACCOUNT_MENU_CSS = `      .account-menu {
 
       .account-menu.is-top-nav[data-platform-popup-animation] {
         transform-origin: top right;
+      }
+
+      .account-menu[data-platform-popup-animation="up-in"] {
+        animation: platform-popup-up-in 120ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+      }
+
+      .account-menu[data-platform-popup-animation="up-out"] {
+        animation: platform-popup-up-out 120ms cubic-bezier(0.4, 0, 1, 1) both !important;
       }
 
       .account-menu-account-button {
@@ -60,8 +68,8 @@ export const APP_HEADER_ACCOUNT_MENU_CSS = `      .account-menu {
 
       .account-menu-account-name {
         min-width: 0;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 12px;
+        font-weight: 400;
         color: rgba(255, 255, 255, 0.96);
         white-space: nowrap;
         overflow: hidden;
@@ -70,7 +78,7 @@ export const APP_HEADER_ACCOUNT_MENU_CSS = `      .account-menu {
 
       .account-menu-account-email {
         min-width: 0;
-        font-size: 12px;
+        font-size: 10px;
         font-weight: 400;
         color: rgba(255, 255, 255, 0.6);
         white-space: nowrap;
@@ -87,7 +95,7 @@ export const APP_HEADER_ACCOUNT_MENU_CSS = `      .account-menu {
 
       .account-menu-divider {
         height: 1px;
-        margin: 4px 0;
+        margin: 0;
         background: rgba(255, 255, 255, 0.1);
       }
 
@@ -130,8 +138,8 @@ export const APP_HEADER_ACCOUNT_MENU_CSS = `      .account-menu {
 
       .account-menu-item-label {
         flex: 1;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 12px;
+        font-weight: 400;
       }
 
       .account-menu-item-copy {

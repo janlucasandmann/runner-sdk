@@ -1,6 +1,7 @@
-import { Check, Copy, Loader2 } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
   PlatformPrimaryButton,
@@ -33,6 +34,8 @@ export function ApiKeyCreateDialog({
   const [description, setDescription] = useState("");
   const [scopePresetId, setScopePresetId] = useState<ApiKeyScopePresetId>("full");
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const descriptionEditorRef = useRef<HTMLElement>(null);
+  const canCreate = Boolean(name.trim()) && !submitting;
 
   useEffect(() => {
     if (!open) return;
@@ -43,6 +46,7 @@ export function ApiKeyCreateDialog({
 
   const handleSubmit = (event: FormEvent<HTMLElement>) => {
     event.preventDefault();
+    if (!canCreate) return;
     const scope = getApiKeyScopePreset(scopePresetId);
     void onSubmit({
       name,
@@ -64,11 +68,53 @@ export function ApiKeyCreateDialog({
       closeButtonDisabled={submitting}
       initialFocusRef={nameInputRef}
       as="form"
-      size="medium"
-      className="platform-api-key-management-modal"
-      bodyClassName="platform-api-key-management-modal__body"
+      size="large"
+      maxHeight="80vh"
+      headerVariant="search"
+      headerLeading={(
+        <span className="platform-api-key-create-modal__icon" aria-hidden="true">
+          <KeyRound width={16} height={16} strokeWidth={1.9} />
+        </span>
+      )}
+      headerSearchProps={{
+        icon: null,
+        inputRef: nameInputRef,
+        value: name,
+        placeholder: "API key name",
+        "aria-label": "API key name",
+        autoComplete: "off",
+        required: true,
+        onChange: (event) => setName(event.target.value),
+        onKeyDown: (event) => {
+          if (
+            event.key !== "Tab"
+            || event.shiftKey
+            || event.altKey
+            || event.ctrlKey
+            || event.metaKey
+          ) {
+            return;
+          }
+          event.preventDefault();
+          descriptionEditorRef.current?.focus({ preventScroll: true });
+        },
+      }}
+      className="platform-api-key-management-modal platform-api-key-create-modal"
+      bodyClassName="platform-api-key-management-modal__body platform-api-key-create-modal__body"
+      footerClassName="platform-api-key-create-modal__footer"
+      closeButtonLabel="Close API key creator"
       surfaceProps={{
         onSubmit: handleSubmit,
+        onKeyDown: (event) => {
+          if (
+            (event.metaKey || event.ctrlKey)
+            && event.key === "Enter"
+            && canCreate
+          ) {
+            event.preventDefault();
+            (event.currentTarget as HTMLFormElement).requestSubmit();
+          }
+        },
       }}
       footer={
         <>
@@ -80,7 +126,7 @@ export function ApiKeyCreateDialog({
           >
             Cancel
           </PlatformSecondaryButton>
-          <PlatformPrimaryButton size="medium" type="submit" disabled={submitting || !name.trim()}>
+          <PlatformPrimaryButton size="medium" type="submit" disabled={!canCreate}>
             {submitting ? (
               <>
                 <Loader2
@@ -98,27 +144,20 @@ export function ApiKeyCreateDialog({
         </>
       }
     >
-      <label className="platform-api-key-management-field">
-        <span>Name</span>
-        <input
-          ref={nameInputRef}
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="e.g. Development Key"
-          autoComplete="off"
-          required
-        />
-      </label>
-      <label className="platform-api-key-management-field">
-        <span>
-          Description <em>optional</em>
-        </span>
-        <textarea
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          placeholder="e.g. For local development and testing"
-        />
-      </label>
+      <PlatformInstructionsEditor
+        value={description}
+        onChange={(nextDescription) => setDescription(nextDescription.slice(0, 4_000))}
+        title="Description"
+        placeholder="Describe where this key will be used."
+        ariaLabel="API key description"
+        readOnly={submitting}
+        stickyHeader={false}
+        historyKey="api-key-create-description"
+        variant="minimalistic-ui"
+        contentVariant="text"
+        editorRef={descriptionEditorRef}
+        className="platform-api-key-create-modal__description-editor"
+      />
       <fieldset className="platform-api-key-management-scopes">
         <legend>Permissions</legend>
         {API_KEY_SCOPE_PRESETS.map((preset) => (

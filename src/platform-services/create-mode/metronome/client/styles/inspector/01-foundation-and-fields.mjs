@@ -190,11 +190,6 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
         line-height: 1.45;
       }
 
-      .playground-metronome-select option {
-        background: #171718;
-        color: #fff;
-      }
-
       .playground-metronome-media-switch {
         width: 100%;
         min-height: 34px;
@@ -301,7 +296,8 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
       }
 
       .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-input),
-      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-select) {
+      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-select),
+      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-inspector-central-selector) {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
@@ -309,12 +305,14 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
         padding-bottom: 8px;
       }
 
-      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-node-type-field:has(> .playground-metronome-select) {
+      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-node-type-field:has(> .playground-metronome-select),
+      .playground-metronome-node-inspector .playground-metronome-field.playground-metronome-node-type-field:has(> .playground-metronome-inspector-central-selector) {
         padding-bottom: 24px;
       }
 
       .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-input) > .playground-metronome-field-label,
-      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-select) > .playground-metronome-field-label {
+      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-select) > .playground-metronome-field-label,
+      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-inspector-central-selector) > .playground-metronome-field-label {
         flex: 0 0 50px;
         min-width: 50px;
         color: rgba(255, 255, 255, 0.92);
@@ -360,8 +358,7 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
         white-space: nowrap;
       }
 
-      .playground-metronome-node-inspector .playground-metronome-firecrawl-source-field:has(> .playground-metronome-select) > .playground-metronome-field-label,
-      .playground-metronome-node-inspector .playground-metronome-firecrawl-fallback-field:has(> .playground-metronome-input) > .playground-metronome-field-label {
+      .playground-metronome-node-inspector .playground-metronome-firecrawl-source-field:has(> .playground-metronome-select) > .playground-metronome-field-label {
         flex-basis: 112px;
         min-width: 112px;
         white-space: nowrap;
@@ -412,8 +409,7 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
       }
 
       .playground-metronome-function-header-row .playground-metronome-input,
-      .playground-metronome-function-header-row .playground-metronome-select,
-      .playground-metronome-function-header-row .playground-metronome-custom-select-trigger {
+      .playground-metronome-function-header-row .playground-metronome-select {
         width: 100%;
         min-width: 0;
         height: 30px;
@@ -424,11 +420,6 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
         font-size: 12px;
         line-height: 30px;
         text-align: left;
-      }
-
-      .playground-metronome-function-header-row .playground-metronome-custom-select-trigger {
-        justify-content: space-between;
-        gap: 8px;
       }
 
       .playground-metronome-function-header-delete {
@@ -503,175 +494,95 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
       .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-select) > .playground-metronome-select {
         background: transparent;
         border-radius: 0;
-        padding: 0 18px 0 8px;
+        padding: 0 0 0 8px;
         text-align: right;
         text-align-last: right;
         color: rgba(255, 255, 255, 0.82);
       }
 
-      .playground-metronome-node-inspector .playground-metronome-field:has(> .playground-metronome-custom-select-trigger) > .playground-metronome-custom-select-trigger {
-        width: auto;
+      .playground-metronome-inspector-central-selector {
         min-width: 0;
-        max-width: calc(100% - 64px);
+        --platform-control-height: 30px;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-field > .playground-metronome-inspector-central-selector {
+        width: 0;
+        min-width: 0;
+        max-width: none;
+        height: auto;
+        flex: 1 1 0%;
+        align-self: stretch;
         margin-left: auto;
         padding: 0;
         border: 0;
+        border-radius: 0;
         background: transparent;
-        color: rgba(255, 255, 255, 0.82);
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 0;
-        cursor: pointer;
-        font: inherit;
-        font-size: 12px;
-        line-height: 30px;
-        text-align: right;
-        appearance: none;
-        -webkit-appearance: none;
-      }
-
-      .playground-metronome-custom-select-trigger:disabled {
-        cursor: default;
-        opacity: 0.55;
-      }
-
-      .playground-metronome-custom-select-trigger-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .playground-metronome-custom-select-trigger-icon {
-        flex: 0 0 auto;
-        margin-left: 12px;
-        color: rgba(255, 255, 255, 0.48);
-      }
-
-      .playground-metronome-inspector-select-popup {
-        --platform-popup-padding: 7px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        transform-origin: top right;
-      }
-
-      .playground-metronome-inspector-select-search {
-        height: 34px;
-        flex: 0 0 auto;
-        border: none;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.35);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 10px;
-        color: rgba(255, 255, 255, 0.64);
-      }
-
-      .playground-metronome-inspector-select-search input {
-        min-width: 0;
-        flex: 1 1 auto;
-        border: 0;
-        outline: none;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.9);
-        font: inherit;
-        font-size: 12px;
-      }
-
-      .playground-metronome-inspector-select-search input::placeholder {
-        color: rgba(255, 255, 255, 0.48);
-      }
-
-      .playground-metronome-inspector-select-list {
-        margin-top: 7px;
-        min-height: 0;
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        overflow: auto;
-        padding-bottom: 1px;
-        scrollbar-width: none;
-      }
-
-      .playground-metronome-inspector-select-list::-webkit-scrollbar {
-        display: none;
-      }
-
-      .playground-metronome-inspector-select-option {
-        width: 100%;
-        height: auto;
-        min-height: 0;
-        flex: 0 0 auto;
-        box-sizing: border-box;
-        border: 0;
-        border-radius: 10px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.82);
-        display: flex;
-        gap: 7px;
-        align-items: flex-start;
-        padding: 7px 8px;
-        text-align: left;
-        cursor: pointer;
-        font: inherit;
         line-height: normal;
       }
 
-      .playground-metronome-inspector-select-option:hover,
-      .playground-metronome-inspector-select-option:focus-visible,
-      .playground-metronome-inspector-select-option.is-selected {
-        background: rgba(255, 255, 255, 0.12);
-        outline: none;
+      .playground-metronome-node-inspector .playground-metronome-field > .playground-metronome-inspector-central-selector .playground-metronome-inspector-central-selector-trigger {
+        width: 100%;
+        min-width: 0;
+        min-height: 30px;
+        justify-content: flex-end;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 30px;
+        text-align: right;
       }
 
-      .playground-metronome-inspector-select-option-check {
-        color: rgba(255, 255, 255, 0.86);
-        line-height: 1;
+      .playground-metronome-node-inspector .playground-metronome-field > .playground-metronome-inspector-central-selector .platform-selector__value {
+        max-width: calc(100% - 18px);
+        justify-content: flex-end;
+      }
+
+      .playground-metronome-inspector-selector-selection {
+        min-width: 0;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 15px;
-        padding-top: 0;
+        justify-content: flex-end;
+        gap: 7px;
       }
 
-      .playground-metronome-inspector-select-option-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
+      .playground-metronome-inspector-selector-selection-leading {
+        display: inline-flex;
+        flex: 0 0 auto;
       }
 
-      .playground-metronome-inspector-select-option-label {
+      .playground-metronome-inspector-selector-selection-label {
         min-width: 0;
         overflow: hidden;
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 12px;
-        line-height: 1.25;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .playground-metronome-inspector-select-option-description {
-        display: block;
-        margin-top: 4px;
-        color: rgba(255, 255, 255, 0.48);
-        font-size: 11px;
-        line-height: 1.3;
-        white-space: normal;
-        overflow-wrap: anywhere;
+      .playground-metronome-node-inspector .playground-metronome-inspector-selector-field {
+        flex: 0 0 auto;
+        align-self: stretch;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 0;
+        padding: 0 0 8px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        overflow: visible;
+        box-sizing: border-box;
       }
 
-      .playground-metronome-inspector-select-empty {
-        padding: 14px 9px 12px;
-        color: rgba(255, 255, 255, 0.48);
+      .playground-metronome-node-inspector .playground-metronome-inspector-selector-field > .playground-metronome-field-label {
+        flex: 0 0 64px;
+        min-width: 64px;
+        min-height: 0;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.92);
         font-size: 12px;
-        line-height: 1.4;
+        font-weight: 400;
+        line-height: 1.3;
+        white-space: nowrap;
       }
 
       .playground-metronome-email-address-control {
@@ -829,43 +740,8 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
       }
 
       .playground-metronome-schedule-popover {
-        position: fixed;
         width: min(320px, calc(100vw - 40px));
         overflow: hidden;
-        z-index: 100001;
-        transform-origin: top right;
-      }
-
-      .playground-metronome-schedule-popover-header {
-        height: 44px;
-        display: grid;
-        grid-template-columns: 40px minmax(0, 1fr) 40px;
-        align-items: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .playground-metronome-schedule-popover-title {
-        color: rgba(255, 255, 255, 0.94);
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 1.2;
-        text-align: center;
-      }
-
-      .playground-metronome-schedule-popover-action {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.84);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      }
-
-      .playground-metronome-schedule-popover-action:hover {
-        color: rgba(255, 255, 255, 0.98);
       }
 
       .playground-metronome-schedule-popover-body {
@@ -1055,6 +931,29 @@ export const METRONOME_INSPECTOR_CSS_01_FRAGMENT = String.raw`
         color: rgba(255, 255, 255, 0.42);
         font-size: 12px;
         line-height: 1.4;
+      }
+
+      .playground-metronome-node-inspector .playground-metronome-thread-command-field {
+        flex-wrap: wrap;
+      }
+
+      .playground-metronome-thread-command-status {
+        width: calc(100% - 64px);
+        margin: -2px 0 0 auto;
+        color: rgba(255, 255, 255, 0.48);
+        font-size: 11px;
+        line-height: 1.35;
+        text-align: right;
+      }
+
+      .playground-metronome-thread-command-status.is-available {
+        color: rgba(108, 219, 160, 0.86);
+      }
+
+      .playground-metronome-thread-command-status.is-taken,
+      .playground-metronome-thread-command-status.is-invalid,
+      .playground-metronome-thread-command-status.is-error {
+        color: rgba(255, 118, 118, 0.86);
       }
 
       .playground-metronome-firecrawl-credential-hint.playground-metronome-field-hint {

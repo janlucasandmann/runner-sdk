@@ -26,13 +26,21 @@ const renderers = createAdminPageRenderers({
   feedbackSummaryAllowedEmail: "operator@example.test",
 });
 
-for (const renderer of Object.values(renderers)) {
+for (const [name, renderer] of Object.entries(renderers)) {
   const response = render(renderer);
-  assert.equal(response.statusCode, 200);
+  assert.equal(
+    response.statusCode,
+    name === "serveAdminAccessDeniedPage" ? 403 : 200,
+  );
   assert.equal(response.headers["Content-Type"], "text/html; charset=utf-8");
   assert.match(response.body, /<!doctype html>/i);
   assert.doesNotMatch(response.body, /__PLATFORM_[A-Z_]+__/);
 }
+
+assert.match(
+  render(renderers.serveAdminAccessDeniedPage).body,
+  /This account does not have access/,
+);
 
 assert.match(
   render(renderers.serveFeedbackSummaryPage).body,

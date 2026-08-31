@@ -6,7 +6,10 @@ import { userEvent } from "@testing-library/user-event";
 import { AgentsOverviewPage } from "../../../platform-resources/agents/overview/agents-overview-page.js";
 import { ComputersOverviewPage } from "../../../platform-resources/computers/overview/computers-overview-page.js";
 import { PluginsOverviewPage } from "../../../platform-resources/plugins/overview/plugins-overview-page.js";
-import { SkillsOverviewPage } from "../../../platform-resources/skills/overview/skills-overview-page.js";
+import {
+  SkillsOverviewPage,
+  type SkillOverviewRow,
+} from "../../../platform-resources/skills/overview/skills-overview-page.js";
 import { TagsOverviewPage } from "../../../platform-resources/tags/overview/tags-overview-page.js";
 import { ResourceOverviewPage } from "./resource-overview-page.js";
 import type { ResourceOverviewAnalyticsModel } from "./resource-overview-types.js";
@@ -319,6 +322,100 @@ describe("resource overview pages", () => {
         .getByRole("button", { name: "Manage Repos" })
         .querySelector("svg"),
     ).toBeNull();
+  });
+
+  it("provides the canonical resource action set while preserving domain callbacks", async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    const onOpen = vi.fn();
+    const onRename = vi.fn();
+    const onDuplicate = vi.fn();
+    const onExport = vi.fn();
+    const onDelete = vi.fn();
+    render(
+      <ResourceOverviewPage<{ id: string; name: string }>
+        showPeriodSelector={false}
+        heroContent={<div>Overview</div>}
+        table={{
+          rows: [{ id: "resource-1", name: "Resource One" }],
+          columns: [{ id: "name", header: "Name", accessor: "name" }],
+          getRowId: (row) => row.id,
+          getRowAriaLabel: (row) => row.name,
+          ariaLabel: "Resources",
+          onRowActivate: onOpen,
+          getRowActions: () => [
+            { id: "edit", label: "Edit draft", onSelect: onEdit },
+            { id: "open", label: "Open", onSelect: onOpen },
+            { id: "rename", label: "Rename", onSelect: onRename },
+            { id: "copy", label: "Copy", onSelect: onDuplicate },
+            { id: "export", label: "Export", onSelect: onExport },
+            { id: "delete", label: "Remove", onSelect: onDelete },
+          ],
+        }}
+      />,
+    );
+
+    const actionTrigger = screen.getByRole("button", {
+      name: "Open actions for Resource One",
+    });
+    await user.click(actionTrigger);
+
+    const menu = screen.getByRole("menu");
+    expect(within(menu).getByRole("menuitem", { name: "Edit" })).not.toBeNull();
+    expect(within(menu).getByRole("menuitem", { name: "Duplicate" })).not.toBeNull();
+    expect(
+      (within(menu).getByRole("menuitem", { name: "Share" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(within(menu).queryByRole("menuitem", { name: "Open" })).toBeNull();
+    expect(within(menu).queryByRole("menuitem", { name: "Rename" })).toBeNull();
+    expect(within(menu).getByRole("menuitem", { name: "Export" })).not.toBeNull();
+    const deleteAction = within(menu).getByRole("menuitem", { name: "Delete" });
+    expect(deleteAction.classList.contains("is-delete")).toBe(true);
+
+    await user.click(within(menu).getByRole("menuitem", { name: "Duplicate" }));
+    expect(onDuplicate).toHaveBeenCalledOnce();
+
+    await user.click(actionTrigger);
+    await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+    expect(onEdit).toHaveBeenCalledOnce();
+    expect(onOpen).not.toHaveBeenCalled();
+    expect(onRename).not.toHaveBeenCalled();
+
+    await user.click(actionTrigger);
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(onDelete).toHaveBeenCalledOnce();
+  });
+
+  it("allows specialized non-resource tables to opt out of canonical actions", async () => {
+    const user = userEvent.setup();
+    render(
+      <ResourceOverviewPage<{ id: string; name: string }>
+        rowActionMode="custom"
+        showPeriodSelector={false}
+        heroContent={<div>Overview</div>}
+        table={{
+          rows: [{ id: "key-1", name: "API Key" }],
+          columns: [{ id: "name", header: "Name", accessor: "name" }],
+          getRowId: (row) => row.id,
+          getRowAriaLabel: (row) => row.name,
+          ariaLabel: "API Keys",
+          getRowActions: () => [
+            { id: "view-key", label: "View key", onSelect: vi.fn() },
+            { id: "delete", label: "Delete", onSelect: vi.fn() },
+          ],
+        }}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for API Key" }),
+    );
+    expect(screen.getByRole("menuitem", { name: "View key" })).not.toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).not.toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Duplicate" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Share" })).toBeNull();
   });
 
   it("can place the timeframe in a centered portal without moving header actions", () => {
@@ -709,13 +806,14 @@ describe("resource overview pages", () => {
     const onModeChange = vi.fn();
     const onCreate = vi.fn();
     const onOpen = vi.fn();
-    const rows = [
+    const rows: SkillOverviewRow[] = [
       {
         id: "computer_agents",
         name: "Computer Agents Skill",
         description: "Browse and interact with websites.",
         isActive: true,
         isCustom: false,
+        updatedAt: Date.parse("2026-08-29T08:00:00.000Z"),
         updatedLabel: "System",
       },
       {
@@ -724,10 +822,12 @@ describe("resource overview pages", () => {
         description: "Apply the organization audit workflow.",
         isActive: true,
         isCustom: true,
+        iconColor: "#7c3aed",
         creatorName: "Jane Doe",
         creatorAvatarUrl: "/img/people/jane.jpg",
         ownerName: "Grace Hopper",
         ownerAvatarUrl: "/img/people/grace.jpg",
+        updatedAt: Date.parse("2026-08-30T08:00:00.000Z"),
         updatedLabel: "Today",
       },
     ];
@@ -744,7 +844,7 @@ describe("resource overview pages", () => {
       onDelete: vi.fn(),
       selection: {
         enabled: true,
-        ariaLabel: (row: (typeof rows)[number]) => `Select ${row.name}`,
+        ariaLabel: (row: SkillOverviewRow) => `Select ${row.name}`,
       },
     };
     const { container } = render(
@@ -801,8 +901,8 @@ describe("resource overview pages", () => {
       within(table).queryByRole("columnheader", { name: "Status" }),
     ).toBeNull();
     expect(
-      within(table).getByRole("columnheader", { name: "Owner" }),
-    ).not.toBeNull();
+      within(table).getAllByRole("columnheader").map((header) => header.textContent),
+    ).toEqual(["", "Name", "Creator", "Updated", ""]);
     expect(
       within(screen.getByRole("row", { name: "Computer Agents Skill" }))
         .getByText("Computer Agents")
@@ -812,11 +912,14 @@ describe("resource overview pages", () => {
     ).toBe("/img/agent-profile-pics/ca-profilepic.jpg");
     expect(
       within(screen.getByRole("row", { name: "Audit" }))
-        .getByText("Grace Hopper")
+        .getByText("Jane Doe")
         ?.closest(".resource-overview-identity")
         ?.querySelector("img")
         ?.getAttribute("src"),
-    ).toBe("/img/people/grace.jpg");
+    ).toBe("/img/people/jane.jpg");
+    expect(screen.queryByText("Grace Hopper")).toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
     expect(
       screen
         .getByRole("row", { name: "Computer Agents Skill" })
@@ -829,6 +932,12 @@ describe("resource overview pages", () => {
         ".resource-overview-identity__visual.is-skill",
       ),
     ).toHaveLength(2);
+    expect(
+      screen
+        .getByRole("row", { name: "Audit" })
+        .querySelector<HTMLElement>(".resource-overview-identity__visual.is-skill")
+        ?.style.getPropertyValue("--resource-overview-skill-icon-color"),
+    ).toBe("#7c3aed");
     expect(
       within(table)
         .getAllByRole("button", {
@@ -888,11 +997,36 @@ describe("resource overview pages", () => {
 
     expect(container.querySelector(".platform-empty-state")).not.toBeNull();
     expect(
-      container.querySelector(".platform-empty-state__icon.lucide-square-mouse-pointer"),
+      container.querySelector(".platform-empty-state__icon.hugeicons-square-mouse-pointer"),
     ).not.toBeNull();
     expect(screen.getByText("No skills available")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Custom Skill" }));
     expect(onCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the centralized loading state for Skills", () => {
+    const { container } = render(
+      <SkillsOverviewPage
+        rows={[]}
+        mode="system"
+        onModeChange={vi.fn()}
+        period="month"
+        onPeriodChange={vi.fn()}
+        loading
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onEdit={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("status", { name: "Loading Skills…" })).not.toBeNull();
+    expect(
+      container.querySelector(
+        '.platform-data-table__state.has-loading-state img[src="/img/spinner.svg"]',
+      ),
+    ).not.toBeNull();
   });
 
   it("routes period changes through the common selector", async () => {

@@ -1,4 +1,4 @@
-import { ChartColumnIncreasing } from "lucide-react";
+import { ChartColumnIncreasing } from "../../ui/hugeicons-compat.js";
 import { PlatformEmptyState } from "../empty-state/index.js";
 
 export const PLATFORM_ANALYTICS_EMPTY_STATE_TITLE = "No data available yet";

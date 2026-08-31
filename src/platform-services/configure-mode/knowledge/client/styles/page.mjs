@@ -211,11 +211,6 @@ export const PLAYGROUND_KNOWLEDGE_CSS = String.raw`
     min-width: 0;
   }
 
-  .knowledge-detail-page__start-thread-button.platform-button {
-    width: 100%;
-    margin-top: 12px;
-  }
-
   .knowledge-detail-page__document-workspace {
     box-sizing: border-box;
     width: min(100%, var(--playground-centered-page-max-width, 87.5rem));
@@ -776,7 +771,7 @@ export const PLAYGROUND_KNOWLEDGE_CSS = String.raw`
     font-size: 13px;
   }
 
-  .knowledge-version-changes-page {
+  .knowledge-version-changes-modal {
     min-height: 100%;
   }
 

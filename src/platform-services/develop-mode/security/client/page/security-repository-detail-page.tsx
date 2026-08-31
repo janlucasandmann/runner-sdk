@@ -11,6 +11,10 @@ import {
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import {
+  PlatformProjectIdentityIcon,
+  getPlatformResourceProjectScopeIds,
+} from "../../../../../platform-resources/projects/index.js";
+import {
   PlatformDataTable,
   type PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
@@ -27,8 +31,10 @@ import {
 import { PlatformUiCard } from "../../../../../platform-ui/components/composite/ui-card/index.js";
 import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/checkbox/index.js";
+import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
-import { type PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
+import type { PlatformPermissionSet } from "../../../../../platform-ui/pages/permissions/index.js";
+import { PlatformResourceSettingsPage } from "../../../../../platform-ui/pages/settings/index.js";
 import type {
   DevelopResourceIdentity,
   DevelopResourceIdentityInput,
@@ -56,6 +62,10 @@ import {
 import { SecurityResourceDetailPage } from "./security-detail-layout.js";
 import { SecurityRepositoryAccessSettings } from "./security-repository-access-settings.js";
 import { SecurityRepositorySidebar } from "./security-repository-sidebar.js";
+import {
+  getSecurityRepositoryIdentityLabel,
+  useSecurityRepositoryOwnerModel,
+} from "./security-repository-owner-model.js";
 import type { PlatformSystemAccessPrincipalId } from "../../../../../platform-resources/access-control/index.js";
 
 export type SecurityRepositoryTab = "runs" | "policy" | "settings";
@@ -844,6 +854,181 @@ function ThreatModelEditor({
   );
 }
 
+type SecurityRepositorySettingsProps = Pick<
+  SecurityRepositoryDetailPageProps,
+  | "detail"
+  | "busy"
+  | "viewerIdentity"
+  | "onLoadOwnerCandidates"
+  | "onOwnerChange"
+  | "workspaceTeams"
+  | "workspaceTeamsLoading"
+  | "workspaceTeamsRequiresPlan"
+  | "onWorkspaceTeamsRequest"
+  | "onSaveSystemPrincipalPermissionSet"
+  | "onAddTeamAccess"
+  | "onRemoveTeamAccess"
+  | "onSaveTeamRolePermissionSet"
+  | "onRunScan"
+  | "onSetStatus"
+>;
+
+function SecurityRepositorySettings({
+  detail,
+  busy = false,
+  viewerIdentity,
+  onLoadOwnerCandidates,
+  onOwnerChange,
+  workspaceTeams,
+  workspaceTeamsLoading,
+  workspaceTeamsRequiresPlan,
+  onWorkspaceTeamsRequest,
+  onSaveSystemPrincipalPermissionSet,
+  onAddTeamAccess,
+  onRemoveTeamAccess,
+  onSaveTeamRolePermissionSet,
+  onRunScan,
+  onSetStatus,
+}: SecurityRepositorySettingsProps) {
+  const [accessDetailOpen, setAccessDetailOpen] = useState(false);
+  const repository = detail.repository;
+  const ownerModel = useSecurityRepositoryOwnerModel({
+    detail,
+    busy,
+    viewerIdentity,
+    onLoadOwnerCandidates,
+    onOwnerChange,
+  });
+  const projectScopeIds = getPlatformResourceProjectScopeIds(repository);
+  const creatorLabel = getSecurityRepositoryIdentityLabel(ownerModel.creator);
+  const ownerLabel = getSecurityRepositoryIdentityLabel(ownerModel.owner);
+  const repositoryDescription = typeof repository.metadata?.description === "string"
+    ? repository.metadata.description
+    : `Security monitoring and remediation policy for ${repository.fullName}.`;
+
+  return (
+    <PlatformResourceSettingsPage<string, { candidate: DevelopResourceIdentity }>
+      ariaLabel={`${repository.fullName} settings`}
+      className="develop-security-repository-settings"
+      identity={{
+        icon: <ShieldCheck width={24} height={24} strokeWidth={1.8} />,
+        title: repository.fullName,
+        description: repositoryDescription,
+        readOnly: true,
+        titleAriaLabel: "Security repository name",
+        descriptionAriaLabel: "Security repository description",
+      }}
+      details={{
+        variant: "standard",
+        customAttributes: [
+          {
+            id: "status",
+            label: "Status",
+            value: (
+              <PlatformLabel
+                variant={repository.status === "active" ? "green" : repository.status === "paused" ? "yellow" : "red"}
+              >
+                {repository.status}
+              </PlatformLabel>
+            ),
+          },
+          { id: "visibility", label: "Visibility", value: repository.private ? "Private" : "Public" },
+          { id: "default-branch", label: "Default branch", value: repository.defaultBranch },
+          { id: "last-scan", label: "Last scan", value: formatSecurityTimestamp(repository.lastRunAt, "Never") },
+          { id: "next-scan", label: "Next scan", value: formatSecurityTimestamp(repository.nextScanAt, "Disabled") },
+          { id: "checkout", label: "Checkout", value: "Exact SHA" },
+          { id: "worker", label: "Worker", value: "Disposable" },
+          { id: "publication", label: "Publication", value: "Draft PR after approval" },
+          { id: "created", label: "Created", value: formatSecurityTimestamp(repository.createdAt, "—") },
+        ],
+        updatedAt: repository.updatedAt || repository.createdAt,
+        creator: {
+          value: ownerModel.creator.id || ownerModel.creator.userId || ownerModel.creator.email || "repository-creator",
+          name: creatorLabel,
+          avatarUrl: ownerModel.creator.avatarUrl,
+        },
+        owner: {
+          value: ownerModel.selectedOwnerValue || "repository-owner",
+          name: ownerLabel,
+          avatarUrl: ownerModel.owner.avatarUrl,
+        },
+        ownerOptions: ownerModel.ownerOptions,
+        onOwnerTransfer: ownerModel.onOwnerTransfer,
+        ownerSelectorProps: {
+          open: ownerModel.ownerSelectorOpen,
+          onOpenChange: ownerModel.onOwnerSelectorOpenChange,
+          ariaLabel: "Choose repository owner",
+          resourceLabel: "security repository",
+          alignment: "end",
+          popupAlignment: "right",
+          fullWidth: true,
+          disabled: ownerModel.ownerSelectorDisabled,
+          loading: ownerModel.ownerSelectorLoading,
+          loadingContent: "Loading organization members...",
+          emptyContent: "No organization members are available.",
+          popupWidth: 260,
+          popupMaxHeight: "min(320px, calc(100vh - 180px))",
+        },
+        scope: projectScopeIds.length ? {
+          values: projectScopeIds,
+          options: projectScopeIds.map((projectId) => ({
+            value: projectId,
+            label: "Project",
+            leading: <PlatformProjectIdentityIcon icon="folder-open" size={14} strokeWidth={1.8} />,
+          })),
+          disabled: true,
+        } : {},
+        primaryActions: [{
+          id: "run-scan",
+          label: "Run Scan",
+          onSelect: onRunScan,
+          disabled: busy || repository.status !== "active" || !onRunScan,
+        }],
+      }}
+      additionalSections={(
+        <PlatformSettingsSectionList>
+          <PlatformSettingsSection
+            title="Monitoring state"
+            description="Pause event and schedule intake without deleting retained security evidence."
+            icon={repository.status === "active" ? <Pause width={18} height={18} /> : <Play width={18} height={18} />}
+            actions={(
+              <PlatformSecondaryButton
+                size="small"
+                disabled={busy || repository.status === "disconnected"}
+                onClick={() => onSetStatus(repository.status === "active" ? "paused" : "active")}
+              >
+                {repository.status === "active" ? "Pause monitoring" : "Resume monitoring"}
+              </PlatformSecondaryButton>
+            )}
+          >
+            <p className="develop-security-muted">
+              Current state: <strong>{repository.status}</strong>. Suspending or removing the GitHub
+              connection forces the repository into disconnected state.
+            </p>
+          </PlatformSettingsSection>
+        </PlatformSettingsSectionList>
+      )}
+      access={(
+        <SecurityRepositoryAccessSettings
+          repository={repository}
+          workspaceTeams={workspaceTeams}
+          workspaceTeamsLoading={workspaceTeamsLoading}
+          workspaceTeamsRequiresPlan={workspaceTeamsRequiresPlan}
+          busy={busy}
+          onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
+          onSaveSystemPrincipalPermissionSet={onSaveSystemPrincipalPermissionSet}
+          onAddTeamAccess={onAddTeamAccess}
+          onRemoveTeamAccess={onRemoveTeamAccess}
+          onSaveTeamRolePermissionSet={onSaveTeamRolePermissionSet}
+          onPermissionDetailOpenChange={setAccessDetailOpen}
+        />
+      )}
+      accessDetailOpen={accessDetailOpen}
+      detailsSidebarAriaLabel="Repository details and safety boundaries"
+    />
+  );
+}
+
 export function SecurityRepositoryDetailPage({
   detail,
   activeTab: controlledActiveTab,
@@ -902,53 +1087,23 @@ export function SecurityRepositoryDetailPage({
     );
   if (activeTab === "settings")
     content = (
-      <SecurityRepositoryAccessSettings
-        repository={repository}
+      <SecurityRepositorySettings
+        detail={detail}
+        busy={busy}
+        viewerIdentity={viewerIdentity}
+        onLoadOwnerCandidates={onLoadOwnerCandidates}
+        onOwnerChange={onOwnerChange}
         workspaceTeams={workspaceTeams}
         workspaceTeamsLoading={workspaceTeamsLoading}
         workspaceTeamsRequiresPlan={workspaceTeamsRequiresPlan}
-        busy={busy}
         onWorkspaceTeamsRequest={onWorkspaceTeamsRequest}
         onSaveSystemPrincipalPermissionSet={onSaveSystemPrincipalPermissionSet}
         onAddTeamAccess={onAddTeamAccess}
         onRemoveTeamAccess={onRemoveTeamAccess}
         onSaveTeamRolePermissionSet={onSaveTeamRolePermissionSet}
-      >
-        <PlatformSettingsSectionList>
-          <PlatformSettingsSection
-            title="Monitoring state"
-            description="Pause event and schedule intake without deleting retained security evidence."
-            icon={
-              repository.status === "active" ? (
-                <Pause width={18} height={18} />
-              ) : (
-                <Play width={18} height={18} />
-              )
-            }
-            actions={
-              <PlatformSecondaryButton
-                size="small"
-                disabled={busy || repository.status === "disconnected"}
-                onClick={() =>
-                  onSetStatus(
-                    repository.status === "active" ? "paused" : "active",
-                  )
-                }
-              >
-                {repository.status === "active"
-                  ? "Pause monitoring"
-                  : "Resume monitoring"}
-              </PlatformSecondaryButton>
-            }
-          >
-            <p className="develop-security-muted">
-              Current state: <strong>{repository.status}</strong>. Suspending or
-              removing the GitHub connection forces the repository into
-              disconnected state.
-            </p>
-          </PlatformSettingsSection>
-        </PlatformSettingsSectionList>
-      </SecurityRepositoryAccessSettings>
+        onRunScan={onRunScan}
+        onSetStatus={onSetStatus}
+      />
     );
 
   return (
@@ -958,7 +1113,7 @@ export function SecurityRepositoryDetailPage({
       onTabChange={handleTabChange}
       ariaLabel={`Security details for ${repository.fullName}`}
       sidebarAriaLabel="Repository details and safety boundaries"
-      sidebar={
+      sidebar={activeTab === "settings" ? undefined : (
         <SecurityRepositorySidebar
           detail={detail}
           busy={busy}
@@ -967,7 +1122,7 @@ export function SecurityRepositoryDetailPage({
           onOwnerChange={onOwnerChange}
           onRunScan={onRunScan}
         />
-      }
+      )}
     >
       {content}
     </SecurityResourceDetailPage>

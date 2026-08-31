@@ -174,6 +174,8 @@
           });
           const authoritativeServerListScopesRef = useRef(new Set());
           const serverDetailsRequestRef = useRef(new Map());
+          const environmentDockerfileSourceRequestRef = useRef(new Map());
+          const environmentDockerfileSourcesByIdRef = useRef({});
           const serverDetailBootstrapRequestRef = useRef(new Map());
           const serverAgentOptionsRequestRef = useRef(null);
           const voiceAgentsRequestRef = useRef(null);
@@ -244,6 +246,7 @@
             });
             return next;
           });
+          const [environmentDockerfileSourcesById, setEnvironmentDockerfileSourcesById] = useState({});
           const [environmentAnalyticsById, setEnvironmentAnalyticsById] = useState({});
           const [environmentHomeCostSummaryByPeriod, setEnvironmentHomeCostSummaryByPeriod] = useState({});
           const [environmentHomeCostBreakdownByPeriod, setEnvironmentHomeCostBreakdownByPeriod] = useState({});
@@ -2855,6 +2858,63 @@
             setToolbarPopover((current) => current === nextValue ? "" : nextValue);
           }
   
+          const setEnvironmentDockerfileSourceRecord = useCallback((environmentId, record) => {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId) return;
+            const next = {
+              ...environmentDockerfileSourcesByIdRef.current,
+              [normalizedEnvironmentId]: record,
+            };
+            environmentDockerfileSourcesByIdRef.current = next;
+            setEnvironmentDockerfileSourcesById(next);
+          }, []);
+
+          const loadEnvironmentDockerfileSource = useCallback((environmentId, options = {}) => {
+            const normalizedEnvironmentId = String(environmentId || "").trim();
+            if (!normalizedEnvironmentId || normalizedEnvironmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
+              return Promise.resolve(null);
+            }
+            const existingRecord = environmentDockerfileSourcesByIdRef.current[normalizedEnvironmentId] || null;
+            if (options?.force !== true && existingRecord?.status === "ready" && existingRecord.source) {
+              return Promise.resolve(existingRecord.source);
+            }
+            const inFlightRequest = environmentDockerfileSourceRequestRef.current.get(normalizedEnvironmentId);
+            if (inFlightRequest) {
+              return inFlightRequest;
+            }
+
+            setEnvironmentDockerfileSourceRecord(normalizedEnvironmentId, {
+              status: "loading",
+              source: existingRecord?.source || null,
+              error: "",
+            });
+            const request = loadComputerDockerfile({
+              backendUrl,
+              requestHeaders,
+              computerId: normalizedEnvironmentId,
+            }).then((source) => {
+              setEnvironmentDockerfileSourceRecord(normalizedEnvironmentId, {
+                status: "ready",
+                source,
+                error: "",
+              });
+              return source;
+            }).catch((error) => {
+              setEnvironmentDockerfileSourceRecord(normalizedEnvironmentId, {
+                status: "error",
+                source: existingRecord?.source || null,
+                error: error instanceof Error ? error.message : "Failed to load the computer Dockerfile.",
+              });
+              throw error;
+            }).finally(() => {
+              if (environmentDockerfileSourceRequestRef.current.get(normalizedEnvironmentId) === request) {
+                environmentDockerfileSourceRequestRef.current.delete(normalizedEnvironmentId);
+              }
+            });
+            environmentDockerfileSourceRequestRef.current.set(normalizedEnvironmentId, request);
+            return request;
+          }, [backendUrl, requestHeaders, setEnvironmentDockerfileSourceRecord]);
+
           const loadEnvironmentDetails = useCallback(async (environmentId, options = {}) => {
             if (!environmentId || environmentId === PLAYGROUND_ENVIRONMENT_DRAFT_ID) {
               return;

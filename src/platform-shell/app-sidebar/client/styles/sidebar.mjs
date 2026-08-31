@@ -1368,9 +1368,9 @@ ${metronomeSidebarCss}
         padding: 0;
         border: 0;
         background: transparent;
-        color: rgba(255, 255, 255, 0.48);
+        color: #ffffff9e;
         font-size: 12px;
-        font-weight: 500;
+        font-weight: 400;
         cursor: pointer;
         text-align: left;
       }

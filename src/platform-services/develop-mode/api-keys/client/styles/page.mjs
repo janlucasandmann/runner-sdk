@@ -120,41 +120,80 @@ export const API_KEYS_PAGE_CSS_FRAGMENT = `      .resource-overview-page.is-deve
         gap: 18px;
       }
 
-      .platform-api-key-management-field {
-        min-width: 0;
-        display: grid;
-        gap: 8px;
-        color: rgba(255, 255, 255, 0.78);
-        font-size: 12px;
+      .platform-api-key-create-modal.platform-modal-surface {
+        display: flex;
+        flex-direction: column;
       }
 
-      .platform-api-key-management-field em {
-        color: rgba(255, 255, 255, 0.4);
-        font-style: normal;
+      .platform-api-key-create-modal > .platform-modal-header,
+      .platform-api-key-create-modal > .platform-modal-footer {
+        flex: 0 0 auto;
       }
 
-      .platform-api-key-management-field input,
-      .platform-api-key-management-field textarea {
-        width: 100%;
-        min-width: 0;
-        padding: 10px 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        outline: none;
-        background: rgba(255, 255, 255, 0.04);
+      .platform-api-key-create-modal > .platform-modal-header.is-search {
+        gap: 10px;
+      }
+
+      .platform-api-key-create-modal > .platform-modal-header .platform-modal-header__leading {
+        overflow: visible;
+      }
+
+      .platform-api-key-create-modal > .platform-modal-header .platform-modal-header__search-input {
+        font-size: 16px;
+      }
+
+      .platform-api-key-create-modal__icon {
+        box-sizing: border-box;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border-radius: 6px;
+        background: transparent;
         color: #fff;
-        font-size: 13px;
-        line-height: 1.4;
       }
 
-      .platform-api-key-management-field textarea {
-        min-height: 88px;
-        resize: vertical;
+      .platform-api-key-create-modal__body.platform-modal-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        overflow-x: hidden;
+        overflow-y: auto;
       }
 
-      .platform-api-key-management-field input:focus,
-      .platform-api-key-management-field textarea:focus {
-        border-color: rgba(77, 163, 255, 0.5);
+      .platform-api-key-create-modal .platform-api-key-create-modal__description-editor.platform-instructions-editor {
+        margin: 0;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.075);
+        overflow: hidden;
+      }
+
+      .platform-api-key-create-modal__description-editor > .platform-instructions-editor__header {
+        margin-bottom: 12px;
+      }
+
+      .platform-api-key-create-modal__description-editor .platform-instructions-editor__prosemirror {
+        min-height: 120px;
+      }
+
+      .platform-api-key-create-modal .platform-api-key-management-scopes {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .platform-api-key-create-modal .platform-api-key-management-scopes legend {
+        grid-column: 1 / -1;
+        margin-bottom: 12px;
+        color: #fff;
+      }
+
+      .platform-api-key-create-modal .playground-settings-scope-option {
+        min-height: 86px;
       }
 
       .platform-api-key-management-scopes {
@@ -224,6 +263,16 @@ export const API_KEYS_PAGE_CSS_FRAGMENT = `      .resource-overview-page.is-deve
       @keyframes platform-api-key-management-spin {
         to {
           transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .platform-api-key-create-modal .platform-api-key-management-scopes {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .platform-api-key-create-modal .playground-settings-scope-option {
+          min-height: 0;
         }
       }
 `;

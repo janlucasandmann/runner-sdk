@@ -16,7 +16,7 @@ import {
   RotateCcw as LucideRotateCcw,
   RotateCw as LucideRotateCw,
   X as LucideX,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { mountRunnerChatStyles } from "../styles/index.js";
 import {
   buildRunnerPreviewHeaders,

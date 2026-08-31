@@ -196,57 +196,6 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         min-width: 0;
       }
 
-      .playground-metronome-field-tooltip {
-        position: relative;
-        width: 17px;
-        height: 17px;
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.64);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        cursor: help;
-      }
-
-      .playground-metronome-field-tooltip-popover {
-        position: absolute;
-        left: calc(100% + 8px);
-        top: 50%;
-        width: 260px;
-        transform: translateX(-4px) translateY(-50%);
-        border-radius: 10px;
-        padding: 9px 10px;
-        background: rgba(26, 26, 27, 0.96);
-        color: rgba(255, 255, 255, 0.76);
-        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 1.45;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 140ms ease, transform 140ms ease;
-        z-index: 20;
-      }
-
-      .playground-metronome-field-tooltip-popover.is-portal {
-        position: fixed;
-        left: auto;
-        top: auto;
-        opacity: 1;
-        transform: none;
-        pointer-events: none;
-        z-index: 100002;
-      }
-
-      .playground-metronome-field-tooltip:hover .playground-metronome-field-tooltip-popover,
-      .playground-metronome-field-tooltip:focus-visible .playground-metronome-field-tooltip-popover {
-        opacity: 1;
-        transform: translateX(0) translateY(-50%);
-      }
-
       .playground-metronome-node-inspector .playground-tasks-detail-description-help {
         margin: 0 0 10px;
         color: rgba(255, 255, 255, 0.42);
@@ -526,13 +475,13 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         color: rgba(255, 225, 124, 0.98);
       }
 
-      .playground-metronome-dynamic-content-picker {
+      .playground-metronome-inspector-picker {
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
 
-      .playground-metronome-dynamic-content-picker-header {
+      .playground-metronome-inspector-picker-header {
         padding: 20px 14px 0;
         display: flex;
         align-items: flex-start;
@@ -541,7 +490,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         border-bottom: 0;
       }
 
-      .playground-metronome-dynamic-content-picker-title {
+      .playground-metronome-inspector-picker-title {
         display: flex;
         align-items: center;
         min-width: 0;
@@ -552,7 +501,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         margin-bottom: 12px;
       }
 
-      .playground-metronome-dynamic-content-picker-copy {
+      .playground-metronome-inspector-picker-description {
         margin-top: 2px;
         color: rgba(255, 255, 255, 0.48);
         font-size: 12px;
@@ -560,7 +509,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         font-weight: 400;
       }
 
-      .playground-metronome-dynamic-content-picker-close {
+      .playground-metronome-inspector-picker-close {
         width: 24px;
         height: 24px;
         border: 0;
@@ -573,30 +522,18 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         flex: 0 0 auto;
       }
 
-      .playground-metronome-dynamic-content-picker-close:hover,
-      .playground-metronome-dynamic-content-picker-close:focus-visible {
+      .playground-metronome-inspector-picker-close:hover,
+      .playground-metronome-inspector-picker-close:focus-visible {
         background: rgba(255, 255, 255, 0.05);
         color: rgba(255, 255, 255, 0.92);
         outline: none;
       }
 
-      .playground-metronome-dynamic-content-search {
-        margin: 10px 14px 12px;
-        min-height: 34px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.06);
+      .playground-metronome-inspector-picker-search {
+        width: 100%;
       }
 
-      .playground-metronome-dynamic-content-search .platform-popup-search-header__icon {
-        color: rgba(255, 255, 255, 0.44);
-      }
-
-      .playground-metronome-dynamic-content-search .platform-popup-search-header__input {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 12px;
-      }
-
-      .playground-metronome-dynamic-content-list {
+      .playground-metronome-inspector-picker-list {
         min-height: 0;
         overflow: auto;
         padding: 0 8px 10px;
@@ -635,7 +572,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         text-overflow: ellipsis;
       }
 
-      .playground-metronome-dynamic-content-row {
+      .playground-metronome-inspector-picker-row {
         width: 100%;
         min-width: 0;
         border: 0;
@@ -650,20 +587,20 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         cursor: pointer;
       }
 
-      .playground-metronome-dynamic-content-row:hover,
-      .playground-metronome-dynamic-content-row:focus-visible {
+      .playground-metronome-inspector-picker-row:hover,
+      .playground-metronome-inspector-picker-row:focus-visible {
         background: rgba(255, 255, 255, 0.08);
         outline: none;
       }
 
-      .playground-metronome-dynamic-content-row-main {
+      .playground-metronome-inspector-picker-row-main {
         min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 3px;
       }
 
-      .playground-metronome-dynamic-content-row-label {
+      .playground-metronome-inspector-picker-row-label {
         min-width: 0;
         overflow: hidden;
         color: rgba(255, 255, 255, 0.9);
@@ -674,7 +611,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         white-space: nowrap;
       }
 
-      .playground-metronome-dynamic-content-row-path {
+      .playground-metronome-inspector-picker-row-description {
         min-width: 0;
         overflow: hidden;
         color: rgba(255, 255, 255, 0.42);
@@ -685,7 +622,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         white-space: nowrap;
       }
 
-      .playground-metronome-dynamic-content-row-type {
+      .playground-metronome-inspector-picker-row-trailing {
         align-self: start;
         max-width: 96px;
         overflow: hidden;
@@ -699,7 +636,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         white-space: nowrap;
       }
 
-      .playground-metronome-dynamic-content-empty {
+      .playground-metronome-inspector-picker-state {
         padding: 22px 14px 24px;
         color: rgba(255, 255, 255, 0.48);
         font-size: 12px;
@@ -707,7 +644,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         text-align: center;
       }
 
-      .playground-metronome-prompt-picker .playground-metronome-dynamic-content-row-path {
+      .playground-metronome-prompt-picker .playground-metronome-inspector-picker-row-description {
         font-family: inherit;
       }
 
@@ -902,8 +839,7 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
       }
 
       .playground-metronome-function-trigger-payload-row .playground-metronome-input,
-      .playground-metronome-function-trigger-payload-row .playground-metronome-select,
-      .playground-metronome-function-trigger-payload-row .playground-metronome-custom-select-trigger {
+      .playground-metronome-function-trigger-payload-row .playground-metronome-select {
         width: 100%;
         min-width: 0;
         height: 30px;
@@ -913,11 +849,6 @@ export const METRONOME_INSPECTOR_CSS_02_FRAGMENT = String.raw`        background
         color: rgba(255, 255, 255, 0.92);
         font-size: 12px;
         line-height: 30px;
-      }
-
-      .playground-metronome-function-trigger-payload-row .playground-metronome-custom-select-trigger {
-        justify-content: space-between;
-        gap: 8px;
       }
 
       .playground-metronome-function-trigger-payload-add {

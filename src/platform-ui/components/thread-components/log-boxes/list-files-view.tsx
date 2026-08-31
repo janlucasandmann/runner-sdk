@@ -1,4 +1,4 @@
-import { FolderOpen } from "lucide-react";
+import { FolderOpen } from "../../ui/hugeicons-compat.js";
 import type { RunnerPreviewAttachment } from "../document-preview/preview-contracts.js";
 import type { RunnerLog } from "../../../../types.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";

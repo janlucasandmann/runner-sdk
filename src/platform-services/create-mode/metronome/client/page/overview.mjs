@@ -49,6 +49,80 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                 isTeamShared: isTeamSharedWorkflow,
               });
             };
+            const getWorkflowCreator = (workflow, isBuiltInWorkflow) => {
+              return resolveMetronomeWorkflowCreatorPresentation(workflow, {
+                isBuiltIn: isBuiltInWorkflow,
+              });
+            };
+            const resolveWorkflowVisualKind = (workflow) => {
+              const metadata = readMetronomeWorkflowMetadata(workflow);
+              const definition = workflow?.definition
+                && typeof workflow.definition === "object"
+                && !Array.isArray(workflow.definition)
+                ? workflow.definition
+                : {};
+              const systemWorkflow = metadata.systemWorkflow
+                && typeof metadata.systemWorkflow === "object"
+                && !Array.isArray(metadata.systemWorkflow)
+                ? metadata.systemWorkflow
+                : metadata.system_workflow
+                  && typeof metadata.system_workflow === "object"
+                  && !Array.isArray(metadata.system_workflow)
+                  ? metadata.system_workflow
+                  : {};
+              const runnerPlayground = metadata.runnerPlayground
+                && typeof metadata.runnerPlayground === "object"
+                && !Array.isArray(metadata.runnerPlayground)
+                ? metadata.runnerPlayground
+                : {};
+              const workflowKey = String(
+                workflow?.systemWorkflowKey
+                || workflow?.system_workflow_key
+                || definition.systemWorkflowKey
+                || definition.system_workflow_key
+                || metadata.systemWorkflowKey
+                || metadata.system_workflow_key
+                || systemWorkflow.key
+                || ""
+              ).trim().toLowerCase();
+              const workflowSource = String(
+                workflow?.source
+                || metadata.source
+                || runnerPlayground?.missionControl?.source
+                || runnerPlayground?.mission_control?.source
+                || ""
+              ).trim().toLowerCase();
+              const workflowType = String(
+                workflow?.workflowType
+                || workflow?.workflow_type
+                || metadata.workflowType
+                || metadata.workflow_type
+                || metadata.taskType
+                || metadata.task_type
+                || ""
+              ).trim().toLowerCase();
+              const workflowName = String(workflow?.name || "").trim().toLowerCase();
+              const workflowId = String(workflow?.id || "").trim().toLowerCase();
+              if (
+                workflowKey === "system.mission-control"
+                || workflowSource.includes("mission_control")
+                || workflowSource.includes("mission-control")
+                || workflowId.includes("mission_control")
+                || workflowId.includes("mission-control")
+                || workflowName === "mission control"
+                || workflowName.startsWith("mission control for ")
+              ) return "mission-control";
+              if (
+                workflowKey === "system.task-loop"
+                || workflowSource === "project_ticket_loop"
+                || workflowSource === "thread_command_loop"
+                || workflowType === "loop"
+                || workflowId.includes("task_loop")
+                || workflowId.includes("task-loop")
+                || workflowName === "loop"
+              ) return "loop";
+              return "metronome";
+            };
             const rows = overviewWorkflows
               .map((workflow) => {
                 const id = String(workflow?.id || "").trim();
@@ -97,6 +171,10 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                   isBuiltInWorkflow,
                   isTeamSharedWorkflow
                 );
+                const creator = getWorkflowCreator(workflow, isBuiltInWorkflow);
+                const rawUpdatedAt = workflow?.updatedAt || workflow?.publishedAt || workflow?.createdAt || "";
+                const parsedUpdatedAt = rawUpdatedAt ? new Date(rawUpdatedAt).getTime() : 0;
+                const updatedAt = Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : 0;
                 const rawLastRunAt = workflow?.lastRunAt
                   ? new Date(workflow.lastRunAt).getTime()
                   : 0;
@@ -109,11 +187,13 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                 return {
                   id,
                   name: String(workflow?.name || "Untitled Metronome"),
+                  description: String(workflow?.description || "").trim(),
                   searchText: [
                     getMetronomeWorkflowSearchText(workflow),
                     statusLabel,
                     formatWorkflowTrigger(workflow),
                     owner.name,
+                    creator.name,
                   ].join(" "),
                   status: normalizedStatus,
                   statusLabel,
@@ -122,9 +202,10 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                   ownerName: owner.name,
                   ownerAvatarUrl: owner.avatarUrl,
                   ownerFallback: owner.fallback,
-                  creatorName: owner.name,
-                  creatorAvatarUrl: owner.avatarUrl,
-                  creatorFallback: owner.fallback,
+                  creatorName: creator.name,
+                  creatorAvatarUrl: creator.avatarUrl,
+                  creatorFallback: creator.fallback,
+                  updatedAt,
                   lastRunAt,
                   sortTimestamp: getMetronomeWorkflowSortTimestamp(workflow),
                   lastRunLabel,
@@ -133,6 +214,7 @@ export const METRONOME_PAGE_OVERVIEW_SCRIPT = String.raw`
                     : lastRunLabel,
                   runsToday: Number(workflow?.runsToday || 0) || 0,
                   waitingApprovals: Number(workflow?.waitingApprovals || 0) || 0,
+                  visualKind: resolveWorkflowVisualKind(workflow),
                   isBuiltIn: isBuiltInWorkflow,
                   isTeamShared: isTeamSharedWorkflow,
                   isHiddenTeamShared: isHiddenTeamSharedWorkflow,

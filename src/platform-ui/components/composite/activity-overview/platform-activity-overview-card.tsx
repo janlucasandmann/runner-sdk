@@ -1,4 +1,4 @@
-import { Check, CircleAlert, X } from "lucide-react";
+import { Check, CircleAlert, X } from "../../ui/hugeicons-compat.js";
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 
 export type PlatformActivityOverviewPermissionRingId = "ring_1" | "ring_2" | "ring_3" | string;

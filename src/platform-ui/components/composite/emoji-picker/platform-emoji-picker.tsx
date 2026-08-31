@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { SmilePlus } from "lucide-react";
+import { SmilePlus } from "../../ui/hugeicons-compat.js";
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import {

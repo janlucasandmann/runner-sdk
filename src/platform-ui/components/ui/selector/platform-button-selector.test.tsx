@@ -54,6 +54,9 @@ describe("PlatformButtonSelector", () => {
 
     const popup = screen.getByRole("menu", { name: "Choose version" });
     expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(
+      chevronTrigger.querySelector(".platform-button-selector__chevron.is-open"),
+    ).not.toBeNull();
     expect(popup.classList.contains("is-minimal")).toBe(true);
     expect(popup.classList.contains("is-portaled")).toBe(true);
     expect(popup.parentElement).toBe(document.body);
@@ -61,6 +64,9 @@ describe("PlatformButtonSelector", () => {
 
     await user.click(chevronTrigger);
     expect(screen.queryByRole("menu", { name: "Choose version" })).toBeNull();
+    expect(
+      chevronTrigger.querySelector(".platform-button-selector__chevron.is-open"),
+    ).toBeNull();
   });
 
   it("separates the primary action from the split popup trigger", async () => {

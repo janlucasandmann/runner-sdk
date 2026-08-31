@@ -1,13 +1,16 @@
-import { Check, Plus } from "lucide-react";
+import { Check, GitBranch, Plus } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useState } from "react";
-import type { PlatformGitHubAutomationAgentOption } from "../../platform-ui/components/composite/github-automations/index.js";
 import {
-  PlatformPrimaryButton,
-  PlatformSecondaryButton,
-} from "../../platform-ui/components/ui/button/index.js";
+  PlatformConnectorPreviewCard,
+  PlatformConnectorSettingsModal,
+} from "../../platform-ui/components/composite/connector-settings/index.js";
+import { PlatformEmptyState } from "../../platform-ui/components/composite/empty-state/index.js";
+import type { PlatformGitHubAutomationAgentOption } from "../../platform-ui/components/composite/github-automations/index.js";
+import { disconnectPlatformResourceSourceControl } from "../../platform-ui/components/composite/resource-source-control/index.js";
+import { PlatformSecondaryButton } from "../../platform-ui/components/ui/button/index.js";
 import { RunnerFileBrowserDialog } from "./file-browser-dialog.js";
-import { IconGithub } from "./icons.js";
-import { RunnerProjectGithubRepositorySettings } from "./project-github-repository-settings.js";
+import { IconGithub, IconGitlab } from "./icons.js";
+import { RunnerResourceGithubRepositorySettings } from "./project-github-repository-settings.js";
 import type { RunnerChatGithubConfig } from "./public-types.js";
 import type { RunnerChatFileNode } from "./workspace-files.js";
 
@@ -22,7 +25,12 @@ export interface RunnerSourceGithubRepository {
   forcePushCommits?: boolean;
 }
 
-export type RunnerSourceGithubResourceKind = "function" | "web_app";
+export type RunnerSourceGithubResourceKind =
+  | "function"
+  | "web_app"
+  | "skill"
+  | "agent"
+  | "computer";
 
 interface RunnerSourceGithubConnectorSettingsBaseProps {
   repository?: RunnerSourceGithubRepository | null;
@@ -37,6 +45,7 @@ interface RunnerSourceGithubConnectorSettingsBaseProps {
     accountId?: string;
   }) => Promise<RunnerSourceGithubRepository>;
   onRepositoryChange: (repository: RunnerSourceGithubRepository | null) => void | Promise<void>;
+  onViewAllConnectors?: () => void;
 }
 
 export interface RunnerSourceGithubConnectorSettingsProps
@@ -56,6 +65,10 @@ export type RunnerFunctionGithubRepository = RunnerSourceGithubRepository;
 
 const EMPTY_CONNECTION = { connected: false } as const;
 
+type RunnerConnectorNavigationGlobal = typeof globalThis & {
+  computerAgentsOpenConnectors?: () => void;
+};
+
 function normalizeRepositoryName(item: RunnerChatFileNode): string {
   return String(item.repoFullName || item.name || "").trim();
 }
@@ -73,10 +86,30 @@ export function RunnerSourceGithubConnectorSettings({
   disabled = false,
   onCreateRepository,
   onRepositoryChange,
+  onViewAllConnectors,
 }: RunnerSourceGithubConnectorSettingsProps) {
-  const resourceLabel = resourceKind === "web_app" ? "Web App" : "Function";
-  const deploymentAutomationKind =
-    resourceKind === "web_app" ? "deploy_web_app" : "deploy_function";
+  const resourceLabel = resourceKind === "web_app"
+    ? "Web App"
+    : resourceKind === "skill"
+      ? "Skill"
+      : resourceKind === "agent"
+        ? "Agent"
+        : resourceKind === "computer"
+          ? "Computer"
+          : "Function";
+  const exactRevisionAction = resourceKind === "function" || resourceKind === "web_app"
+    ? "deployments"
+    : "updates";
+  const automationScopeType = ["function", "web_app", "skill"].includes(resourceKind)
+    ? resourceKind as "function" | "web_app" | "skill"
+    : undefined;
+  const automationKinds = resourceKind === "function"
+    ? (["security_scan", "pull_request_review", "deploy_function"] as const)
+    : resourceKind === "web_app"
+      ? (["security_scan", "pull_request_review", "deploy_web_app"] as const)
+      : resourceKind === "skill"
+        ? (["security_scan", "pull_request_review"] as const)
+        : undefined;
   const connectorTitleId = `source-connectors-title-${resourceKind}-${resourceId}`;
   const defaultAccountId = String(
     repository?.accountId ||
@@ -86,6 +119,8 @@ export function RunnerSourceGithubConnectorSettings({
       "",
   ).trim();
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeRepositoryId, setActiveRepositoryId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [accountId, setAccountId] = useState(defaultAccountId);
   const [items, setItems] = useState<RunnerChatFileNode[]>([]);
@@ -143,6 +178,24 @@ export function RunnerSourceGithubConnectorSettings({
     setOpen(true);
   }
 
+  async function disconnectRepository() {
+    try {
+      await disconnectPlatformResourceSourceControl({
+        apiBaseUrl,
+        requestHeaders,
+        resourceKind,
+        resourceId,
+      });
+      await onRepositoryChange(null);
+    } catch (disconnectError) {
+      const message = disconnectError instanceof Error
+        ? disconnectError.message
+        : `Failed to disconnect the ${resourceLabel} repository.`;
+      setError(message);
+      throw disconnectError;
+    }
+  }
+
   async function createRepositoryForResource() {
     if (!onCreateRepository) return;
     setCreating(true);
@@ -151,7 +204,7 @@ export function RunnerSourceGithubConnectorSettings({
       const createdRepository = await onCreateRepository({
         name: String(
           resourceName ||
-            `${resourceKind === "web_app" ? "web-app" : "function"}-${resourceId.slice(-8)}`,
+            `${resourceKind === "web_app" ? "web-app" : resourceKind}-${resourceId.slice(-8)}`,
         ).trim(),
         accountId: accountId || undefined,
       });
@@ -184,7 +237,7 @@ export function RunnerSourceGithubConnectorSettings({
           normalizeRepositoryName(item).toLowerCase() === selectedRepositoryName.toLowerCase(),
       );
       if (!selectedRepositoryName) {
-        await onRepositoryChange(null);
+        await disconnectRepository();
       } else if (!selected) {
         if (repository?.repoFullName?.toLowerCase() !== selectedRepositoryName.toLowerCase()) {
           throw new Error("Wait for the selected GitHub repository to finish loading.");
@@ -228,6 +281,34 @@ export function RunnerSourceGithubConnectorSettings({
     onDisconnect: github?.onDisconnect,
   };
 
+  function openConnectorSettings(connectorId: "github" | "gitlab") {
+    setActiveRepositoryId(
+      connectorId === "github" && repository?.repoFullName
+        ? `github:${repository.repoFullName}`
+        : "",
+    );
+    setSettingsOpen(true);
+  }
+
+  function viewAllConnectors() {
+    if (onViewAllConnectors) {
+      setSettingsOpen(false);
+      onViewAllConnectors();
+      return;
+    }
+    const openConnectors = (globalThis as RunnerConnectorNavigationGlobal)
+      .computerAgentsOpenConnectors;
+    if (typeof openConnectors === "function") {
+      setSettingsOpen(false);
+      openConnectors();
+      return;
+    }
+    setActiveRepositoryId(
+      repository?.repoFullName ? `github:${repository.repoFullName}` : "",
+    );
+    setSettingsOpen(true);
+  }
+
   return (
     <section
       className="playground-source-connector-settings"
@@ -237,54 +318,115 @@ export function RunnerSourceGithubConnectorSettings({
       <div className="playground-source-connector-settings__heading">
         <h2 id={connectorTitleId}>Connectors</h2>
         <p>
-          Synchronize this {resourceLabel} with a GitHub repository and automate exact-revision
-          deployments.
+          Synchronize this {resourceLabel} with a GitHub or GitLab repository and automate exact-revision {exactRevisionAction}.
         </p>
       </div>
 
-      <div className="playground-source-connector-settings__provider-group">
-        <div className="playground-source-connector-settings__provider-row">
-          <div className="playground-source-connector-settings__provider-identity">
-            <IconGithub className="playground-source-connector-settings__provider-icon" />
-            <span>GitHub</span>
+      <div className="playground-source-connector-settings__previews">
+        <PlatformConnectorPreviewCard
+          className="playground-source-connector-settings__preview"
+          connectorName="GitHub"
+          title="GitHub"
+          description={`Automate exact-revision ${exactRevisionAction}.`}
+          icon={<IconGithub />}
+          backgroundImageSrc="/img/bg/blur.webp"
+          activeConnectionCount={repository?.repoFullName ? 1 : 0}
+          aria-label="Open GitHub connector settings"
+          disabled={disabled}
+          onOpenSettings={() => openConnectorSettings("github")}
+          onViewAllConnectors={viewAllConnectors}
+        />
+        <PlatformConnectorPreviewCard
+          className="playground-source-connector-settings__preview"
+          connectorName="GitLab"
+          title="GitLab"
+          description={`Automate exact-revision ${exactRevisionAction}.`}
+          icon={<IconGitlab />}
+          backgroundImageSrc="/img/bg/blur3.webp"
+          activeConnectionCount={0}
+          aria-label="Open GitLab connector settings"
+          disabled={disabled}
+          onOpenSettings={() => openConnectorSettings("gitlab")}
+          onViewAllConnectors={viewAllConnectors}
+        />
+      </div>
+
+      <PlatformConnectorSettingsModal
+        open={settingsOpen}
+        title="Connectors"
+        ariaLabel={`${resourceLabel} connector settings`}
+        activeItemId={activeRepositoryId}
+        onActiveItemChange={setActiveRepositoryId}
+        onClose={() => setSettingsOpen(false)}
+        primaryAction={{
+          label: "Add another repo",
+          disabled: disabled || saving,
+          onClick: openManager,
+        }}
+        emptyState={(
+          <div className="playground-source-connector-settings__modal-empty">
+            <PlatformEmptyState
+              icon={GitBranch}
+              title="No repositories connected"
+              description={`Add a GitHub or GitLab repository to synchronize this ${resourceLabel} and configure exact-revision ${exactRevisionAction}.`}
+            />
+            {error && !open ? (
+              <p className="playground-source-connector-settings__error" role="alert">
+                {error}
+              </p>
+            ) : null}
           </div>
-          <PlatformPrimaryButton
-            type="button"
-            size="small"
-            disabled={disabled || saving}
-            onClick={openManager}
-          >
-            Manage
-          </PlatformPrimaryButton>
-        </div>
-
-        {repository?.repoFullName ? (
-          <RunnerProjectGithubRepositorySettings
-            accountId={repository.accountId || accountId || undefined}
-            repoFullName={repository.repoFullName}
-            refName={repository.ref || "main"}
-            branchPrefix={repository.branchPrefix}
-            createPullRequests={repository.createPullRequests}
-            forcePushCommits={repository.forcePushCommits}
-            apiBaseUrl={apiBaseUrl}
-            requestHeaders={requestHeaders}
-            automationScopeType={resourceKind}
-            automationScopeId={resourceId}
-            automationKinds={["security_scan", "pull_request_review", deploymentAutomationKind]}
-            automationEnvironmentId={automationEnvironmentId}
-            automationAgentOptions={automationAgentOptions}
-            fetchBranches={github?.fetchBranches}
-            onChange={(patch) => onRepositoryChange({ ...repository, ...patch })}
-            onDisconnect={() => onRepositoryChange(null)}
-          />
-        ) : null}
-      </div>
-
-      {error && !open ? (
-        <p className="playground-source-connector-settings__error" role="alert">
-          {error}
-        </p>
-      ) : null}
+        )}
+        groups={[
+          {
+            id: "github",
+            label: "GitHub",
+            icon: <IconGithub />,
+            items: repository?.repoFullName ? [
+              {
+                id: `github:${repository.repoFullName}`,
+                label: repository.repoFullName,
+                onDisconnect: disconnectRepository,
+                content: (
+                  <div className="platform-connector-settings-modal__repository-content">
+                    <RunnerResourceGithubRepositorySettings
+                      accountId={repository.accountId || accountId || undefined}
+                      repoFullName={repository.repoFullName}
+                      refName={repository.ref || "main"}
+                      branchPrefix={repository.branchPrefix}
+                      createPullRequests={repository.createPullRequests}
+                      forcePushCommits={repository.forcePushCommits}
+                      apiBaseUrl={apiBaseUrl}
+                      requestHeaders={requestHeaders}
+                      automationScopeType={automationScopeType}
+                      sourceControlResourceKind={resourceKind}
+                      sourceControlResourceId={resourceId}
+                      automationScopeId={resourceId}
+                      automationKinds={automationKinds}
+                      automationEnvironmentId={automationEnvironmentId}
+                      automationAgentOptions={automationAgentOptions}
+                      fetchBranches={github?.fetchBranches}
+                      onChange={(patch) => onRepositoryChange({ ...repository, ...patch })}
+                      onDisconnect={disconnectRepository}
+                    />
+                    {error && !open ? (
+                      <p className="playground-source-connector-settings__error" role="alert">
+                        {error}
+                      </p>
+                    ) : null}
+                  </div>
+                ),
+              },
+            ] : [],
+          },
+          {
+            id: "gitlab",
+            label: "GitLab",
+            icon: <IconGitlab />,
+            items: [],
+          },
+        ]}
+      />
 
       <RunnerFileBrowserDialog
         open={open}

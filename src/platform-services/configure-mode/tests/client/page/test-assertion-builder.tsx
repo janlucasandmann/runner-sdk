@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { PlatformSecondaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
 import { PlatformIconButton } from "../../../../../platform-ui/components/ui/icon-button/index.js";
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
@@ -192,4 +192,3 @@ export function TestAssertionBuilder({
     </div>
   );
 }
-

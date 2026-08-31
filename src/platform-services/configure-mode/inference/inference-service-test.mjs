@@ -135,6 +135,7 @@ assert.match(
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-inference-overview-controls/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.configureHomeEntry, /Configure Inference/);
 assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "inference"/);
+assert.match(INFERENCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: InferenceSidebarIcon/);
 assert.doesNotThrow(() => new Function(`
   function inferenceHostIntegration() {
     ${INFERENCE_APP_SCRIPT_FRAGMENTS.state}

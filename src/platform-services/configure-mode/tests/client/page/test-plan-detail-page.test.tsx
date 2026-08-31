@@ -130,12 +130,19 @@ describe("TestPlanDetailPage", () => {
       '[data-platform-detail-sidebar="true"]',
     );
     expect(detailsSidebar?.dataset.collapsed).toBe("true");
-    expect(screen.getByRole("table", { name: "Test cases" })).not.toBeNull();
-    expect(screen.getByText("All Cases").classList).toContain("platform-data-table__toolbar-title");
-    expect(screen.getByPlaceholderText("Search cases")).not.toBeNull();
-    expect(screen.getAllByRole("button", { name: "Add Case" }).length).toBeGreaterThan(0);
+    expect(container.querySelector(".tests-detail-page")?.classList).toContain(
+      "is-cases-tab",
+    );
+    expect(screen.getByRole("complementary", { name: "Test scenarios" })).not.toBeNull();
+    expect(screen.getAllByRole("button", { name: /Add scenario/i }).length).toBeGreaterThan(0);
 
     fireEvent.click(within(sectionSwitch).getByRole("radio", { name: "Settings" }));
+    expect(container.querySelector(".tests-detail-page")?.classList).not.toContain(
+      "is-overview-tab",
+    );
+    expect(container.querySelector(".tests-detail-page")?.classList).toContain(
+      "is-settings-tab",
+    );
     expect(screen.queryByRole("heading", { name: "How this test works" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Test details" })).toBeNull();
     expect(screen.getByRole("region", { name: "Test settings" })).not.toBeNull();
@@ -148,6 +155,12 @@ describe("TestPlanDetailPage", () => {
     expect(
       (screen.getByRole("textbox", { name: "Test description" }) as HTMLTextAreaElement).value,
     ).toBe(plan.description);
+    const settingsDetailsSidebar = screen.getByRole("complementary", {
+      name: "Test plan information",
+    });
+    expect(settingsDetailsSidebar.dataset.collapsed).toBe("false");
+    expect(within(settingsDetailsSidebar).getByText("Scope")).not.toBeNull();
+    expect(within(settingsDetailsSidebar).getByText("Computer")).not.toBeNull();
     expect(screen.queryByText("Status")).toBeNull();
     expect(screen.queryByRole("heading", { name: "Run target" })).toBeNull();
     expect(screen.getByRole("heading", { name: "Run behavior" })).not.toBeNull();
@@ -159,7 +172,7 @@ describe("TestPlanDetailPage", () => {
     const runBehaviorSection = screen.getByRole("heading", { name: "Run behavior" }).closest("section");
     expect(runBehaviorSection?.querySelectorAll(".platform-service-detail-page__property")).toHaveLength(3);
     expect(within(runBehaviorSection as HTMLElement).getByRole("switch", {
-      name: "Stop after the first failed case",
+      name: "Stop after the first failed scenario",
     })).not.toBeNull();
     const evidenceSection = screen.getByRole("heading", { name: "Evidence to keep" }).closest("section");
     expect(evidenceSection?.querySelectorAll(".platform-service-detail-page__property")).toHaveLength(5);
@@ -188,6 +201,21 @@ describe("TestPlanDetailPage", () => {
     expect((descriptionInput as HTMLTextAreaElement).value).toBe(plan.description);
 
     fireEvent.click(within(sectionSwitch).getByRole("radio", { name: "Overview" }));
+    expect(container.querySelector(".tests-detail-page")?.classList).toContain(
+      "is-overview-tab",
+    );
+    const overviewIdentity = container.querySelector(".tests-overview-identity");
+    expect(overviewIdentity).not.toBeNull();
+    expect(
+      (within(overviewIdentity as HTMLElement).getByRole("textbox", {
+        name: "Test name",
+      }) as HTMLTextAreaElement).readOnly,
+    ).toBe(true);
+    expect(
+      (within(overviewIdentity as HTMLElement).getByRole("textbox", {
+        name: "Test description",
+      }) as HTMLTextAreaElement).value,
+    ).toBe(plan.description);
     const overviewDetailsSidebar = container.querySelector<HTMLElement>(
       "[data-platform-detail-sidebar='true']",
     );
@@ -430,6 +458,9 @@ describe("TestPlanDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Rename" }));
     await waitFor(() => {
       expect(updatePlan).toHaveBeenCalledWith("plan-1", { name: "Production readiness" });
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Rename test" })).toBeNull();
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Test actions" }));

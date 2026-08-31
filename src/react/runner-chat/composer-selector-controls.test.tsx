@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { createRef } from "react";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -17,16 +17,13 @@ describe("composer selector controls", () => {
     const html = renderToStaticMarkup(
       <RunnerAgentSelectorControl
         animation={false}
-        availableModes={["agents"]}
         buttonRef={createRef<HTMLButtonElement>()}
         displayedAgentLabel="Forge"
         hasApiKey
         hidden={false}
         locked
-        mode="agents"
         onCloseReasoning={vi.fn()}
         onDoneReasoning={vi.fn()}
-        onModeChange={vi.fn()}
         onOpenReasoning={vi.fn()}
         onSelectAgent={vi.fn()}
         onSelectReasoningEffort={vi.fn()}
@@ -59,15 +56,12 @@ describe("composer selector controls", () => {
     render(
       <RunnerAgentSelectorControl
         animation={false}
-        availableModes={["agents"]}
         buttonRef={createRef<HTMLButtonElement>()}
         displayedAgentLabel="Forge"
         hasApiKey
         hidden={false}
-        mode="agents"
         onCloseReasoning={vi.fn()}
         onDoneReasoning={vi.fn()}
-        onModeChange={vi.fn()}
         onOpenReasoning={vi.fn()}
         onSelectAgent={vi.fn()}
         onSelectReasoningEffort={vi.fn()}
@@ -90,6 +84,74 @@ describe("composer selector controls", () => {
       '[role="radiogroup"][aria-label="Reasoning effort"]',
     );
     expect(switchElement?.classList.contains("is-full-width")).toBe(true);
+    expect(
+      document.body.querySelector(".tb-popup-menu-agent-reasoning")
+        ?.getAttribute("data-platform-popup-variant"),
+    ).toBe("minimal");
+  });
+
+  it("renders one searchable agent and squad list with profile photos", () => {
+    const longAgentName = "Bounded optimization target delivery specialist";
+    render(
+      <RunnerAgentSelectorControl
+        animation={false}
+        buttonRef={createRef<HTMLButtonElement>()}
+        displayedAgentLabel={longAgentName}
+        hasApiKey
+        hidden={false}
+        onCloseReasoning={vi.fn()}
+        onDoneReasoning={vi.fn()}
+        onOpenReasoning={vi.fn()}
+        onSelectAgent={vi.fn()}
+        onSelectReasoningEffort={vi.fn()}
+        onToggle={vi.fn()}
+        open
+        options={[
+          {
+            id: "agent_1",
+            name: longAgentName,
+            photoUrl: "/img/agent-profile-pics/forge.webp",
+          },
+          { id: "team_1", name: "Research squad" },
+        ]}
+        popupRef={createRef<HTMLDivElement>()}
+        popupStyle={null}
+        reasoningEffort="low"
+        reasoningOpen={false}
+        reasoningPopupAnimation={false}
+        reasoningPopupRef={createRef<HTMLDivElement>()}
+        reasoningPopupStyle={null}
+        selectedAgentId="agent_1"
+        totalAgentCount={2}
+      />,
+    );
+
+    const searchInput = document.body.querySelector<HTMLInputElement>(
+      'input[aria-label="Search agents and squads"]',
+    );
+    const popup = document.body.querySelector<HTMLElement>(
+      ".tb-popup-menu-inline-agent",
+    );
+    expect(searchInput).not.toBeNull();
+    expect(popup?.textContent).toContain(longAgentName);
+    expect(popup?.textContent).toContain("Research squad");
+    expect(document.body.querySelector('[aria-label="Agent type"]')).toBeNull();
+    expect(
+      document.body
+        .querySelector(".platform-agent-selector__avatar-image")
+        ?.getAttribute("src"),
+    ).toBe("/img/agent-profile-pics/forge.webp");
+    expect(
+      document.body.querySelector(
+        ".tb-composer-agent-option .platform-agent-selector__option-name",
+      )
+        ?.getAttribute("title"),
+    ).toBe(longAgentName);
+
+    if (!searchInput) throw new Error("Agent search input was not rendered");
+    fireEvent.change(searchInput, { target: { value: "research" } });
+    expect(popup?.textContent).not.toContain(longAgentName);
+    expect(popup?.textContent).toContain("Research squad");
   });
 
   it("marks the selected workspace label as a truncation target", () => {

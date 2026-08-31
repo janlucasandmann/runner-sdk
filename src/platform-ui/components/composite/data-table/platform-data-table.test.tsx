@@ -2,7 +2,6 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  act,
   cleanup,
   createEvent,
   fireEvent,
@@ -96,9 +95,9 @@ describe("PlatformDataTable", () => {
         ?.classList.contains("is-bottom-active"),
     ).toBe(true);
     expect(
-      sortButton.querySelectorAll(".lucide-chevrons-up-down"),
+      sortButton.querySelectorAll(".hugeicons-chevrons-up-down"),
     ).toHaveLength(2);
-    expect(sortButton.querySelector(".lucide-arrow-up-down")).toBeNull();
+    expect(sortButton.querySelector(".hugeicons-arrow-up-down")).toBeNull();
 
     await user.click(sortButton);
 
@@ -220,7 +219,7 @@ describe("PlatformDataTable", () => {
     const filterButton = screen.getByRole("button", { name: "Filter" });
     expect(title.nextElementSibling).toBe(filterButton);
     expect(filterButton.classList.contains("is-icon-only")).toBe(true);
-    expect(filterButton.querySelector(".lucide-list-filter")).not.toBeNull();
+    expect(filterButton.querySelector(".hugeicons-list-filter")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "Sort" })).toBeNull();
 
     await user.click(filterButton);
@@ -869,9 +868,98 @@ describe("PlatformDataTable", () => {
 
     expect(
       document.querySelector(
-        ".platform-data-table__floating-menu.platform-popup-surface.is-minimal",
+        ".platform-data-table__floating-menu.platform-popup-surface.is-minimal.is-portaled",
       ),
     ).not.toBeNull();
+  });
+
+  it("renders delete as the canonical full-width shortcut action", async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    renderTable({
+      getRowActions: () => [
+        {
+          id: "delete",
+          label: "Delete",
+          onSelect: onDelete,
+        },
+      ],
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
+
+    const deleteAction = screen.getByRole("menuitem", { name: "Delete" });
+    expect(deleteAction.classList.contains("is-delete")).toBe(true);
+    expect(deleteAction.classList.contains("is-danger")).toBe(true);
+    expect(deleteAction.classList.contains("has-separator")).toBe(true);
+    expect(deleteAction.querySelector(".hugeicons-trash-2")).not.toBeNull();
+    expect(deleteAction.getAttribute("aria-keyshortcuts")).toBe(
+      "Meta+Backspace Meta+Delete Control+Backspace Control+Delete",
+    );
+    expect(within(deleteAction).getByText("⌘ ⌫").className).toBe(
+      "platform-data-table__menu-shortcut",
+    );
+  });
+
+  it("applies the canonical delete treatment to bulk delete actions", async () => {
+    const user = userEvent.setup();
+    renderTable({
+      getRowActions: () => [
+        {
+          id: "delete-selected",
+          label: "Delete selected",
+          onSelect: vi.fn(),
+        },
+      ],
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
+
+    const deleteAction = screen.getByRole("menuitem", {
+      name: "Delete selected",
+    });
+    expect(deleteAction.classList.contains("is-delete")).toBe(true);
+    expect(within(deleteAction).getByText("⌘ ⌫")).not.toBeNull();
+  });
+
+  it("invokes delete shortcuts only for the hovered row", () => {
+    const onDelete = vi.fn();
+    renderTable({
+      getRowActions: () => [
+        {
+          id: "delete",
+          label: "Delete",
+          onSelect: onDelete,
+        },
+      ],
+    });
+
+    const alphaRow = screen.getByRole("row", { name: "Alpha" });
+    fireEvent.pointerEnter(alphaRow);
+    fireEvent.keyDown(document, {
+      key: "Backspace",
+      code: "Backspace",
+      metaKey: true,
+    });
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({
+        rowId: "row-a",
+        rows: [expect.objectContaining({ id: "row-a" })],
+      }),
+    );
+
+    fireEvent.pointerLeave(alphaRow);
+    fireEvent.keyDown(document, {
+      key: "Delete",
+      code: "Delete",
+      ctrlKey: true,
+    });
+    expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
   it("activates a focused row with the keyboard", async () => {
@@ -914,8 +1002,17 @@ describe("PlatformDataTable", () => {
   });
 
   it("uses the canonical loading and empty states", () => {
-    const { rerender } = renderTable({ rows: [], loading: true });
-    expect(screen.getByRole("status").textContent).toContain("Loading");
+    const { container, rerender } = renderTable({ rows: [], loading: true });
+    const loadingState = screen.getByRole("status", {
+      name: "Loading Test resources…",
+    });
+    expect(loadingState.classList.contains("platform-loading-state")).toBe(true);
+    expect(loadingState.classList.contains("is-centered")).toBe(true);
+    expect(
+      container.querySelector(
+        '.platform-data-table__state.has-loading-state img[src="/img/spinner.svg"]',
+      ),
+    ).not.toBeNull();
     expect(screen.getByRole("columnheader", { name: /Name/ })).not.toBeNull();
 
     rerender(
@@ -1016,20 +1113,12 @@ describe("PlatformDataTable", () => {
     ).toBe(true);
   });
 
-  it("animates the shared nine-dot loading sequence", () => {
-    vi.useFakeTimers();
+  it("renders the shared spinner for the default loading state", () => {
     const { container } = renderTable({ rows: [], loading: true });
-    const dots = Array.from(
-      container.querySelectorAll<HTMLElement>(
-        ".platform-data-table__dot-loader > span",
+    expect(
+      container.querySelector(
+        '.platform-data-table__state.has-loading-state img[src="/img/spinner.svg"]',
       ),
-    );
-    const initialOpacities = dots.map((dot) => dot.style.opacity);
-
-    expect(dots).toHaveLength(9);
-
-    act(() => vi.advanceTimersByTime(62));
-
-    expect(dots.map((dot) => dot.style.opacity)).not.toEqual(initialOpacities);
+    ).not.toBeNull();
   });
 });

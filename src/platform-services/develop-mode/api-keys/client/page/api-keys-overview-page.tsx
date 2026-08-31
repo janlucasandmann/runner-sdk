@@ -80,11 +80,13 @@ function ApiKeyCreatedNotice({
           <p className="playground-settings-created-key-copy">
             Copy this key now. It cannot be viewed again after this notice is dismissed.
           </p>
-          <div className="playground-settings-code-row">
-            <code className="playground-settings-code">{notice.keyValue}</code>
+          <div className="playground-settings-created-key-secret">
+            <code className="playground-settings-code playground-settings-created-key-value">
+              {notice.keyValue}
+            </code>
             <button
               type="button"
-              className="playground-settings-icon-button"
+              className="playground-settings-icon-button playground-settings-created-key-copy-button"
               onClick={notice.onCopy}
               title="Copy to clipboard"
               aria-label="Copy newly created API key"
@@ -97,7 +99,7 @@ function ApiKeyCreatedNotice({
         </div>
         <button
           type="button"
-          className="playground-settings-icon-button"
+          className="playground-settings-icon-button playground-settings-created-key-dismiss-button"
           onClick={notice.onDismiss}
           aria-label="Dismiss created API key"
         >
@@ -285,6 +287,7 @@ export function DevelopApiKeysOverviewPage({
 
   return (
     <ResourceOverviewPage<DevelopApiKeyOverviewRow>
+      rowActionMode="custom"
       period={period}
       onPeriodChange={onPeriodChange}
       heroContent={(

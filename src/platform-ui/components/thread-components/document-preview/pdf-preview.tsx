@@ -5,7 +5,7 @@ import {
   LoaderCircle as LucideLoaderCircle,
   Minus as LucideMinus,
   Plus as LucidePlus,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import { useEffect, useRef, useState } from "react";
 import { PlatformLoadingState } from "../../composite/loading-state/index.js";
 import {

@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "../../ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,

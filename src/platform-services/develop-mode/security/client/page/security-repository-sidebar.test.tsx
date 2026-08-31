@@ -201,7 +201,7 @@ describe("SecurityRepositorySidebar", () => {
     fireEvent.click(selector);
 
     const adaOption = await screen.findByRole("option", {
-      name: "Ada Lovelace, ada@acme.test",
+      name: "Ada Lovelace",
     });
     expect(onLoadOwnerCandidates).toHaveBeenCalledTimes(1);
     fireEvent.click(adaOption);

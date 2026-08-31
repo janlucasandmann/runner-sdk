@@ -7,7 +7,7 @@ import {
   GitBranch,
   Workflow,
   X,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import {
   type CSSProperties,
   type ElementType,

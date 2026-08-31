@@ -24,7 +24,7 @@ import {
   Terminal as LucideTerminal,
   Wand2 as LucideWand2,
   Zap as LucideZap,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 
 export interface RunnerChatSkill {
   id: string;

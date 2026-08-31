@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Code2, FileSearch, Globe } from "lucide-react";
+import { Code2, FileSearch, Globe } from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import {
   buildRunnerPreviewAttachmentFromPath,

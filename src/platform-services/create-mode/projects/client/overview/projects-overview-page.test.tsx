@@ -105,7 +105,7 @@ describe("ProjectsOverviewPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Open actions for Equal Care" }));
     const deleteAction = screen.getByRole("menuitem", { name: "Delete" });
-    expect(deleteAction.classList.contains("is-danger")).toBe(false);
+    expect(deleteAction.classList.contains("is-danger")).toBe(true);
     await user.click(deleteAction);
     expect(onDelete).toHaveBeenCalledWith([rows[0]]);
   });

@@ -471,8 +471,20 @@ const computerDetailPageSource = await fs.readFile(
   path.join(packageRoot, "src", "platform-resources", "computers", "detail", "computer-detail-page.tsx"),
   "utf8",
 );
-if (!computerDetailPageSource.includes("ResourceDetailPage")) {
-  failures.push("ComputerDetailPage must compose the shared ResourceDetailPage");
+if (
+  !computerDetailPageSource.includes("ResourceDetailPage")
+  ||
+  !computerDetailPageSource.includes("MarkdownResourceDetailPage")
+  || !computerDetailPageSource.includes("PlatformServiceDetailPage")
+) {
+  failures.push("ComputerDetailPage must compose the shared General, Runtime, and Settings detail pages");
+}
+if (
+  !computerDetailPageSource.includes("PlatformCodeEditorWorkspace")
+  || !computerDetailPageSource.includes("PlatformMonacoCodeEditor")
+  || !computerDetailPageSource.includes("function ComputerRuntimeEditor")
+) {
+  failures.push("Computer Runtime must use the centralized code-editor workspace and Monaco adapter");
 }
 const computerDetailControllerSource = await fs.readFile(
   path.join(packageRoot, "apps", "platform", "client", "legacy", "domains", "compute-resources", "controller", "computer-detail-view.js"),
@@ -488,10 +500,17 @@ if (!computerDetailControllerSource.includes("React.createElement(PlatformAnalyt
   failures.push("computer detail analytics must use PlatformAnalyticsSection");
 }
 if (
-  !computerDetailControllerSource.includes("const environmentDetailsSection =")
-  || !computerDetailControllerSource.includes("environmentAnalyticsSection,\n              environmentDetailsSection")
+  !computerDetailControllerSource.includes("const environmentGeneralContent = React.createElement")
+  || !computerDetailControllerSource.includes("environmentAnalyticsSection,\n              environmentDetailAdvancedSettingsList")
 ) {
-  failures.push("computer details must follow Analytics in the General content section");
+  failures.push("Computer General must own analytics and advanced runtime configuration");
+}
+if (
+  !computerDetailControllerSource.includes("location: environmentLocationSection")
+  || !computerDetailControllerSource.includes("connectors: computerConnectorsSection")
+  || !computerDetailControllerSource.includes("access: environmentAccessSettingsSection")
+) {
+  failures.push("Computer Settings must use the shared location, GitHub connector, and access slots");
 }
 if (
   !computerDetailControllerSource.includes("React.createElement(PlatformResourceActionsMenu")
@@ -502,16 +521,38 @@ if (
   failures.push("computer operations must use the centralized breadcrumb resource-actions menu");
 }
 if (
-  !computerDetailControllerSource.includes('className: "playground-computer-detail-profile-description"')
-  || !computerDetailControllerSource.includes('updateEnvironmentField("description", event.target.value)')
+  !computerDetailControllerSource.includes("const environmentSettings = {")
+  || !computerDetailControllerSource.includes("title: String(draftEnvironment.name || \"\")")
+  || !computerDetailControllerSource.includes("description: String(draftEnvironment.description || \"\")")
+  || !computerDetailControllerSource.includes('updateEnvironmentField("description", value)')
 ) {
-  failures.push("computer descriptions must use the inline editable identity field");
+  failures.push("computer descriptions must use the centralized editable Settings identity");
 }
 if (computerDetailControllerSource.includes("const descriptionSection = React.createElement(PlatformInstructionsEditor")) {
   failures.push("computer descriptions must not retain a standalone instructions editor");
 }
-if (!computerDetailControllerSource.includes('className: "playground-computer-detail-profile-icon"')) {
-  failures.push("computer identity must include its icon tile");
+if (
+  !computerDetailControllerSource.includes("const renderEnvironmentIdentityIcon = () => React.createElement(ProjectIconPicker")
+  || !computerDetailControllerSource.includes("const environmentRuntimeIdentity = React.createElement(PlatformFileResourceIdentity")
+  || !/identity: \{[\s\S]{0,120}\.\.\.environmentIdentityFields,[\s\S]{0,120}icon: renderEnvironmentIdentityIcon\(\)/.test(computerDetailControllerSource)
+) {
+  failures.push("computer Runtime and Settings identities must share the centralized editable icon tile");
+}
+if (
+  !computerDetailControllerSource.includes("const environmentRuntimeEditor = {")
+  || !computerDetailControllerSource.includes("environmentDockerfileSource?.effectiveDockerfile")
+  || !computerDetailControllerSource.includes("readOnly: true")
+) {
+  failures.push("Computer Runtime must display the authoritative effective Dockerfile safely");
+}
+if (
+  !computerDetailControllerSource.includes("await loadEnvironmentDockerfileSource(")
+  || !computerDetailControllerSource.includes('{ path: "Dockerfile", content: effectiveDockerfile + "\\n" }')
+) {
+  failures.push("Computer GitHub exports must contain the complete effective Dockerfile");
+}
+if (/environmentDetailGeneralSection|environmentProfileSection|environmentDetailsSection/.test(computerDetailControllerSource)) {
+  failures.push("Computer Details must not retain the legacy General composition");
 }
 if (!computerDetailControllerSource.includes("React.createElement(PlatformSettingsSectionList")) {
   failures.push("computer advanced settings must use PlatformSettingsSectionList");

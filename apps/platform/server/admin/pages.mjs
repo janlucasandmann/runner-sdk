@@ -1,3 +1,4 @@
+import { createAdminAccessDeniedPageRenderer } from "./admin-access-denied-page.mjs";
 import { createEnvironmentGuiPageRenderer } from "./environment-gui-page.mjs";
 import { createFeedbackSummaryPageRenderer } from "./feedback-summary-page.mjs";
 import { createProductUsageSummaryPageRenderer } from "./product-usage-summary-page.mjs";
@@ -9,6 +10,7 @@ export function createAdminPageRenderers({
   feedbackSummaryAllowedEmail,
 }) {
   return Object.freeze({
+    serveAdminAccessDeniedPage: createAdminAccessDeniedPageRenderer({ aiosOrigin }),
     serveEnvironmentGuiViewerPage: createEnvironmentGuiPageRenderer(),
     serveFeedbackSummaryPage: createFeedbackSummaryPageRenderer({
       aiosOrigin,

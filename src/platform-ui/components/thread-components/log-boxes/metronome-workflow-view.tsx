@@ -14,7 +14,7 @@ import {
   StickyNote,
   Workflow,
   Zap,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 import { Fragment, useEffect, useRef, useState } from "react";
 import {

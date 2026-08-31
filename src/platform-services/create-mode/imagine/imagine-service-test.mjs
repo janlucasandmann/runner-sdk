@@ -61,6 +61,7 @@ assert.doesNotMatch(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation, /className: "pla
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.teamTemplateReader, /function readTeamPageCustomImagineTemplates/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.teamResourceNavigation, /function openTeamResourceImagineTemplateRow/);
 assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "imagine"/);
+assert.match(IMAGINE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: ImagineSidebarIcon/);
 assert.match(IMAGINE_SHELL_STYLE_FRAGMENTS.toolbar, /\.playground-imagine-media-mode-selector/);
 
 assert.doesNotThrow(() => new Function(IMAGINE_APP_SCRIPT_FRAGMENTS.topNavigation));

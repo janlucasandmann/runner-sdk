@@ -27,6 +27,7 @@ const rows: readonly EvaluationOverviewRow[] = [
     caseCount: 12,
     runCount: 4,
     creatorName: "Jan",
+    creatorAvatarUrl: "/jan.png",
     creatorFallback: "J",
     updatedAt: 1_720_000_000_000,
     canRun: true,
@@ -148,6 +149,9 @@ describe("EvaluationsOverviewPage", () => {
         ?.textContent,
     ).toBe("Support Quality");
     expect(screen.getByText("Measure customer support quality.")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
+    expect(container.querySelector('img[src="/jan.png"]')).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Evaluation" }));
     expect(onCreate).toHaveBeenCalledOnce();

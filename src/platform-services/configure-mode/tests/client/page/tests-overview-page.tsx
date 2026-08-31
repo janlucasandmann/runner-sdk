@@ -1,4 +1,4 @@
-import { ChevronRight, FlaskConical, Play, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, FlaskConical, Play, Plus, Trash2 } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,

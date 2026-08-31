@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   PlatformModal,
 } from "../../../../../platform-ui/components/composite/modal/index.js";

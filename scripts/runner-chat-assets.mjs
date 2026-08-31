@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadPlatformPageStyleBundle } from "../apps/platform/shared/development-style-resolution.mjs";
 import { loadRunnerChatCssBundle } from "./runner-chat-style-sources.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -286,6 +287,24 @@ const distPlatformEmptyStateCssPath = path.join(
   "empty-state",
   "empty-state.css",
 );
+const platformEmojiPickerCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "emoji-picker",
+  "emoji-picker.css",
+);
+const distPlatformEmojiPickerCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "emoji-picker",
+  "emoji-picker.css",
+);
 const platformLoadingStateCssPath = path.join(
   packageRoot,
   "src",
@@ -465,6 +484,24 @@ const distPlatformComponentsIconButtonCssPath = path.join(
   "ui",
   "icon-button",
   "icon-button.css",
+);
+const platformInputCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "ui",
+  "input",
+  "input.css",
+);
+const distPlatformComponentsInputCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "ui",
+  "input",
+  "input.css",
 );
 const platformLabelCssPath = path.join(
   packageRoot,
@@ -772,6 +809,24 @@ const distPlatformConnectorConfigurationCssPath = path.join(
   "connector-configuration",
   "connector-configuration.css",
 );
+const platformConnectorSettingsCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "connector-settings",
+  "connector-settings.css",
+);
+const distPlatformConnectorSettingsCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "connector-settings",
+  "connector-settings.css",
+);
 const platformGitHubAutomationsCssPath = path.join(
   packageRoot,
   "src",
@@ -789,6 +844,24 @@ const distPlatformGitHubAutomationsCssPath = path.join(
   "composite",
   "github-automations",
   "github-automations.css",
+);
+const platformResourceSourceControlCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "components",
+  "composite",
+  "resource-source-control",
+  "resource-source-control.css",
+);
+const distPlatformResourceSourceControlCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "components",
+  "composite",
+  "resource-source-control",
+  "resource-source-control.css",
 );
 const platformGlobalSearchModalCssPath = path.join(
   packageRoot,
@@ -869,6 +942,22 @@ const distPlatformDetailPageCssPath = path.join(
   "pages",
   "details",
   "resource-detail.css",
+);
+const platformSettingsPageCssPath = path.join(
+  packageRoot,
+  "src",
+  "platform-ui",
+  "pages",
+  "settings",
+  "resource-settings-page.css",
+);
+const distPlatformSettingsPageCssPath = path.join(
+  packageRoot,
+  "dist",
+  "platform-ui",
+  "pages",
+  "settings",
+  "resource-settings-page.css",
 );
 const developServerDetailPageCssPath = path.join(
   packageRoot,
@@ -1006,6 +1095,7 @@ async function prepare() {
 async function copy() {
   const [
     cssText,
+    platformPagesCssText,
     platformAttachmentsCssText,
     platformActivityOverviewCssText,
     platformActivityTimelineCssText,
@@ -1021,6 +1111,7 @@ async function copy() {
     platformVersionSaveDialogCssText,
     platformDetailTabBarCssText,
     platformEmptyStateCssText,
+    platformEmojiPickerCssText,
     platformLoadingStateCssText,
     platformStatusIndicatorCssText,
     platformInstructionsEditorCssText,
@@ -1031,6 +1122,7 @@ async function copy() {
     platformButtonCssText,
     platformCheckboxCssText,
     platformIconButtonCssText,
+    platformInputCssText,
     platformLabelCssText,
     platformTicketItemCssText,
     platformVersionLabelCssText,
@@ -1048,12 +1140,15 @@ async function copy() {
     platformToggleCssText,
     platformModalCssText,
     platformConnectorConfigurationCssText,
+    platformConnectorSettingsCssText,
     platformGitHubAutomationsCssText,
+    platformResourceSourceControlCssText,
     platformGlobalSearchModalCssText,
     platformPlanGateModalCssText,
     platformHomePageCssText,
     platformOverviewPageCssText,
     platformDetailPageCssText,
+    platformSettingsPageCssText,
     developServerDetailPageCssText,
     securityPageCssText,
     evidenceAgentsPageCssText,
@@ -1066,6 +1161,7 @@ async function copy() {
     platformResourceAccessTableCssText,
   ] = await Promise.all([
     loadBundledCss(),
+    loadPlatformPageStyleBundle(packageRoot),
     fs.readFile(platformAttachmentsCssPath, "utf8"),
     fs.readFile(platformActivityOverviewCssPath, "utf8"),
     fs.readFile(platformActivityTimelineCssPath, "utf8"),
@@ -1081,6 +1177,7 @@ async function copy() {
     fs.readFile(platformVersionSaveDialogCssPath, "utf8"),
     fs.readFile(platformDetailTabBarCssPath, "utf8"),
     fs.readFile(platformEmptyStateCssPath, "utf8"),
+    fs.readFile(platformEmojiPickerCssPath, "utf8"),
     fs.readFile(platformLoadingStateCssPath, "utf8"),
     fs.readFile(platformStatusIndicatorCssPath, "utf8"),
     fs.readFile(platformInstructionsEditorCssPath, "utf8"),
@@ -1091,6 +1188,7 @@ async function copy() {
     fs.readFile(platformButtonCssPath, "utf8"),
     fs.readFile(platformCheckboxCssPath, "utf8"),
     fs.readFile(platformIconButtonCssPath, "utf8"),
+    fs.readFile(platformInputCssPath, "utf8"),
     fs.readFile(platformLabelCssPath, "utf8"),
     fs.readFile(platformTicketItemCssPath, "utf8"),
     fs.readFile(platformVersionLabelCssPath, "utf8"),
@@ -1108,12 +1206,15 @@ async function copy() {
     fs.readFile(platformToggleCssPath, "utf8"),
     fs.readFile(platformModalCssPath, "utf8"),
     fs.readFile(platformConnectorConfigurationCssPath, "utf8"),
+    fs.readFile(platformConnectorSettingsCssPath, "utf8"),
     fs.readFile(platformGitHubAutomationsCssPath, "utf8"),
+    fs.readFile(platformResourceSourceControlCssPath, "utf8"),
     fs.readFile(platformGlobalSearchModalCssPath, "utf8"),
     fs.readFile(platformPlanGateModalCssPath, "utf8"),
     fs.readFile(platformHomePageCssPath, "utf8"),
     fs.readFile(platformOverviewPageCssPath, "utf8"),
     fs.readFile(platformDetailPageCssPath, "utf8"),
+    fs.readFile(platformSettingsPageCssPath, "utf8"),
     fs.readFile(developServerDetailPageCssPath, "utf8"),
     fs.readFile(securityPageCssPath, "utf8"),
     fs.readFile(evidenceAgentsPageCssPath, "utf8"),
@@ -1243,6 +1344,14 @@ async function copy() {
     platformEmptyStateCssText,
     "utf8",
   );
+  await fs.mkdir(path.dirname(distPlatformEmojiPickerCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformEmojiPickerCssPath,
+    platformEmojiPickerCssText,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformLoadingStateCssPath), {
     recursive: true,
   });
@@ -1321,6 +1430,14 @@ async function copy() {
   await fs.writeFile(
     distPlatformComponentsIconButtonCssPath,
     platformIconButtonCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformComponentsInputCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformComponentsInputCssPath,
+    platformInputCssText,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformComponentsLabelCssPath), {
@@ -1453,12 +1570,28 @@ async function copy() {
     platformConnectorConfigurationCssText,
     "utf8",
   );
+  await fs.mkdir(path.dirname(distPlatformConnectorSettingsCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformConnectorSettingsCssPath,
+    platformConnectorSettingsCssText,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformGitHubAutomationsCssPath), {
     recursive: true,
   });
   await fs.writeFile(
     distPlatformGitHubAutomationsCssPath,
     platformGitHubAutomationsCssText,
+    "utf8",
+  );
+  await fs.mkdir(path.dirname(distPlatformResourceSourceControlCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformResourceSourceControlCssPath,
+    platformResourceSourceControlCssText,
     "utf8",
   );
   await fs.mkdir(path.dirname(distPlatformGlobalSearchModalCssPath), {
@@ -1501,6 +1634,14 @@ async function copy() {
     platformDetailPageCssText,
     "utf8",
   );
+  await fs.mkdir(path.dirname(distPlatformSettingsPageCssPath), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    distPlatformSettingsPageCssPath,
+    platformSettingsPageCssText,
+    "utf8",
+  );
   await fs.mkdir(path.dirname(distPlatformPermissionsPageCssPath), {
     recursive: true,
   });
@@ -1512,7 +1653,7 @@ async function copy() {
   await fs.mkdir(path.dirname(distPlatformPagesCssPath), { recursive: true });
   await fs.writeFile(
     distPlatformPagesCssPath,
-    `${platformPopupCssText}\n\n${platformResourceActionModalsCssText}\n\n${platformResourceHeaderActionsCssText}\n\n${platformProfileImagePickerCssText}\n\n${platformOwnerSelectorCssText}\n\n${platformSelectorCssText}\n\n${platformCheckboxCssText}\n\n${platformAttachmentsCssText}\n\n${platformActivityOverviewCssText}\n\n${platformActivityTimelineCssText}\n\n${platformActivityWorkspaceCssText}\n\n${platformCommentsCssText}\n\n${platformConnectorActionDetailCssText}\n\n${platformSubtasksCssText}\n\n${platformTicketItemCssText}\n\n${platformFileExplorerCssText}\n\n${platformDataTableCssText}\n\n${platformAnalyticsCssText}\n\n${platformDeploymentMapCssText}\n\n${platformEmptyStateCssText}\n\n${platformLoadingStateCssText}\n\n${platformStatusIndicatorCssText}\n\n${platformCodeEditorWorkspaceCssText}\n\n${platformCodePreviewBoxCssText}\n\n${platformPageHeroCssText}\n\n${platformUiCardCssText}\n\n${platformVersionLabelCssText}\n\n${platformHomePageCssText}\n\n${platformOverviewPageCssText}\n\n${platformDetailTabBarCssText}\n\n${platformDetailSidebarCssText}\n\n${platformFloatingSidebarCssText}\n\n${platformVersionHistorySidebarCssText}\n\n${platformVersionSaveDialogCssText}\n\n${platformInstructionsEditorCssText}\n\n${platformSettingsSectionCssText}\n\n${platformDetailPageCssText}\n\n${developServerDetailPageCssText}\n\n${securityPageCssText}\n\n${evidenceAgentsPageCssText}\n\n${platformPermissionsPageCssText}\n\n${agentDetailCssText}\n\n${skillDetailCssText}\n\n${promptDetailCssText}\n\n${tagDetailCssText}\n\n${externalAgentTriggersCssText}\n\n${platformResourceAccessTableCssText}\n\n${platformPlanGateModalCssText}`,
+    platformPagesCssText,
     "utf8",
   );
   await fs.mkdir(distAssetsDir, { recursive: true });

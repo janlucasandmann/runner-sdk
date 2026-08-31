@@ -9,8 +9,7 @@ export interface ComputerResourceClientOptions {
   fetchImpl?: typeof fetch;
 }
 
-export interface SaveComputerResourceOptions
-  extends ComputerResourceClientOptions {
+export interface SaveComputerResourceOptions extends ComputerResourceClientOptions {
   computerId?: string | null;
   draftId?: string | null;
   createPayload: unknown;
@@ -31,15 +30,37 @@ export interface SaveComputerResourceInput {
   updatePayload: unknown;
 }
 
+/**
+ * The authoritative build source returned by the Computers API.
+ *
+ * `effectiveDockerfile` is the complete file used to build the container.
+ * `dockerfileExtensions` remains separate because the current write contract
+ * only persists the custom suffix, not an arbitrary replacement Dockerfile.
+ */
+export interface ComputerDockerfileSource {
+  baseImage: string;
+  dockerfileExtensions: string;
+  effectiveDockerfile: string;
+}
+
+export interface LoadComputerDockerfileOptions extends ComputerResourceClientOptions {
+  computerId: string;
+  signal?: AbortSignal;
+}
+
 export interface ComputerResourceRepository {
   list(signal?: AbortSignal): Promise<unknown[]>;
+  getDockerfile(
+    computerId: string,
+    signal?: AbortSignal,
+  ): Promise<ComputerDockerfileSource>;
   save(input: SaveComputerResourceInput): Promise<SaveComputerResourceResult>;
   delete(computerId: string): Promise<Record<string, unknown>>;
 }
 
 function toJsonRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
+    ? (value as Record<string, unknown>)
     : {};
 }
 
@@ -57,14 +78,75 @@ function toComputerList(value: unknown): unknown[] {
   return [];
 }
 
+function unwrapComputerDockerfileRecord(
+  value: unknown,
+): Record<string, unknown> {
+  const record = toJsonRecord(value);
+  for (const candidate of [record.dockerfile, record.data]) {
+    if (
+      candidate &&
+      typeof candidate === "object" &&
+      !Array.isArray(candidate)
+    ) {
+      return candidate as Record<string, unknown>;
+    }
+  }
+  return record;
+}
+
+function joinDockerfileSections(baseImage: string, extensions: string): string {
+  const normalizedBaseImage = baseImage.trim();
+  const normalizedExtensions = extensions.trim();
+  return (
+    [
+      normalizedBaseImage ? `FROM ${normalizedBaseImage}` : "",
+      normalizedExtensions,
+    ]
+      .filter(Boolean)
+      .join("\n\n") + (normalizedBaseImage || normalizedExtensions ? "\n" : "")
+  );
+}
+
+export function normalizeComputerDockerfileSource(
+  value: unknown,
+): ComputerDockerfileSource {
+  const record = unwrapComputerDockerfileRecord(value);
+  const baseImage =
+    typeof record.baseImage === "string"
+      ? record.baseImage
+      : typeof record.base_image === "string"
+        ? record.base_image
+        : "";
+  const dockerfileExtensions =
+    typeof record.dockerfileExtensions === "string"
+      ? record.dockerfileExtensions
+      : typeof record.dockerfile_extensions === "string"
+        ? record.dockerfile_extensions
+        : "";
+  const providedEffectiveDockerfile =
+    typeof record.effectiveDockerfile === "string"
+      ? record.effectiveDockerfile
+      : typeof record.effective_dockerfile === "string"
+        ? record.effective_dockerfile
+        : "";
+  return Object.freeze({
+    baseImage,
+    dockerfileExtensions,
+    effectiveDockerfile:
+      providedEffectiveDockerfile ||
+      joinDockerfileSections(baseImage, dockerfileExtensions),
+  });
+}
+
 function extractCreatedComputerId(data: Record<string, unknown>): string {
-  const nested = data.environment
-    && typeof data.environment === "object"
-    && !Array.isArray(data.environment)
-    ? data.environment as Record<string, unknown>
-    : data.data && typeof data.data === "object" && !Array.isArray(data.data)
-      ? data.data as Record<string, unknown>
-      : data;
+  const nested =
+    data.environment &&
+    typeof data.environment === "object" &&
+    !Array.isArray(data.environment)
+      ? (data.environment as Record<string, unknown>)
+      : data.data && typeof data.data === "object" && !Array.isArray(data.data)
+        ? (data.data as Record<string, unknown>)
+        : data;
   return typeof nested.id === "string" ? nested.id.trim() : "";
 }
 
@@ -91,14 +173,24 @@ async function requestComputerJson({
 }
 
 export function createComputerResourceRepository(
-  apiClient: Pick<
-    PlatformApiClient,
-    "delete" | "get" | "post" | "put"
-  >,
+  apiClient: Pick<PlatformApiClient, "delete" | "get" | "post" | "put">,
 ): ComputerResourceRepository {
   const repository: ComputerResourceRepository = {
     async list(signal?: AbortSignal) {
       return toComputerList(await apiClient.get("/environments", { signal }));
+    },
+
+    async getDockerfile(computerId: string, signal?: AbortSignal) {
+      const normalizedComputerId = String(computerId || "").trim();
+      if (!normalizedComputerId) {
+        throw new Error("A computer id is required.");
+      }
+      return normalizeComputerDockerfileSource(
+        await apiClient.get(
+          `/environments/${encodeURIComponent(normalizedComputerId)}/dockerfile`,
+          { signal },
+        ),
+      );
     },
 
     async save(input: SaveComputerResourceInput) {
@@ -117,7 +209,9 @@ export function createComputerResourceRepository(
         });
         computerId = extractCreatedComputerId(createdData);
         if (!computerId) {
-          throw new Error("Environment creation response did not include an id.");
+          throw new Error(
+            "Environment creation response did not include an id.",
+          );
         }
       }
 
@@ -155,12 +249,14 @@ function createLegacyComputerResourceRepository({
   requestHeaders,
   fetchImpl,
 }: ComputerResourceClientOptions): ComputerResourceRepository {
-  return createComputerResourceRepository(createPlatformApiClient({
-    baseUrl: backendUrl,
-    fetchImpl,
-    getHeaders: () => requestHeaders,
-    credentials: "same-origin",
-  }));
+  return createComputerResourceRepository(
+    createPlatformApiClient({
+      baseUrl: backendUrl,
+      fetchImpl,
+      getHeaders: () => requestHeaders,
+      credentials: "same-origin",
+    }),
+  );
 }
 
 export async function saveComputerResource(
@@ -184,12 +280,29 @@ export async function deleteComputerResource(
   options: ComputerResourceClientOptions & { computerId: string },
 ): Promise<Record<string, unknown>> {
   try {
-    return await createLegacyComputerResourceRepository(options)
-      .delete(options.computerId);
+    return await createLegacyComputerResourceRepository(options).delete(
+      options.computerId,
+    );
   } catch (error) {
     if (error instanceof Error && error.message) {
       throw error;
     }
     throw new Error("Failed to delete environment.");
+  }
+}
+
+export async function loadComputerDockerfile(
+  options: LoadComputerDockerfileOptions,
+): Promise<ComputerDockerfileSource> {
+  try {
+    return await createLegacyComputerResourceRepository(options).getDockerfile(
+      options.computerId,
+      options.signal,
+    );
+  } catch (error) {
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+    throw new Error("Failed to load the computer Dockerfile.");
   }
 }

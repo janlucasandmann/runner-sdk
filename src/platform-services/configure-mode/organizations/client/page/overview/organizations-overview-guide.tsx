@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, ShieldCheck } from "lucide-react";
+import { ArrowRight, Building2, ShieldCheck } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { PlatformPageHero } from "../../../../../../platform-ui/components/composite/page-hero/index.js";
 import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
 

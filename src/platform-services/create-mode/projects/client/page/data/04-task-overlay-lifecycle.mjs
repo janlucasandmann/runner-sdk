@@ -477,6 +477,9 @@ export const PROJECTS_DATA_04_FRAGMENT = `          setPendingExternalTaskOpenRe
                 items: Array.isArray(requestedProjectResourceSnapshot.serverResources)
                   ? requestedProjectResourceSnapshot.serverResources.slice()
                   : [],
+                linkedResources: Array.isArray(requestedProjectResourceSnapshot.linkedResources)
+                  ? requestedProjectResourceSnapshot.linkedResources.slice()
+                  : [],
               });
               setProjectOverviewFileActivityState({
                 projectId: requestedProjectId,

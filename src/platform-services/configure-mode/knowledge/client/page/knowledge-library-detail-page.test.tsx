@@ -159,6 +159,11 @@ describe("KnowledgeLibraryDetailPage", () => {
     screen.getAllByRole("button", { name: "Manage" }).forEach((button) => {
       expect((button as HTMLButtonElement).disabled).toBe(true);
     });
+    const scopeTrigger = screen.getByRole("button", { name: "Choose Knowledge library scope" });
+    expect(scopeTrigger.textContent).toContain("Research project");
+    expect((scopeTrigger as HTMLButtonElement).disabled).toBe(true);
+    expect(scopeTrigger.closest(".platform-selector")?.getAttribute("title"))
+      .toBe("Project Strategy Knowledge is permanently scoped to its Project.");
 
     const identityIcon = container.querySelector(
       "[data-platform-resource-settings-identity='true'] .knowledge-library-identity__icon.is-project-linked",
@@ -255,6 +260,14 @@ describe("KnowledgeLibraryDetailPage", () => {
     ).not.toBeNull();
     expect(screen.getByText("Location")).not.toBeNull();
     expect(screen.getByText("Updated")).not.toBeNull();
+    expect(screen.getByText("Creator")).not.toBeNull();
+    expect(screen.getByText("Owner")).not.toBeNull();
+    expect(screen.getByText("Scope")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Choose Knowledge library scope" }).textContent)
+      .toContain("Independent");
+    const startThread = screen.getByRole("button", { name: "Start Thread" });
+    expect(startThread.querySelector("svg")).toBeNull();
+    expect((startThread as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("radio", { name: "Library" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Knowledge Library actions" }));
@@ -295,6 +308,75 @@ describe("KnowledgeLibraryDetailPage", () => {
       expect(createVersion).toHaveBeenCalledWith("library-1", { description: "" });
       expect(onReload).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("persists independent, single-project, and multi-project Scope selections", async () => {
+    const updateLibrary = vi.fn(async (_libraryId: string, input: Partial<KnowledgeLibrary>) => ({
+      ...library,
+      ...input,
+    }));
+
+    function ScopeHarness() {
+      const [currentLibrary, setCurrentLibrary] = useState<KnowledgeLibrary>(library);
+      return (
+        <>
+          <div id="knowledge-scope-sections" />
+          <KnowledgeLibraryDetailPage
+            library={currentLibrary}
+            availableProjectIdentities={[
+              {
+                id: "project-1",
+                name: "Project Alpha",
+                icon: "rocket",
+                color: "#5f6bdc",
+                projectType: "blank",
+              },
+              {
+                id: "project-2",
+                name: "Project Beta",
+                icon: "telescope",
+                color: "#8d83ff",
+                projectType: "research_knowledge",
+              },
+            ]}
+            api={{ updateLibrary } as unknown as KnowledgeApi}
+            sectionControlsPortalId="knowledge-scope-sections"
+            onLibraryChange={setCurrentLibrary}
+            onReload={vi.fn(async () => undefined)}
+            onStartThread={vi.fn()}
+          />
+        </>
+      );
+    }
+
+    render(<ScopeHarness />);
+    fireEvent.click(screen.getByRole("radio", { name: "Settings" }));
+    const scopeTrigger = screen.getByRole("button", { name: "Choose Knowledge library scope" });
+    expect(scopeTrigger.textContent).toContain("Independent");
+
+    fireEvent.click(scopeTrigger);
+    fireEvent.click(screen.getByRole("option", { name: "Project Alpha" }));
+    await waitFor(() => expect(scopeTrigger.textContent).toContain("Project Alpha"));
+
+    fireEvent.click(scopeTrigger);
+    fireEvent.click(screen.getByRole("option", { name: "Project Beta" }));
+    await waitFor(() => expect(scopeTrigger.textContent).toContain("2 Projects"));
+    expect(updateLibrary).toHaveBeenLastCalledWith(
+      library.id,
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          projectId: "project-1",
+          projectIds: ["project-1", "project-2"],
+        }),
+      }),
+    );
+
+    fireEvent.click(scopeTrigger);
+    fireEvent.click(screen.getByRole("option", { name: "Independent" }));
+    await waitFor(() => expect(scopeTrigger.textContent).toContain("Independent"));
+    const independentMetadata = updateLibrary.mock.calls.at(-1)?.[1].metadata;
+    expect(independentMetadata).toMatchObject({ projectIds: [] });
+    expect(independentMetadata).not.toHaveProperty("projectId");
   });
 
   it("adds and persists a full-width library cover from the focused document title", async () => {
@@ -516,7 +598,7 @@ describe("KnowledgeLibraryDetailPage", () => {
     });
     fireEvent.click(
       await screen.findByRole("option", {
-        name: "John Smith, john@example.com",
+        name: "John Smith",
       }),
     );
     expect(screen.getByRole("alertdialog")).not.toBeNull();

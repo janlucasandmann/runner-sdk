@@ -1,4 +1,4 @@
-import { Loader2, Play } from "lucide-react";
+import { Loader2, Play } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useState, type FormEvent } from "react";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {

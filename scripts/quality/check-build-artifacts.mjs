@@ -74,6 +74,30 @@ assert.deepEqual(
   `Package exports reference missing build artifacts:\n${missingExportTargets.join("\n")}`,
 );
 
+const settingsPageStyleSelector = ".platform-resource-settings-page";
+const [aggregatePageStyles, directSettingsPageStyles] = await Promise.all([
+  fs.readFile(
+    path.join(distributionRoot, "platform-ui/pages/styles.css"),
+    "utf8",
+  ),
+  fs.readFile(
+    path.join(
+      distributionRoot,
+      "platform-ui/pages/settings/resource-settings-page.css",
+    ),
+    "utf8",
+  ),
+]);
+
+assert.ok(
+  aggregatePageStyles.includes(settingsPageStyleSelector),
+  "The aggregate platform page stylesheet must include the shared Settings page layout.",
+);
+assert.ok(
+  directSettingsPageStyles.includes(settingsPageStyleSelector),
+  "The direct Settings page stylesheet export must include the shared Settings page layout.",
+);
+
 const retiredApplicationArtifacts = distributionFiles
   .map((file) => path.relative(distributionRoot, file))
   .filter(

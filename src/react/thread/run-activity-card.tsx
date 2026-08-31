@@ -6,7 +6,7 @@ import {
   LoaderCircle,
   Pause,
   Play,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   RunnerThreadAction,

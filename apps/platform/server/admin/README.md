@@ -8,6 +8,7 @@ This directory owns restricted operational pages and their safe HTML rendering b
 
 ## Contents
 
+- [`admin-access-denied-page.mjs`](admin-access-denied-page.mjs) — Non-looping account-switch boundary for restricted admin pages.
 - [`templates/`](templates/) — This directory contains escaped HTML templates used only by restricted administrative page renderers.
 - [`admin-pages.test.mjs`](admin-pages.test.mjs) — Regression coverage for Admin Pages.
 - [`environment-gui-page.mjs`](environment-gui-page.mjs) — Presentation composition for Environment Gui Page.

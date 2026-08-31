@@ -3,7 +3,10 @@ export const API_KEYS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
             return;
           }
 
-          if (activePage === "develop-api-keys") {
+          if (
+            activePage === "develop-api-keys"
+            || (settingsModalOpen && settingsSection === "api")
+          ) {
             void loadSettingsApiKeys();
           }
           if (activePage === "develop-webhooks") {
@@ -14,6 +17,8 @@ export const API_KEYS_LOAD_LIFECYCLE_SCRIPT = `        useEffect(() => {
           hasSessionAuth,
 	          loadSettingsApiKeys,
 	          loadSettingsTriggers,
+	          settingsModalOpen,
+	          settingsSection,
 	        ]);
         useEffect(() => {
           if (activePage !== "develop-api-keys" || !hasSessionAuth) {

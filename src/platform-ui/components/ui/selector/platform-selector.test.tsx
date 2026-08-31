@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe("PlatformSelector", () => {
-  it("renders the selected label with ChevronsUpDown and selects from PlatformPopup", async () => {
+  it("renders the selected label with a Hugeicons chevron and selects from PlatformPopup", async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
     const { container } = render(
@@ -28,9 +28,12 @@ describe("PlatformSelector", () => {
 
     const trigger = screen.getByRole("button", { name: "Default permissions" });
     expect(trigger.textContent).toContain("Full access");
-    expect(trigger.querySelector(".lucide-chevrons-up-down")).not.toBeNull();
+    expect(trigger.querySelector(".platform-selector__chevrons")).not.toBeNull();
+    expect(trigger.querySelector(".platform-selector__chevrons.is-open")).toBeNull();
 
     await user.click(trigger);
+
+    expect(trigger.querySelector(".platform-selector__chevrons.is-open")).not.toBeNull();
 
     const popup = document.body.querySelector(
       ".platform-popup-surface.platform-selector__popup.is-minimal.is-portaled",
@@ -203,6 +206,30 @@ describe("PlatformSelector", () => {
     expect(popup.classList.contains("has-custom-content")).toBe(true);
     expect(screen.getByRole("textbox", { name: "Run at" })).not.toBeNull();
     expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("owns listbox semantics for custom multi-select content", async () => {
+    const user = userEvent.setup();
+    render(
+      <PlatformSelector
+        value="project-one"
+        options={[]}
+        label="Project One"
+        popupContent={<button type="button" role="option" aria-selected="true">Project One</button>}
+        popupAriaLabel="Resource scope"
+        popupRole="listbox"
+        popupAriaMultiselectable
+        ariaLabel="Select resource scope"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Select resource scope" });
+    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
+    await user.click(trigger);
+
+    const listbox = screen.getByRole("listbox", { name: "Resource scope" });
+    expect(listbox.getAttribute("aria-multiselectable")).toBe("true");
+    expect(screen.getByRole("option", { name: "Project One" })).not.toBeNull();
   });
 
   it("supports right-edge popup alignment independently from trigger alignment", async () => {

@@ -51,7 +51,12 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                   className: "tb-popup-row account-menu-item",
                   onClick: openSettingsModal,
                 },
-                  React.createElement(Settings, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                  React.createElement(HugeiconsIcon, {
+                    icon: Settings01Icon,
+                    className: "account-menu-item-icon",
+                    color: "currentColor",
+                    strokeWidth: 1.8,
+                  }),
                   React.createElement("span", { className: "account-menu-item-label" }, "Settings")
                 ),
                 React.createElement("button", {
@@ -59,7 +64,12 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                   className: "tb-popup-row account-menu-item",
                   onClick: openHelpPage,
                 },
-                  React.createElement(CircleHelp, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                  React.createElement(HugeiconsIcon, {
+                    icon: HelpSquareIcon,
+                    className: "account-menu-item-icon",
+                    color: "currentColor",
+                    strokeWidth: 1.8,
+                  }),
                   React.createElement("span", { className: "account-menu-item-label" }, "Help"),
                   React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
                 ),
@@ -68,7 +78,12 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                   className: "tb-popup-row account-menu-item",
                   onClick: openDocsPage,
                 },
-                  React.createElement(FileText, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                  React.createElement(HugeiconsIcon, {
+                    icon: BookOpen01Icon,
+                    className: "account-menu-item-icon",
+                    color: "currentColor",
+                    strokeWidth: 1.8,
+                  }),
                   React.createElement("span", { className: "account-menu-item-label" }, "Docs"),
                   React.createElement(ChevronRight, { className: "account-menu-item-chevron", strokeWidth: 1.8 })
                 ),
@@ -79,7 +94,12 @@ export const APP_HEADER_ACCOUNT_MENU_SCRIPT = `        function renderAppHeaderA
                       className: "tb-popup-row account-menu-item is-signout",
                       onClick: handleSignOutFromComputerAgents,
                     },
-                      React.createElement(LogOut, { className: "account-menu-item-icon", strokeWidth: 1.8 }),
+                      React.createElement(HugeiconsIcon, {
+                        icon: Logout02Icon,
+                        className: "account-menu-item-icon",
+                        color: "currentColor",
+                        strokeWidth: 1.8,
+                      }),
                       React.createElement("span", { className: "account-menu-item-label" }, "Sign out")
                     )
                   : React.createElement("button", {

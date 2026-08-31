@@ -131,12 +131,14 @@ export async function tryRouteRunnerCommunicatorMessage({
 
   const fallbackLooksLikeStatusQuestion = looksLikeStatusQuestion(normalizedContent);
   const fallbackLooksLikeWorkerInstruction = looksLikeWorkerInstruction(normalizedContent);
+  const explicitlyAddressedCommunicator = /(^|\s)@communicator\b/i.test(normalizedContent);
 
   try {
     const headers = buildRunnerVoiceHeaders(requestHeaders, apiKey);
     let shouldUseCommunicator =
-      fallbackLooksLikeStatusQuestion ||
-      (hasRoutableActiveRun && !fallbackLooksLikeWorkerInstruction);
+      explicitlyAddressedCommunicator ||
+      (hasRoutableActiveRun &&
+        (fallbackLooksLikeStatusQuestion || !fallbackLooksLikeWorkerInstruction));
     let targetRunId = activeRunId || null;
     let controlAction: string | null = null;
 
@@ -160,13 +162,10 @@ export async function tryRouteRunnerCommunicatorMessage({
           .toLowerCase();
         shouldUseCommunicator =
           classification.suggestedTransport === "activity_message" && rawRoute === "communicator";
-        const explicitlyAddressedCommunicator = /(^|\s)@communicator\b/i.test(normalizedContent);
         const targetRunActive = classification.targetRunActive === true;
         if (
           shouldUseCommunicator &&
           !targetRunActive &&
-          !hasRoutableActiveRun &&
-          !fallbackLooksLikeStatusQuestion &&
           !explicitlyAddressedCommunicator
         ) {
           return false;

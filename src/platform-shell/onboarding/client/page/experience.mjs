@@ -582,7 +582,14 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
                               tabIndex: -1,
                               "aria-label": "Attach files",
                             },
-                              React.createElement(Plus, { className: "task-attachment-icon", strokeWidth: 1.9 })
+                              React.createElement(HugeiconsIcon, {
+                                icon: PlusIcon,
+                                className: "task-attachment-icon",
+                                size: 20,
+                                color: "currentColor",
+                                strokeWidth: 1.9,
+                                "aria-hidden": "true",
+                              })
                             )
                           ),
                           React.createElement("div", { className: "tb-selector-anchor tb-context-indicator-anchor" },
@@ -625,7 +632,14 @@ export const ONBOARDING_EXPERIENCE_SCRIPT = String.raw`        function Playgrou
                             tabIndex: -1,
                             "aria-label": "Start speech to text",
                           },
-                            React.createElement(Mic, { className: "task-mic-icon", strokeWidth: 1.9 })
+                            React.createElement(HugeiconsIcon, {
+                              icon: Mic02Icon,
+                              className: "task-mic-icon",
+                              size: 20,
+                              color: "currentColor",
+                              strokeWidth: 1.9,
+                              "aria-hidden": "true",
+                            })
                           )
                         )
                       )

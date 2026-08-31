@@ -1534,7 +1534,7 @@ export const METRONOME_OVERVIEW_CSS = String.raw`
         box-sizing: border-box;
       }
 
-      .playground-metronome-version-changes-shell .playground-version-changes-page {
+      .playground-metronome-version-changes-shell .playground-version-changes-modal {
         width: min(100%, 1080px);
         margin: 0 auto;
       }

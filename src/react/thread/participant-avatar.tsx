@@ -1,4 +1,4 @@
-import { Bot, UserRound } from "lucide-react";
+import { Bot, UserRound } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { RunnerThreadParticipant } from "../../thread/types.js";
 
 export interface RunnerThreadParticipantAvatarProps {

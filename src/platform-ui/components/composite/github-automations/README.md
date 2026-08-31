@@ -21,6 +21,18 @@ Function settings opt into the same checks plus exact-revision deployments:
 />
 ```
 
+Custom Skill settings reuse the same repository policy and event mechanism,
+with an exact-revision Skill update instead of a deployment:
+
+```tsx
+<PlatformGitHubAutomations
+  scopeType="skill"
+  scopeId={skillId}
+  automationKinds={["security_scan", "pull_request_review", "sync_skill"]}
+  {...props}
+/>
+```
+
 Develop → Webhooks must mount the same component with:
 
 ```tsx

@@ -52,7 +52,7 @@ export const APP_HEADER_LIFECYCLE_SCRIPT = `        useEffect(() => {
             accountMenuAnimationTimerRef.current = window.setTimeout(() => {
               setAccountMenuPhase("idle");
               accountMenuAnimationTimerRef.current = null;
-            }, 180);
+            }, 120);
             return;
           }
 
@@ -66,7 +66,7 @@ export const APP_HEADER_LIFECYCLE_SCRIPT = `        useEffect(() => {
             setRenderedAccountMenu(false);
             setAccountMenuPhase("idle");
             accountMenuAnimationTimerRef.current = null;
-          }, 180);
+          }, 120);
         }, [accountMenuOpen, renderedAccountMenu]);
 
         useEffect(() => {

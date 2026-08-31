@@ -33,7 +33,12 @@ function renderSettings(accessDetailOpen = false) {
       access={<section>Access section</section>}
       accessDetailOpen={accessDetailOpen}
       details={{
-        attributes: [{ id: "updated", label: "Updated", value: "Today" }],
+        variant: "standard",
+        customAttributes: [{ id: "status", label: "Status", value: "Ready" }],
+        updatedAt: "2020-04-15T10:30:00.000Z",
+        creator: { value: "creator-1", name: "Creator Name" },
+        owner: { value: "owner-1", name: "Owner Name" },
+        primaryActions: [{ id: "open", label: "Open", onSelect: vi.fn() }],
       }}
       detailsSidebarAriaLabel="Knowledge Library details"
     />,
@@ -56,7 +61,12 @@ describe("PlatformResourceSettingsPage", () => {
       ),
     ).toEqual(["location", "connectors", "additional", "access"]);
     expect(screen.getByRole("complementary", { name: "Knowledge Library details" })).not.toBeNull();
+    expect(screen.getByText("Status")).not.toBeNull();
     expect(screen.getByText("Updated")).not.toBeNull();
+    expect(screen.getByText("Creator")).not.toBeNull();
+    expect(screen.getByText("Owner")).not.toBeNull();
+    expect(screen.getByText("Scope")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Open" }).querySelector("svg")).toBeNull();
 
     const title = screen.getByRole("textbox", { name: "Knowledge library name" });
     expect(titleRef.current).toBe(title);

@@ -491,7 +491,7 @@
               ].filter(Boolean);
             }
 
-            function openPromptVersionChangesPage(versionId = "") {
+            function openPromptVersionChangesModal(versionId = "") {
               const versions = getOrderedPromptVersions();
               const requestedTarget = getPromptVersionById(versionId) || getPromptEditorVersion();
               const target = versions.find((version) => (
@@ -503,7 +503,7 @@
                 ? versions[targetIndex - 1]
                 : versions[targetIndex + 1] || target;
               setPromptVersionSelectedId(String(target.id || versionId || ""));
-              setPromptVersionsOpen(true);
+              setPromptVersionsOpen(false);
               setPromptVersionChangesState({
                 leftVersionId: String(baseVersion?.id || target.id || ""),
                 rightVersionId: String(target.id || versionId || ""),
@@ -511,7 +511,7 @@
               return true;
             }
 
-            function renderPromptVersionChangesSurface() {
+            function renderPromptVersionChangesModal() {
               if (!promptVersionChangesState || !selectedPrompt) return null;
               const versions = getOrderedPromptVersions();
               if (!versions.length) return null;
@@ -536,8 +536,8 @@
                 );
               };
               const files = buildPromptVersionDiffFilesFromVersions(baseVersion, targetVersion);
-              const changesPage = typeof renderPlaygroundVersionChangesPage === "function"
-                ? renderPlaygroundVersionChangesPage({
+              const changesModal = typeof renderPlaygroundVersionChangesModal === "function"
+                ? renderPlaygroundVersionChangesModal({
                     title: "Changes",
                     subtitle: "Compare saved prompt versions and review the exact file changes.",
                     leftSelector: {
@@ -553,27 +553,13 @@
                       ariaLabel: "Select target prompt version",
                     },
                     files,
-                    backIcon: ArrowLeft,
-                    backText: "Back",
-                    backLabel: "Back to prompt details",
-                    onBack: () => setPromptVersionChangesState(null),
+                    closeButtonLabel: "Close prompt version changes",
+                    onClose: () => setPromptVersionChangesState(null),
                     emptyMessage: "No differences between the selected versions.",
-                    className: "playground-prompts-version-changes-page",
+                    className: "playground-prompts-version-changes-modal__content",
                   })
                 : null;
-              return changesPage
-                ? React.createElement("div", {
-                    className: "playground-environments-editor-main playground-tasks-detail-main playground-prompts-detail-page is-prompt-version-changes-page",
-                  },
-                    React.createElement("div", {
-                      className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll",
-                    },
-                      React.createElement("div", {
-                        className: "playground-prompts-detail-content is-prompt-version-changes",
-                      }, changesPage)
-                    )
-                  )
-                : null;
+              return changesModal;
             }
 
             function buildPromptVersionDiffFiles() {
@@ -1720,50 +1706,45 @@
               });
             });
             const promptOwnerOptions = Array.from(promptOwnerOptionsByValue.values());
-            const promptSettingsDetails = !isDraft && selectedPrompt
-              ? {
-                  attributes: [{
-                    id: "updated",
-                    label: "Updated",
-                    value: formatUpdatedLabel(selectedPrompt.updatedAt || selectedPrompt.createdAt),
-                  }],
-                  creator: promptCreatorIdentity,
-                  owner: promptOwnerIdentity,
-                  ownerOptions: promptOwnerOptions,
-                  onOwnerTransfer: transferPromptOwner,
-                  ownerSelectorProps: {
-                    open: promptOwnerSelectorOpen,
-                    onOpenChange: handlePromptOwnerSelectorOpenChange,
-                    ariaLabel: "Choose prompt owner",
-                    resourceLabel: "prompt",
-                    alignment: "end",
-                    popupAlignment: "right",
-                    fullWidth: true,
-                    disabled: Boolean(saveState.isSaving) || isDirty || promptAccessState.isSaving,
-                    loading: promptOwnerCandidateState.status === "loading",
-                    loadingContent: "Loading organization members...",
-                    emptyContent: "No organization members are available.",
-                    popupWidth: 260,
-                    popupMaxHeight: "min(320px, calc(100vh - 180px))",
-                    title: isDirty ? "Save prompt changes before changing the owner." : undefined,
-                  },
-                  className: "prompt-detail-page__settings-sidebar",
-                  propertiesClassName: "prompt-detail-page__settings-sidebar-properties",
-                  primaryAction: React.createElement(PlatformPrimaryButton, {
-                    type: "button",
-                    size: "small",
-                    fullWidth: true,
-                    className: "prompt-detail-page__start-thread-button",
-                    onClick: () => onStartThread?.(selectedPrompt),
-                  }, "New Thread"),
-                }
-              : {
-                  attributes: [{
-                    id: "status",
-                    label: "Status",
-                    value: "Draft",
-                  }],
-                };
+            const promptSettingsDetails = {
+              variant: "standard",
+              customAttributes: isDraft ? [{
+                id: "status",
+                label: "Status",
+                value: "Draft",
+              }] : [],
+              updatedAt: selectedPrompt?.updatedAt || selectedPrompt?.createdAt,
+              creator: promptCreatorIdentity,
+              owner: promptOwnerIdentity,
+              ownerOptions: promptOwnerOptions,
+              onOwnerTransfer: !isDraft && selectedPrompt ? transferPromptOwner : undefined,
+              ownerSelectorProps: {
+                open: promptOwnerSelectorOpen,
+                onOpenChange: handlePromptOwnerSelectorOpenChange,
+                ariaLabel: "Choose prompt owner",
+                resourceLabel: "prompt",
+                alignment: "end",
+                popupAlignment: "right",
+                fullWidth: true,
+                disabled: isDraft || Boolean(saveState.isSaving) || isDirty || promptAccessState.isSaving,
+                loading: promptOwnerCandidateState.status === "loading",
+                loadingContent: "Loading organization members...",
+                emptyContent: "No organization members are available.",
+                popupWidth: 260,
+                popupMaxHeight: "min(320px, calc(100vh - 180px))",
+                title: isDirty ? "Save prompt changes before changing the owner." : undefined,
+              },
+              primaryActions: [{
+                id: "new-thread",
+                label: "New Thread",
+                onSelect: !isDraft && selectedPrompt
+                  ? () => onStartThread?.(selectedPrompt)
+                  : undefined,
+                disabled: isDraft || !selectedPrompt || !onStartThread,
+              }],
+              className: "prompt-detail-page__settings-sidebar",
+              propertiesClassName: "prompt-detail-page__settings-sidebar-properties",
+            };
 
             const promptSettings = {
               ariaLabel: "Prompt settings",
@@ -1862,7 +1843,7 @@
                   onCreateVersion: () => openPromptVersionSaveDialog({ mode: "new" }),
                   onSelectVersion: (versionId) => checkoutPromptVersion(versionId),
                   onPublishVersion: (versionId) => publishPromptVersion(versionId),
-                  onViewChanges: () => openPromptVersionChangesPage(
+                  onViewChanges: () => openPromptVersionChangesModal(
                     promptVersionSelectedId || selectedPrompt.currentVersionId,
                   ),
                   getVersionCreatedAt: (version) => formatUpdatedLabel(version?.createdAt || version?.updatedAt),
@@ -1943,7 +1924,7 @@
                 })()
               : null;
 
-            const promptVersionChangesSurface = renderPromptVersionChangesSurface();
+            const promptVersionChangesModal = renderPromptVersionChangesModal();
 
             const actionPortal = topNavActionsContainer
               ? createPortal(
@@ -1982,10 +1963,8 @@
               promptVersionDialog,
               promptVersionsSidebar,
               promptShareModal,
-              promptVersionChangesSurface,
-              promptVersionChangesSurface
-                ? null
-                : isDetail
+              promptVersionChangesModal,
+              isDetail
                 ? detailPage
                 : React.createElement(PromptsOverviewPage, {
                     rows: scopedRows,

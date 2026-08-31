@@ -46,11 +46,13 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [metronomeDynamicContentPicker, setMetronomeDynamicContentPicker] = useState({
             fieldKey: "",
             query: "",
+            anchorPoint: null,
           });
           const [metronomePromptPicker, setMetronomePromptPicker] = useState({
             fieldKey: "",
             query: "",
             selectingPromptId: "",
+            anchorPoint: null,
           });
           const [metronomePromptPickerState, setMetronomePromptPickerState] = useState({
             status: "idle",
@@ -60,13 +62,12 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const metronomePromptSelectionTokenRef = useRef(0);
           const closeMetronomePromptPicker = useCallback(() => {
             metronomePromptSelectionTokenRef.current += 1;
-            setMetronomePromptPicker({ fieldKey: "", query: "", selectingPromptId: "" });
+            setMetronomePromptPicker({ fieldKey: "", query: "", selectingPromptId: "", anchorPoint: null });
           }, []);
           useEffect(() => () => {
             metronomePromptSelectionTokenRef.current += 1;
           }, []);
           const [isMetronomeSchedulePopoverOpen, setIsMetronomeSchedulePopoverOpen] = useState(false);
-          const [metronomeSchedulePopoverRect, setMetronomeSchedulePopoverRect] = useState(null);
           const [isMetronomeSchedulePopoverClosing, setIsMetronomeSchedulePopoverClosing] = useState(false);
           const metronomeSchedulePopoverCloseTimerRef = useRef(null);
           const closeMetronomeSchedulePopover = useCallback((options = {}) => {
@@ -78,7 +79,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             if (shouldCloseImmediately || typeof window === "undefined") {
               setIsMetronomeSchedulePopoverClosing(false);
               setIsMetronomeSchedulePopoverOpen(false);
-              setMetronomeSchedulePopoverRect(null);
               return;
             }
             setIsMetronomeSchedulePopoverClosing(true);
@@ -86,7 +86,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               metronomeSchedulePopoverCloseTimerRef.current = null;
               setIsMetronomeSchedulePopoverClosing(false);
               setIsMetronomeSchedulePopoverOpen(false);
-              setMetronomeSchedulePopoverRect(null);
             }, 180);
           }, []);
           const promptExtensionTextareaRef = useRef(null);
@@ -112,35 +111,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               setIsMetronomeAttachmentPopoverOpen(false);
             }, 180);
           }, []);
-          const [metronomeInspectorSelectPopover, setMetronomeInspectorSelectPopover] = useState({
-            id: "",
-            rect: null,
-            query: "",
-            closing: false,
-          });
-          const metronomeInspectorSelectCloseTimerRef = useRef(null);
-          const closeMetronomeInspectorSelectPopover = useCallback((options = {}) => {
-            const shouldCloseImmediately = Boolean(options?.immediate);
-            if (metronomeInspectorSelectCloseTimerRef.current && typeof window !== "undefined") {
-              window.clearTimeout(metronomeInspectorSelectCloseTimerRef.current);
-              metronomeInspectorSelectCloseTimerRef.current = null;
-            }
-            if (shouldCloseImmediately || typeof window === "undefined") {
-              setMetronomeInspectorSelectPopover({ id: "", rect: null, query: "", closing: false });
-              return;
-            }
-            setMetronomeInspectorSelectPopover((current) => {
-              if (!current.id || current.closing) return current;
-              return { ...current, closing: true };
-            });
-            metronomeInspectorSelectCloseTimerRef.current = window.setTimeout(() => {
-              metronomeInspectorSelectCloseTimerRef.current = null;
-              setMetronomeInspectorSelectPopover((current) => current.closing
-                ? { id: "", rect: null, query: "", closing: false }
-                : current
-              );
-            }, 180);
-          }, []);
           const [metronomeAttachmentModalOpen, setMetronomeAttachmentModalOpen] = useState(false);
           const [isMetronomeAttachmentDragging, setIsMetronomeAttachmentDragging] = useState(false);
           const [metronomeAttachmentStatus, setMetronomeAttachmentStatus] = useState("");
@@ -152,11 +122,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [metronomeEnvironmentFilePickerState, setMetronomeEnvironmentFilePickerState] = useState({ status: "idle", error: "" });
           const [isMetronomeAttachmentUploading, setIsMetronomeAttachmentUploading] = useState(false);
           const [isMetronomeThreadMoreOpen, setIsMetronomeThreadMoreOpen] = useState(false);
-          const [metronomeFieldTooltipPortal, setMetronomeFieldTooltipPortal] = useState({ copy: "", rect: null });
-          const [isMetronomeWorkspaceSelectorOpen, setIsMetronomeWorkspaceSelectorOpen] = useState(false);
-          const [metronomeWorkspaceSelectorMode, setMetronomeWorkspaceSelectorMode] = useState("computers");
-          const metronomeWorkspaceSelectorAnchorRef = useRef(null);
-          const [metronomeWorkspaceSelectorRect, setMetronomeWorkspaceSelectorRect] = useState(null);
           const [workflowNameModal, setWorkflowNameModal] = useState(null);
           const [workflowNameModalClosing, setWorkflowNameModalClosing] = useState(false);
           const [workflowNameDraft, setWorkflowNameDraft] = useState("");
@@ -178,6 +143,11 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             message: "",
           });
           const [metronomeOwnerTransferState, setMetronomeOwnerTransferState] = useState({
+            workflowId: "",
+            status: "idle",
+            message: "",
+          });
+          const [metronomeScopeUpdateState, setMetronomeScopeUpdateState] = useState({
             workflowId: "",
             status: "idle",
             message: "",
@@ -241,6 +211,12 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           const [isLoadingMetronomeTriggerEvents, setIsLoadingMetronomeTriggerEvents] = useState(false);
           const [metronomeTriggerEventsError, setMetronomeTriggerEventsError] = useState("");
           const [metronomeTriggerTestState, setMetronomeTriggerTestState] = useState({ status: "idle", message: "" });
+          const [metronomeThreadCommandAvailability, setMetronomeThreadCommandAvailability] = useState({
+            command: "",
+            status: "idle",
+            message: "Commands must start with @.",
+            conflictWorkflowId: "",
+          });
           const [selectedMetronomeRunId, setSelectedMetronomeRunId] = useState("");
           const [metronomeRunInlineDetailId, setMetronomeRunInlineDetailId] = useState("");
           const lastHandledCreateWorkflowRequestTokenRef = useRef("");
@@ -274,13 +250,12 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             type: "string",
           });
           const [metronomeFlowZoom, setMetronomeFlowZoom] = useState(1);
-          const [isMetronomeAgentSelectorOpen, setIsMetronomeAgentSelectorOpen] = useState(false);
-          const [metronomeAgentSelectorMode, setMetronomeAgentSelectorMode] = useState("agents");
-          const metronomeAgentSelectorAnchorRef = useRef(null);
-          const [metronomeAgentSelectorRect, setMetronomeAgentSelectorRect] = useState(null);
           const metronomeAgentOptions = useMemo(() => normalizeMetronomeOptionList(agents, METRONOME_FALLBACK_AGENTS), [agents]);
           const metronomeComputerOptions = useMemo(() => normalizeMetronomeOptionList(environments, METRONOME_FALLBACK_COMPUTERS), [environments]);
           const metronomeProjectOptions = useMemo(() => normalizeMetronomeOptionList(projects, METRONOME_FALLBACK_PROJECTS), [projects]);
+          const metronomeProjectIdentities = useMemo(() => metronomeProjectOptions
+            .map((project) => normalizePlatformProjectIdentity(project))
+            .filter(Boolean), [metronomeProjectOptions]);
           const metronomeRequestHeadersKey = useMemo(() => {
             try {
               return JSON.stringify(requestHeaders || {});
@@ -692,6 +667,26 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               void loadActiveMetronomeOwnerCandidates().catch(() => {});
             }
           }, [loadActiveMetronomeOwnerCandidates]);
+          useEffect(() => {
+            const workflowId = String(activeWorkflow?.id || "").trim();
+            if (
+              metronomeEditorMode !== "settings"
+              || !workflowId
+              || !canTransferActiveMetronomeOwnership
+            ) return;
+            if (
+              metronomeOwnerCandidateState.workflowId === workflowId
+              && metronomeOwnerCandidateState.status !== "idle"
+            ) return;
+            void loadActiveMetronomeOwnerCandidates().catch(() => {});
+          }, [
+            activeWorkflow?.id,
+            canTransferActiveMetronomeOwnership,
+            loadActiveMetronomeOwnerCandidates,
+            metronomeEditorMode,
+            metronomeOwnerCandidateState.status,
+            metronomeOwnerCandidateState.workflowId,
+          ]);
           const transferActiveMetronomeOwnership = useCallback(async (ownerUserId) => {
             const workflowId = String(activeWorkflow?.id || "").trim();
             const normalizedOwnerUserId = String(ownerUserId || "").trim();
@@ -1207,13 +1202,10 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           }, [workflows, normalizedMetronomeProjectFilterId]);
 
           useEffect(() => {
-            setIsMetronomeWorkspaceSelectorOpen(false);
-            setIsMetronomeAgentSelectorOpen(false);
-            setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+            setMetronomeDynamicContentPicker({ fieldKey: "", query: "", anchorPoint: null });
             closeMetronomePromptPicker();
             closeMetronomeSchedulePopover({ immediate: true });
             closeMetronomeAttachmentPopover({ immediate: true });
-            closeMetronomeInspectorSelectPopover({ immediate: true });
             setIsMetronomeTriggerDiagnosticsModalOpen(false);
             setMetronomeFunctionInvokeState({
               nodeId: selectedNodeId || "",
@@ -1230,7 +1222,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               value: "",
               error: "",
             });
-          }, [selectedNodeId, closeMetronomePromptPicker, closeMetronomeSchedulePopover, closeMetronomeAttachmentPopover, closeMetronomeInspectorSelectPopover]);
+          }, [selectedNodeId, closeMetronomePromptPicker, closeMetronomeSchedulePopover, closeMetronomeAttachmentPopover]);
 
           useEffect(() => {
             if (!metronomeDynamicContentPicker.fieldKey || typeof document === "undefined") return () => {};
@@ -1238,11 +1230,11 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               const target = event.target;
               if (target?.closest?.(".playground-metronome-dynamic-content-popup-shell")) return;
               if (target?.closest?.(".playground-metronome-dynamic-content-picker")) return;
-              setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+              setMetronomeDynamicContentPicker({ fieldKey: "", query: "", anchorPoint: null });
             };
             const handleDynamicContentKeyDown = (event) => {
               if (event.key === "Escape") {
-                setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+                setMetronomeDynamicContentPicker({ fieldKey: "", query: "", anchorPoint: null });
               }
             };
             document.addEventListener("pointerdown", handleDynamicContentPointerDown, true);
@@ -1379,34 +1371,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
           }, []);
 
           useEffect(() => {
-            if (!metronomeInspectorSelectPopover.id || typeof document === "undefined") return () => {};
-            const handleInspectorSelectPointerDown = (event) => {
-              const target = event.target;
-              if (target?.closest?.(".playground-metronome-inspector-select-popup")) return;
-              if (target?.closest?.(".playground-metronome-custom-select-trigger")) return;
-              closeMetronomeInspectorSelectPopover();
-            };
-            const handleInspectorSelectKeyDown = (event) => {
-              if (event.key === "Escape") {
-                closeMetronomeInspectorSelectPopover();
-              }
-            };
-            document.addEventListener("pointerdown", handleInspectorSelectPointerDown, true);
-            document.addEventListener("keydown", handleInspectorSelectKeyDown);
-            return () => {
-              document.removeEventListener("pointerdown", handleInspectorSelectPointerDown, true);
-              document.removeEventListener("keydown", handleInspectorSelectKeyDown);
-            };
-          }, [metronomeInspectorSelectPopover.id, closeMetronomeInspectorSelectPopover]);
-
-          useEffect(() => () => {
-            if (metronomeInspectorSelectCloseTimerRef.current && typeof window !== "undefined") {
-              window.clearTimeout(metronomeInspectorSelectCloseTimerRef.current);
-              metronomeInspectorSelectCloseTimerRef.current = null;
-            }
-          }, []);
-
-          useEffect(() => {
             if (!isMetronomeTriggerDiagnosticsModalOpen || typeof document === "undefined") return () => {};
             const handleDiagnosticsModalKeyDown = (event) => {
               if (event.key === "Escape") {
@@ -1418,134 +1382,6 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
               document.removeEventListener("keydown", handleDiagnosticsModalKeyDown);
             };
           }, [isMetronomeTriggerDiagnosticsModalOpen]);
-
-          useEffect(() => {
-            if (typeof document === "undefined") return () => {};
-            const handleWorkspaceSelectorPointerDown = (event) => {
-              if (isActiveWorkflowBuiltIn) {
-                setIsMetronomeWorkspaceSelectorOpen(false);
-                return;
-              }
-              const target = event.target;
-              if (!target?.closest) return;
-              if (target.closest(".playground-metronome-workspace-popup-portal")) {
-                return;
-              }
-              if (target.closest(".playground-metronome-agent-popup-portal")) {
-                return;
-              }
-              const selector = target.closest(".playground-metronome-workspace-selector-field");
-              if (!selector) {
-                setIsMetronomeWorkspaceSelectorOpen(false);
-                return;
-              }
-              event.preventDefault();
-              event.stopPropagation();
-              const anchor = selector.querySelector(".playground-metronome-workspace-selector-trigger") || selector;
-              const rect = anchor.getBoundingClientRect?.();
-              if (rect) {
-                setMetronomeWorkspaceSelectorRect({
-                  left: rect.left,
-                  top: rect.bottom + 8,
-                  width: rect.width,
-                });
-              }
-              const contextType = selector.getAttribute("data-context-type") === "project" ? "project" : "computer";
-              setMetronomeWorkspaceSelectorMode(contextType === "project" ? "projects" : "computers");
-              setIsMetronomeWorkspaceSelectorOpen(true);
-              setIsMetronomeAgentSelectorOpen(false);
-            };
-            document.addEventListener("pointerdown", handleWorkspaceSelectorPointerDown, true);
-            return () => {
-              document.removeEventListener("pointerdown", handleWorkspaceSelectorPointerDown, true);
-            };
-          }, [isActiveWorkflowBuiltIn]);
-
-          useEffect(() => {
-            if (typeof document === "undefined") return () => {};
-            const handleAgentSelectorPointerDown = (event) => {
-              if (isActiveWorkflowBuiltIn) {
-                setIsMetronomeAgentSelectorOpen(false);
-                return;
-              }
-              const target = event.target;
-              if (!target?.closest) return;
-              if (target.closest(".playground-metronome-agent-popup-portal")) {
-                return;
-              }
-              if (target.closest(".playground-metronome-workspace-popup-portal")) {
-                return;
-              }
-              const selector = target.closest(".playground-metronome-agent-selector-field");
-              if (!selector) {
-                setIsMetronomeAgentSelectorOpen(false);
-                return;
-              }
-              event.preventDefault();
-              event.stopPropagation();
-              const anchor = selector.querySelector(".playground-metronome-agent-selector-trigger") || selector;
-              const rect = anchor.getBoundingClientRect?.();
-              if (rect) {
-                setMetronomeAgentSelectorRect({
-                  left: rect.left,
-                  top: rect.bottom + 8,
-                  width: rect.width,
-                });
-              }
-              setIsMetronomeAgentSelectorOpen(true);
-              setIsMetronomeWorkspaceSelectorOpen(false);
-            };
-            document.addEventListener("pointerdown", handleAgentSelectorPointerDown, true);
-            return () => {
-              document.removeEventListener("pointerdown", handleAgentSelectorPointerDown, true);
-            };
-          }, [isActiveWorkflowBuiltIn]);
-
-          useEffect(() => {
-            if (!isMetronomeWorkspaceSelectorOpen) {
-              setMetronomeWorkspaceSelectorRect(null);
-              return () => {};
-            }
-            const updateWorkspaceSelectorRect = () => {
-              const rect = metronomeWorkspaceSelectorAnchorRef.current?.getBoundingClientRect?.();
-              if (!rect) return;
-              setMetronomeWorkspaceSelectorRect({
-                left: rect.left,
-                top: rect.bottom + 8,
-                width: rect.width,
-              });
-            };
-            updateWorkspaceSelectorRect();
-            window.addEventListener("resize", updateWorkspaceSelectorRect);
-            window.addEventListener("scroll", updateWorkspaceSelectorRect, true);
-            return () => {
-              window.removeEventListener("resize", updateWorkspaceSelectorRect);
-              window.removeEventListener("scroll", updateWorkspaceSelectorRect, true);
-            };
-          }, [isMetronomeWorkspaceSelectorOpen, selectedNodeId]);
-
-          useEffect(() => {
-            if (!isMetronomeAgentSelectorOpen) {
-              setMetronomeAgentSelectorRect(null);
-              return () => {};
-            }
-            const updateAgentSelectorRect = () => {
-              const rect = metronomeAgentSelectorAnchorRef.current?.getBoundingClientRect?.();
-              if (!rect) return;
-              setMetronomeAgentSelectorRect({
-                left: rect.left,
-                top: rect.bottom + 8,
-                width: rect.width,
-              });
-            };
-            updateAgentSelectorRect();
-            window.addEventListener("resize", updateAgentSelectorRect);
-            window.addEventListener("scroll", updateAgentSelectorRect, true);
-            return () => {
-              window.removeEventListener("resize", updateAgentSelectorRect);
-              window.removeEventListener("scroll", updateAgentSelectorRect, true);
-            };
-          }, [isMetronomeAgentSelectorOpen, selectedNodeId]);
 
           useEffect(() => {
             let cancelled = false;
@@ -1762,7 +1598,7 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
             setActiveMetronomeVersionChanges(false);
             setSelectedNodeId("");
             setActiveMetronomeRichTextField("");
-            setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+            setMetronomeDynamicContentPicker({ fieldKey: "", query: "", anchorPoint: null });
             setMetronomeEditorMode("edit");
             setGraphUndoStack([]);
             setGraphRedoStack([]);
@@ -1864,10 +1700,9 @@ export const METRONOME_PAGE_SHELL_SCRIPT = String.raw`
 
           useEffect(() => {
             setActiveMetronomeRichTextField("");
-            setMetronomeDynamicContentPicker({ fieldKey: "", query: "" });
+            setMetronomeDynamicContentPicker({ fieldKey: "", query: "", anchorPoint: null });
             setMetronomeOutputContractComposer({ key: "", type: "string" });
             setIsMetronomeThreadMoreOpen(false);
-            setMetronomeFieldTooltipPortal({ copy: "", rect: null });
           }, [selectedNodeId]);
 
           useEffect(() => {

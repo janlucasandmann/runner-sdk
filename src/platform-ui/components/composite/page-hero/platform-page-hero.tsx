@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "../../ui/hugeicons-compat.js";
 import { createElement, type ReactNode } from "react";
 
 export interface PlatformPageHeroAction {

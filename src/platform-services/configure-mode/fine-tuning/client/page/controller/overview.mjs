@@ -49,11 +49,12 @@ export const FINE_TUNING_PAGE_CONTROLLER_OVERVIEW_SCRIPT = String.raw`        fu
                 || agent?.avatarUrl
                 || agent?.avatarURL
               );
-              const explicitConductor = normalizePlaygroundFineTuningPersonIdentity(
-                normalizedJob.conductedBy || normalizedJob.createdBy || normalizedJob.created_by || {}
+              const resolvedConductor = resolvePlaygroundFineTuningConductorIdentity(
+                normalizedJob,
+                [currentFineTuningUser, ...normalizedAgents]
               );
-              const conductor = getPlaygroundFineTuningPersonLabel(explicitConductor)
-                ? explicitConductor
+              const conductor = getPlaygroundFineTuningPersonLabel(resolvedConductor)
+                ? resolvedConductor
                 : currentFineTuningUser;
               const creatorName = getPlaygroundFineTuningPersonLabel(conductor) || "Unknown";
               const status = normalizePlaygroundFineTuningString(normalizedJob.status || "completed").toLowerCase();

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlatformOwnerSelector } from "./platform-owner-selector.js";
@@ -58,9 +58,14 @@ describe("PlatformOwnerSelector", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Choose owner" }));
+    const search = screen.getByRole("searchbox", { name: "Search owners" });
+    expect(search).toBeTruthy();
+    await user.type(search, "Next");
+    const listbox = screen.getByRole("listbox", { name: "Choose owner options" });
+    expect(within(listbox).queryByRole("option", { name: "Current Owner" })).toBeNull();
     expect(screen.getByText("Next Owner")).toBeTruthy();
-    expect(screen.getByText("next@example.com")).toBeTruthy();
-    await user.click(await screen.findByRole("option", { name: "Next Owner, next@example.com" }));
+    expect(screen.queryByText("next@example.com")).toBeNull();
+    await user.click(await screen.findByRole("option", { name: "Next Owner" }));
 
     expect(onTransfer).not.toHaveBeenCalled();
     expect(screen.getByRole("alertdialog")).toBeTruthy();
@@ -175,7 +180,7 @@ describe("PlatformOwnerSelector", () => {
     expect(container.querySelector(".platform-owner-selector__avatar-fallback")?.textContent).toBe("S");
   });
 
-  it("adds all organization members to resource-specific owner choices", async () => {
+  it("loads organization members in the background before the popup opens", async () => {
     const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce({
@@ -205,8 +210,10 @@ describe("PlatformOwnerSelector", () => {
       </PlatformOrganizationMemberDirectoryProvider>,
     );
 
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(2));
     await user.click(screen.getByRole("button", { name: "Choose owner" }));
 
-    expect(await screen.findByRole("option", { name: "Simone, simone@example.com" })).toBeTruthy();
+    expect(await screen.findByRole("option", { name: "Simone" })).toBeTruthy();
+    expect(screen.queryByText("simone@example.com")).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import type { CSSProperties, ReactNode } from "react";
 import {
   getPlatformPermissionAccessLabel,

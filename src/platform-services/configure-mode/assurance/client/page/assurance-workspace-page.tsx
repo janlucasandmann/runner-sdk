@@ -17,7 +17,9 @@ import {
   type AssuranceWorkspaceOption,
   getAssurancePolicyCreatorIdentity,
   initializeAssurancePolicyIdentityMetadata,
+  normalizeAssurancePersonIdentity,
   normalizeAssuranceWorkspaceOption,
+  resolveAssurancePolicyCreatorIdentity,
 } from "../domain/index.js";
 import {
   AssuranceOverviewPage,
@@ -54,16 +56,6 @@ export interface AssuranceWorkspacePageProps {
   }) => void;
   onNavigationGuardChange?: PlatformVersionNavigationGuardRegistrar;
   onNavigationRequest?: (continuation: () => void) => boolean;
-}
-
-function formatRelativeTimestamp(value: string): string {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return "Unknown";
-  const delta = Date.now() - timestamp;
-  if (delta < 60_000) return "Just now";
-  if (delta < 3_600_000) return `${Math.max(1, Math.round(delta / 60_000))}m ago`;
-  if (delta < 86_400_000) return `${Math.max(1, Math.round(delta / 3_600_000))}h ago`;
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(timestamp));
 }
 
 function normalizeOptions(
@@ -106,6 +98,10 @@ export function AssuranceWorkspacePage({
   const normalizedProjects = useMemo(
     () => normalizeOptions(projects, "Project"),
     [projects],
+  );
+  const normalizedCurrentUser = useMemo(
+    () => normalizeAssurancePersonIdentity(currentUser),
+    [currentUser],
   );
   const [testPlans, setTestPlans] = useState<AssuranceWorkspaceOption[]>([]);
   const [policies, setPolicies] = useState<AssurancePolicy[]>([]);
@@ -253,9 +249,21 @@ export function AssuranceWorkspacePage({
         (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt),
       );
       const lastRun = policyRuns[0];
+      const explicitCreator = resolveAssurancePolicyCreatorIdentity(
+        policy,
+        [normalizedCurrentUser],
+      );
+      const creator = explicitCreator.id
+        || explicitCreator.userId
+        || explicitCreator.email
+        || explicitCreator.name
+        ? explicitCreator
+        : normalizedCurrentUser;
+      const creatorName = creator.name || creator.email || creator.id || creator.userId || "Unknown";
       return {
         id: policy.id,
         name: policy.name,
+        description: policy.description,
         projectLabel:
           normalizedProjects.find((project) => project.id === policy.projectId)?.name
           || "Unassigned",
@@ -267,12 +275,13 @@ export function AssuranceWorkspacePage({
         passedRunCount: policyRuns.filter((run) => run.status === "passed").length,
         blockedRunCount: policyRuns.filter((run) => run.status === "blocked").length,
         lastRunStatus: lastRun?.status || "",
+        creatorName,
+        creatorAvatarUrl: creator.avatarUrl,
         updatedAt: Date.parse(policy.updatedAt) || 0,
-        updatedLabel: formatRelativeTimestamp(policy.updatedAt),
-        searchText: `${policy.name} ${policy.description} ${policy.status} ${policy.projectId || ""}`,
+        searchText: `${policy.name} ${policy.description} ${policy.status} ${policy.projectId || ""} ${creatorName}`,
       };
     });
-  }, [currentUser, normalizedProjects, overviewScope, policies, runs]);
+  }, [normalizedCurrentUser, normalizedProjects, overviewScope, policies, runs]);
 
   const requestWorkspaceNavigation = useCallback((continuation: () => void) => {
     if (typeof onNavigationRequest === "function") {
@@ -330,6 +339,7 @@ export function AssuranceWorkspacePage({
             api={api}
             projects={normalizedProjects}
             workspaceTeams={workspaceTeams}
+            currentUser={normalizedCurrentUser}
             controlsPortalId={controlsPortalId}
             sectionControlsPortalId={sectionControlsPortalId}
             onNavigationGuardChange={onNavigationGuardChange}

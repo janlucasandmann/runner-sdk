@@ -18,7 +18,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X } from "../../ui/hugeicons-compat.js";
 import {
   PlatformSearch,
   type PlatformSearchProps,

@@ -1,4 +1,4 @@
-import { Clock3 } from "lucide-react";
+import { Clock3 } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 
 export interface RunnerPageQueueReceiptProps {
   label?: string;

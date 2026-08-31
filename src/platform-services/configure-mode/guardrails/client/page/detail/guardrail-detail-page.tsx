@@ -4,6 +4,10 @@ import {
   MarkdownResourceDetailPage,
   PlatformServiceDetailFrame,
 } from "../../../../../../platform-ui/pages/details/index.js";
+import {
+  PlatformResourceSettingsPage,
+  type PlatformResourceSettingsPageProps,
+} from "../../../../../../platform-ui/pages/settings/index.js";
 
 export type GuardrailDetailTab = "general" | "evaluation" | "settings";
 
@@ -13,9 +17,8 @@ export interface GuardrailDetailPageProps {
   notice?: ReactNode;
   general: ReactNode;
   evaluation: ReactNode;
-  settings: ReactNode;
+  settings: PlatformResourceSettingsPageProps;
   sidebar?: ReactNode;
-  sidebarCollapsed?: boolean;
   evaluationScopeKey?: string;
   onEvaluationActivate?: () => void;
   onSettingsActivate?: () => void;
@@ -35,7 +38,6 @@ export function GuardrailDetailPage({
   evaluation,
   settings,
   sidebar,
-  sidebarCollapsed = false,
   evaluationScopeKey = "",
   onEvaluationActivate,
   onSettingsActivate,
@@ -64,15 +66,26 @@ export function GuardrailDetailPage({
     }
   }, [evaluationScopeKey, normalizedTab]);
 
+  if (normalizedTab === "settings") {
+    return (
+      <PlatformServiceDetailFrame className="guardrail-detail-page__frame">
+        <PlatformResourceSettingsPage
+          {...settings}
+          className={`guardrail-detail-page${settings.className ? ` ${settings.className}` : ""}${className ? ` ${className}` : ""}`}
+        />
+      </PlatformServiceDetailFrame>
+    );
+  }
+
   const detailPage = (
     <MarkdownResourceDetailPage
       activeTab={fileResourceTab}
       metadata={metadata}
       notice={notice}
       code={general}
-      settings={normalizedTab === "evaluation" ? evaluation : settings}
+      settings={evaluation}
       sidebar={normalizedTab === "evaluation" ? undefined : sidebar}
-      sidebarCollapsed={normalizedTab === "settings" ? sidebarCollapsed : true}
+      sidebarCollapsed={true}
       ariaLabel="Guardrail details"
       sidebarAriaLabel="Guardrail properties"
       className={`guardrail-detail-page playground-project-overview-layout playground-agents-detail-overview-layout is-${normalizedTab}-tab${className ? ` ${className}` : ""}`}

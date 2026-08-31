@@ -71,6 +71,43 @@ export function readProjectResourceProjectId(record) {
   ).trim();
 }
 
+function normalizeProjectResourceProjectIds(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map((projectId) => String(projectId || "").trim()).filter(Boolean);
+}
+
+export function readProjectResourceProjectIds(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return [];
+  }
+  const metadata = getProjectResourceIndexMetadata(record);
+  const rootScope = record.projectScope && typeof record.projectScope === "object" && !Array.isArray(record.projectScope)
+    ? record.projectScope
+    : {};
+  const metadataScope = metadata.projectScope && typeof metadata.projectScope === "object" && !Array.isArray(metadata.projectScope)
+    ? metadata.projectScope
+    : metadata.project_scope && typeof metadata.project_scope === "object" && !Array.isArray(metadata.project_scope)
+      ? metadata.project_scope
+      : {};
+  const runnerPlayground = metadata.runnerPlayground && typeof metadata.runnerPlayground === "object" && !Array.isArray(metadata.runnerPlayground)
+    ? metadata.runnerPlayground
+    : {};
+  const runnerScope = runnerPlayground.projectScope && typeof runnerPlayground.projectScope === "object" && !Array.isArray(runnerPlayground.projectScope)
+    ? runnerPlayground.projectScope
+    : {};
+  return [...new Set([
+    ...normalizeProjectResourceProjectIds(record.projectIds || record.project_ids),
+    ...normalizeProjectResourceProjectIds(rootScope.projectIds || rootScope.project_ids),
+    ...normalizeProjectResourceProjectIds(metadata.projectIds || metadata.project_ids),
+    ...normalizeProjectResourceProjectIds(metadataScope.projectIds || metadataScope.project_ids),
+    ...normalizeProjectResourceProjectIds(runnerPlayground.projectIds || runnerPlayground.project_ids),
+    ...normalizeProjectResourceProjectIds(runnerScope.projectIds || runnerScope.project_ids),
+    readProjectResourceProjectId(record),
+  ].filter(Boolean))];
+}
+
 export function readProjectResourceIndexResponseProjectId(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) {
     return "";
@@ -109,12 +146,49 @@ export function filterProjectResourceIndexRecordsByProjectId(records, projectId,
   const responseProjectId = String(options.responseProjectId || "").trim();
   const responseProvesProjectScope = responseProjectId === normalizedProjectId;
   return normalizedRecords.filter((record) => {
-    const recordProjectId = readProjectResourceProjectId(record);
-    if (recordProjectId) {
-      return recordProjectId === normalizedProjectId;
+    const recordProjectIds = readProjectResourceProjectIds(record);
+    if (recordProjectIds.length) {
+      return recordProjectIds.includes(normalizedProjectId);
     }
     return responseProvesProjectScope;
   });
+}
+
+export function normalizeProjectResourceIndexKnowledgeLibrary(record) {
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return null;
+  }
+  const id = String(record.id || record.libraryId || record.library_id || "").trim();
+  if (!id) return null;
+  const metadata = getProjectResourceIndexMetadata(record);
+  const title = String(record.name || record.title || "Project Knowledge").trim() || "Project Knowledge";
+  const purpose = String(metadata.purpose || record.purpose || "").trim().toLowerCase();
+  const isStrategyKnowledge = [
+    "project_knowledge",
+    "project_strategy_and_documentation",
+  ].includes(purpose)
+    || metadata.isStrategyKnowledge === true
+    || (
+      String(metadata.schemaVersion || metadata.schema_version || "").trim()
+        === "computer_agents_project_knowledge_v1"
+      && String(metadata.managedBy || metadata.managed_by || "").trim().toLowerCase()
+        === "mission_control"
+    );
+  return {
+    ...record,
+    id,
+    resourceId: id,
+    libraryId: id,
+    type: "knowledge",
+    resourceType: "knowledge",
+    name: title,
+    title,
+    description: String(record.description || "").trim(),
+    status: isStrategyKnowledge ? "Strategy" : "Shared",
+    isStrategyKnowledge,
+    scopeManaged: true,
+    metadata,
+  };
 }
 
 export function getProjectResourceIndexConnectors(project) {
@@ -162,8 +236,8 @@ export function filterProjectResourceIndexImagineResources(records, projectId) {
     if (!source.includes("imagine")) {
       return false;
     }
-    const recordProjectId = readProjectResourceProjectId(record);
-    return !normalizedProjectId || !recordProjectId || recordProjectId === normalizedProjectId;
+    const recordProjectIds = readProjectResourceProjectIds(record);
+    return !normalizedProjectId || !recordProjectIds.length || recordProjectIds.includes(normalizedProjectId);
   });
 }
 
@@ -186,7 +260,7 @@ export function createProjectResourceIndexHandler({
 
     const encodedProjectId = encodeURIComponent(normalizedProjectId);
     try {
-      const [projectResponse, serversResponse, metronomesResponse] = await Promise.all([
+      const [projectResponse, serversResponse, metronomesResponse, knowledgeResponse] = await Promise.all([
         fetchUpstreamJsonForProxyExactPath(req, `/projects/${encodedProjectId}?view=metadata`, "GET"),
         fetchUpstreamJsonForProxyExactPath(req, `/servers?projectId=${encodedProjectId}`, "GET").catch((error) => ({
           status: 502,
@@ -195,6 +269,10 @@ export function createProjectResourceIndexHandler({
         fetchUpstreamJsonForProxyExactPath(req, `/metronomes?projectId=${encodedProjectId}`, "GET").catch((error) => ({
           status: 502,
           data: { error: "Failed to load metronomes", message: error instanceof Error ? error.message : String(error) },
+        })),
+        fetchUpstreamJsonForProxyExactPath(req, "/knowledge", "GET").catch((error) => ({
+          status: 502,
+          data: { error: "Failed to load Knowledge libraries", message: error instanceof Error ? error.message : String(error) },
         })),
       ]);
       if (projectResponse.status >= 400) {
@@ -241,6 +319,22 @@ export function createProjectResourceIndexHandler({
         });
       }
 
+      let scopedKnowledgeLibraries = [];
+      if (knowledgeResponse.status < 400) {
+        scopedKnowledgeLibraries = filterProjectResourceIndexRecordsByProjectId(
+          getProjectResourceIndexArray(knowledgeResponse.data, ["libraries", "knowledgeLibraries"]),
+          normalizedProjectId,
+        )
+          .map(normalizeProjectResourceIndexKnowledgeLibrary)
+          .filter(Boolean);
+      } else {
+        errors.push({
+          resource: "knowledgeLibraries",
+          status: knowledgeResponse.status,
+          message: knowledgeResponse.data?.message || knowledgeResponse.data?.error || "Knowledge libraries are unavailable.",
+        });
+      }
+
       const imagineResources = filterProjectResourceIndexImagineResources(attachments, normalizedProjectId);
       const defaultEnvironmentId = String(
         project.defaultEnvironmentId
@@ -271,6 +365,9 @@ export function createProjectResourceIndexHandler({
         serverResources,
         servers: serverResources,
         metronomes,
+        linkedResources: scopedKnowledgeLibraries,
+        scopedResources: scopedKnowledgeLibraries,
+        knowledgeLibraries: scopedKnowledgeLibraries,
         imagineResources,
         counts: {
           files: attachments.length,
@@ -279,6 +376,8 @@ export function createProjectResourceIndexHandler({
           serverResources: serverResources.length,
           servers: serverResources.length,
           metronomes: metronomes.length,
+          linkedResources: scopedKnowledgeLibraries.length,
+          knowledgeLibraries: scopedKnowledgeLibraries.length,
           imagineResources: imagineResources.length,
         },
         routes: {
@@ -287,6 +386,7 @@ export function createProjectResourceIndexHandler({
           files: `/api/real/projects/${encodedProjectId}`,
           serverResources: `/api/real/servers?projectId=${encodedProjectId}`,
           metronomes: `/api/real/metronomes?projectId=${encodedProjectId}`,
+          knowledgeLibraries: "/api/real/knowledge",
         },
         errors,
       });

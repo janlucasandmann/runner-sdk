@@ -66,6 +66,16 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
       }
 
       function normalizePlaygroundFineTuningPersonIdentity(rawValue = {}) {
+        if (typeof rawValue === "string") {
+          const value = normalizePlaygroundFineTuningString(rawValue);
+          return {
+            id: value,
+            userId: "",
+            name: value.includes("@") ? "" : value,
+            email: value.includes("@") ? value : "",
+            avatarUrl: "",
+          };
+        }
         const source = rawValue && typeof rawValue === "object" && !Array.isArray(rawValue) ? rawValue : {};
         return {
           id: normalizePlaygroundFineTuningString(source.id || source.userId || source.user_id || source.uid || source.email),
@@ -108,6 +118,44 @@ export const FINE_TUNING_PAGE_FOUNDATION_SCRIPT = String.raw`
           email: nestedIdentity.email || direct.email,
           avatarUrl: nestedIdentity.avatarUrl || direct.avatarUrl,
         };
+      }
+
+      function resolvePlaygroundFineTuningPersonIdentity(rawIdentity = {}, knownIdentities = []) {
+        const identity = normalizePlaygroundFineTuningPersonIdentity(rawIdentity);
+        const identityKeys = new Set([
+          identity.userId,
+          identity.email,
+          identity.id,
+        ].map((value) => normalizePlaygroundFineTuningString(value).toLowerCase()).filter(Boolean));
+        const candidates = (Array.isArray(knownIdentities) ? knownIdentities : [knownIdentities])
+          .map((candidate) => normalizePlaygroundFineTuningPersonIdentity(candidate))
+          .filter((candidate) => candidate.id || candidate.userId || candidate.email || candidate.name);
+        const matchingIdentity = candidates.find((candidate) => {
+          const candidateKeys = [candidate.userId, candidate.email, candidate.id]
+            .map((value) => normalizePlaygroundFineTuningString(value).toLowerCase())
+            .filter(Boolean);
+          if (candidateKeys.some((key) => identityKeys.has(key))) return true;
+          const identityName = normalizePlaygroundFineTuningString(identity.name).toLowerCase();
+          const candidateName = normalizePlaygroundFineTuningString(candidate.name).toLowerCase();
+          return Boolean(!identityKeys.size && identityName && candidateName && identityName === candidateName);
+        });
+        if (!matchingIdentity) return identity;
+        const identityName = normalizePlaygroundFineTuningString(identity.name);
+        const identityNameIsIdentifier = identityKeys.has(identityName.toLowerCase());
+        return {
+          id: identity.id || matchingIdentity.id,
+          userId: identity.userId || matchingIdentity.userId,
+          name: matchingIdentity.name || (identityNameIsIdentifier ? "" : identityName),
+          email: matchingIdentity.email || identity.email,
+          avatarUrl: matchingIdentity.avatarUrl || identity.avatarUrl,
+        };
+      }
+
+      function resolvePlaygroundFineTuningConductorIdentity(source = {}, knownIdentities = []) {
+        return resolvePlaygroundFineTuningPersonIdentity(
+          getPlaygroundFineTuningConductorIdentity(source),
+          knownIdentities
+        );
       }
 
       function isPlaygroundFineTuningAgentVersionReady(status) {

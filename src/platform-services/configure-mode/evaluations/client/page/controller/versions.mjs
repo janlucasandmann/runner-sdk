@@ -925,7 +925,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           return activeVersion ? getEvaluationVersionCompareVersionSourceId(activeVersion.id) : EVALUATION_VERSION_COMPARE_CURRENT_EDITOR_ID;
         };
 
-        function openEvaluationVersionChangesPage(versionId, options = {}) {
+        function openEvaluationVersionChangesModal(versionId, options = {}) {
           if (!activeSet) return;
           const versions = readSelectedEvaluationVersions();
           const normalizedVersionId = String(versionId || "").trim();
@@ -937,11 +937,11 @@ export const EVALUATIONS_PAGE_CONTROLLER_VERSIONS_SCRIPT = String.raw`        fu
           setOpenEvaluationVersionMenuId("");
           setEvaluationPublishMenuOpen(false);
           setEvaluationVersionsHeaderMenuOpen(false);
-          setEvaluationVersionsSidebarOpen(true);
+          setEvaluationVersionsSidebarOpen(false);
           setEvaluationVersionChangesState({ leftSourceId, rightSourceId });
         }
 
-        function closeEvaluationVersionChangesPage() {
+        function closeEvaluationVersionChangesModal() {
           setEvaluationVersionChangesState(null);
         }
 

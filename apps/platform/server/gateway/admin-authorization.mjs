@@ -5,6 +5,18 @@ function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function normalizeEmailList(...values) {
+  const emails = values
+    .flatMap((value) => (
+      Array.isArray(value)
+        ? value
+        : String(value || "").split(/[;,\n]/)
+    ))
+    .map(normalizeEmail)
+    .filter(Boolean);
+  return [...new Set(emails)];
+}
+
 function extractEmail(payload) {
   const candidates = [
     payload?.email,
@@ -52,6 +64,7 @@ export function extractPlatformIdToken(req) {
 export function createAdminAuthorization({
   aiosOrigin,
   feedbackSummaryAdminEnvFileCandidates,
+  feedbackSummaryAllowedEmail = "",
   fetchAiosApi,
   hasAiosSession,
   identityService = { provider: "firebase" },
@@ -59,6 +72,7 @@ export function createAdminAuthorization({
   port,
 }) {
   let cachedFeedbackSummaryAdminKey = null;
+  let cachedFeedbackSummaryAllowedEmails = null;
   let cachedContactSalesApiToken = null;
 
   function readAdminKey(req) {
@@ -118,6 +132,34 @@ export function createAdminAuthorization({
       );
     }
     return cachedFeedbackSummaryAdminKey;
+  }
+
+  async function readFeedbackSummaryAllowedEmails() {
+    if (cachedFeedbackSummaryAllowedEmails === null) {
+      const configuredValues = [feedbackSummaryAllowedEmail];
+      for (const key of [
+        "PLATFORM_ADMIN_EMAILS",
+        "PLATFORM_ADMIN_EMAIL",
+        "FEEDBACK_SUMMARY_ALLOWED_EMAILS",
+        "FEEDBACK_SUMMARY_ALLOWED_EMAIL",
+      ]) {
+        configuredValues.push(
+          await readRuntimeEnvValue(
+            key,
+            feedbackSummaryAdminEnvFileCandidates,
+          ),
+        );
+      }
+      cachedFeedbackSummaryAllowedEmails = Object.freeze(
+        normalizeEmailList(...configuredValues),
+      );
+    }
+    return cachedFeedbackSummaryAllowedEmails;
+  }
+
+  async function readFeedbackSummaryAllowedEmail() {
+    const allowedEmails = await readFeedbackSummaryAllowedEmails();
+    return allowedEmails[0] || "";
   }
 
   async function readContactSalesApiToken() {
@@ -240,6 +282,8 @@ export function createAdminAuthorization({
     readAdminKey,
     readContactSalesApiToken,
     readFeedbackSummaryAdminKey,
+    readFeedbackSummaryAllowedEmail,
+    readFeedbackSummaryAllowedEmails,
     redirectToFeedbackSummaryLogin(req, res, options = {}) {
       redirectToLogin(req, res, "/feedback-summary", options);
     },

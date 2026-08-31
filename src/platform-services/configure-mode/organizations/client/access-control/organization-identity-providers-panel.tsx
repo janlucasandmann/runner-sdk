@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Trash2,
   Unplug,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useState } from "react";
 import {
   PlatformDataTable,

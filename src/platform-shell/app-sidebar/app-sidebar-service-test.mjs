@@ -46,9 +46,29 @@ assert.ok(fragments.modeSelector.includes('label: "Create"'));
 assert.ok(fragments.modeSelector.includes('label: "Configure"'));
 assert.ok(fragments.modeSelector.includes('label: "Develop"'));
 assert.ok(fragments.modeSelector.includes('label: "Admin"'));
+assert.match(
+  fragments.modeSelector,
+  /function renderSidebarModeHugeIcon[\s\S]*?function CreateModeSidebarIcon[\s\S]*?renderSidebarModeHugeIcon\(BadgePlusIcon, props\)[\s\S]*?function ConfigureModeSidebarIcon[\s\S]*?renderSidebarModeHugeIcon\(CustomizeIcon, props\)[\s\S]*?function DevelopModeSidebarIcon[\s\S]*?renderSidebarModeHugeIcon\(CodeIcon, props\)[\s\S]*?function AdminModeSidebarIcon[\s\S]*?renderSidebarModeHugeIcon\(AccountSetting02Icon, props\)/,
+  "The mode selector must use the requested Hugeicons for Create, Configure, Develop, and Admin.",
+);
 assert.ok(!fragments.modeSelector.includes("ActiveIcon"));
 assert.ok(fragments.modeSelector.includes("OptionIcon"));
 assert.match(fragments.navigationItems, /id: "new-thread"[\s\S]*active: showInitialThreadWelcome/);
+assert.match(
+  fragments.navigationItems,
+  /function renderSidebarHugeIcon[\s\S]*size = 14[\s\S]*React\.createElement\(HugeiconsIcon,[\s\S]*function NewThreadSidebarIcon[\s\S]*renderSidebarHugeIcon\(PencilEdit02Icon, props\)[\s\S]*function ProjectsSidebarIcon[\s\S]*renderSidebarHugeIcon\(StartUp02Icon, props\)[\s\S]*function FilesSidebarIcon[\s\S]*renderSidebarHugeIcon\(Folder02Icon, props\)/,
+  "Create-mode sidebar icons must use Hugeicons at the established 14px sidebar size.",
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "projects"[\s\S]*Icon: ProjectsSidebarIcon/,
+  "The Create-mode Projects action must use StartUp02Icon.",
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "files"[\s\S]*Icon: FilesSidebarIcon/,
+  "The Create-mode Files action must use Folder02Icon.",
+);
 assert.match(
   fragments.navigationItems,
   /id: "new-thread"[\s\S]*id: "projects"[\s\S]*id: "files"[\s\S]*id: "create-services-label"[\s\S]*label: "Services"[\s\S]*id: "create-test"/,
@@ -59,7 +79,35 @@ assert.match(
 );
 assert.match(
   fragments.navigationItems,
-  /id: "tags"[\s\S]*label: "Connectors"[\s\S]*searchAliases: \["Tags", "Plugins", "Tags and Plugins"\][\s\S]*Icon: Plug[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
+  /id: "metronome"[\s\S]*Icon: WorkflowsSidebarIcon/,
+  "The Create-mode Workflows action must use WorkflowIcon.",
+);
+assert.match(
+  fragments.navigationItems,
+  /function ImagineSidebarIcon[\s\S]*renderSidebarHugeIcon\(ClapperboardIcon, props\)[\s\S]*function BatchesSidebarIcon[\s\S]*renderSidebarHugeIcon\(TruckIcon, props\)[\s\S]*function CalendarSidebarIcon[\s\S]*renderSidebarHugeIcon\(Calendar04Icon, props\)/,
+  "Imagine, Batches, and Calendar must use their requested Hugeicons.",
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "batches"[\s\S]*Icon: BatchesSidebarIcon[\s\S]*id: "calendar"[\s\S]*Icon: CalendarSidebarIcon/,
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "tags"[\s\S]*label: "Connectors"[\s\S]*searchAliases: \["Tags", "Plugins", "Tags and Plugins"\][\s\S]*Icon: ConnectorsSidebarIcon[\s\S]*toolsView === "tags" \|\| toolsView === "plugins"/,
+);
+assert.match(
+  fragments.navigationItems,
+  /function HomeSidebarIcon[\s\S]*renderSidebarHugeIcon\(Home01Icon, props\)[\s\S]*function AgentsSidebarIcon[\s\S]*renderSidebarHugeIcon\(Robot01Icon, props\)[\s\S]*function ComputersSidebarIcon[\s\S]*renderSidebarHugeIcon\(ComputerIcon, props\)[\s\S]*function KnowledgeSidebarIcon[\s\S]*renderSidebarHugeIcon\(LibraryIcon, props\)[\s\S]*function PromptsSidebarIcon[\s\S]*renderSidebarHugeIcon\(Chat01Icon, props\)[\s\S]*function ConnectorsSidebarIcon[\s\S]*renderSidebarHugeIcon\(PlugIcon, props\)/,
+  "Configure Home, Agents, Computers, Knowledge, Prompts, and Connectors must use their requested Hugeicons.",
+);
+assert.match(
+  fragments.navigationItems,
+  /function TestsSidebarIcon[\s\S]*renderSidebarHugeIcon\(TestTube01Icon, props\)[\s\S]*function EvaluationsSidebarIcon[\s\S]*renderSidebarHugeIcon\(ChartAnalysisIcon, props\)[\s\S]*function AgentOptimizationSidebarIcon[\s\S]*renderSidebarHugeIcon\(TestTubeIcon, props\)[\s\S]*function AssuranceSidebarIcon[\s\S]*renderSidebarHugeIcon\(Award05Icon, props\)[\s\S]*function GuardrailsSidebarIcon[\s\S]*renderSidebarHugeIcon\(ChatLockIcon, props\)[\s\S]*function ModelsSidebarIcon[\s\S]*renderSidebarHugeIcon\(AiArtIcon, props\)[\s\S]*function MarketplaceSidebarIcon[\s\S]*renderSidebarHugeIcon\(Store01Icon, props\)[\s\S]*function InferenceSidebarIcon[\s\S]*renderSidebarHugeIcon\(ChipIcon, props\)/,
+  "Configure governance and infrastructure entries must use their requested Hugeicons.",
+);
+assert.match(
+  fragments.navigationItems,
+  /id: "agents"[\s\S]*Icon: AgentsSidebarIcon[\s\S]*id: "computers"[\s\S]*Icon: ComputersSidebarIcon[\s\S]*id: "prompts"[\s\S]*Icon: PromptsSidebarIcon/,
 );
 assert.match(
   fragments.navigationItems,
@@ -271,7 +319,10 @@ sidebarShortcutHandler({
 assert.equal(sidebarShortcutOpen, true);
 sidebarShortcutCleanup();
 assert.equal(sidebarShortcutHandler, null);
-assert.match(fragments.sidebar, /React\.createElement\(PanelLeft,/);
+assert.match(fragments.sidebar, /React\.createElement\(AppSidebarSearchIcon,/);
+assert.match(fragments.sidebar, /React\.createElement\(AppSidebarCloseIcon,/);
+assert.doesNotMatch(fragments.sidebar, /React\.createElement\(Search,/);
+assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeft,/);
 assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeftClose,/);
 assert.match(fragments.sidebar, /className: "sidebar-organization-card"[\s\S]*?onClick: \(\) => toggleAccountMenuFrom\("sidebar"\)/);
 assert.match(fragments.sidebar, /"aria-label": "Open account menu for " \+ sidebarOrganizationDisplay\.name/);

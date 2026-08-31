@@ -7,7 +7,7 @@ import {
   Trash2,
   UserRound,
   Webhook,
-} from "lucide-react";
+} from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   useCallback,
   useEffect,

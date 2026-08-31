@@ -144,6 +144,63 @@ describe("RunnerChat connector mention popup", () => {
     expect(popup.classList.contains("is-placement-top")).toBe(true);
   });
 
+  it("lists workflow commands after connectors and starts the selected workflow directly", async () => {
+    const onWorkflowSubmit = vi.fn(async () => true);
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <RunnerChat
+        backendUrl="https://runner.example.test"
+        apiKey="runner-key"
+        inputMode="computer-agents"
+        environments={[]}
+        computerAgents={{ connectors: [connector] }}
+        composerWorkflowTriggers={[
+          {
+            id: "met_launch",
+            name: "Launch Review",
+            command: "@launch",
+          },
+        ]}
+        onComposerWorkflowTriggerSubmit={onWorkflowSubmit}
+        autoCreateThread={false}
+      />,
+    );
+
+    const textarea = await screen.findByRole("textbox");
+    fireEvent.change(textarea, {
+      target: { value: "@", selectionStart: 1 },
+    });
+    const popup = await screen.findByRole("listbox", { name: "Connectors" });
+    const sectionLabels = Array.from(
+      popup.querySelectorAll(".tb-composer-mention-section-label"),
+    ).map((element) => element.textContent);
+    expect(sectionLabels).toEqual(["Connectors", "Workflows"]);
+    expect(within(popup).getByText("@launch")).not.toBeNull();
+
+    fireEvent.click(within(popup).getByRole("option", { name: /Launch Review/ }));
+    expect(
+      await screen.findByRole("button", { name: "Remove Launch Review workflow" }),
+    ).not.toBeNull();
+
+    fireEvent.keyDown(textarea, { key: "Enter" });
+    await waitFor(() => {
+      expect(onWorkflowSubmit).toHaveBeenCalledTimes(1);
+    });
+    expect(onWorkflowSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        command: "@launch",
+        prompt: "",
+        workflow: expect.objectContaining({
+          id: "met_launch",
+          name: "Launch Review",
+        }),
+      }),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("renders a selected connector inline with the textarea", async () => {
     const popup = await renderConnectorMentionPopup();
     fireEvent.click(popup.querySelector('[role="option"]') as HTMLButtonElement);

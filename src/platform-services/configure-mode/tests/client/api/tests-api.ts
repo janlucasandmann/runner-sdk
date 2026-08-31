@@ -5,8 +5,14 @@ import type {
   TestPlanVersion,
   TestRun,
   TestRunCreateInput,
+  TestPreviewRunCreateInput,
+  TestImportRunCreateInput,
+  TestCapabilities,
+  TestCaseDefinition,
+  TestTargetType,
   TestWorkspaceResourceOption,
 } from "../domain/index.js";
+import { getTestWorkspaceResourceProjectIds } from "../domain/index.js";
 
 export interface TestPlanListPage {
   plans: TestPlanOverviewSummary[];
@@ -86,7 +92,9 @@ function normalizePlanOverviewSummary(value: unknown): TestPlanOverviewSummary |
     projectId: String(source.projectId ?? source.project_id ?? "").trim() || null,
     name: String(source.name || "Untitled Test").trim(),
     description: String(source.description || "").trim(),
-    targetType: String(source.targetType ?? source.target_type ?? "project").trim(),
+    targetType: String(
+      source.targetType ?? source.target_type ?? "project",
+    ).trim() as TestTargetType,
     targetId: String(source.targetId ?? source.target_id ?? "").trim() || null,
     defaultEnvironmentId: String(
       source.defaultEnvironmentId ?? source.default_environment_id ?? "",
@@ -122,6 +130,7 @@ function normalizeResourceOptions(
   return resourceArray(payload, keys).flatMap((value): TestWorkspaceResourceOption[] => {
     const source = asRecord(value);
     const metadata = asRecord(source.metadata);
+    const projectIds = getTestWorkspaceResourceProjectIds(source);
     const id = String(
       source.id
       || source.value
@@ -147,6 +156,7 @@ function normalizeResourceOptions(
         || metadata.description
         || (ordinal > 0 ? `Immutable version ${ordinal}` : ""),
       ).trim(),
+      ...(projectIds.length ? { projectIds } : {}),
     }];
   });
 }
@@ -195,6 +205,37 @@ export class TestsApi {
       },
     });
     return readResponse<T>(response, fallback);
+  }
+
+  private async listWorkspaceResources(
+    path: string,
+    query: URLSearchParams,
+    keys: readonly string[],
+    fallbackLabel: string,
+    fallbackMessage: string,
+  ): Promise<TestWorkspaceResourceOption[]> {
+    const limit = 200;
+    const resources = new Map<string, TestWorkspaceResourceOption>();
+    let offset = 0;
+    for (let page = 0; page < 50; page += 1) {
+      const pageQuery = new URLSearchParams(query);
+      pageQuery.set("limit", String(limit));
+      pageQuery.set("offset", String(offset));
+      const payload = await this.request<unknown>(
+        `${path}?${pageQuery.toString()}`,
+        {},
+        fallbackMessage,
+      );
+      const rawResources = resourceArray(payload, keys);
+      for (const resource of normalizeResourceOptions(payload, keys, fallbackLabel)) {
+        resources.set(resource.id, resource);
+      }
+      const source = asRecord(payload);
+      const hasMore = source.hasMore === true || source.has_more === true;
+      if (!hasMore || rawResources.length === 0) break;
+      offset += rawResources.length;
+    }
+    return Array.from(resources.values());
   }
 
   async listPlanPage(offset = 0, limit = 20): Promise<TestPlanListPage> {
@@ -250,6 +291,14 @@ export class TestsApi {
         : [];
   }
 
+  getCapabilities(): Promise<TestCapabilities> {
+    return this.request<TestCapabilities>(
+      "/tests/capabilities",
+      {},
+      "Failed to load Test capabilities.",
+    );
+  }
+
   async getPlan(id: string): Promise<TestPlan> {
     const payload = await this.request<{ testPlan: TestPlan }>(
       `/test-plans/${encodeURIComponent(id)}`,
@@ -267,33 +316,109 @@ export class TestsApi {
     );
   }
 
-  async listFunctions(projectId = ""): Promise<TestWorkspaceResourceOption[]> {
-    const query = new URLSearchParams({ kind: "function", limit: "200" });
-    if (projectId.trim()) query.set("projectId", projectId.trim());
-    const payload = await this.request<unknown>(
-      `/servers?${query.toString()}`,
+  async listScenarios(id: string): Promise<TestCaseDefinition[]> {
+    const payload = await this.request<{
+      data?: TestCaseDefinition[];
+      scenarios?: TestCaseDefinition[];
+      testCases?: TestCaseDefinition[];
+    }>(
+      `/tests/${encodeURIComponent(id)}/scenarios`,
       {},
-      "Failed to load Functions.",
+      "Failed to load Test scenarios.",
     );
-    return normalizeResourceOptions(
-      payload,
-      ["servers", "serverResources", "functions", "data", "items", "results"],
-      "Function",
+    return payload.data ?? payload.scenarios ?? payload.testCases ?? [];
+  }
+
+  async createScenario(
+    id: string,
+    input: Partial<TestCaseDefinition> & { name: string; position?: number },
+  ): Promise<TestCaseDefinition> {
+    const payload = await this.request<{
+      scenario?: TestCaseDefinition;
+      testCase?: TestCaseDefinition;
+    }>(
+      `/tests/${encodeURIComponent(id)}/scenarios`,
+      { method: "POST", body: JSON.stringify(input) },
+      "Failed to create the Test scenario.",
+    );
+    return payload.scenario ?? payload.testCase as TestCaseDefinition;
+  }
+
+  async updateScenario(
+    id: string,
+    scenarioId: string,
+    input: Partial<TestCaseDefinition> & {
+      expectedUpdatedAt?: string;
+      position?: number;
+    },
+  ): Promise<TestCaseDefinition> {
+    const payload = await this.request<{
+      scenario?: TestCaseDefinition;
+      testCase?: TestCaseDefinition;
+    }>(
+      `/tests/${encodeURIComponent(id)}/scenarios/${encodeURIComponent(scenarioId)}`,
+      { method: "PATCH", body: JSON.stringify(input) },
+      "Failed to update the Test scenario.",
+    );
+    return payload.scenario ?? payload.testCase as TestCaseDefinition;
+  }
+
+  async deleteScenario(
+    id: string,
+    scenarioId: string,
+    expectedUpdatedAt?: string,
+  ): Promise<void> {
+    await this.request(
+      `/tests/${encodeURIComponent(id)}/scenarios/${encodeURIComponent(scenarioId)}`,
+      {
+        method: "DELETE",
+        body: expectedUpdatedAt
+          ? JSON.stringify({ expectedUpdatedAt })
+          : undefined,
+      },
+      "Failed to delete the Test scenario.",
     );
   }
 
-  async listMetronomes(projectId = ""): Promise<TestWorkspaceResourceOption[]> {
-    const query = new URLSearchParams({ limit: "200" });
-    if (projectId.trim()) query.set("projectId", projectId.trim());
-    const payload = await this.request<unknown>(
-      `/metronomes?${query.toString()}`,
-      {},
-      "Failed to load Metronome workflows.",
+  async reorderScenarios(
+    id: string,
+    scenarioIds: string[],
+    expectedUpdatedAt?: string,
+  ): Promise<TestCaseDefinition[]> {
+    const payload = await this.request<{
+      data?: TestCaseDefinition[];
+      scenarios?: TestCaseDefinition[];
+    }>(
+      `/tests/${encodeURIComponent(id)}/scenarios/reorder`,
+      {
+        method: "POST",
+        body: JSON.stringify({ scenarioIds, expectedUpdatedAt }),
+      },
+      "Failed to reorder Test scenarios.",
     );
-    return normalizeResourceOptions(
-      payload,
+    return payload.data ?? payload.scenarios ?? [];
+  }
+
+  async listFunctions(_projectId = ""): Promise<TestWorkspaceResourceOption[]> {
+    // A Test's project is organizational context, not an ownership boundary for
+    // deployable Functions. Load every Function the caller can use so valid
+    // organization resources never disappear from the target selector.
+    return this.listWorkspaceResources(
+      "/servers",
+      new URLSearchParams({ kind: "function" }),
+      ["servers", "serverResources", "functions", "data", "items", "results"],
+      "Function",
+      "Failed to load Functions.",
+    );
+  }
+
+  async listMetronomes(_projectId = ""): Promise<TestWorkspaceResourceOption[]> {
+    return this.listWorkspaceResources(
+      "/metronomes",
+      new URLSearchParams(),
       ["metronomes", "workflows", "data", "items", "results"],
       "Workflow",
+      "Failed to load Metronome workflows.",
     );
   }
 
@@ -386,6 +511,39 @@ export class TestsApi {
       `/test-plans/${encodeURIComponent(planId)}/runs`,
       { method: "POST", body: JSON.stringify(input) },
       "Failed to start the test run.",
+    );
+    return payload.testRun;
+  }
+
+  async createPreviewRun(
+    testId: string,
+    input: TestPreviewRunCreateInput,
+  ): Promise<TestRun> {
+    const payload = await this.request<{ testRun: TestRun }>(
+      `/tests/${encodeURIComponent(testId)}/preview-runs`,
+      { method: "POST", body: JSON.stringify(input) },
+      "Failed to try the Test scenarios.",
+    );
+    return payload.testRun;
+  }
+
+  async cancelRun(runId: string): Promise<TestRun> {
+    const payload = await this.request<{ testRun: TestRun }>(
+      `/tests/runs/${encodeURIComponent(runId)}/cancel`,
+      { method: "POST", body: "{}" },
+      "Failed to cancel the Test run.",
+    );
+    return payload.testRun;
+  }
+
+  async importRun(
+    testId: string,
+    input: TestImportRunCreateInput,
+  ): Promise<TestRun> {
+    const payload = await this.request<{ testRun: TestRun }>(
+      `/tests/${encodeURIComponent(testId)}/import-runs`,
+      { method: "POST", body: JSON.stringify(input) },
+      "Failed to import the Test report.",
     );
     return payload.testRun;
   }

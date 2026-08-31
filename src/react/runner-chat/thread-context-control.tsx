@@ -7,14 +7,14 @@ import {
   GitBranch as LucideGitBranch,
   MessageCircle as LucideMessageCircle,
   Minimize2 as LucideMinimize2,
-} from "lucide-react";
-import {
-  PlatformPopupSurface,
-  type PlatformPopupAnimation,
-} from "../../platform-ui/components/composite/popup/index.js";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
+import type { PlatformPopupAnimation } from "../../platform-ui/components/composite/popup/index.js";
 import { PlatformSecondaryButton } from "../../platform-ui/components/ui/button/index.js";
 import { PlatformHoverLabel } from "../../platform-ui/components/ui/icon-button/index.js";
-import { renderComposerPopupPortal } from "./composer-popup.js";
+import {
+  RunnerComposerPopupSurface,
+  renderComposerPopupPortal,
+} from "./composer-popup.js";
 import {
   EMPTY_THREAD_CONTEXT_CATEGORIES,
   buildContextIndicatorTitle,
@@ -122,7 +122,7 @@ function RunnerThreadContextPopup({
 >) {
   if (!hasApiKey) {
     return (
-      <PlatformPopupSurface
+      <RunnerComposerPopupSurface
         className="tb-popup-menu-context"
         animation={animation}
       >
@@ -136,7 +136,7 @@ function RunnerThreadContextPopup({
             thread context.
           </div>
         </div>
-      </PlatformPopupSurface>
+      </RunnerComposerPopupSurface>
     );
   }
 
@@ -188,7 +188,7 @@ function RunnerThreadContextPopup({
   });
 
   return (
-    <PlatformPopupSurface
+    <RunnerComposerPopupSurface
       className="tb-popup-menu-context"
       animation={animation}
     >
@@ -350,7 +350,7 @@ function RunnerThreadContextPopup({
           </div>
         </div>
       )}
-    </PlatformPopupSurface>
+    </RunnerComposerPopupSurface>
   );
 }
 

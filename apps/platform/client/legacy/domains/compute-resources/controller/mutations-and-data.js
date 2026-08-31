@@ -571,7 +571,7 @@
                 + (missingPaths.length > 3 ? "…" : "")
               );
             }
-            const files = sourceFiles.length > 0
+            const sourceResourceFiles = sourceFiles.length > 0
               ? sourceFiles.map((entry) => {
                   const filePath = normalizeHistoryPath(entry.path);
                   return { path: filePath, content: sourceFileContents[filePath] };
@@ -594,6 +594,23 @@
                       : PLAYGROUND_DEFAULT_FUNCTION_PACKAGE_CONTENT,
                   },
                 ];
+            const manifestPath = ".computer-agents/resource.json";
+            const files = [
+              {
+                path: manifestPath,
+                content: JSON.stringify({
+                  schemaVersion: 1,
+                  provider: "computer-agents",
+                  resourceKind,
+                  resourceId: String(draftServer.id),
+                  name: draftServer.name,
+                  description: draftServer.description,
+                  runtime: draftServer.runtime,
+                  region: draftServer.region,
+                }, null, 2) + "\n",
+              },
+              ...sourceResourceFiles.filter((file) => normalizeHistoryPath(file.path) !== manifestPath),
+            ];
             const resourceName = String(
               options?.name || draftServer.name || "Computer Agents " + resourceLabel
             ).trim();

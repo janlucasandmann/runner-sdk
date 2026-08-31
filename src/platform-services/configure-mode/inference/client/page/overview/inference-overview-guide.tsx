@@ -1,4 +1,4 @@
-import { ArrowRight, CloudCog, HardDrive } from "lucide-react";
+import { ArrowRight, CloudCog, HardDrive } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { PlatformPageHero } from "../../../../../../platform-ui/components/composite/page-hero/index.js";
 import { PlatformUiCard } from "../../../../../../platform-ui/components/composite/ui-card/index.js";
 

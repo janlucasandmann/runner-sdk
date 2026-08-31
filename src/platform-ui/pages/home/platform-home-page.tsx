@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "../../components/ui/hugeicons-compat.js";
 import { createElement, type ReactNode } from "react";
 import { PlatformPageHero } from "../../components/composite/page-hero/index.js";
 import { PlatformUiCard } from "../../components/composite/ui-card/index.js";

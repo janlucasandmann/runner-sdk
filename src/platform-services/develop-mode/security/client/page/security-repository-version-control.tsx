@@ -1,12 +1,5 @@
 import { Bookmark, Code2, SquarePen, Trash2, Undo2 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { SecurityServiceRepository } from "../api/security-repository.js";
 import type {
@@ -19,6 +12,7 @@ import type {
 import { PlatformDiffViewer } from "../../../../../platform-ui/components/composite/diff-viewer/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
+  PlatformVersionChangesModal,
   PlatformVersionHistorySidebar,
   PlatformVersionPublishControl,
   PlatformVersionSaveDialog,
@@ -29,7 +23,6 @@ import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../../../../platform-ui/components/ui/button/index.js";
-import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 
 export interface SecurityRepositoryHeaderState {
   mode: "overview" | "detail";
@@ -94,14 +87,10 @@ interface CompareSource {
 function cloneSnapshot(
   snapshot: SecurityRepositoryVersionSnapshot,
 ): SecurityRepositoryVersionSnapshot {
-  return JSON.parse(
-    JSON.stringify(snapshot),
-  ) as SecurityRepositoryVersionSnapshot;
+  return JSON.parse(JSON.stringify(snapshot)) as SecurityRepositoryVersionSnapshot;
 }
 
-function snapshotFromDetail(
-  detail: SecurityRepositoryDetail,
-): SecurityRepositoryVersionSnapshot {
+function snapshotFromDetail(detail: SecurityRepositoryDetail): SecurityRepositoryVersionSnapshot {
   if (!detail.policy || !detail.threatModel) {
     throw new Error("Security repository configuration is incomplete.");
   }
@@ -153,17 +142,11 @@ function buildVersionDiff(
 }
 
 function getPortalTarget(id: string): HTMLElement | null {
-  return typeof document !== "undefined" && id
-    ? document.getElementById(id)
-    : null;
+  return typeof document !== "undefined" && id ? document.getElementById(id) : null;
 }
 
 function getActiveVersion(versions: readonly SecurityRepositoryVersion[]) {
-  return (
-    versions.find((version) => version.status === "published") ||
-    versions[0] ||
-    null
-  );
+  return versions.find((version) => version.status === "published") || versions[0] || null;
 }
 
 function formatVersionTimestamp(value: string): string {
@@ -211,50 +194,33 @@ export function SecurityRepositoryVersionControl({
     mode: "current" | "new";
     key: string;
   } | null>(null);
-  const [editVersion, setEditVersion] =
-    useState<SecurityRepositoryVersion | null>(null);
+  const [editVersion, setEditVersion] = useState<SecurityRepositoryVersion | null>(null);
   const [editDescription, setEditDescription] = useState("");
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareLeftId, setCompareLeftId] = useState("");
   const [compareRightId, setCompareRightId] = useState("current-editor");
-  const [controlsTarget, setControlsTarget] = useState<HTMLElement | null>(
-    null,
-  );
+  const [controlsTarget, setControlsTarget] = useState<HTMLElement | null>(null);
   const [drawerTarget, setDrawerTarget] = useState<HTMLElement | null>(null);
   const onDeleteRef = useRef(onDelete);
   onDeleteRef.current = onDelete;
 
   const selectedVersion = useMemo(
     () =>
-      versions.find((version) => version.id === selectedVersionId) ||
-      getActiveVersion(versions),
+      versions.find((version) => version.id === selectedVersionId) || getActiveVersion(versions),
     [selectedVersionId, versions],
   );
   const activeVersion = useMemo(() => getActiveVersion(versions), [versions]);
   const latestVersionNumber = useMemo(
-    () =>
-      versions.reduce(
-        (latest, version) => Math.max(latest, Number(version.version) || 0),
-        0,
-      ),
+    () => versions.reduce((latest, version) => Math.max(latest, Number(version.version) || 0), 0),
     [versions],
   );
-  const hasChanges = useMemo(
-    () => !snapshotsEqual(baseline, draft),
-    [baseline, draft],
-  );
+  const hasChanges = useMemo(() => !snapshotsEqual(baseline, draft), [baseline, draft]);
   const isBusy = busy || versionBusy || versionsLoading;
-  const diff = useMemo(
-    () => buildVersionDiff(baseline, draft),
-    [baseline, draft],
-  );
+  const diff = useMemo(() => buildVersionDiff(baseline, draft), [baseline, draft]);
 
   const loadVersions = useCallback(
     async (signal?: AbortSignal) => {
-      const nextVersions = await repository.listRepositoryVersions(
-        repositoryId,
-        signal,
-      );
+      const nextVersions = await repository.listRepositoryVersions(repositoryId, signal);
       setVersions(nextVersions);
       return nextVersions;
     },
@@ -282,9 +248,7 @@ export function SecurityRepositoryVersionControl({
       })
       .catch((error) => {
         if ((error as { name?: string })?.name !== "AbortError") {
-          setVersionError(
-            error instanceof Error ? error.message : "Failed to load versions.",
-          );
+          setVersionError(error instanceof Error ? error.message : "Failed to load versions.");
         }
       })
       .finally(() => {
@@ -321,9 +285,7 @@ export function SecurityRepositoryVersionControl({
 
   useEffect(() => {
     if (!onHeaderChange) return undefined;
-    const versionNumber = selectedVersion
-      ? Number(selectedVersion.version)
-      : null;
+    const versionNumber = selectedVersion ? Number(selectedVersion.version) : null;
     onHeaderChange({
       mode: "detail",
       title: detail.repository.fullName,
@@ -333,8 +295,7 @@ export function SecurityRepositoryVersionControl({
       sectionOptions,
       onSectionChange,
       versionNumber: Number.isFinite(versionNumber) ? versionNumber : null,
-      versionIsLatest:
-        Number.isFinite(versionNumber) && versionNumber === latestVersionNumber,
+      versionIsLatest: Number.isFinite(versionNumber) && versionNumber === latestVersionNumber,
       versionBusy: isBusy,
       onVersionClick: openHistory,
       actionsOpen,
@@ -401,20 +362,14 @@ export function SecurityRepositoryVersionControl({
       setVersionBusy(true);
       setVersionError("");
       try {
-        const result = await repository.publishRepositoryVersion(
-          repositoryId,
-          version.id,
-          {
-            snapshot,
-            description,
-          },
-        );
+        const result = await repository.publishRepositoryVersion(repositoryId, version.id, {
+          snapshot,
+          description,
+        });
         await resetFromPublishedState(result.versions);
       } catch (error) {
         const message =
-          error instanceof Error
-            ? error.message
-            : "The version could not be published.";
+          error instanceof Error ? error.message : "The version could not be published.";
         setVersionError(message);
         throw error;
       } finally {
@@ -425,13 +380,7 @@ export function SecurityRepositoryVersionControl({
   );
 
   const submitSave = useCallback(
-    async ({
-      mode,
-      description,
-    }: {
-      mode: "current" | "new";
-      description: string;
-    }) => {
+    async ({ mode, description }: { mode: "current" | "new"; description: string }) => {
       setVersionBusy(true);
       setVersionError("");
       try {
@@ -443,23 +392,16 @@ export function SecurityRepositoryVersionControl({
           );
           await resetFromPublishedState(result.versions);
         } else {
-          const result = await repository.createRepositoryVersion(
-            repositoryId,
-            {
-              snapshot: draft,
-              description,
-              publish: true,
-            },
-          );
+          const result = await repository.createRepositoryVersion(repositoryId, {
+            snapshot: draft,
+            description,
+            publish: true,
+          });
           await resetFromPublishedState(result.versions);
         }
         setSaveDialog(null);
       } catch (error) {
-        setVersionError(
-          error instanceof Error
-            ? error.message
-            : "The version could not be saved.",
-        );
+        setVersionError(error instanceof Error ? error.message : "The version could not be saved.");
         throw error;
       } finally {
         setVersionBusy(false);
@@ -484,17 +426,12 @@ export function SecurityRepositoryVersionControl({
         await repository.deleteRepositoryVersion(repositoryId, version.id);
         const nextVersions = await loadVersions();
         const nextSelected = getActiveVersion(nextVersions);
-        if (
-          !nextVersions.some((item) => item.id === selectedVersionId) &&
-          nextSelected
-        ) {
+        if (!nextVersions.some((item) => item.id === selectedVersionId) && nextSelected) {
           selectVersion(nextSelected);
         }
       } catch (error) {
         setVersionError(
-          error instanceof Error
-            ? error.message
-            : "The version could not be deleted.",
+          error instanceof Error ? error.message : "The version could not be deleted.",
         );
       } finally {
         setVersionBusy(false);
@@ -519,8 +456,7 @@ export function SecurityRepositoryVersionControl({
     compareSources[1] ||
     compareSources[0];
   const rightSource =
-    compareSources.find((source) => source.id === compareRightId) ||
-    compareSources[0];
+    compareSources.find((source) => source.id === compareRightId) || compareSources[0];
   const compareDiff = useMemo(
     () => buildVersionDiff(leftSource.snapshot, rightSource.snapshot),
     [leftSource, rightSource],
@@ -529,9 +465,7 @@ export function SecurityRepositoryVersionControl({
   const versionedDetail = useMemo<SecurityRepositoryDetail>(
     () => ({
       ...detail,
-      policy: detail.policy
-        ? { ...detail.policy, value: draft.policy }
-        : detail.policy,
+      policy: detail.policy ? { ...detail.policy, value: draft.policy } : detail.policy,
       threatModel: detail.threatModel
         ? { ...detail.threatModel, value: draft.threatModel }
         : detail.threatModel,
@@ -578,15 +512,11 @@ export function SecurityRepositoryVersionControl({
       {children({
         detail: versionedDetail,
         busy: isBusy,
-        onPolicyChange: (policy) =>
-          setDraft((current) => ({ ...current, policy })),
-        onThreatModelChange: (threatModel) =>
-          setDraft((current) => ({ ...current, threatModel })),
+        onPolicyChange: (policy) => setDraft((current) => ({ ...current, policy })),
+        onThreatModelChange: (threatModel) => setDraft((current) => ({ ...current, threatModel })),
       })}
 
-      {controlsTarget
-        ? createPortal(headerControls, controlsTarget)
-        : headerControls}
+      {controlsTarget ? createPortal(headerControls, controlsTarget) : headerControls}
 
       <PlatformVersionHistorySidebar<SecurityRepositoryVersion>
         open={historyOpen}
@@ -605,16 +535,12 @@ export function SecurityRepositoryVersionControl({
         emptyDescription="Save changes to create this repository's first version."
         busy={isBusy}
         onClose={() => setHistoryOpen(false)}
-        onCreateVersion={() =>
-          setSaveDialog({ mode: "new", key: String(Date.now()) })
-        }
+        onCreateVersion={() => setSaveDialog({ mode: "new", key: String(Date.now()) })}
         onSelectVersion={(_versionId, version) => selectVersion(version)}
         onPublishVersion={(_versionId, version) =>
           publishVersion(
             version,
-            selectedVersion?.id === version.id && hasChanges
-              ? draft
-              : version.snapshot,
+            selectedVersion?.id === version.id && hasChanges ? draft : version.snapshot,
           )
         }
         canPublishVersion={(version) =>
@@ -626,6 +552,7 @@ export function SecurityRepositoryVersionControl({
           setCompareLeftId(selectedVersion?.id || activeVersion?.id || "");
           setCompareRightId("current-editor");
           setCompareOpen(true);
+          setHistoryOpen(false);
         }}
         getVersionCreatedAt={(version) =>
           formatVersionTimestamp(
@@ -650,6 +577,7 @@ export function SecurityRepositoryVersionControl({
               setCompareLeftId(version.id);
               setCompareRightId("current-editor");
               setCompareOpen(true);
+              setHistoryOpen(false);
             },
           },
           {
@@ -666,9 +594,7 @@ export function SecurityRepositoryVersionControl({
       <PlatformVersionSaveDialog
         open={Boolean(saveDialog)}
         title="Review changes"
-        currentVersion={
-          selectedVersion?.version ?? activeVersion?.version ?? null
-        }
+        currentVersion={selectedVersion?.version ?? activeVersion?.version ?? null}
         nextVersion={latestVersionNumber + 1}
         currentDescription={selectedVersion?.description || ""}
         initialMode={saveDialog?.mode || "new"}
@@ -735,9 +661,7 @@ export function SecurityRepositoryVersionControl({
                   })
                   .then((updated) => {
                     setVersions((current) =>
-                      current.map((version) =>
-                        version.id === updated.id ? updated : version,
-                      ),
+                      current.map((version) => (version.id === updated.id ? updated : version)),
                     );
                     setEditVersion(null);
                   })
@@ -769,54 +693,42 @@ export function SecurityRepositoryVersionControl({
         </label>
       </PlatformModal>
 
-      <PlatformModal
+      <PlatformVersionChangesModal
         open={compareOpen}
         title="Changes"
-        size="large"
-        maxHeight="min(760px, calc(100dvh - 48px))"
         onClose={() => setCompareOpen(false)}
-        footer={
-          <PlatformSecondaryButton
-            size="medium"
-            onClick={() => setCompareOpen(false)}
-          >
-            Close
-          </PlatformSecondaryButton>
-        }
-      >
-        <div className="develop-security-version-compare-controls">
-          <PlatformSelector
-            value={leftSource.id}
-            ariaLabel="Base repository version"
-            options={compareSources.map((source) => ({
-              value: source.id,
-              label: source.label,
-            }))}
-            onValueChange={setCompareLeftId}
-          />
-          <span aria-hidden="true">→</span>
-          <PlatformSelector
-            value={rightSource.id}
-            ariaLabel="Target repository version"
-            options={compareSources.map((source) => ({
-              value: source.id,
-              label: source.label,
-            }))}
-            onValueChange={setCompareRightId}
-          />
-        </div>
-        <PlatformDiffViewer
-          filePath={compareDiff.filePath}
-          diffContent={compareDiff.diffContent}
-          fileContent={compareDiff.fileContent}
-          additions={compareDiff.additions}
-          deletions={compareDiff.deletions}
-          emptyMessage="No differences between the selected versions."
-          embedded
-          defaultExpanded
-          maxHeight={520}
-        />
-      </PlatformModal>
+        closeButtonLabel="Close repository version changes"
+        leftSelector={{
+          value: leftSource.id,
+          ariaLabel: "Base repository version",
+          options: compareSources.map((source) => ({
+            value: source.id,
+            label: source.label,
+          })),
+          onValueChange: setCompareLeftId,
+        }}
+        rightSelector={{
+          value: rightSource.id,
+          ariaLabel: "Target repository version",
+          options: compareSources.map((source) => ({
+            value: source.id,
+            label: source.label,
+          })),
+          onValueChange: setCompareRightId,
+        }}
+        files={[
+          {
+            id: compareDiff.filePath,
+            filePath: compareDiff.filePath,
+            diffContent: compareDiff.diffContent,
+            fileContent: compareDiff.fileContent,
+            additions: compareDiff.additions,
+            deletions: compareDiff.deletions,
+          },
+        ]}
+        emptyMessage="No differences between the selected versions."
+        contentClassName="develop-security-version-changes"
+      />
     </>
   );
 }

@@ -1272,6 +1272,20 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
           );
         }
 
+        function getTaskActorPhotoUrl(actorId) {
+          const normalizedActorId = String(actorId || "").trim();
+          if (!normalizedActorId) {
+            return "";
+          }
+          if (isPlaygroundHumanAssigneeId(normalizedActorId)) {
+            return canRenderAvatarImage(currentUserAvatarUrl) ? currentUserAvatarUrl : "";
+          }
+          const actorAgent = agentsById[normalizedActorId] || assignableActorsById[normalizedActorId] || null;
+          return actorAgent
+            ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(actorAgent))
+            : "";
+        }
+
         function renderTaskActorAvatar(actorId, className) {
           const normalizedActorId = String(actorId || "").trim();
           if (!normalizedActorId) {
@@ -1283,7 +1297,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
           }
           if (isPlaygroundHumanAssigneeId(normalizedActorId)) {
             const currentUserInitials = getAccountInitials(currentUserName || "Me");
-            const currentUserPhotoUrl = canRenderAvatarImage(currentUserAvatarUrl) ? currentUserAvatarUrl : "";
+            const currentUserPhotoUrl = getTaskActorPhotoUrl(normalizedActorId);
             return React.createElement("div", { className, title: actorName, "aria-hidden": "true" },
               currentUserPhotoUrl
                 ? React.createElement("img", {
@@ -1294,10 +1308,7 @@ export const PROJECTS_ACTIONS_01_FRAGMENT = `        function normalizeProjectMe
                 : React.createElement("span", { className: className + "-fallback" }, currentUserInitials)
             );
           }
-          const actorAgent = agentsById[normalizedActorId] || assignableActorsById[normalizedActorId] || null;
-          const actorPhotoUrl = actorAgent
-            ? normalizeSessionPhotoUrl(getPlaygroundAgentProfilePhotoUrl(actorAgent))
-            : "";
+          const actorPhotoUrl = getTaskActorPhotoUrl(normalizedActorId);
           return renderAgentNameAvatar(actorName, className, actorPhotoUrl);
         }
 

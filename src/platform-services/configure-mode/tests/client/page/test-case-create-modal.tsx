@@ -3,7 +3,7 @@ import {
   Braces,
   Plus,
   TerminalSquare,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   useEffect,
   useMemo,
@@ -20,18 +20,23 @@ import { PlatformCheckbox } from "../../../../../platform-ui/components/ui/check
 import { PlatformSelector } from "../../../../../platform-ui/components/ui/selector/index.js";
 import {
   applyTestCasePresentation,
+  configureTestCaseForTestTarget,
   DETERMINISTIC_TEST_TARGET_OPTIONS,
+  getTestTargetScenarioPolicy,
   TEST_CASE_CATEGORY_OPTIONS,
   TEST_CASE_EXECUTION_OPTIONS,
   type TestCaseCategory,
   type TestCaseDefinition,
   type TestCaseExecutionMethod,
+  type TestTargetType,
 } from "../domain/index.js";
 import { TestAssertionBuilder } from "./test-assertion-builder.js";
 
 interface TestCaseCreateModalProps {
   open: boolean;
   existingCases: readonly TestCaseDefinition[];
+  testTargetType?: TestTargetType;
+  testTargetId?: string | null;
   onClose: () => void;
   onCreate: (testCase: TestCaseDefinition) => void;
 }
@@ -93,9 +98,15 @@ function emptyCase(name: string): TestCaseDefinition {
 export function TestCaseCreateModal({
   open,
   existingCases,
+  testTargetType = "custom",
+  testTargetId = null,
   onClose,
   onCreate,
 }: TestCaseCreateModalProps) {
+  const targetPolicy = useMemo(
+    () => getTestTargetScenarioPolicy(testTargetType),
+    [testTargetType],
+  );
   const nameRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -121,13 +132,13 @@ export function TestCaseCreateModal({
     if (!open) return;
     setName("");
     setDescription("");
-    setExecutionMethod("command");
-    setCategory("smoke");
+    setExecutionMethod(targetPolicy.defaultExecutionMethod);
+    setCategory(targetPolicy.forcedCategory || "smoke");
     setCommand("");
     setWorkingDirectory("");
     setInstructions("");
-    setTarget("control_plane_readiness");
-    setResourceId("");
+    setTarget(targetPolicy.defaultContractTarget);
+    setResourceId(String(testTargetId || ""));
     setRequestMethod("GET");
     setRequestPath("/");
     setRequestPayload("null");
@@ -136,7 +147,14 @@ export function TestCaseCreateModal({
     setRequireAgentRuntime(true);
     setAssertions([]);
     setError("");
-  }, [open]);
+  }, [open, targetPolicy, testTargetId]);
+
+  const executionOptions = useMemo(() => TEST_CASE_EXECUTION_OPTIONS.filter(
+    (option) => targetPolicy.allowedExecutionMethods.includes(option.value),
+  ), [targetPolicy]);
+  const contractTargetOptions = useMemo(() => DETERMINISTIC_TEST_TARGET_OPTIONS.filter(
+    (option) => targetPolicy.allowedContractTargets.includes(option.value),
+  ), [targetPolicy]);
 
   const selectedExecution = useMemo(
     () => TEST_CASE_EXECUTION_OPTIONS.find((option) => option.value === executionMethod),
@@ -183,12 +201,12 @@ export function TestCaseCreateModal({
     event.preventDefault();
     const normalizedName = name.trim();
     if (!normalizedName) {
-      setError("Enter a case name.");
+      setError("Enter a scenario name.");
       nameRef.current?.focus();
       return;
     }
     if (executionMethod === "command" && !command.trim()) {
-      setError("Enter the command this case should execute.");
+      setError("Enter the command this scenario should execute.");
       return;
     }
     if (executionMethod === "agent" && !instructions.trim()) {
@@ -203,7 +221,7 @@ export function TestCaseCreateModal({
           ? { instructions: instructions.trim() }
           : {};
       const presented = applyTestCasePresentation(base, executionMethod, category);
-      onCreate({
+      const candidate = configureTestCaseForTestTarget({
         ...presented,
         id: uniqueCaseId(normalizedName, existingCases),
         description: description.trim(),
@@ -211,18 +229,21 @@ export function TestCaseCreateModal({
         workingDirectory: workingDirectory.trim(),
         request,
         assertions,
-      });
+      }, testTargetType, testTargetId);
+      onCreate(candidate);
       onClose();
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "The test case is not valid.");
+      setError(nextError instanceof Error ? nextError.message : "The scenario is not valid.");
     }
   }
 
   return (
     <PlatformModal
       open={open}
-      title="Add test case"
-      description="Choose how this case executes, then define the behavior it verifies."
+      title="Add scenario"
+      description={targetPolicy.locked
+        ? `This Test uses ${targetPolicy.scenarioLabel.toLowerCase()} scenarios. Define the behavior and expected result.`
+        : "Choose how this scenario executes, then define the behavior it verifies."}
       as="form"
       size="large"
       initialFocusRef={nameRef}
@@ -235,13 +256,13 @@ export function TestCaseCreateModal({
           <PlatformSecondaryButton size="medium" onClick={onClose}>Cancel</PlatformSecondaryButton>
           <PlatformPrimaryButton size="medium" type="submit" disabled={!name.trim()}>
             <Plus width={14} height={14} aria-hidden="true" />
-            Add case
+            Add Scenario
           </PlatformPrimaryButton>
         </>
       )}
     >
       <label className="tests-form-field">
-        <span>Case name</span>
+        <span>Scenario name</span>
         <input
           ref={nameRef}
           value={name}
@@ -252,9 +273,22 @@ export function TestCaseCreateModal({
       </label>
 
       <fieldset className="tests-case-method-fieldset">
-        <legend>Execution method</legend>
-        <div className="tests-case-method-grid">
-          {TEST_CASE_EXECUTION_OPTIONS.map((option) => {
+        <legend>{targetPolicy.locked ? "Scenario type" : "Execution method"}</legend>
+        <div className={`tests-case-method-grid${targetPolicy.locked ? " is-locked" : ""}`}>
+          {targetPolicy.locked ? (() => {
+            const option = executionOptions[0];
+            const Icon = EXECUTION_ICONS[targetPolicy.defaultExecutionMethod];
+            return (
+              <div className="tests-case-method-card is-selected is-locked">
+                <Icon width={17} height={17} aria-hidden="true" />
+                <span>
+                  <strong>{targetPolicy.scenarioLabel}</strong>
+                  <small>{targetPolicy.description}</small>
+                </span>
+                <em>{option?.trust === "runner_captured" ? "Deterministic worker" : option?.label}</em>
+              </div>
+            );
+          })() : executionOptions.map((option) => {
             const Icon = EXECUTION_ICONS[option.value];
             const selected = executionMethod === option.value;
             return (
@@ -285,7 +319,7 @@ export function TestCaseCreateModal({
             value={category}
             options={TEST_CASE_CATEGORY_OPTIONS}
             fullWidth
-            ariaLabel="Test case category"
+            ariaLabel="Scenario category"
             onValueChange={setCategory}
           />
         </div>
@@ -294,7 +328,7 @@ export function TestCaseCreateModal({
           <input
             value={description}
             maxLength={5_000}
-            placeholder="What this case proves"
+            placeholder="What this scenario proves"
             onChange={(event) => setDescription(event.currentTarget.value)}
           />
         </label>
@@ -308,7 +342,7 @@ export function TestCaseCreateModal({
               value={command}
               rows={5}
               placeholder="npm test"
-              aria-label="New test case command"
+              aria-label="New scenario command"
               onChange={(event) => setCommand(event.currentTarget.value)}
             />
           </label>
@@ -325,16 +359,18 @@ export function TestCaseCreateModal({
 
       {executionMethod === "contract" ? (
         <div className="tests-case-create-modal__contract">
-          <div className="tests-form-field">
-            <span>Contract target</span>
-            <PlatformSelector
-              value={target}
-              options={DETERMINISTIC_TEST_TARGET_OPTIONS}
-              fullWidth
-              ariaLabel="Deterministic contract target"
-              onValueChange={setTarget}
-            />
-          </div>
+          {!targetPolicy.locked ? (
+            <div className="tests-form-field">
+              <span>Contract target</span>
+              <PlatformSelector
+                value={target}
+                options={contractTargetOptions}
+                fullWidth
+                ariaLabel="Deterministic contract target"
+                onValueChange={setTarget}
+              />
+            </div>
+          ) : null}
           {target === "control_plane_readiness" ? (
             <div className="tests-case-create-modal__checks">
               <label>
@@ -357,14 +393,16 @@ export function TestCaseCreateModal({
           ) : null}
           {target === "computer_agents_function" || target === "metronome_workflow" ? (
             <div className="tests-form-grid">
-              <label className="tests-form-field is-span-2">
-                <span>{target === "computer_agents_function" ? "Function ID" : "Workflow ID"}</span>
-                <input
-                  value={resourceId}
-                  placeholder={target === "computer_agents_function" ? "function_…" : "metronome_…"}
-                  onChange={(event) => setResourceId(event.currentTarget.value)}
-                />
-              </label>
+              {!targetPolicy.locked ? (
+                <label className="tests-form-field is-span-2">
+                  <span>{target === "computer_agents_function" ? "Function ID" : "Workflow ID"}</span>
+                  <input
+                    value={resourceId}
+                    placeholder={target === "computer_agents_function" ? "function_…" : "metronome_…"}
+                    onChange={(event) => setResourceId(event.currentTarget.value)}
+                  />
+                </label>
+              ) : null}
               {target === "computer_agents_function" ? (
                 <>
                   <div className="tests-form-field">

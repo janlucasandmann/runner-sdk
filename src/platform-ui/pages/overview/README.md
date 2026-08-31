@@ -9,6 +9,7 @@ This directory contains the canonical page layer for resource overview screens. 
 1. App-header controls rendered through `controlsPortalId`
 2. Shared `PlatformAnalyticsSection` KPI summary and usage chart, or a resource-specific `heroContent` replacement
 3. Shared `PlatformDataTable` surface
+4. Canonical Edit, Duplicate, Share, and Delete row actions
 
 Resource-specific behavior does not belong here. Each resource module under `platform-resources/<resource>/overview` defines its row model, extension columns, filters, actions, data mapping, and resource-specific header controls, then renders `ResourceOverviewPage`. Catalog overviews use the centralized Name, Creator, and Updated column set.
 
@@ -17,7 +18,9 @@ Resource-specific behavior does not belong here. Each resource module under `pla
 - `resource-overview-page.tsx`: generic page composition
 - `resource-overview-chart.tsx`: compatibility export for the shared analytics chart
 - `resource-overview-cells.tsx`: reusable table cell presentations
+- `resource-overview-standard-cells.tsx`: canonical Knowledge-style Name and Creator cells
 - `resource-overview-columns.tsx`: fixed Name, Creator, and Updated catalog columns with typed extension slots
+- `resource-overview-actions.tsx`: canonical resource action order, aliases, icons, and unavailable states
 - `resource-overview-types.ts`: public page and analytics contracts
 - `resource-overview.css`: canonical overview-page styling
 - `resource-overview-pages.test.tsx`: cross-resource contract tests
@@ -70,6 +73,8 @@ import "@computer-agents/platform/platform-ui/pages/styles.css";
 - Provide a stable app-header target through `controlsPortalId`; timeframe and primary actions must not be rendered in the page body.
 - Set a primary action's `icon` to `null` when the centralized button should be deliberately iconless; omit it to retain the default plus icon.
 - Use `PlatformDataTable` configuration instead of introducing resource-specific table markup.
+- Resource tables inherit Edit, Duplicate, Share, and Delete actions. Supply domain callbacks through `getRowActions`; unavailable mutations remain disabled instead of being faked.
+- Set `rowActionMode="custom"` only for a non-resource table with a deliberately specialized action contract, such as API keys.
 - Build catalog columns with `createResourceOverviewColumns`; add domain-specific columns through its extension slots instead of recreating Name, Creator, or Updated.
 - Update the cross-resource test when adding a new overview page to ensure it renders the canonical shell.
 

@@ -23,6 +23,13 @@ const sourceDeployableServerDetailPageSource = await fs.readFile(
   ),
   "utf8",
 );
+const computerDetailPageCssSource = await fs.readFile(
+  path.resolve(
+    domainRoot,
+    "../../../../../../src/platform-resources/computers/detail/computer-detail-page.css",
+  ),
+  "utf8",
+);
 const mutationsAndDataSource = await fs.readFile(
   path.resolve(domainRoot, "controller/mutations-and-data.js"),
   "utf8",
@@ -65,6 +72,11 @@ const shellCompositionSource = await fs.readFile(
 
 assert.equal(COMPUTE_RESOURCES_CONTROLLER_FRAGMENT_PATHS.length, 12);
 assert.match(COMPUTE_RESOURCES_PAGE_SCRIPT, /function PlaygroundEnvironmentsPage/);
+assert.doesNotMatch(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /onViewAllConnectors:\s*handleOpenTagsShortcut/,
+  "Compute resource fragments must use the shell-owned connector navigation bridge.",
+);
 const environmentsHomeThreadStartSource = COMPUTE_RESOURCES_PAGE_SCRIPT.match(
   /const handleEnvironmentsHomeThreadStartRequest = \(runRequest\) => \{[\s\S]*?(?=\n\s*function EnvironmentsHomeResponsiveSvgShared)/,
 )?.[0] || "";
@@ -137,12 +149,17 @@ assert.doesNotMatch(
   "The Computer header section handler must not create a parent/child render feedback loop from an unstable callback prop.",
 );
 const computerDetailPageComposition = computerDetailViewSource.match(
-  /const environmentDetailWorkspaceSection = React\.createElement\(ComputerDetailPage, \{[\s\S]*?environmentDetailActiveSection\s*\n\s*\);/,
+  /const environmentDetailWorkspaceSection = React\.createElement\(ComputerDetailPage, \{[\s\S]*?\n\s*\}\);/,
 )?.[0] || "";
 assert.ok(computerDetailPageComposition, "Computer Details must compose the centralized detail page.");
+assert.match(
+  computerDetailPageComposition,
+  /activeTab: normalizedEnvironmentDetailTab,[\s\S]{0,180}general: environmentGeneralContent,[\s\S]{0,180}metadata: environmentRuntimeIdentity,[\s\S]{0,180}runtime: environmentRuntimeEditor,[\s\S]{0,180}settings: environmentSettings/,
+  "Computer Details must route General, Runtime, and Settings through the centralized page contract.",
+);
 assert.doesNotMatch(
   computerDetailPageComposition,
-  /tabBarActions|sidebar|activeTab|onTabChange|onOpenFilebase|filebaseDisabled/,
+  /tabBarActions|onTabChange|onOpenFilebase|filebaseDisabled/,
   "Computer Details must not retain its removed in-page tab bar, Filebase navigation, or right sidebar contract.",
 );
 assert.doesNotMatch(
@@ -150,28 +167,98 @@ assert.doesNotMatch(
   /const descriptionSection = React\.createElement\(PlatformInstructionsEditor/,
   "Computer Details must not render its description as a standalone instructions editor.",
 );
-const computerDetailIdentityComposition = computerDetailViewSource.match(
-  /const environmentProfileSection = React\.createElement\("div",[\s\S]*?(?=\n\s*const renderEnvironmentDetailValue)/,
+const computerSettingsComposition = computerDetailViewSource.match(
+  /const environmentSettings = \{[\s\S]*?\n\s*\};\n\s*const runtimeEnvironmentId/,
 )?.[0] || "";
 assert.match(
-  computerDetailIdentityComposition,
-  /className: "playground-computer-detail-profile-icon"/,
-  "Computer Details must render its icon in the identity block.",
+  computerDetailViewSource,
+  /const environmentIdentityFields = \{[\s\S]{0,180}title: String\(draftEnvironment\.name[\s\S]{0,180}description: String\(draftEnvironment\.description[\s\S]{0,1200}const environmentRuntimeIdentity = React\.createElement\(PlatformFileResourceIdentity,[\s\S]{0,240}icon: renderEnvironmentIdentityIcon\(\)/,
+  "Computer Runtime and Settings must share the centralized editable resource identity fields.",
 );
 assert.match(
-  computerDetailIdentityComposition,
-  /className: "playground-computer-detail-profile-description"[\s\S]{0,700}updateEnvironmentField\("description", event\.target\.value\)/,
-  "Computer Details must render an editable description directly below its name.",
+  computerSettingsComposition,
+  /identity: \{[\s\S]{0,120}\.\.\.environmentIdentityFields,[\s\S]{0,120}icon: renderEnvironmentIdentityIcon\(\)/,
+  "Computer Settings must reuse the same editable identity contract as Runtime.",
+);
+assert.doesNotMatch(
+  computerSettingsComposition,
+  /trailing: React\.createElement\(PlatformSwitch,[\s\S]{0,320}ariaLabel: "Computer analytics time frame"/,
+  "Computer Settings must keep analytics controls with General instead of the identity header.",
 );
 assert.match(
-  computerDetailIdentityComposition,
-  /className: "playground-computer-detail-profile-timeframe"[\s\S]{0,500}React\.createElement\(PlatformSwitch,[\s\S]{0,320}ariaLabel: "Computer analytics time frame"/,
-  "Computer Details must render its centralized timeframe selector at the right of the identity header.",
+  computerSettingsComposition,
+  /details: \{\s*variant: "standard",[\s\S]{0,12000}access: environmentAccessSettingsSection,[\s\S]{0,180}location: environmentLocationSection,[\s\S]{0,180}connectors: computerConnectorsSection/,
+  "Computer Settings must use the canonical details sidebar, location, GitHub connector, and access slots.",
+);
+assert.doesNotMatch(
+  computerSettingsComposition,
+  /additionalSections:/,
+  "Computer Settings must not absorb General analytics or runtime configuration.",
 );
 assert.match(
   computerDetailViewSource,
-  /const environmentDetailGeneralSection = React\.createElement\(React\.Fragment, null,[\s\S]{0,180}environmentAnalyticsSection,[\s\S]{0,120}environmentDetailsSection/,
-  "Computer Details must render its Details section below Analytics on General.",
+  /const environmentGeneralContent = React\.createElement\("div",[\s\S]{0,220}environmentAnalyticsSection,[\s\S]{0,180}environmentDetailAdvancedSettingsList/,
+  "Computer General must own analytics and runtime configuration without a detail sidebar.",
+);
+assert.match(
+  computerDetailViewSource,
+  /const environmentDockerfileSourceRecord = environmentDockerfileSourcesById\[runtimeEnvironmentId\][\s\S]{0,1200}value: String\(environmentDockerfileSource\?\.effectiveDockerfile \|\| fallbackDockerfile\)[\s\S]{0,500}readOnly: true/,
+  "Computer Runtime must display the authoritative effective Dockerfile without treating it as an extension-only write.",
+);
+assert.match(
+  computerDetailViewSource,
+  /const dockerfileSource = await loadEnvironmentDockerfileSource\([\s\S]{0,220}effectiveDockerfile[\s\S]{0,1200}\{ path: "Dockerfile", content: effectiveDockerfile \+ "\\n" \}/,
+  "Computer GitHub repository creation must seed the complete effective Dockerfile.",
+);
+assert.match(
+  bootstrapAndEffectsSource,
+  /const loadEnvironmentDockerfileSource = useCallback\([\s\S]{0,1600}loadComputerDockerfile\([\s\S]{0,600}status: "ready"/,
+  "Computer details must load and cache the effective Dockerfile through the typed resource client.",
+);
+assert.match(
+  computerDetailPageCssSource,
+  /\.computer-detail-page__runtime-workspace\s*\{[\s\S]{0,180}min-height:\s*min\(\s*480px,[\s\S]{0,120}100dvh/,
+  "Computer Runtime must retain a visible editor height when the legacy shell has no intrinsic content height.",
+);
+assert.match(
+  computerDetailViewSource,
+  /className: normalizedEnvironmentDetailTab === "runtime"[\s\S]{0,160}\? "playground-computer-detail-content is-computer-runtime-tab"/,
+  "Computer Runtime must opt out of the centered legacy detail-content wrapper.",
+);
+assert.match(
+  computerDetailPageCssSource,
+  /\.playground-computer-detail-content\.is-computer-runtime-tab\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,120}max-width:\s*none;[\s\S]{0,120}margin:\s*0;/,
+  "Computer Runtime must stretch its content wrapper to the route bounds.",
+);
+assert.match(
+  computerDetailPageCssSource,
+  /\.playground-resources-page\.is-develop-server-kind-page:has\([\s\S]{0,160}\.playground-computer-detail-main \.computer-detail-page[\s\S]{0,240}> \.playground-environments-detail-scroll\.playground-settings-detail-scroll,[\s\S]{0,300}\.playground-resources-page\.is-develop-configure-page:has\([\s\S]{0,160}\.playground-computer-detail-main \.computer-detail-page[\s\S]{0,240}> \.playground-environments-detail-scroll\.playground-settings-detail-scroll \{[\s\S]{0,80}padding:\s*0;/,
+  "Every Computer detail tab must remove the outer Develop detail-scroll padding in both route variants.",
+);
+assert.match(
+  computerDetailPageCssSource,
+  /\.computer-detail-page\.is-general-tab\s*\{[\s\S]{0,160}width:\s*min\(100%, var\(--platform-page-content-max-width, 87\.5rem\)\);[\s\S]{0,120}max-width:\s*var\(--platform-page-content-max-width, 87\.5rem\);[\s\S]{0,100}margin-inline:\s*auto;[\s\S]{0,100}padding:\s*42px 44px 56px;/,
+  "Computer General must own the same centered content sizing and gutters as Computer Settings.",
+);
+assert.match(
+  computerDetailViewSource,
+  /playground-agents-detail-content playground-computer-detail-content is-agent-overview-general is-computer-general-tab/,
+  "Computer General must expose its own layout hook alongside the shared overview classes.",
+);
+assert.match(
+  bootstrapAndEffectsSource,
+  /const \[environmentDetailTab, setEnvironmentDetailTab\] = useState\("general"\);[\s\S]{0,1600}const normalizedEnvironmentDetailTab = environmentDetailTab === "settings"[\s\S]{0,240}: "general"/,
+  "Computer details must default to General and normalize legacy sections safely.",
+);
+assert.match(
+  shellCompositionSource,
+  /isComputerResourcesDetailView[\s\S]{0,800}value: \["general", "runtime", "settings"\][\s\S]{0,300}options: \[[\s\S]{0,120}\{ value: "general", label: "General" \},[\s\S]{0,120}\{ value: "runtime", label: "Runtime" \},[\s\S]{0,120}\{ value: "settings", label: "Settings" \}/,
+  "The Computer app-header switch must expose General, Runtime, and rightmost Settings.",
+);
+assert.match(
+  catalogAndLifecycleSource,
+  /setEnvironmentDetailTab\("general"\)/,
+  "Opening an existing Computer must reset its details to General.",
 );
 assert.match(
   computerDetailViewSource,
@@ -181,10 +268,10 @@ assert.match(
 const computerDetailAnalyticsComposition = computerDetailViewSource.match(
   /const environmentAnalyticsSection = React\.createElement\(PlatformAnalyticsSection, \{[\s\S]*?\n\s*\}\);/,
 )?.[0] || "";
-assert.doesNotMatch(
+assert.match(
   computerDetailAnalyticsComposition,
   /timeframe:/,
-  "Computer Details analytics must not duplicate the timeframe selector below the identity header.",
+  "Computer General analytics must retain its timeframe control.",
 );
 assert.doesNotMatch(
   computerDetailViewSource,
@@ -198,7 +285,7 @@ assert.match(
 );
 assert.match(
   computerDetailViewSource,
-  /renderEnvironmentFactRow\("Internet",[\s\S]{0,180}React\.createElement\(PlatformToggle,[\s\S]{0,260}onCheckedChange: \(nextChecked\) => updateEnvironmentField\("internetAccess", nextChecked\)/,
+  /id: "internet",[\s\S]{0,180}React\.createElement\(PlatformToggle,[\s\S]{0,260}onCheckedChange: \(nextChecked\) => updateEnvironmentField\("internetAccess", nextChecked\)/,
   "Computer Details must render Internet access with the centralized toggle component.",
 );
 assert.match(
@@ -206,15 +293,15 @@ assert.match(
   /import \{ PlatformToggle \} from "\/dist\/platform-ui\/components\/ui\/toggle\/index\.js";/,
   "The legacy platform shell must consume the centralized toggle through its public entry point.",
 );
-assert.match(
+assert.doesNotMatch(
   computerDetailViewSource,
-  /const environmentOwnerSelectorControl = React\.createElement\(PlatformOwnerSelector, \{[\s\S]{0,2600}ariaLabel: "Choose computer owner"/,
-  "Computer Details must use an editable, organization-aware owner selector.",
+  /const environmentOwnerSelectorControl = React\.createElement\(PlatformOwnerSelector/,
+  "Computer Details must not rebuild the centralized owner selector.",
 );
 assert.match(
-  computerDetailViewSource,
-  /renderEnvironmentFactRow\("Owner", environmentOwnerSelectorControl\)/,
-  "Computer Details must render the owner selector in its Details section.",
+  computerSettingsComposition,
+  /ownerOptions: environmentOwnerOptions,[\s\S]{0,260}onOwnerTransfer:[\s\S]{0,500}ownerSelectorProps: \{[\s\S]{0,800}ariaLabel: "Choose computer owner"/,
+  "Computer Settings must configure organization-aware ownership through the centralized details section.",
 );
 assert.match(
   catalogAndLifecycleSource,
@@ -897,8 +984,8 @@ assert.match(
 );
 assert.match(
   sourceDeployableServerDetailPageSource,
-  /resourceClassName = resourceKind === "function" \? "function" : "web-app"[\s\S]{0,500}`is-\$\{resourceClassName\}-server-detail`/,
-  "Function and Web App detail pages must expose resource-specific centralized scopes.",
+  /resourceClassName = resourceKind === "function"[\s\S]{0,160}resourceKind === "api"[\s\S]{0,160}"web-app";[\s\S]{0,500}`is-\$\{resourceClassName\}-server-detail`/,
+  "Function, Web App, and API detail pages must expose resource-specific centralized scopes.",
 );
 assert.doesNotMatch(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
@@ -1658,9 +1745,9 @@ assert.doesNotMatch(
   "Database ownership must not recreate the legacy popup shell.",
 );
 assert.match(
-  COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /renderEnvironmentFactRow\("Creator", renderDevelopResourceIdentityValue\(environmentCreatorIdentity\)[\s\S]{0,12000}renderEnvironmentFactRow\("Owner", environmentOwnerSelectorControl\)/,
-  "Computer details must expose Creator and place Owner last in the General Details section.",
+  computerSettingsComposition,
+  /creator: \{[\s\S]{0,700}environmentCreatorIdentity[\s\S]{0,700}owner: \{[\s\S]{0,700}environmentOwnerIdentity/,
+  "Computer Settings must expose Creator and Owner through the centralized details section.",
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,

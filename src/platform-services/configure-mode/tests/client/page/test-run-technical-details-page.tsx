@@ -2,7 +2,7 @@ import {
   Braces,
   FileJson2,
   ListTree,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useState } from "react";
 import {
   PlatformCodeEditorWorkspace,

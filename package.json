@@ -63,6 +63,13 @@
     "./platform-ui/components/ui/icon-button/styles.css": {
       "default": "./dist/platform-ui/components/ui/icon-button/icon-button.css"
     },
+    "./platform-ui/components/ui/input": {
+      "types": "./dist/platform-ui/components/ui/input/index.d.ts",
+      "default": "./dist/platform-ui/components/ui/input/index.js"
+    },
+    "./platform-ui/components/ui/input/styles.css": {
+      "default": "./dist/platform-ui/components/ui/input/input.css"
+    },
     "./platform-ui/components/ui/label": {
       "types": "./dist/platform-ui/components/ui/label/index.d.ts",
       "default": "./dist/platform-ui/components/ui/label/index.js"
@@ -165,12 +172,26 @@
     "./platform-ui/components/composite/github-automations/styles.css": {
       "default": "./dist/platform-ui/components/composite/github-automations/github-automations.css"
     },
+    "./platform-ui/components/composite/resource-source-control": {
+      "types": "./dist/platform-ui/components/composite/resource-source-control/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/resource-source-control/index.js"
+    },
+    "./platform-ui/components/composite/resource-source-control/styles.css": {
+      "default": "./dist/platform-ui/components/composite/resource-source-control/resource-source-control.css"
+    },
     "./platform-ui/components/composite/connector-configuration": {
       "types": "./dist/platform-ui/components/composite/connector-configuration/index.d.ts",
       "default": "./dist/platform-ui/components/composite/connector-configuration/index.js"
     },
     "./platform-ui/components/composite/connector-configuration/styles.css": {
       "default": "./dist/platform-ui/components/composite/connector-configuration/connector-configuration.css"
+    },
+    "./platform-ui/components/composite/connector-settings": {
+      "types": "./dist/platform-ui/components/composite/connector-settings/index.d.ts",
+      "default": "./dist/platform-ui/components/composite/connector-settings/index.js"
+    },
+    "./platform-ui/components/composite/connector-settings/styles.css": {
+      "default": "./dist/platform-ui/components/composite/connector-settings/connector-settings.css"
     },
     "./platform-ui/components/composite/attachments": {
       "types": "./dist/platform-ui/components/composite/attachments/index.d.ts",
@@ -618,6 +639,8 @@
     "@git-diff-view/react": "^0.1.3",
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.8.1",
+    "@hugeicons/core-free-icons": "^4.3.0",
+    "@hugeicons/react": "^1.1.10",
     "@monaco-editor/react": "^4.7.0",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "3.28.0",

@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import type { CSSProperties } from "react";
-import { Telescope, X } from "lucide-react";
+import { Telescope, X } from "../../ui/hugeicons-compat.js";
 
 import type { RunnerDeepResearchSession, RunnerLog } from "../../../../types.js";
 import {

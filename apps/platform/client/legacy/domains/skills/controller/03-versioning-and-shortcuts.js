@@ -290,7 +290,7 @@
                 id: "compare",
                 label: "View Changes",
                 icon: Code2,
-                onSelect: () => openSkillVersionChangesPage(versionId),
+                onSelect: () => openSkillVersionChangesModal(versionId),
               },
               {
                 id: "delete",
@@ -423,10 +423,10 @@
             };
           }
 
-          function openSkillVersionChangesPage(versionId) {
+          function openSkillVersionChangesModal(versionId) {
             if (!selectedSkill?.id) return;
             const compareSourceIds = getDefaultSkillVersionCompareSourceIds(versionId);
-            setSkillVersionsOpen(true);
+            setSkillVersionsOpen(false);
             setSkillVersionChangesState(compareSourceIds);
           }
 
@@ -438,7 +438,7 @@
             }));
           }
 
-          function renderSkillVersionChangesPage(actions = null) {
+          function renderSkillVersionChangesModal(actions = null) {
             if (!skillVersionChangesState) return null;
             const sources = buildSkillVersionCompareSources();
             const currentSource = sources[0] || null;
@@ -454,7 +454,7 @@
               value: source.id,
               label: source.label,
             }));
-            return renderPlaygroundVersionChangesPage({
+            return renderPlaygroundVersionChangesModal({
               title: "Changes",
               leftSelector: {
                 value: orderedSources.leftSource.id,
@@ -473,30 +473,11 @@
                 orderedSources.leftSource.snapshot,
                 orderedSources.rightSource.snapshot
               ),
-              backIcon: ArrowLeft,
-              backText: "Back",
-              backLabel: "Back to skill details",
-              onBack: () => setSkillVersionChangesState(null),
+              closeButtonLabel: "Close skill version changes",
+              onClose: () => setSkillVersionChangesState(null),
               emptyMessage: "No differences between the selected versions.",
-              className: "playground-skills-version-changes-page",
+              className: "playground-skills-version-changes-modal__content",
             });
-          }
-
-          function renderSkillVersionChangesSurface(actions = null) {
-            const changesPage = renderSkillVersionChangesPage(actions);
-            return changesPage
-              ? React.createElement("div", {
-                  className: "playground-environments-editor-main playground-tasks-detail-main playground-skills-detail-page is-skill-version-changes-page",
-                },
-                  React.createElement("div", {
-                    className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll",
-                  },
-                    React.createElement("div", {
-                      className: "playground-skills-detail-content is-skill-version-changes",
-                    }, changesPage)
-                  )
-                )
-              : null;
           }
 
           function renderSkillVersionEditDialog() {

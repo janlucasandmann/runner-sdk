@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Braces } from "lucide-react";
+import { Braces } from "../../ui/hugeicons-compat.js";
 
 import { PlatformSwitch } from "../../ui/switch/index.js";
 import { RunnerMarkdown } from "../shared/runner-markdown.js";

@@ -244,7 +244,17 @@
 .resource-overview-table.is-projects.is-catalog-ui
   .resource-overview-identity__visual.is-project {
   border: 0;
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(
+    in srgb,
+    var(--resource-overview-skill-icon-color, #fff) 10%,
+    transparent
+  );
+}
+
+.resource-overview-table.is-skills.is-catalog-ui
+  .resource-overview-identity__visual.is-skill
+  > svg {
+  color: var(--resource-overview-skill-icon-color, #fff);
 }
 
 .resource-overview-table.is-skills.is-catalog-ui
@@ -269,6 +279,42 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
+}
+
+.resource-overview-table.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-name {
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.resource-overview-table.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-name
+  > svg {
+  width: 17px;
+  height: 17px;
+}
+
+.resource-overview-table.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-creator {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-creator
+  img {
+  border: 0;
+  border-radius: 50%;
 }
 
 .resource-overview-table.is-teams.is-catalog-ui
@@ -319,6 +365,28 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
+}
+
+.resource-overview-table.is-metronomes.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-name.is-loop {
+  color: #fff;
+  background: linear-gradient(180deg, #9a72df 0%, #6542a8 100%);
+}
+
+.resource-overview-table.is-metronomes.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-name.is-mission-control {
+  color: #fff;
+  background: linear-gradient(180deg, #3159a8 0%, #172f68 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(137, 178, 255, 0.16),
+    0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+.resource-overview-table.is-metronomes.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-name.is-loop > svg,
+.resource-overview-table.is-metronomes.is-catalog-ui
+  .resource-overview-identity__visual.is-standard-name.is-mission-control > svg {
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
 }
 
 .resource-overview-table.is-evaluations.is-catalog-ui

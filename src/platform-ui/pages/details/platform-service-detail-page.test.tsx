@@ -83,6 +83,7 @@ describe("PlatformServiceDetailPage", () => {
       <PlatformServiceDetailPage
         ariaLabel="Evaluation details"
         properties={<div>Legacy properties</div>}
+        sidebarCollapsed
         settings={{
           ariaLabel: "Evaluation settings",
           identity: {
@@ -102,10 +103,12 @@ describe("PlatformServiceDetailPage", () => {
 
     const page = screen.getByRole("region", { name: "Evaluation details" });
     expect(page.classList.contains("has-resource-settings")).toBe(true);
+    expect(page.classList.contains("is-sidebar-collapsed")).toBe(false);
     expect(screen.getByRole("region", { name: "Evaluation settings" })).not.toBeNull();
     expect(screen.queryByText("Legacy properties")).toBeNull();
     expect(screen.queryByText("Evaluation analytics")).toBeNull();
     expect(container.querySelector(".platform-service-detail-page__sidebar-card")).toBeNull();
-    expect(screen.getByRole("complementary", { name: "Resource details" })).not.toBeNull();
+    const settingsSidebar = screen.getByRole("complementary", { name: "Resource details" });
+    expect(settingsSidebar.dataset.collapsed).toBe("false");
   });
 });

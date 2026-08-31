@@ -156,17 +156,17 @@ describe("TestRunDetailPage", () => {
     expect(container.querySelectorAll(".platform-analytics__metric")).toHaveLength(4);
     expect(container.querySelector(".platform-analytics__chart")).not.toBeNull();
 
-    const resultsTable = screen.getByRole("table", { name: "Test case results" });
-    expect(within(resultsTable).getByText("Case")).not.toBeNull();
+    const resultsTable = screen.getByRole("table", { name: "Test scenario results" });
+    expect(within(resultsTable).getByText("Scenario")).not.toBeNull();
     expect(within(resultsTable).getByText("Status")).not.toBeNull();
     expect(within(resultsTable).queryByText("Summary")).toBeNull();
     expect(within(resultsTable).getByText("Build completed successfully.")).not.toBeNull();
     expect(within(resultsTable).queryByText("Build completed successfully.")
       ?.closest(".tests-run-case-output__copy")
       ?.querySelector("svg")).toBeNull();
-    expect(within(resultsTable).queryByText("Exit code")).toBeNull();
+    expect(within(resultsTable).queryByText("Exit code")).not.toBeNull();
     expect(within(resultsTable).queryByText("Attempt")).toBeNull();
-    expect(screen.getByRole("searchbox", { name: "Search case results" })).not.toBeNull();
+    expect(screen.getByRole("searchbox", { name: "Search scenario results" })).not.toBeNull();
     expect(screen.queryByRole("heading", { name: "Case output" })).toBeNull();
 
     expect(screen.getByRole("searchbox", { name: "Search artifacts" })).not.toBeNull();
@@ -176,9 +176,9 @@ describe("TestRunDetailPage", () => {
       name: "Open actions for Build succeeds, Passed",
     }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Expand" }));
-    expect(within(resultsTable).getByText("Attempt")).not.toBeNull();
-    expect(within(resultsTable).getByText("Exit code")).not.toBeNull();
-    expect(within(resultsTable).getByText("Standard output")).not.toBeNull();
+    expect(within(resultsTable).getAllByText("Attempts").length).toBeGreaterThan(0);
+    expect(within(resultsTable).getAllByText("Exit code").length).toBeGreaterThan(0);
+    expect(within(resultsTable).getAllByText("Standard output").length).toBeGreaterThan(0);
     expect(within(resultsTable).getByText("done")).not.toBeNull();
 
     expect(screen.getByRole("heading", { name: "Run evidence" })).not.toBeNull();

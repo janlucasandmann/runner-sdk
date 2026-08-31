@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X } from "../../ui/hugeicons-compat.js";
 import type { ElementType, ReactNode } from "react";
 import {
   PlatformDetailTabBar,

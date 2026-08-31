@@ -114,102 +114,17 @@ export const API_KEYS_MANAGEMENT_PAGE_SCRIPT = `        function renderApiKeysMa
             }
           };
 
-          const apiKeyDialogContent = settingsApiKeyDialogOpen
-            ? React.createElement(PlatformModalBackdrop, {
-                className: "playground-tasks-project-modal-backdrop playground-settings-api-key-modal-backdrop",
-                onClick: () => setSettingsApiKeyDialogOpen(false),
-              },
-                React.createElement(PlatformModalSurface, {
-                    as: "form",
-                    className: "playground-tasks-project-modal playground-agent-composer-modal playground-settings-api-key-modal",
-                    onClick: (event) => event.stopPropagation(),
-                    onSubmit: (event) => {
-                      event.preventDefault();
-                      void handleSettingsCreateApiKey();
-                    },
-                  },
-                  React.createElement("div", { className: "playground-tasks-project-modal-top playground-settings-api-key-modal-top" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-name-row" },
-                      React.createElement("span", {
-                        className: "playground-tasks-project-modal-icon-trigger",
-                        "aria-hidden": "true",
-                      }, React.createElement(Code, { width: 18, height: 18, strokeWidth: 1.9 })),
-                      React.createElement("div", { className: "playground-settings-api-key-modal-title-shell" },
-                        React.createElement("div", { className: "playground-settings-api-key-modal-title" }, "Create API Key"),
-                        React.createElement("div", { className: "playground-settings-api-key-modal-subtitle" }, "Create a scoped key for SDKs, automation, or external apps.")
-                      )
-                    ),
-                    React.createElement("button", {
-                      type: "button",
-                      className: "playground-settings-icon-button playground-tasks-project-modal-close",
-                      onClick: () => setSettingsApiKeyDialogOpen(false),
-                      title: "Close",
-                    }, React.createElement(X, { width: 16, height: 16, strokeWidth: 1.8 }))
-                  ),
-                  React.createElement("div", { className: "playground-agent-composer-modal-body playground-settings-api-key-modal-body" },
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Name *"),
-                      React.createElement("input", {
-                        id: "settings-new-key-name",
-                        className: "playground-environments-input",
-                        value: settingsNewKeyName,
-                        onChange: (event) => setSettingsNewKeyName(event.target.value),
-                        placeholder: "e.g., Development Key",
-                        autoFocus: true,
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Description (optional)"),
-                      React.createElement("textarea", {
-                        id: "settings-new-key-description",
-                        className: "playground-tasks-project-modal-textarea",
-                        value: settingsNewKeyDescription,
-                        onChange: (event) => setSettingsNewKeyDescription(event.target.value),
-                        placeholder: "e.g., For local development and testing",
-                      })
-                    ),
-                    React.createElement("div", { className: "playground-tasks-project-modal-field" },
-                      React.createElement("div", { className: "playground-tasks-project-modal-label" }, "Permissions"),
-                      React.createElement("div", { className: "playground-settings-api-key-modal-scopes" },
-                        Object.entries(SETTINGS_API_KEY_SCOPE_PRESETS).map(([presetId, preset]) =>
-                          React.createElement("button", {
-                              key: presetId,
-                              type: "button",
-                              className: "playground-settings-scope-option" + (settingsNewKeyScopePreset === presetId ? " is-active" : ""),
-                              onClick: () => setSettingsNewKeyScopePreset(presetId),
-                            },
-                              React.createElement("div", { className: "playground-settings-emphasis" }, preset.label),
-                              React.createElement("div", { className: "playground-settings-muted-copy" }, preset.description)
-                            )
-                        )
-                      )
-                    ),
-                    settingsApiKeysError
-                      ? React.createElement("div", { className: "playground-tasks-project-modal-error" }, settingsApiKeysError)
-                      : null,
-                    React.createElement("div", { className: "playground-tasks-project-modal-actions" },
-                      React.createElement("button", {
-                        type: "button",
-                        className: "playground-environments-action-button",
-                        onClick: () => setSettingsApiKeyDialogOpen(false),
-                        disabled: settingsCreateKeyLoading,
-                      }, "Cancel"),
-                      React.createElement(PlatformPrimaryButton, {
-                        size: "medium",
-                        type: "submit",
-                        className: "playground-environments-action-button is-primary",
-                        disabled: settingsCreateKeyLoading || !String(settingsNewKeyName || "").trim(),
-                      }, settingsCreateKeyLoading
-                        ? React.createElement(Loader2, { width: 14, height: 14, strokeWidth: 1.8, className: "playground-settings-records-spinner" })
-                        : "Create Key")
-                    )
-                  )
-                )
-              )
-            : null;
-          const apiKeyDialog = apiKeyDialogContent && typeof document !== "undefined" && document.body
-            ? createPortal(apiKeyDialogContent, document.body)
-            : apiKeyDialogContent;
+          const apiKeyDialog = React.createElement(ApiKeyCreateDialog, {
+            open: settingsApiKeyDialogOpen,
+            submitting: settingsCreateKeyLoading,
+            error: settingsApiKeysError,
+            onClose: () => {
+              if (!settingsCreateKeyLoading) {
+                setSettingsApiKeyDialogOpen(false);
+              }
+            },
+            onSubmit: (input) => handleSettingsCreateApiKey(input),
+          });
 
           const apiKeyRevealDialogContent = developApiKeyRevealModal
             ? React.createElement(PlatformModal, {
@@ -325,7 +240,10 @@ export const API_KEYS_MANAGEMENT_PAGE_SCRIPT = `        function renderApiKeysMa
                     onDismiss: () => setSettingsNewlyCreatedKey(""),
                   }
                 : null,
-              onCreate: () => setSettingsApiKeyDialogOpen(true),
+              onCreate: () => {
+                setSettingsApiKeysError("");
+                setSettingsApiKeyDialogOpen(true);
+              },
               onReveal: (row) => {
                 const apiKeyRecord = activeApiKeys.find((record) => String(record?.id || "") === row.id);
                 if (apiKeyRecord) return openApiKeyRevealModal(apiKeyRecord);

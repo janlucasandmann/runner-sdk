@@ -1035,10 +1035,47 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
           const projectOverviewPublishedTemplates = Array.isArray(projectOverviewMetadata.resourceTemplates)
             ? projectOverviewMetadata.resourceTemplates
             : [];
-          const projectOverviewLinkedResources = Array.isArray(projectOverviewMetadata.linkedResources)
+          const projectOverviewPersistedLinkedResources = Array.isArray(projectOverviewMetadata.linkedResources)
             ? projectOverviewMetadata.linkedResources
                 .filter((resource) => resource && typeof resource === "object" && !Array.isArray(resource))
             : [];
+          const projectOverviewScopeManagedLinkedResources = String(projectOverviewServerResourcesState?.projectId || "").trim() === normalizedSelectedProjectId
+            && Array.isArray(projectOverviewServerResourcesState?.linkedResources)
+              ? projectOverviewServerResourcesState.linkedResources
+                  .filter((resource) => resource && typeof resource === "object" && !Array.isArray(resource))
+                  .map((resource) => ({ ...resource, scopeManaged: true }))
+              : [];
+          function getProjectOverviewLinkedResourceIdentity(resource) {
+            const type = normalizePlaygroundProjectLinkedResourceType(resource?.type || resource?.resourceType);
+            const resourceId = String(
+              resource?.id
+              || resource?.resourceId
+              || resource?.libraryId
+              || resource?.evaluationId
+              || resource?.key
+              || ""
+            ).trim();
+            return type && resourceId ? type + ":" + resourceId : "";
+          }
+          const projectOverviewScopeManagedResourceKeys = new Set(
+            projectOverviewScopeManagedLinkedResources
+              .map(getProjectOverviewLinkedResourceIdentity)
+              .filter(Boolean)
+          );
+          const projectOverviewLinkedResources = (() => {
+            const seen = new Set();
+            return projectOverviewPersistedLinkedResources
+              .map((resource) => projectOverviewScopeManagedResourceKeys.has(getProjectOverviewLinkedResourceIdentity(resource))
+                ? { ...resource, scopeManaged: true }
+                : resource)
+              .concat(projectOverviewScopeManagedLinkedResources)
+              .filter((resource) => {
+                const key = getProjectOverviewLinkedResourceIdentity(resource);
+                if (!key || seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              });
+          })();
 
           function getProjectOverviewCurrentProjectTypeId() {
             const metadata = selectedProject?.metadata && typeof selectedProject.metadata === "object" && !Array.isArray(selectedProject.metadata)
@@ -1233,11 +1270,12 @@ export const PROJECT_OVERVIEW_METRICS_FILES_FRAGMENT = String.raw`
                 type,
                 title: title || meta.label,
                 subtitle: String(resource.description || resource.summary || resource.subtitle || "Linked " + meta.label.toLowerCase()).trim(),
-                status: resource.isStrategyKnowledge ? "Strategy" : "Linked",
+                status: resource.isStrategyKnowledge ? "Strategy" : resource.scopeManaged ? "Shared" : "Linked",
                 updatedLabel: getProjectOverviewSidebarDateLabel(resource.updatedAt || resource.linkedAt || resource.createdAt || ""),
                 record: resource,
                 resourceId,
                 isStrategyKnowledge: resource.isStrategyKnowledge === true,
+                scopeManaged: resource.scopeManaged === true,
                 usageCount: Number(resource.usageCount || resource.useCount || resource.referenceCount || resource.runCount || 0),
                 path: normalizeHistoryPath(resource.sourcePath || resource.workspacePath || resource.path || ""),
               });

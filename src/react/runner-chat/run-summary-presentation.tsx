@@ -4,7 +4,7 @@ import {
   Cloud as LucideCloud,
   Cpu as LucideCpu,
   Rocket as LucideRocket,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useState } from "react";
 import type { RunnerCreatedResourcePreview } from "../../platform-ui/components/thread-components/log-boxes/index.js";
 

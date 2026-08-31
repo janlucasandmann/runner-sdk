@@ -1,4 +1,4 @@
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "../../ui/hugeicons-compat.js";
 
 export type PlatformFileExplorerFileKind =
   | "folder"

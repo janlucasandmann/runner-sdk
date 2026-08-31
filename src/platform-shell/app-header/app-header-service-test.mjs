@@ -161,6 +161,19 @@ assert.match(
 );
 assert.match(fragments.appHeader, /React\.createElement\(PlatformSecondaryButton,/);
 assert.match(fragments.appHeader, /className: "playground-top-nav-private-chat-control"/);
+assert.match(
+  fragments.appHeader,
+  /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: GhostIcon,[\s\S]*?className: "playground-content-menu-icon"/,
+);
+assert.match(
+  fragments.appHeader,
+  /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: hasVisibleNotifications \? BellDotIcon : BellIcon,[\s\S]*?className: "playground-content-menu-icon"/,
+);
+assert.match(
+  fragments.appHeader,
+  /icon: hasVisibleNotifications \? BellDotIcon : BellIcon,[\s\S]*?color: "white"/,
+);
+assert.doesNotMatch(fragments.appHeader, /className: "playground-content-menu-button" \+ \(hasVisibleNotifications/);
 assert.doesNotMatch(fragments.appHeader, /function renderAppHeaderSearchButton\(/);
 assert.doesNotMatch(fragments.appHeader, /function renderAppHeaderSidebarToggle\(/);
 assert.doesNotMatch(fragments.appHeader, /function renderAppHeaderAccountButton\(/);
@@ -172,8 +185,30 @@ assert.match(fragments.accountMenu, /React\.createElement\(PlatformPopup,/);
 assert.match(fragments.accountMenu, /variant: "minimal"/);
 assert.match(fragments.accountMenu, /className: "tb-popup-row account-menu-account-button"/);
 assert.match(fragments.accountMenu, /className: "tb-popup-row account-menu-item"/);
-assert.match(fragments.accountMenu, /React\.createElement\(Settings,/);
-assert.doesNotMatch(fragments.accountMenu, /React\.createElement\(Settings2,/);
+assert.match(
+  fragments.accountMenu,
+  /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: Settings01Icon/,
+  "Account menu settings must use the centralized Hugeicons settings icon.",
+);
+assert.match(
+  fragments.accountMenu,
+  /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: HelpSquareIcon/,
+  "Account menu help must use the centralized Hugeicons help icon.",
+);
+assert.match(
+  fragments.accountMenu,
+  /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: BookOpen01Icon/,
+  "Account menu docs must use the centralized Hugeicons docs icon.",
+);
+assert.match(
+  fragments.accountMenu,
+  /React\.createElement\(HugeiconsIcon,[\s\S]*?icon: Logout02Icon/,
+  "Account menu sign out must use the centralized Hugeicons logout icon.",
+);
+assert.doesNotMatch(fragments.accountMenu, /React\.createElement\(Settings,/);
+assert.doesNotMatch(fragments.accountMenu, /React\.createElement\(CircleHelp,/);
+assert.doesNotMatch(fragments.accountMenu, /React\.createElement\(FileText,/);
+assert.doesNotMatch(fragments.accountMenu, /React\.createElement\(LogOut,/);
 assert.doesNotMatch(fragments.accountMenu, /openCalendarPage/);
 assert.doesNotMatch(fragments.accountMenu, /"Calendar"/);
 assert.match(fragments.notificationsPopup, /function renderAppHeaderNotificationsPopup/);

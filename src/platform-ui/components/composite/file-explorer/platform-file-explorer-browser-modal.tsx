@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "../../ui/hugeicons-compat.js";
 import { type ReactNode, useState } from "react";
 
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";

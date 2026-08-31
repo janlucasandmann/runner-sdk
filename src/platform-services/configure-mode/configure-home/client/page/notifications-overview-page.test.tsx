@@ -18,6 +18,8 @@ describe("NotificationsOverviewPage", () => {
           text: "Deploy API",
           statusLabel: "Needs decision",
           unread: true,
+          actorName: "Review Agent",
+          actorAvatarUrl: "/review-agent.png",
           createdAtLabel: "Now",
           createdAtTimestamp: Date.now(),
         }]}
@@ -53,9 +55,16 @@ describe("NotificationsOverviewPage", () => {
     expect(
       screen.getByRole("checkbox", { name: "Select Permission needed" }),
     ).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: /Name/ })).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: /Creator/ })).not.toBeNull();
+    expect(screen.getByRole("columnheader", { name: /Updated/ })).not.toBeNull();
+    expect(screen.getByText("Review Agent")).not.toBeNull();
     expect(
-      container.querySelector(".resource-overview-identity__visual"),
-    ).toBeNull();
+      container.querySelector(".resource-overview-standard-creator-cell img")
+        ?.getAttribute("src"),
+    ).toBe("/review-agent.png");
   });
 
   it("uses the canonical notification empty state", () => {
@@ -78,7 +87,7 @@ describe("NotificationsOverviewPage", () => {
     expect(
       container.querySelector(".platform-empty-state"),
     ).not.toBeNull();
-    expect(container.querySelector(".lucide-bell")).not.toBeNull();
+    expect(container.querySelector(".hugeicons-bell")).not.toBeNull();
     expect(screen.getByText("No notifications yet")).not.toBeNull();
     expect(screen.getByText(
       "Notifications come from agent activity, permission requests, team invitations, and product updates.",

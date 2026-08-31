@@ -3,7 +3,7 @@ import {
   History,
   KeyRound,
   ShieldCheck,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PlatformSwitch } from "../../../../../platform-ui/components/ui/switch/index.js";
 import {

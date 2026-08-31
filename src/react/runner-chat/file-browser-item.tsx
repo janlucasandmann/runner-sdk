@@ -1,4 +1,4 @@
-import { Check, Ellipsis, ExternalLink, Pencil, Trash2, X } from "lucide-react";
+import { Check, Ellipsis, ExternalLink, Pencil, Trash2, X } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { type FormEvent, type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   PlatformFileExplorerFileIcon,

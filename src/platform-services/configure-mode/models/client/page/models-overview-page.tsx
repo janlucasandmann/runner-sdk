@@ -1,4 +1,4 @@
-import { Bot, Info } from "lucide-react";
+import { Bot, Info } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState, type ReactNode } from "react";
 import type {
   PlatformDataTableAction,

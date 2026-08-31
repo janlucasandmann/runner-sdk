@@ -12,7 +12,9 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronDownIcon } from "@hugeicons/core-free-icons";
+import { Check } from "../hugeicons-compat.js";
 import { PlatformPopup } from "../../composite/popup/platform-popup.js";
 import type { PlatformPopupSearchHeaderProps } from "../../composite/popup/platform-popup-search-header.js";
 
@@ -54,6 +56,8 @@ export interface PlatformSelectorProps<TValue extends string = string>
   popupContent?: ReactNode;
   popupContentClassName?: string;
   popupAriaLabel?: string;
+  popupRole?: HTMLAttributes<HTMLDivElement>["role"];
+  popupAriaMultiselectable?: boolean;
   popupWidth?: CSSProperties["width"];
   popupMaxWidth?: CSSProperties["maxWidth"];
   popupMaxHeight?: CSSProperties["maxHeight"];
@@ -103,6 +107,8 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   popupContent = null,
   popupContentClassName = "",
   popupAriaLabel,
+  popupRole,
+  popupAriaMultiselectable,
   popupWidth,
   popupMaxWidth,
   popupMaxHeight = "min(320px, calc(100vh - 32px))",
@@ -121,6 +127,11 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
   const resolvedOpen = controlled ? Boolean(open) : internalOpen;
   const listboxId = `platform-selector-${useId().replace(/:/g, "")}`;
   const hasCustomPopupContent = popupContent != null;
+  const customPopupHasPopup = popupRole === "listbox"
+    ? "listbox"
+    : popupRole === "menu"
+      ? "menu"
+      : "dialog";
   const selectedOption = useMemo(
     () => options.find((option) => option.value === value) || null,
     [options, value],
@@ -260,9 +271,13 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
       )}
       surfaceProps={{
         id: hasCustomPopupContent ? listboxId : undefined,
-        role: hasCustomPopupContent ? "dialog" : undefined,
+        role: hasCustomPopupContent ? (popupRole || "dialog") : undefined,
         "aria-label": hasCustomPopupContent
           ? (popupAriaLabel || `${ariaLabel} options`)
+          : undefined,
+        "aria-multiselectable": hasCustomPopupContent
+          && popupRole === "listbox"
+          ? popupAriaMultiselectable
           : undefined,
         width: popupWidth,
         maxWidth: popupMaxWidth,
@@ -288,7 +303,7 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
           )}
           disabled={disabled}
           aria-label={ariaLabel}
-          aria-haspopup={hasCustomPopupContent ? "dialog" : "listbox"}
+          aria-haspopup={hasCustomPopupContent ? customPopupHasPopup : "listbox"}
           aria-controls={resolvedOpen ? listboxId : undefined}
           aria-expanded={resolvedOpen}
           onClick={() => commitOpen(!resolvedOpen)}
@@ -299,10 +314,13 @@ export const PlatformSelector = forwardRef(function PlatformSelector<
           }}
         >
           <span className="platform-selector__value">{resolvedLabel}</span>
-          <ChevronsUpDown
-            className="platform-selector__chevrons"
-            width={14}
-            height={14}
+          <HugeiconsIcon
+            icon={ChevronDownIcon}
+            className={joinPlatformSelectorClassNames(
+              "platform-selector__chevrons",
+              resolvedOpen && "is-open",
+            )}
+            size={14}
             strokeWidth={1.8}
             aria-hidden="true"
           />

@@ -36,7 +36,7 @@ describe("PromptsOverviewPage", () => {
     ).toEqual(["Name", "Creator", "Updated", ""]);
     expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
     expect(
-      container.querySelector(".resource-overview-identity__visual .lucide-message-square-text"),
+      container.querySelector(".resource-overview-identity__visual .hugeicons-message-square-text"),
     ).not.toBeNull();
   });
 

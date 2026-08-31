@@ -1,4 +1,4 @@
-import { FileText, X } from "lucide-react";
+import { FileText, X } from "../../ui/hugeicons-compat.js";
 import { useRef, type HTMLAttributes, type ReactNode } from "react";
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";

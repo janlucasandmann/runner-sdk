@@ -1031,11 +1031,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
                 )
               ),
               React.createElement("div", { className: "playground-files-browser-body playground-guardrails-browser-body" + (isEvaluationOverviewPage ? " playground-guardrails-overview-browser-body" : "") + (isEvaluationDetailPage || isEvaluationDatasetCasePage || isEvaluationRunPage ? " is-detail-page playground-evaluations-detail-page-body" : "") + (isEvaluationDatasetCasePage ? " playground-evaluations-dataset-case-page-body" : "") },
-                normalizedMode === "detail" && evaluationVersionChangesState
-                  ? React.createElement("div", { className: "playground-guardrails-detail playground-evaluations-version-changes-shell" },
-                      renderEvaluationVersionChangesPage()
-                    )
-                  : normalizedMode === "dataset-case" ? renderEvaluationDatasetCaseDetail() : normalizedMode === "case" ? renderCase() : normalizedMode === "run" ? renderRun() : normalizedMode === "detail" ? renderDetail() : renderOverview()
+                normalizedMode === "dataset-case" ? renderEvaluationDatasetCaseDetail() : normalizedMode === "case" ? renderCase() : normalizedMode === "run" ? renderRun() : normalizedMode === "detail" ? renderDetail() : renderOverview()
               )
             )
           ),
@@ -1047,6 +1043,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_DIALOGS_SCRIPT = String.raw`        fun
 	          renderCreateModal(),
             renderEvaluationVersionSaveDialog(),
             renderEvaluationVersionModal(),
+            renderEvaluationVersionChangesModal(),
             renderEvaluationVersionsSidebarPortal()
 	        );
       }

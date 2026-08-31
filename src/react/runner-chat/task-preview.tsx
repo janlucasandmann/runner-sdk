@@ -10,7 +10,7 @@ import {
   CircleMinus as LucideCircleMinus,
   RefreshCw as LucideRefreshCw,
   Rocket as LucideRocket,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { PlatformTicketItem } from "../../platform-ui/components/ui/ticket-item/index.js";
 import { RunnerMarkdown } from "../runner-markdown.js";
 

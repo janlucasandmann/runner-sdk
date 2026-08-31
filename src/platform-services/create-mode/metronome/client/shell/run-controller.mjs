@@ -1101,6 +1101,113 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           return () => window.removeEventListener("playground:metronome-run-upserted", handleMetronomeRunUpserted);
         }, []);
 
+        useEffect(() => {
+          if (!hasRealAccess || !showInitialThreadWelcome) {
+            if (!hasRealAccess) {
+              setMetronomeComposerWorkflowTriggers([]);
+            }
+            return undefined;
+          }
+
+          let cancelled = false;
+          const loadComposerWorkflowTriggers = async () => {
+            try {
+              const workflows = await fetchMetronomeWorkflowsFromApi("", {
+                backendUrl: proxyBackendBase,
+                requestHeaders: authRequestHeaders,
+                limit: 250,
+              });
+              if (!cancelled) {
+                setMetronomeComposerWorkflowTriggers(
+                  listMetronomeThreadTriggerOptions(workflows, {
+                    activeOnly: true,
+                    dedupe: true,
+                  })
+                );
+              }
+            } catch (error) {
+              if (!cancelled) {
+                console.warn("Failed to load workflow commands for the composer", error);
+                setMetronomeComposerWorkflowTriggers([]);
+              }
+            }
+          };
+
+          void loadComposerWorkflowTriggers();
+          const handleWindowFocus = () => {
+            void loadComposerWorkflowTriggers();
+          };
+          window.addEventListener("focus", handleWindowFocus);
+          return () => {
+            cancelled = true;
+            window.removeEventListener("focus", handleWindowFocus);
+          };
+        }, [
+          authRequestHeaders,
+          hasRealAccess,
+          proxyBackendBase,
+          requestHeadersSignature,
+          showInitialThreadWelcome,
+        ]);
+
+        async function handleComposerMetronomeWorkflowTriggerSubmit(payload) {
+          const workflow = payload?.workflow && typeof payload.workflow === "object"
+            ? payload.workflow
+            : {};
+          const workflowId = String(workflow.workflowId || workflow.id || "").trim();
+          const workflowName = String(workflow.name || "Metronome").trim() || "Metronome";
+          const triggerCommand = normalizeMetronomeThreadTriggerCommand(
+            payload?.command || workflow.command
+          );
+          if (!workflowId || !triggerCommand || triggerCommand === "@") {
+            throw new Error("This workflow command is no longer available.");
+          }
+
+          const message = String(payload?.prompt || "").trim();
+          const prompt = message || triggerCommand;
+          const randomId = globalThis.crypto?.randomUUID?.()
+            || (Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
+          const run = await createMetronomeThreadCommandRunApi(workflowId, {
+            command: triggerCommand,
+            prompt,
+            idempotencyKey: "composer-thread-trigger:" + workflowId + ":" + randomId,
+            inputs: {
+              source: "composer_thread_trigger",
+              triggerType: "thread_event",
+              triggerCommand,
+              command: triggerCommand,
+              message: prompt,
+              attachments: Array.isArray(payload?.attachments) ? payload.attachments : [],
+              projectId: String(payload?.projectId || "").trim() || null,
+              environmentId: String(payload?.environmentId || "").trim() || null,
+              agentId: String(payload?.agentId || "").trim() || null,
+              agentName: String(payload?.agentName || "").trim() || null,
+              reasoningEffort: String(payload?.reasoningEffort || "").trim() || null,
+              githubRepo: payload?.githubRepo || null,
+              enabledSkills: payload?.enabledSkills || null,
+              connectors: payload?.connectors || null,
+              knowledgeContext: payload?.knowledgeContext || null,
+              quotedSelection: payload?.quotedSelection || null,
+            },
+          });
+          const runId = String(run?.id || "").trim();
+          if (!runId) {
+            throw new Error("The workflow started without returning a run id.");
+          }
+
+          handleMetronomeWorkflowRunFromThread({
+            workflowId,
+            workflowName,
+            runId,
+            status: String(run?.status || "running").trim() || "running",
+            triggerCommand,
+            userMessage: prompt,
+            attachments: Array.isArray(payload?.attachments) ? payload.attachments : [],
+            directComposerTrigger: true,
+          });
+          return true;
+        }
+
         function handleMetronomeWorkflowRunFromThread(payload) {
           const workflowId = String(payload?.workflowId || "").trim();
           const runId = String(payload?.runId || "").trim();
@@ -1121,7 +1228,10 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
           if (payloadNodeId || payload?.isOriginThread === false || !hasTriggerMarker) {
             return;
           }
-          const triggerThread = buildOptimisticMetronomeRunThread(payload);
+          const isDirectComposerTrigger = payload?.directComposerTrigger === true;
+          const triggerThread = isDirectComposerTrigger
+            ? null
+            : buildOptimisticMetronomeRunThread(payload);
           if (sourceThreadId) {
             registerAbsorbedMetronomeTriggerThread(sourceThreadId, key);
             setThreadActionMenuState((current) => (
@@ -1142,15 +1252,15 @@ export const METRONOME_APP_RUN_CONTROLLER_SCRIPT = `
             workflowName: String(payload?.workflowName || "Metronome").trim() || "Metronome",
             status: String(payload?.status || "running").trim() || "running",
             input: {
-              source: "thread_event",
+              source: isDirectComposerTrigger ? "composer_thread_trigger" : "thread_event",
               threadId: sourceThreadId,
               message: String(payload?.userMessage || payload?.triggerCommand || "").trim(),
               triggerCommand: String(payload?.triggerCommand || "").trim(),
               attachments: Array.isArray(payload?.attachments) ? payload.attachments : [],
             },
             threads: [],
-            latestThread: triggerThread.id ? triggerThread : null,
-            originThread: triggerThread.id ? triggerThread : null,
+            latestThread: triggerThread?.id ? triggerThread : null,
+            originThread: triggerThread?.id ? triggerThread : null,
           };
           upsertOptimisticMetronomeRunEntry(entry);
           if (

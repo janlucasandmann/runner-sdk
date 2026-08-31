@@ -1,4 +1,4 @@
-import { Bot, Loader2, Settings2, UserRound } from "lucide-react";
+import { Bot, Loader2, Settings2, UserRound } from "../../ui/hugeicons-compat.js";
 
 import {
   PlatformComposerSuggestionPopup,

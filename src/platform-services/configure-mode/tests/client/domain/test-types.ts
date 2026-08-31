@@ -1,3 +1,5 @@
+import { getPlatformResourceProjectScopeIds } from "../../../../../platform-resources/projects/index.js";
+
 export type TestRunStatus =
   | "queued"
   | "running"
@@ -5,6 +7,28 @@ export type TestRunStatus =
   | "failed"
   | "completed_with_errors"
   | "cancelled";
+export type TestTargetType =
+  | "project"
+  | "workflow"
+  | "function"
+  | "web_app"
+  | "agent"
+  | "repository"
+  | "custom";
+export type TestTechnique =
+  | "contract"
+  | "service_topology"
+  | "command"
+  | "browser"
+  | "visual";
+export type TestScenarioType =
+  | "command"
+  | "function"
+  | "workflow"
+  | "browser"
+  | "agent"
+  | "readiness"
+  | "service_topology";
 export type TestCaseKind =
   | "command"
   | "contract"
@@ -75,6 +99,9 @@ export interface TestRun {
   triggerType: string;
   commitSha: string | null;
   status: TestRunStatus;
+  executionStatus?: "queued" | "running" | "completed" | "cancelled";
+  verdict?: "passed" | "failed" | "error" | "cancelled" | null;
+  executionType?: "preview" | "published" | "imported";
   totalCount: number;
   passedCount: number;
   failedCount: number;
@@ -94,6 +121,7 @@ export interface TestRun {
   startedAt: string | null;
   completedAt: string | null;
   results?: TestCaseResult[];
+  resultAttempts?: TestCaseResult[];
   artifacts?: TestRunArtifact[];
 }
 
@@ -114,6 +142,9 @@ export interface TestCaseResult {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  classification?: TestCaseResult["status"] | "flaky";
+  attemptCount?: number;
+  attempts?: TestCaseResult[];
 }
 
 export interface TestRunArtifact {
@@ -135,7 +166,7 @@ export interface TestPlan {
   projectId: string | null;
   name: string;
   description: string;
-  targetType: string;
+  targetType: TestTargetType;
   targetId: string | null;
   defaultEnvironmentId: string | null;
   definition: TestPlanDefinition;
@@ -154,7 +185,7 @@ export interface TestPlanOverviewSummary {
   projectId: string | null;
   name: string;
   description: string;
-  targetType: string;
+  targetType: TestTargetType;
   targetId: string | null;
   defaultEnvironmentId: string | null;
   caseCount: number;
@@ -174,7 +205,7 @@ export interface TestPlanCreateInput {
   name: string;
   description?: string;
   projectId?: string;
-  targetType?: string;
+  targetType?: TestTargetType;
   targetId?: string;
   defaultEnvironmentId?: string;
   definition: Partial<TestPlanDefinition> & {
@@ -182,6 +213,61 @@ export interface TestPlanCreateInput {
   };
   metadata?: Record<string, unknown>;
   publishInitialVersion?: boolean;
+}
+
+export interface TestPreviewRunCreateInput {
+  definition?: TestPlanDefinition;
+  scenarioIds?: string[];
+  environmentId?: string;
+  agentId?: string;
+  projectId?: string;
+  commitSha?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export type TestReportFormat =
+  | "normalized"
+  | "junit"
+  | "jest"
+  | "vitest"
+  | "playwright";
+
+export interface TestImportRunCreateInput {
+  scenarioId?: string;
+  format?: TestReportFormat;
+  report?: unknown;
+  reports?: Array<{
+    scenarioId: string;
+    format: TestReportFormat;
+    report: unknown;
+  }>;
+  projectId?: string;
+  commitSha?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TestCapabilities {
+  schemaVersion: string;
+  productModel: {
+    resource: "test";
+    childResource: "scenario";
+    configuration: "definition";
+  };
+  targets: Array<{
+    id: TestTargetType;
+    label: string;
+    execution: "deterministic" | "agent" | "hybrid";
+    immutableVersionRequired: boolean;
+    scenarioTypes?: TestScenarioType[];
+    defaultScenarioType?: TestScenarioType;
+  }>;
+  techniques: Array<{
+    id: TestTechnique;
+    label: string;
+    execution: "deterministic" | "agent";
+    trustedVerdict: boolean;
+  }>;
+  features: Record<string, boolean>;
 }
 
 export interface TestRunCreateInput {
@@ -199,12 +285,73 @@ export interface TestWorkspaceResourceOption {
   id: string;
   name: string;
   description?: string;
+  projectIds?: string[];
+  linkedResources?: TestWorkspaceLinkedResource[];
+}
+
+export interface TestWorkspaceLinkedResource {
+  id: string;
+  type: string;
 }
 
 export function asTestRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
+}
+
+function uniqueTestIds(values: readonly unknown[]): string[] {
+  return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
+}
+
+export function getTestWorkspaceResourceProjectIds(value: unknown): string[] {
+  const source = asTestRecord(value);
+  const metadata = asTestRecord(source.metadata);
+  const project = asTestRecord(source.project);
+  return uniqueTestIds([
+    ...getPlatformResourceProjectScopeIds(source),
+    ...getPlatformResourceProjectScopeIds(metadata),
+    source.attachedProjectId,
+    source.attached_project_id,
+    project.id,
+  ]);
+}
+
+export function getTestWorkspaceLinkedResources(value: unknown): TestWorkspaceLinkedResource[] {
+  const source = asTestRecord(value);
+  const metadata = asTestRecord(source.metadata);
+  const rawResources = Array.isArray(source.linkedResources)
+    ? source.linkedResources
+    : Array.isArray(source.linked_resources)
+      ? source.linked_resources
+      : Array.isArray(metadata.linkedResources)
+        ? metadata.linkedResources
+        : Array.isArray(metadata.linked_resources)
+          ? metadata.linked_resources
+          : [];
+  const resources = new Map<string, TestWorkspaceLinkedResource>();
+  for (const value of rawResources) {
+    const resource = asTestRecord(value);
+    const id = String(
+      resource.id
+      || resource.resourceId
+      || resource.resource_id
+      || resource.serverId
+      || resource.server_id
+      || resource.evaluationId
+      || resource.evaluation_id
+      || "",
+    ).trim();
+    const type = String(
+      resource.type
+      || resource.resourceType
+      || resource.resource_type
+      || resource.kind
+      || "",
+    ).trim().toLowerCase();
+    if (id && type) resources.set(`${type}:${id}`, { id, type });
+  }
+  return [...resources.values()];
 }
 
 export function normalizeTestWorkspaceOption(
@@ -222,6 +369,8 @@ export function normalizeTestWorkspaceOption(
     || "",
   ).trim();
   if (!id) return null;
+  const projectIds = getTestWorkspaceResourceProjectIds(source);
+  const linkedResources = getTestWorkspaceLinkedResources(source);
   return {
     id,
     name: String(
@@ -232,5 +381,7 @@ export function normalizeTestWorkspaceOption(
       || `${fallbackLabel} ${id.slice(-6)}`,
     ).trim(),
     description: String(source.description || metadata.description || "").trim(),
+    ...(projectIds.length ? { projectIds } : {}),
+    ...(linkedResources.length ? { linkedResources } : {}),
   };
 }

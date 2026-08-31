@@ -26,7 +26,7 @@ describe("PlatformSearch", () => {
 
     const input = screen.getByRole("searchbox", { name: "Search agents" });
     expect(input.closest("[data-platform-search='true']")).not.toBeNull();
-    expect(input.closest(".platform-search")?.querySelector(".lucide-search")).not.toBeNull();
+    expect(input.closest(".platform-search")?.querySelector(".hugeicons-search")).not.toBeNull();
 
     fireEvent.change(input, { target: { value: "spark" } });
     expect(onChange).toHaveBeenCalledOnce();
@@ -43,7 +43,7 @@ describe("PlatformSearch", () => {
 
     const search = screen.getByRole("searchbox", { name: "New Computer" });
     expect(search.closest(".platform-search")?.querySelector(".lucide-monitor")).not.toBeNull();
-    expect(search.closest(".platform-search")?.querySelector(".lucide-search")).toBeNull();
+    expect(search.closest(".platform-search")?.querySelector(".hugeicons-search")).toBeNull();
   });
 
   it("can omit its icon when another leading control owns that space", () => {

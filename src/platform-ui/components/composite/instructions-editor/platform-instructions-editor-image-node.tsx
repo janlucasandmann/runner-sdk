@@ -14,7 +14,7 @@ import {
   Pencil,
   RectangleHorizontal,
   Trash2,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import {
   type CSSProperties,
   type ImgHTMLAttributes,

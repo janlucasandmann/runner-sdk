@@ -270,6 +270,10 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
                         && Array.isArray(projectOverviewServerResourcesState?.items)
                           ? projectOverviewServerResourcesState.items.slice()
                           : [],
+                      linkedResources: String(projectOverviewServerResourcesState?.projectId || "").trim() === normalizedSelectedProjectId
+                        && Array.isArray(projectOverviewServerResourcesState?.linkedResources)
+                          ? projectOverviewServerResourcesState.linkedResources.slice()
+                          : [],
                       fileActivity: String(projectOverviewFileActivityState?.projectId || "").trim() === normalizedSelectedProjectId
                         && Array.isArray(projectOverviewFileActivityState?.items)
                           ? projectOverviewFileActivityState.items.slice()
@@ -332,7 +336,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               : {};
             const meta = getProjectOverviewResourceTypeMeta(normalizedType);
             const creator = getProjectOverviewResourceCreator({ record: source, type: normalizedType });
-            const existing = projectOverviewLinkedResources.find((candidate) => (
+            const existing = projectOverviewPersistedLinkedResources.find((candidate) => (
               String(candidate?.type || candidate?.resourceType || "").trim().toLowerCase().replace(/s$/, "") === normalizedType
               && String(candidate?.id || candidate?.resourceId || candidate?.evaluationId || "").trim() === resourceId
             ));
@@ -375,7 +379,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             if (!linkedResource) {
               throw new Error("This resource could not be linked to the project.");
             }
-            const nextLinkedResources = projectOverviewLinkedResources
+            const nextLinkedResources = projectOverviewPersistedLinkedResources
               .filter((candidate) => !(
                 String(candidate?.type || candidate?.resourceType || "").trim().toLowerCase().replace(/s$/, "") === linkedResource.type
                 && String(candidate?.id || candidate?.resourceId || candidate?.evaluationId || "").trim() === linkedResource.id
@@ -685,7 +689,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
             if (isManagedStrategyLibrary) {
               throw new Error("The project Strategy Knowledge library is managed by Mission Control and cannot be removed here.");
             }
-            const nextLinkedResources = projectOverviewLinkedResources.filter((candidate) => !(
+            const nextLinkedResources = projectOverviewPersistedLinkedResources.filter((candidate) => !(
               String(candidate?.type || candidate?.resourceType || "").trim().toLowerCase().replace(/s$/, "") === resourceType
               && String(candidate?.id || candidate?.resourceId || candidate?.evaluationId || "").trim() === resourceId
             ));
@@ -1172,7 +1176,7 @@ export const PROJECT_OVERVIEW_RESOURCES_CREATORS_FRAGMENT = String.raw`
               getRowMenuId: getProjectOverviewResourceRowMenuId,
               renderIcon: (row, meta) => renderProjectOverviewResourceIcon(row, meta?.Icon || Layers),
               renderCreator: renderProjectOverviewResourceCreator,
-              getRowActions: (row) => row?.isStrategyKnowledge ? [] : [{
+              getRowActions: (row) => row?.isStrategyKnowledge || row?.scopeManaged ? [] : [{
                   id: "remove",
                   label: "Remove from project",
                   icon: Trash2,

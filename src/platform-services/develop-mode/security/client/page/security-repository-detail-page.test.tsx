@@ -138,6 +138,35 @@ afterEach(() => {
 });
 
 describe("SecurityRepositoryDetailPage", () => {
+  it("uses the canonical Settings page while preserving repository-specific controls", () => {
+    const { container } = render(
+      <SecurityRepositoryDetailPage
+        detail={detail}
+        activeTab="settings"
+        viewerIdentity={{ name: "Ada Lovelace", email: "ada@acme.test" }}
+        onLoadOwnerCandidates={vi.fn().mockResolvedValue([])}
+        onOwnerChange={vi.fn()}
+        onOpenRun={vi.fn()}
+        onOpenFinding={vi.fn()}
+        onSavePolicy={vi.fn()}
+        onSaveThreatModel={vi.fn()}
+        onSaveSystemPrincipalPermissionSet={vi.fn()}
+        onAddTeamAccess={vi.fn()}
+        onRemoveTeamAccess={vi.fn()}
+        onSaveTeamRolePermissionSet={vi.fn()}
+        onRunScan={vi.fn()}
+        onSetStatus={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector("[data-platform-resource-settings-page='true']")).not.toBeNull();
+    expect(screen.getByDisplayValue("acme/api")).not.toBeNull();
+    expect(screen.getByText("Default branch")).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Monitoring state" })).not.toBeNull();
+    expect(screen.getByRole("table", { name: "Security Agents access" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Run Scan" })).not.toBeNull();
+  });
+
   it("uses centralized empty states for every activity table view", () => {
     const emptyDetail: SecurityRepositoryDetail = {
       ...detail,

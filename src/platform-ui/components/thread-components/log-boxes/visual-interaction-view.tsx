@@ -12,7 +12,7 @@ import {
   MousePointerClick,
   Route,
   X,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import { buildRunnerPreviewDownloadUrl } from "../document-preview/preview-contracts.js";
 import { RunnerImagePreviewSurface } from "../document-preview/image-preview-surface.js";

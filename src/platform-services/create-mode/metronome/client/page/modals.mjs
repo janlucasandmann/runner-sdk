@@ -1,7 +1,6 @@
 export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
-          const renderEditor = () => metronomeVersionChangesState
-            ? renderMetronomeChangesMode()
-            : metronomeRunInlineDetailId
+          const renderEditor = () => React.createElement(React.Fragment, null,
+            metronomeRunInlineDetailId
             ? React.createElement(React.Fragment, null,
                 renderMetronomeInlineRunDetail(
                   metronomeRuns.find((run) => run.id === metronomeRunInlineDetailId) || null
@@ -57,7 +56,9 @@ export const METRONOME_PAGE_MODALS_SCRIPT = String.raw`
                     )
                   ),
                   renderMetronomeVersionHistorySidebarPortal()
-                );
+                ),
+            renderMetronomeVersionChangesModal()
+          );
 
           const renderWorkflowNameModal = () => {
             if (!workflowNameModal) return null;

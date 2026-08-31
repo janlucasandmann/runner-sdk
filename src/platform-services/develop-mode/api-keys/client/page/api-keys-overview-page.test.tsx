@@ -145,6 +145,9 @@ describe("DevelopApiKeysOverviewPage", () => {
     await user.click(screen.getByRole("button", { name: "Open actions for Automation" }));
     expect(screen.queryByRole("menuitem", { name: "View key" })).toBeNull();
     expect(screen.getByRole("menuitem", { name: "Delete" })).not.toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Duplicate" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Share" })).toBeNull();
     expect(onReveal).not.toHaveBeenCalled();
   });
 
@@ -180,11 +183,19 @@ describe("DevelopApiKeysOverviewPage", () => {
       },
     });
 
-    expect(screen.getByText("tb_secret")).not.toBeNull();
+    const keyValue = screen.getByText("tb_secret");
+    const secretField = keyValue.closest(".playground-settings-created-key-secret");
+    const copyButton = screen.getByRole("button", { name: "Copy newly created API key" });
+    const dismissButton = screen.getByRole("button", { name: "Dismiss created API key" });
+
+    expect(secretField).not.toBeNull();
+    expect(secretField?.contains(copyButton)).toBe(true);
+    expect(keyValue.classList.contains("playground-settings-created-key-value")).toBe(true);
+    expect(dismissButton.classList.contains("playground-settings-created-key-dismiss-button")).toBe(true);
     expect(screen.getByText(/cannot be viewed again/i)).not.toBeNull();
-    await user.click(screen.getByRole("button", { name: "Copy newly created API key" }));
+    await user.click(copyButton);
     expect(onCopy).toHaveBeenCalledOnce();
-    await user.click(screen.getByRole("button", { name: "Dismiss created API key" }));
+    await user.click(dismissButton);
     expect(onDismiss).toHaveBeenCalledOnce();
   });
 

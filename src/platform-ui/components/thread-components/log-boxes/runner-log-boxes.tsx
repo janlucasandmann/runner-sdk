@@ -46,7 +46,7 @@ import {
   ThumbsUp,
   User,
   X,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import {
   buildRunnerPreviewAttachmentFromPath,

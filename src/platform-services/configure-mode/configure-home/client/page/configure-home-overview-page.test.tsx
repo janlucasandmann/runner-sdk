@@ -2,7 +2,7 @@
 
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { Bot, Monitor, Sparkles } from "lucide-react";
+import { Bot, Monitor, Sparkles } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConfigureHomeOverviewPage } from "./configure-home-overview-page.js";
 

@@ -153,8 +153,9 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
         };
       }
 
-      function renderPlaygroundVersionChangesPage(props = {}) {
-        return React.createElement(PlatformVersionChangesPage, {
+      function renderPlaygroundVersionChangesModal(props = {}) {
+        return React.createElement(PlatformVersionChangesModal, {
+          open: props.open !== false,
           title: props.title || "Changes",
           subtitle: props.subtitle === undefined
             ? "Compare saved versions and review the exact changes."
@@ -167,11 +168,11 @@ export const VERSIONING_CORE_SCRIPT = String.raw`
           compareControls: props.compareControls || null,
           actions: props.actions || null,
           compareTitle: props.compareTitle || "Versions",
-          backIcon: props.backIcon || ArrowLeft,
-          backLabel: props.backLabel || "Back",
-          onBack: typeof props.onBack === "function" ? props.onBack : undefined,
+          closeButtonLabel: props.closeButtonLabel || "Close version changes",
+          onClose: typeof props.onClose === "function" ? props.onClose : () => {},
           emptyMessage: props.emptyMessage || "No differences found.",
-          className: props.className || "",
+          contentClassName: props.className || props.contentClassName || "",
+          className: props.modalClassName || "",
         });
       }
 

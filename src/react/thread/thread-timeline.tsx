@@ -1,4 +1,4 @@
-import { Activity, ChevronDown, ChevronUp } from "lucide-react";
+import { Activity, ChevronDown, ChevronUp } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { buildRunnerThreadRunReceiptViewModel } from "../../thread/presentation.js";

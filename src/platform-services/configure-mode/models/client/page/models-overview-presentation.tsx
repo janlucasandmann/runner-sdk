@@ -1,7 +1,7 @@
 import {
   Bot,
   Brain,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 
 import type {

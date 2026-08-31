@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
@@ -12,9 +12,10 @@ import {
   type PlatformLabelVariant,
 } from "../../../../../platform-ui/components/ui/label/index.js";
 import {
-  ResourceOverviewCatalogIdentityCell,
+  createResourceOverviewColumns,
   ResourceOverviewPage,
   ResourceOverviewValue,
+  type ResourceOverviewStandardRow,
 } from "../../../../../platform-ui/pages/overview/index.js";
 import { NotificationsOverviewGuide } from "./notifications-overview-guide.js";
 
@@ -32,6 +33,9 @@ export interface ConfigureHomeNotificationRow {
   createdAtLabel?: string;
   [key: string]: unknown;
 }
+
+type NotificationOverviewRow = ConfigureHomeNotificationRow
+  & ResourceOverviewStandardRow;
 
 export type ConfigureHomeNotificationSort = "newest" | "oldest" | "type";
 
@@ -73,6 +77,51 @@ function getNotificationStatusVariant(
   return "gray";
 }
 
+function asNotificationRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function readNotificationText(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value !== "string") continue;
+    const normalized = value.trim();
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function getNotificationCreator(row: ConfigureHomeNotificationRow) {
+  const metadata = asNotificationRecord(row.metadata);
+  const actor = asNotificationRecord(row.actor);
+  const creatorName = readNotificationText(
+    row.actorName,
+    row.invitedByName,
+    row.creatorName,
+    row.createdByName,
+    actor.name,
+    actor.displayName,
+    metadata.actorName,
+    metadata.creatorName,
+    metadata.createdByName,
+  ) || "Computer Agents";
+  const creatorAvatarUrl = readNotificationText(
+    row.actorAvatarUrl,
+    row.invitedByAvatarUrl,
+    row.creatorAvatarUrl,
+    row.createdByAvatarUrl,
+    actor.avatarUrl,
+    actor.photoUrl,
+    metadata.actorAvatarUrl,
+    metadata.creatorAvatarUrl,
+    metadata.createdByAvatarUrl,
+  ) || (creatorName === "Computer Agents"
+    ? "/img/agent-profile-pics/ca-profilepic.jpg"
+    : "");
+  return { creatorName, creatorAvatarUrl };
+}
+
 export function NotificationsOverviewPage({
   notifications,
   totalNotificationCount,
@@ -88,70 +137,67 @@ export function NotificationsOverviewPage({
   loading = false,
 }: NotificationsOverviewPageProps) {
   const columns = useMemo<
-    PlatformDataTableColumn<ConfigureHomeNotificationRow>[]
-  >(() => [
-    {
-      id: "notification",
-      header: "Notification",
-      accessor: (row) => row.label || row.kindLabel || "Notification",
-      sortable: true,
-      width: "minmax(280px, 1.8fr)",
-      cell: ({ row }) => (
-        <ResourceOverviewCatalogIdentityCell
-          title={row.label || row.kindLabel || "Notification"}
-          description={row.text || row.meta || "Open notification"}
-        />
-      ),
+    PlatformDataTableColumn<NotificationOverviewRow>[]
+  >(() => createResourceOverviewColumns<NotificationOverviewRow>({
+    name: {
+      className: "notifications-overview-identity",
+      getVisual: () => ({
+        icon: <Bell width={16} height={16} strokeWidth={1.8} />,
+        iconClassName: "is-notification",
+      }),
     },
-    {
-      id: "type",
-      header: "Type",
-      accessor: (row) => row.kindLabel || "Notification",
-      sortable: true,
-      width: "minmax(130px, 0.75fr)",
-      hideBelow: 780,
-      cell: ({ row }) => (
-        <ResourceOverviewValue>
-          {row.kindLabel || "Notification"}
-        </ResourceOverviewValue>
-      ),
+    creator: {
+      getName: (row) => getNotificationCreator(row).creatorName,
+      getAvatarUrl: (row) => getNotificationCreator(row).creatorAvatarUrl,
     },
-    {
-      id: "status",
-      header: "Status",
-      accessor: (row) => (
-        row.statusLabel || (row.unread ? "Unread" : "Read")
-      ),
-      sortable: true,
-      width: "minmax(120px, 0.65fr)",
-      hideBelow: 620,
-      cell: ({ row }) => (
-        <PlatformLabel variant={getNotificationStatusVariant(row)}>
-          {row.statusLabel || (row.unread ? "Unread" : "Read")}
-        </PlatformLabel>
-      ),
+    extensions: {
+      afterName: [
+        {
+          id: "type",
+          header: "Type",
+          accessor: (row) => row.kindLabel || "Notification",
+          sortable: true,
+          width: "minmax(130px, 0.6fr)",
+          hideBelow: 900,
+          cell: ({ row }) => (
+            <ResourceOverviewValue>
+              {row.kindLabel || "Notification"}
+            </ResourceOverviewValue>
+          ),
+        },
+        {
+          id: "status",
+          header: "Status",
+          accessor: (row) => (
+            row.statusLabel || (row.unread ? "Unread" : "Read")
+          ),
+          sortable: true,
+          width: "minmax(110px, 0.5fr)",
+          hideBelow: 700,
+          cell: ({ row }) => (
+            <PlatformLabel variant={getNotificationStatusVariant(row)}>
+              {row.statusLabel || (row.unread ? "Unread" : "Read")}
+            </PlatformLabel>
+          ),
+        },
+      ],
     },
-    {
-      id: "time",
-      header: "Time",
-      accessor: (row) => row.createdAtTimestamp || 0,
-      sortable: true,
-      sortDescFirst: true,
-      width: "minmax(130px, 0.7fr)",
-      align: "end",
-      cell: ({ row }) => (
-        <ResourceOverviewValue title={row.createdAt}>
-          {row.createdAtLabel || "—"}
-        </ResourceOverviewValue>
-      ),
-    },
-  ], []);
+  }), []);
+
+  const overviewNotifications = useMemo<NotificationOverviewRow[]>(() => (
+    notifications.map((row) => ({
+      ...row,
+      name: row.label || row.kindLabel || "Notification",
+      description: row.text || row.meta || "Open notification",
+      updatedAt: row.createdAt || row.createdAtTimestamp || null,
+    }))
+  ), [notifications]);
 
   const sorting: PlatformDataTableSortState = sortValue === "oldest"
-    ? { id: "time", direction: "asc" }
+    ? { id: "updated", direction: "asc" }
     : sortValue === "type"
       ? { id: "type", direction: "asc" }
-      : { id: "time", direction: "desc" };
+      : { id: "updated", direction: "desc" };
   const noNotifications = totalNotificationCount === 0;
   const emptyState = (
     <PlatformEmptyState
@@ -166,12 +212,12 @@ export function NotificationsOverviewPage({
   );
 
   return (
-    <ResourceOverviewPage<ConfigureHomeNotificationRow>
+    <ResourceOverviewPage<NotificationOverviewRow>
       heroContent={<NotificationsOverviewGuide />}
       showPeriodSelector={false}
       className="is-notifications"
       table={{
-        rows: notifications,
+        rows: overviewNotifications,
         columns,
         getRowId: (row) => `${row.kind}:${row.id}`,
         ariaLabel: "Notifications",

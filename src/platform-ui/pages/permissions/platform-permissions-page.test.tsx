@@ -183,7 +183,7 @@ describe("PlatformPermissionsPage", () => {
     expect(container.querySelector(".platform-data-table__pagination")).toBeNull();
     expect(container.querySelector("select")).toBeNull();
     expect(container.querySelectorAll(".platform-selector")).toHaveLength(4);
-    expect(container.querySelectorAll(".lucide-chevrons-up-down")).toHaveLength(4);
+    expect(container.querySelectorAll(".hugeicons-chevrons-up-down")).toHaveLength(4);
 
     const ringOneTable = screen.getByRole("table", { name: "Ring 1 permissions" });
     expect(

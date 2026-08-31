@@ -7,7 +7,109 @@ export function createAppSidebarNavigationScript(options = {}) {
   const developAgentServiceEntries = String(options.developAgentServiceEntries || "");
   const createPrimaryEntries = String(options.createPrimaryEntries || "");
   const adminEntries = String(options.adminEntries || "");
-  return `        function getSidebarNavigationItemsForMode(targetMode = sidebarWorkspaceMode) {
+  return `        function renderSidebarHugeIcon(icon, props = {}) {
+          const { size = 14, ...iconProps } = props;
+          return React.createElement(HugeiconsIcon, {
+            ...iconProps,
+            icon,
+            size,
+            color: "currentColor",
+          });
+        }
+
+        function NewThreadSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(PencilEdit02Icon, props);
+        }
+
+        function ProjectsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(StartUp02Icon, props);
+        }
+
+        function FilesSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Folder02Icon, props);
+        }
+
+        function WorkflowsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(WorkflowIcon, props);
+        }
+
+        function ImagineSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(ClapperboardIcon, props);
+        }
+
+        function BatchesSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(TruckIcon, props);
+        }
+
+        function CalendarSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Calendar04Icon, props);
+        }
+
+        function HomeSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Home01Icon, props);
+        }
+
+        function AgentsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Robot01Icon, props);
+        }
+
+        function ComputersSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(ComputerIcon, props);
+        }
+
+        function KnowledgeSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(LibraryIcon, props);
+        }
+
+        function PromptsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Chat01Icon, props);
+        }
+
+        function ConnectorsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(PlugIcon, props);
+        }
+
+        function TestsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(TestTube01Icon, props);
+        }
+
+        function EvaluationsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(ChartAnalysisIcon, props);
+        }
+
+        function AgentOptimizationSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(TestTubeIcon, props);
+        }
+
+        function AssuranceSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Award05Icon, props);
+        }
+
+        function GuardrailsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(ChatLockIcon, props);
+        }
+
+        function ModelsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(AiArtIcon, props);
+        }
+
+        function MarketplaceSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(Store01Icon, props);
+        }
+
+        function InferenceSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(ChipIcon, props);
+        }
+
+        function AppSidebarSearchIcon(props = {}) {
+          return renderSidebarHugeIcon(Search01Icon, props);
+        }
+
+        function AppSidebarCloseIcon(props = {}) {
+          return renderSidebarHugeIcon(LayoutAlignLeftIcon, props);
+        }
+
+        function getSidebarNavigationItemsForMode(targetMode = sidebarWorkspaceMode) {
           const normalizedTargetMode = targetMode === "develop"
             ? "develop"
             : targetMode === "configure"
@@ -26,14 +128,14 @@ ${configurePrimaryEntries}
               {
                 id: "agents",
                 label: "Agents",
-                Icon: Bot,
+                Icon: AgentsSidebarIcon,
                 active: isResourcesPage && activeResourcesView === "agents",
                 onClick: handleOpenAgentsShortcut,
               },
               {
                 id: "computers",
                 label: "Computers",
-                Icon: Monitor,
+                Icon: ComputersSidebarIcon,
                 active: isResourcesPage && activeResourcesView === "computers",
                 onClick: handleOpenEnvironmentsShortcut,
               },
@@ -52,7 +154,7 @@ ${configurePrimaryEntries}
 ${configureContextEntries}              {
                 id: "prompts",
                 label: "Prompts",
-                Icon: MessageSquareText,
+                Icon: PromptsSidebarIcon,
                 active: activePage === "tools" && toolsView === "prompts",
                 onClick: handleOpenPromptsShortcut,
               },
@@ -60,7 +162,7 @@ ${configureContextEntries}              {
                 id: "tags",
                 label: "Connectors",
                 searchAliases: ["Tags", "Plugins", "Tags and Plugins"],
-                Icon: Plug,
+                Icon: ConnectorsSidebarIcon,
                 active: activePage === "tools" && (toolsView === "tags" || toolsView === "plugins"),
                 onClick: handleOpenTagsShortcut,
               },
@@ -109,21 +211,21 @@ ${developAgentServiceEntries}            ];
             {
               id: "new-thread",
               label: "New Thread",
-              Icon: SquarePen,
+              Icon: NewThreadSidebarIcon,
               active: showInitialThreadWelcome,
               onClick: hasShellAccess ? handleNewThread : handleSignInWithComputerAgents,
             },
             {
               id: "projects",
               label: "Projects",
-              Icon: Rocket,
+              Icon: ProjectsSidebarIcon,
               active: activePage === "tasks",
               onClick: handleOpenTasksShortcut,
             },
             {
               id: "files",
               label: "Files",
-              Icon: FolderOpen,
+              Icon: FilesSidebarIcon,
               active: activePage === "files",
               onClick: handleOpenFilesShortcut,
             },
@@ -136,21 +238,21 @@ ${createPrimaryEntries}
             {
               id: "metronome",
               label: "Workflows",
-              Icon: Metronome,
+              Icon: WorkflowsSidebarIcon,
               active: activePage === "metronome",
               onClick: openMetronomeOverviewPage,
             },
             {
               id: "batches",
               label: "Batches",
-              Icon: Truck,
+              Icon: BatchesSidebarIcon,
               active: activePage === "batches",
               onClick: openBatchesOverviewPage,
             },
             {
               id: "calendar",
               label: "Calendar",
-              Icon: CalendarIcon,
+              Icon: CalendarSidebarIcon,
               active: activePage === "calendar",
               onClick: openCalendarOverviewPage,
             },

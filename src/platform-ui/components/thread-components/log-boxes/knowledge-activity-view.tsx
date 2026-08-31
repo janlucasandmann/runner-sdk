@@ -1,4 +1,4 @@
-import { LibraryBig } from "lucide-react";
+import { LibraryBig } from "../../ui/hugeicons-compat.js";
 import { useEffect, useRef, useState } from "react";
 import type { RunnerLog } from "../../../../types.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";

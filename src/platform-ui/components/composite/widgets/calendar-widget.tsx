@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "../../ui/hugeicons-compat.js";
 import { PlatformDefaultWidget, joinPlatformWidgetClassNames } from "./platform-widget.js";
 
 export interface PlatformCalendarWidgetDay {

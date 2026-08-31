@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PlatformConnectorConfiguration,
   PlatformConnectorConfigurationRow,
+  PlatformConnectorConfigurationSection,
 } from "./platform-connector-configuration.js";
 
 afterEach(cleanup);
@@ -52,6 +53,53 @@ describe("PlatformConnectorConfiguration", () => {
     expect(spinner.getAttribute("src")).toBe("/img/spinner.svg");
     expect(control?.firstElementChild).toBe(spinner);
     expect(control?.lastElementChild).toBe(screen.getByRole("button", { name: "Toggle" }));
+  });
+
+  it("supports a headerless plain attribute-list presentation", () => {
+    const { container } = render(
+      <PlatformConnectorConfiguration
+        title="acme/repository"
+        surface="plain"
+        showHeader={false}
+      >
+        <PlatformConnectorConfigurationRow title="Base branch">
+          <button type="button">main</button>
+        </PlatformConnectorConfigurationRow>
+      </PlatformConnectorConfiguration>,
+    );
+
+    const configuration = container.querySelector(
+      "[data-platform-connector-configuration='true']",
+    );
+    expect(configuration?.getAttribute("data-platform-connector-configuration-surface")).toBe(
+      "plain",
+    );
+    expect(configuration?.querySelector(".platform-connector-configuration__header")).toBeNull();
+    expect(screen.queryByText("acme/repository")).toBeNull();
+    expect(screen.getByRole("button", { name: "main" })).toBeTruthy();
+  });
+
+  it("groups related connector policies into semantic sections", () => {
+    const { container } = render(
+      <PlatformConnectorConfiguration title="acme/repository" surface="plain" showHeader={false}>
+        <PlatformConnectorConfigurationSection
+          title="Version synchronization"
+          description="Keep exact revisions aligned."
+        >
+          <PlatformConnectorConfigurationRow title="Base branch">
+            <button type="button">main</button>
+          </PlatformConnectorConfigurationRow>
+        </PlatformConnectorConfigurationSection>
+      </PlatformConnectorConfiguration>,
+    );
+
+    const section = container.querySelector(
+      "[data-platform-connector-configuration-section='true']",
+    );
+    expect(section).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Version synchronization" })).toBeTruthy();
+    expect(screen.getByText("Keep exact revisions aligned.")).toBeTruthy();
+    expect(section?.querySelector("[data-platform-connector-configuration-row='true']")).toBeTruthy();
   });
 
   it("opens a minimal scoped menu and disconnects the connector", async () => {

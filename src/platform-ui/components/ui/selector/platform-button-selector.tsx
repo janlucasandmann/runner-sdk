@@ -1,4 +1,5 @@
-import { ChevronDown } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ChevronDownIcon } from "@hugeicons/core-free-icons";
 import {
   type AriaRole,
   type CSSProperties,
@@ -337,7 +338,13 @@ export const PlatformButtonSelector = forwardRef<
         }}
         onKeyDown={handlePopupTriggerKeyDown}
       >
-        <ChevronDown aria-hidden="true" />
+        <HugeiconsIcon
+          icon={ChevronDownIcon}
+          className={resolvedOpen ? "platform-button-selector__chevron is-open" : "platform-button-selector__chevron"}
+          size={14}
+          strokeWidth={1.8}
+          aria-hidden="true"
+        />
       </PlatformButton>
     </div>
   );

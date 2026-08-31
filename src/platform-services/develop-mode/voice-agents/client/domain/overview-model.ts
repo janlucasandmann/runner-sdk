@@ -64,6 +64,8 @@ export function createDevelopVoiceAgentOverviewRows(
       instructions,
       phoneNumber,
       phoneStatus: asString(phone.status) || (phoneNumber ? "active" : ""),
+      createdAt: asString(agent.createdAt || agent.created_at || record.createdAt || record.created_at),
+      updatedAt: asString(agent.updatedAt || agent.updated_at || record.updatedAt || record.updated_at),
       creator: getDevelopResourceCreatorIdentity(agent, identityFallback),
       owner: getDevelopResourceOwnerIdentity(agent, identityFallback),
       enabled: mode !== "off" || Boolean(phoneNumber),

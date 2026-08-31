@@ -78,6 +78,139 @@
             ).trim() || "europe-west1";
           }
 
+          function getSelectedSkillGithubRepository(metadata = selectedSkill?.metadata) {
+            const normalizedMetadata = metadata
+              && typeof metadata === "object"
+              && !Array.isArray(metadata)
+              ? metadata
+              : {};
+            const connector = normalizedMetadata.skillGithubConnector
+              && typeof normalizedMetadata.skillGithubConnector === "object"
+              && !Array.isArray(normalizedMetadata.skillGithubConnector)
+              ? normalizedMetadata.skillGithubConnector
+              : {};
+            return connector.repository
+              && typeof connector.repository === "object"
+              && !Array.isArray(connector.repository)
+              ? connector.repository
+              : null;
+          }
+
+          async function updateSelectedSkillGithubConnector(repository) {
+            if (!selectedSkill?.id || !selectedSkill.isCustom || selectedSkill.isDraft) {
+              throw new Error("Save this Skill before configuring its GitHub connector.");
+            }
+            const previousMetadata = selectedSkill.metadata
+              && typeof selectedSkill.metadata === "object"
+              && !Array.isArray(selectedSkill.metadata)
+              ? selectedSkill.metadata
+              : {};
+            const normalizedRepository = repository && typeof repository === "object"
+              ? {
+                  id: String(repository.id || "").trim(),
+                  name: String(repository.name || "").trim(),
+                  repoFullName: String(repository.repoFullName || "").trim(),
+                  ref: String(repository.ref || "main").trim() || "main",
+                  accountId: String(repository.accountId || "").trim(),
+                  branchPrefix: String(repository.branchPrefix ?? "computer-agents/").trim(),
+                  createPullRequests: repository.createPullRequests !== false,
+                  forcePushCommits: repository.forcePushCommits === true,
+                }
+              : null;
+            if (normalizedRepository && !/^[^/\s]+\/[^/\s]+$/.test(normalizedRepository.repoFullName)) {
+              throw new Error("Choose a valid GitHub repository.");
+            }
+            const nextMetadata = { ...previousMetadata };
+            if (normalizedRepository) {
+              nextMetadata.skillGithubConnector = {
+                schemaVersion: "1",
+                repository: normalizedRepository,
+              };
+            } else {
+              delete nextMetadata.skillGithubConnector;
+            }
+            updateSelectedSkillLocal((current) => ({ ...current, metadata: nextMetadata }));
+            setSkillSaveState({ isSaving: true, error: "" });
+            try {
+              const savedSkill = await patchSelectedSkillFields({ metadata: nextMetadata });
+              setSkillSaveState({ isSaving: false, error: "" });
+              return savedSkill;
+            } catch (error) {
+              updateSelectedSkillLocal((current) => ({ ...current, metadata: previousMetadata }));
+              setSkillSaveState({
+                isSaving: false,
+                error: error instanceof Error ? error.message : "Failed to save the Skill connector.",
+              });
+              throw error;
+            }
+          }
+
+          async function createSelectedSkillGithubRepository(options = {}) {
+            if (!selectedSkill?.id || !selectedSkill.isCustom || selectedSkill.isDraft) {
+              throw new Error("Save this Skill before creating its GitHub repository.");
+            }
+            const createRepository = github?.createRepository;
+            if (typeof createRepository !== "function") {
+              throw new Error("GitHub repository creation is unavailable. Reconnect GitHub and try again.");
+            }
+            const snapshot = buildCurrentSkillVersionSnapshot(selectedSkill);
+            const normalizedFiles = normalizeSkillCodeFiles(snapshot.codeFiles);
+            const filesByPath = new Map();
+            normalizedFiles.forEach((file) => {
+              const filePath = normalizeHistoryPath(file.name);
+              if (!filePath) return;
+              filesByPath.set(filePath, {
+                path: filePath,
+                content: filePath.toLowerCase() === "skill.md"
+                  ? String(snapshot.markdown || file.content || "")
+                  : String(file.content || ""),
+              });
+            });
+            if (![...filesByPath.keys()].some((filePath) => filePath.toLowerCase() === "skill.md")) {
+              filesByPath.set("SKILL.md", {
+                path: "SKILL.md",
+                content: String(snapshot.markdown || ""),
+              });
+            }
+            filesByPath.set(".computer-agents/resource.json", {
+              path: ".computer-agents/resource.json",
+              content: JSON.stringify({
+                schemaVersion: 1,
+                provider: "computer-agents",
+                resourceKind: "skill",
+                resourceId: String(selectedSkill.id),
+                name: selectedSkill.name,
+                description: selectedSkill.description,
+                icon: selectedSkill.icon,
+                category: selectedSkill.category,
+              }, null, 2) + "\n",
+            });
+            const resourceName = String(options?.name || selectedSkill.name || "Computer Agents Skill").trim();
+            const createdRepository = await createRepository({
+              name: resourceName,
+              description: String(selectedSkill.description || "").trim()
+                || "Source for the " + resourceName + " Computer Agents Skill.",
+              resourceId: String(selectedSkill.id || "").trim(),
+              resourceKind: "skill",
+              skillId: String(selectedSkill.id || "").trim(),
+              private: true,
+              commitMessage: "Initialize " + resourceName + " Skill source",
+              files: Array.from(filesByPath.values()),
+            }, {
+              accountId: String(options?.accountId || "").trim() || undefined,
+            });
+            return {
+              id: String(createdRepository?.id || "").trim(),
+              name: String(createdRepository?.name || "").trim(),
+              repoFullName: String(createdRepository?.repoFullName || "").trim(),
+              ref: String(createdRepository?.ref || "main").trim() || "main",
+              accountId: String(options?.accountId || "").trim(),
+              branchPrefix: "computer-agents/",
+              createPullRequests: true,
+              forcePushCommits: false,
+            };
+          }
+
           function normalizeSkillOwnerIdentity(value, fallback = {}) {
             const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
             const nested = [source.user, source.profile, source.account, source.member, source.identity]
@@ -443,11 +576,10 @@
           }
 
           function renderSkillIdentitySection(skillResourceMetadata) {
-            return React.createElement("section", {
-                className: "skill-detail-page__identity",
-                "aria-label": "Skill identity",
-              },
-              React.createElement(ProjectIconPicker, {
+            return React.createElement(PlatformFileResourceIdentity, {
+              className: "skill-detail-page__identity",
+              ariaLabel: "Skill identity",
+              icon: React.createElement(ProjectIconPicker, {
                 projectName: selectedSkill.name || "Skill",
                 icon: getPlaygroundSkillIconId(selectedSkill.icon),
                 color: getSelectedSkillIconColor(skillResourceMetadata),
@@ -456,44 +588,28 @@
                 showProjectName: false,
                 disabled: !selectedSkill.isCustom,
                 onChange: handleSelectedSkillIdentityChange,
-                className: "skill-detail-page__icon-picker",
                 resourceLabel: "skill",
               }),
-              React.createElement("div", {
-                  className: "skill-detail-page__identity-copy",
-                },
-                React.createElement("input", {
-                  type: "text",
-                  ref: skillTitleInputRef,
-                  className: "skill-detail-page__name-input",
-                  value: skillTitleDraft,
-                  onChange: (event) => setSkillTitleDraft(event.target.value),
-                  onBlur: handleSelectedSkillTitleCommit,
-                  placeholder: selectedSkill.isDraft ? "new-skill" : undefined,
-                  readOnly: !selectedSkill.isCustom,
-                  "aria-label": "Skill name",
-                }),
-                React.createElement("input", {
-                  type: "text",
-                  className: "file-resource-detail-page__description-input skill-detail-page__description-input",
-                  value: selectedSkill.description || "",
-                  onChange: selectedSkill.isCustom
-                    ? (event) => updateSelectedSkillLocal((current) => ({
-                        ...current,
-                        description: event.target.value,
-                      }))
-                    : undefined,
-                  onBlur: selectedSkill.isCustom
-                    ? (event) => void saveSelectedSkillFields({
-                        description: event.target.value,
-                      })
-                    : undefined,
-                  readOnly: !selectedSkill.isCustom,
-                  placeholder: "Describe when agents should use this skill.",
-                  "aria-label": "Skill description",
-                })
-              )
-            );
+              title: skillTitleDraft,
+              description: selectedSkill.description || "",
+              onTitleChange: selectedSkill.isCustom ? setSkillTitleDraft : undefined,
+              onTitleBlur: selectedSkill.isCustom ? handleSelectedSkillTitleCommit : undefined,
+              onDescriptionChange: selectedSkill.isCustom
+                ? (value) => updateSelectedSkillLocal((current) => ({
+                    ...current,
+                    description: value,
+                  }))
+                : undefined,
+              onDescriptionBlur: selectedSkill.isCustom
+                ? (value) => void saveSelectedSkillFields({ description: value })
+                : undefined,
+              titleRef: skillTitleInputRef,
+              titlePlaceholder: selectedSkill.isDraft ? "new-skill" : undefined,
+              descriptionPlaceholder: "Describe when agents should use this skill.",
+              titleAriaLabel: "Skill name",
+              descriptionAriaLabel: "Skill description",
+              readOnly: !selectedSkill.isCustom,
+            });
           }
 
           function renderSkillSettingsComposition(
@@ -527,63 +643,84 @@
               || skillSaveState.isSaving
               || hasSelectedSkillVersionChanges()
             );
-            if (accessDetailFocused) {
-              return {
-                content: React.createElement("div", {
-                    className: "skill-detail-page__settings-content skill-detail-page__settings skill-detail-page__access-detail-view",
-                  },
-                  accessSettings
-                ),
-                sidebar: null,
-              };
-            }
-            const settingsContent = React.createElement("div", {
-                className: "skill-detail-page__settings-content skill-detail-page__settings",
+            const skillGithubRepository = getSelectedSkillGithubRepository(skillResourceMetadata);
+            const skillConnectorsSection = selectedSkill.isCustom
+              ? React.createElement(RunnerSourceGithubConnectorSettings, {
+                  resourceId: String(selectedSkill.id || "").trim(),
+                  resourceKind: "skill",
+                  resourceName: String(selectedSkill.name || "").trim(),
+                  repository: skillGithubRepository,
+                  github,
+                  apiBaseUrl: backendUrl,
+                  requestHeaders,
+                  automationEnvironmentId: String(skillEnvironmentSelectionId || "").trim(),
+                  automationAgentOptions: (Array.isArray(agents) ? agents : [])
+                    .filter((agent) => agent?.id)
+                    .map((agent) => ({
+                      id: String(agent.id),
+                      label: String(agent.name || agent.displayName || agent.id),
+                    })),
+                  disabled: selectedSkill.isDraft || skillSaveState.isSaving,
+                  onCreateRepository: createSelectedSkillGithubRepository,
+                  onRepositoryChange: updateSelectedSkillGithubConnector,
+                })
+              : null;
+            return {
+              ariaLabel: "Skill settings",
+              className: "skill-detail-page__settings-content skill-detail-page__settings",
+              identity: {
+                icon: React.createElement(ProjectIconPicker, {
+                  projectName: selectedSkill.name || "Skill",
+                  icon: getPlaygroundSkillIconId(selectedSkill.icon),
+                  color: getSelectedSkillIconColor(skillResourceMetadata),
+                  iconOptions: PLAYGROUND_SKILL_ICON_OPTIONS,
+                  colorOptions: ["#ffffff", ...PLAYGROUND_PROJECT_ACCENT_COLORS],
+                  showProjectName: false,
+                  disabled: !selectedSkill.isCustom,
+                  onChange: handleSelectedSkillIdentityChange,
+                  resourceLabel: "skill",
+                }),
+                iconAriaHidden: false,
+                iconClassName: "file-resource-identity__icon",
+                title: skillTitleDraft,
+                description: String(selectedSkill.description || ""),
+                onTitleChange: selectedSkill.isCustom ? setSkillTitleDraft : undefined,
+                onTitleBlur: selectedSkill.isCustom ? handleSelectedSkillTitleCommit : undefined,
+                onDescriptionChange: selectedSkill.isCustom
+                  ? (value) => updateSelectedSkillLocal((current) => ({ ...current, description: value }))
+                  : undefined,
+                onDescriptionBlur: selectedSkill.isCustom
+                  ? (value) => void saveSelectedSkillFields({ description: value })
+                  : undefined,
+                titleRef: skillTitleInputRef,
+                titlePlaceholder: selectedSkill.isDraft ? "new-skill" : "Skill",
+                descriptionPlaceholder: "Describe when agents should use this skill.",
+                titleAriaLabel: "Skill name",
+                descriptionAriaLabel: "Skill description",
+                readOnly: !selectedSkill.isCustom,
               },
-              React.createElement(PlatformDeploymentMap, {
-                regionCode: deploymentRegion,
-                title: "Deployment region",
-                className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map skill-detail-page__deployment-map",
-              }),
-              accessSettings
-            );
-            const settingsSidebar = React.createElement(PlatformServiceDetailPropertyList, null,
-              React.createElement(PlatformServiceDetailProperty, {
-                label: "Status",
-              },
-                React.createElement(PlatformLabel, {
-                  variant: selectedSkill.isActive === false ? "gray" : "green",
-                }, selectedSkill.isActive === false ? "Inactive" : "Active")
-              ),
-              React.createElement(PlatformServiceDetailProperty, {
-                label: "Creator",
-                className: "skill-detail-page__creator-row",
-                title: creatorIdentity.email || creatorIdentity.name || creatorIdentity.id || "Unknown",
-              }, renderSkillDetailIdentityValue(creatorIdentity)),
-              React.createElement(PlatformServiceDetailProperty, {
-                label: "Created",
-                title: formatPlaygroundFileDate(selectedSkill.createdAt),
-              }, formatPlaygroundFileDate(selectedSkill.createdAt)),
-              React.createElement(PlatformServiceDetailProperty, {
-                label: "Updated",
-                title: formatPlaygroundFileDate(selectedSkill.updatedAt),
-              }, formatPlaygroundFileDate(selectedSkill.updatedAt)),
-              React.createElement(PlatformServiceDetailProperty, {
-                label: "Owner",
-                className: "skill-detail-page__owner-row",
-                title: ownerIdentity.email || ownerIdentity.name || ownerIdentity.id || "Unknown",
-              },
-                React.createElement(PlatformOwnerSelector, {
-                  owner: {
-                    value: String(ownerIdentity.value || ownerIdentity.id || ownerIdentity.email || "skill-owner"),
-                    name: String(ownerIdentity.name || ownerIdentity.email || "Unknown user"),
-                    email: String(ownerIdentity.email || ""),
-                    avatarUrl: String(ownerIdentity.avatarUrl || ""),
-                  },
-                  options: ownerOptions,
+              details: {
+                variant: "standard",
+                updatedAt: selectedSkill.isCustom
+                  ? selectedSkill.updatedAt || selectedSkill.createdAt || null
+                  : null,
+                creator: {
+                  value: String(creatorIdentity.value || creatorIdentity.id || creatorIdentity.email || "skill-creator"),
+                  name: String(creatorIdentity.name || creatorIdentity.email || "Unknown user"),
+                  email: String(creatorIdentity.email || ""),
+                  avatarUrl: String(creatorIdentity.avatarUrl || ""),
+                },
+                owner: {
+                  value: String(ownerIdentity.value || ownerIdentity.id || ownerIdentity.email || "skill-owner"),
+                  name: String(ownerIdentity.name || ownerIdentity.email || "Unknown user"),
+                  email: String(ownerIdentity.email || ""),
+                  avatarUrl: String(ownerIdentity.avatarUrl || ""),
+                },
+                ownerOptions,
+                onOwnerTransfer: selectedSkill.isCustom ? transferSelectedSkillOwner : undefined,
+                ownerSelectorProps: {
                   open: skillOwnerSelectorOpen,
                   onOpenChange: handleSkillOwnerSelectorOpenChange,
-                  onTransfer: transferSelectedSkillOwner,
                   ariaLabel: "Choose skill owner",
                   resourceLabel: "skill",
                   alignment: "end",
@@ -596,27 +733,31 @@
                   emptyContent: "No organization members are available.",
                   popupWidth: 260,
                   popupMaxHeight: "min(320px, calc(100vh - 180px))",
-                  className: "skill-detail-page__owner-selector",
-                  triggerClassName: "skill-detail-page__owner-trigger",
-                  popupClassName: "skill-detail-page__owner-menu",
-                  optionClassName: "skill-detail-page__owner-option",
                   title: hasSelectedSkillVersionChanges()
                     ? "Save skill changes before changing the owner."
                     : undefined,
-                })
-              ),
-              React.createElement(PlatformPrimaryButton, {
-                type: "button",
-                size: "small",
-                fullWidth: true,
-                className: "skill-detail-page__test-skill-button",
-                disabled: selectedSkill.isDraft || typeof onTestSkill !== "function",
-                title: selectedSkill.isDraft ? "Save this skill before testing it." : undefined,
-                onClick: () => onTestSkill?.(selectedSkill),
-              }, "Test Skill")
-            );
-            return {
-              content: settingsContent,
-              sidebar: settingsSidebar,
+                },
+                scope: false,
+                primaryActions: [{
+                  id: "test-skill",
+                  label: "Test Skill",
+                  onSelect: typeof onTestSkill === "function"
+                    ? () => onTestSkill(selectedSkill)
+                    : undefined,
+                  disabled: selectedSkill.isDraft || typeof onTestSkill !== "function",
+                  title: selectedSkill.isDraft ? "Save this skill before testing it." : undefined,
+                }],
+                className: "skill-detail-page__properties-card",
+              },
+              location: React.createElement(PlatformDeploymentMap, {
+                regionCode: deploymentRegion,
+                title: "Deployment region",
+                className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map skill-detail-page__deployment-map",
+              }),
+              connectors: skillConnectorsSection,
+              access: accessSettings,
+              accessDetailOpen: accessDetailFocused,
+              detailsSidebarAriaLabel: "Skill properties",
+              detailsSidebarClassName: "skill-detail-page__sidebar",
             };
           }

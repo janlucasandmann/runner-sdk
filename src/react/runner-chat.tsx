@@ -38,6 +38,7 @@ import {
   RefreshCw as LucideRefreshCw,
   Repeat2 as LucideRepeat2,
   Split as LucideSplit,
+  SquareMousePointer as LucideSquareMousePointer,
   Star as LucideStar,
   Telescope as LucideTelescope,
   TextQuote as LucideTextQuote,
@@ -48,9 +49,10 @@ import {
   UsersRound as LucideUsersRound,
   Video as LucideVideo,
   Wand2 as LucideWand2,
+  Workflow as LucideWorkflow,
   X as LucideX,
   Zap as LucideZap,
-} from "lucide-react";
+} from "../platform-ui/components/ui/hugeicons-compat.js";
 import { RunnerDeepResearchSession, RunnerLog } from "../types.js";
 import {
   PlatformPopupSurface,
@@ -70,6 +72,7 @@ import {
   PlatformResourceActionsMenu,
 } from "../platform-ui/components/composite/resource-header-actions/index.js";
 import { PlatformSwitch } from "../platform-ui/components/ui/switch/index.js";
+import { PlatformSelector } from "../platform-ui/components/ui/selector/index.js";
 import { ConnectionIdentityIcon } from "../platform-resources/shared/connections/connection-identity-icon.js";
 import { buildRunnerThreadScreenViewModel } from "../thread/presentation.js";
 import type { RunnerThreadAction, RunnerThreadMessage } from "../thread/types.js";
@@ -152,14 +155,17 @@ import {
   IconOneDrive,
   IconPaperclip,
   IconPlus,
+  IconSidebarCalendar,
+  IconSidebarFiles,
+  IconSidebarKnowledge,
+  IconSidebarNewThread,
+  IconSidebarPrompts,
+  IconSidebarThreads,
   IconSearch,
   IconStop,
   IconX,
 } from "./runner-chat/icons.js";
-import {
-  type RunnerAgentSelectorMode,
-  type RunnerReasoningEffortId,
-} from "./runner-chat/voice-audio.js";
+import type { RunnerReasoningEffortId } from "./runner-chat/voice-audio.js";
 import { useRunnerSpeechToText } from "./runner-chat/use-speech-to-text.js";
 import { useRunnerVoiceModeSession } from "./runner-chat/use-voice-mode-session.js";
 import {
@@ -205,7 +211,6 @@ import {
   buildRunnerAgentGuardrailsHiddenPrompt,
   buildRunnerExecutionPromptWithHiddenContext,
   getRunnerAgentOptionPhotoUrl,
-  getRunnerAgentSelectorMode,
   getRunnerPreferredDefaultAgentOption,
   getRunnerProjectEnvironmentId,
   isRunnerHumanAgentOption,
@@ -478,6 +483,7 @@ import type {
   RunnerChatPromptAttachment,
   RunnerChatThreadAttachment,
   RunnerChatProps,
+  RunnerChatWorkflowTriggerOption,
 } from "./runner-chat/public-types.js";
 export type {
   RunnerChatActionSummaryClickPayload,
@@ -506,9 +512,15 @@ export type {
   RunnerChatSchedulePreset,
   RunnerChatSummaryWorkspacePathClickPayload,
   RunnerChatWorkspaceConfig,
+  RunnerChatWorkflowTriggerOption,
+  RunnerChatWorkflowTriggerSubmitPayload,
   RunnerThreadTaskListItem,
   RunnerThreadTaskListSummary,
 } from "./runner-chat/public-types.js";
+import {
+  filterRunnerWorkflowTriggerOptions,
+  normalizeRunnerWorkflowTriggerOptions,
+} from "./runner-chat/composer-workflows.js";
 export type {
   RunnerFileBrowserSource,
 } from "./runner-chat/file-browser-source.js";
@@ -556,6 +568,7 @@ import {
 } from "./runner-chat/composer-plan.js";
 import {
   isPlusPopupId,
+  RunnerComposerPopupSurface,
   renderComposerPopupPortal,
   useComposerAnchoredPopupStyle,
 } from "./runner-chat/composer-popup.js";
@@ -789,6 +802,7 @@ export function RunnerChat({
   enabledSkillIds: controlledEnabledSkillIds,
   skillDefaults,
   computerAgents,
+  composerWorkflowTriggers = [],
   uploadFiles,
   mapFileToAttachment,
   onThreadIdChange,
@@ -821,6 +835,7 @@ export function RunnerChat({
   onComposerOrganizationChange,
   onComposerProjectTaskSubmit,
   onComposerSubmit,
+  onComposerWorkflowTriggerSubmit,
   onBatchJobCreate,
   onComposerDraftChange,
   composerSubmitRequest = null,
@@ -883,6 +898,7 @@ export function RunnerChat({
     normalizeRunnerSelectedConnectorIds(computerAgents?.selectedConnectorIds),
   );
   const [activeConnectorOptionIndex, setActiveConnectorOptionIndex] = useState(0);
+  const [selectedWorkflowTriggerId, setSelectedWorkflowTriggerId] = useState("");
   const [connectingConnectorId, setConnectingConnectorId] = useState("");
   const [dismissedConnectorMentionKey, setDismissedConnectorMentionKey] = useState("");
   const {
@@ -1041,11 +1057,9 @@ export function RunnerChat({
     },
   });
   const {
-    agentPopupMode,
     initialAgentTopId,
     selectedAgentId,
     selectedReasoningEffort,
-    setAgentPopupMode,
     setSelectedAgentId,
     setSelectedReasoningEffort,
   } = useRunnerAgentSelectionController({
@@ -1626,10 +1640,26 @@ export function RunnerChat({
     const selectedIds = new Set(selectedConnectorIds);
     return availableConnectorOptions.filter((option) => selectedIds.has(option.id));
   }, [availableConnectorOptions, selectedConnectorIds]);
+  const availableWorkflowTriggerOptions = useMemo(
+    () => normalizeRunnerWorkflowTriggerOptions(
+      onComposerWorkflowTriggerSubmit ? composerWorkflowTriggers : [],
+    ),
+    [composerWorkflowTriggers, onComposerWorkflowTriggerSubmit],
+  );
+  const selectedWorkflowTrigger = useMemo(
+    () => availableWorkflowTriggerOptions.find((option) => option.id === selectedWorkflowTriggerId) || null,
+    [availableWorkflowTriggerOptions, selectedWorkflowTriggerId],
+  );
+  useEffect(() => {
+    if (selectedWorkflowTriggerId && !selectedWorkflowTrigger) {
+      setSelectedWorkflowTriggerId("");
+    }
+  }, [selectedWorkflowTrigger, selectedWorkflowTriggerId]);
+  const hasComposerMentionTokens = selectedConnectorOptions.length > 0 || Boolean(selectedWorkflowTrigger);
   const selectedConnectorsInlineStartValue = hasStagedComposerCommand
     ? stagedComposerOffsetValue
     : "16px";
-  const composerTextareaOffsetValue = selectedConnectorOptions.length > 0
+  const composerTextareaOffsetValue = hasComposerMentionTokens
     ? `calc(${selectedConnectorsInlineStartValue} + var(--tb-selected-connectors-inline-width, 0px) + 8px)`
     : stagedComposerOffsetValue;
   const selectedConnectorPayload = useMemo(
@@ -1659,12 +1689,22 @@ export function RunnerChat({
         : [],
     [availableConnectorOptions, connectorMentionInputState],
   );
+  const filteredWorkflowTriggerOptions = useMemo(
+    () => connectorMentionInputState
+      ? filterRunnerWorkflowTriggerOptions(
+          availableWorkflowTriggerOptions,
+          connectorMentionInputState.query,
+        )
+      : [],
+    [availableWorkflowTriggerOptions, connectorMentionInputState],
+  );
+  const mentionOptionCount = filteredConnectorOptions.length + filteredWorkflowTriggerOptions.length;
   const showConnectorMentionPopup = Boolean(
     inputMode === "computer-agents"
     && !activeInputPopup
     && connectorMentionInputState
     && connectorMentionKey !== dismissedConnectorMentionKey
-    && availableConnectorOptions.length > 0
+    && (availableConnectorOptions.length > 0 || availableWorkflowTriggerOptions.length > 0)
   );
   useEffect(() => {
     setActiveConnectorOptionIndex(0);
@@ -1806,7 +1846,7 @@ export function RunnerChat({
     !isSavingBatchJob &&
     !isPreparingRun &&
     (!hasRunningTurn || hasRunningTurnLogs) &&
-    (trimmedInput.length > 0 || canRunStagedThreadContextCommand || canRunStagedMissionControlCommand);
+    (trimmedInput.length > 0 || Boolean(selectedWorkflowTrigger) || canRunStagedThreadContextCommand || canRunStagedMissionControlCommand);
   const useComputerAgentsMode = inputMode === "computer-agents";
   const enabledSkillsPayload = useMemo(
     () => (useComputerAgentsMode ? buildEnabledSkillsPayload(enabledSkillIds, displayedSkills, skillDefaults) : null),
@@ -2428,9 +2468,25 @@ export function RunnerChat({
     replaceActiveConnectorMention(mention);
   }
 
+  function selectComposerWorkflowTrigger(
+    option: RunnerChatWorkflowTriggerOption,
+    mention: RunnerConnectorMentionInputState,
+  ) {
+    setSelectedWorkflowTriggerId(option.id);
+    replaceActiveConnectorMention(mention);
+  }
+
+  function removeSelectedWorkflowTrigger() {
+    setSelectedWorkflowTriggerId("");
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  }
+
   function clearComposerDraft(options?: {
     preserveQuotedSelection?: boolean;
     preserveSelectedConnectors?: boolean;
+    preserveSelectedWorkflowTrigger?: boolean;
     preserveStagedCommand?: boolean;
   }) {
     setInput("");
@@ -2445,6 +2501,9 @@ export function RunnerChat({
     resetSpeechDraft("");
     if (!options?.preserveSelectedConnectors) {
       updateSelectedConnectorIds([]);
+    }
+    if (!options?.preserveSelectedWorkflowTrigger) {
+      setSelectedWorkflowTriggerId("");
     }
   }
 
@@ -4106,7 +4165,7 @@ export function RunnerChat({
         "--tb-selected-connectors-inline-width",
       );
     };
-  }, [selectedConnectorOptions]);
+  }, [selectedConnectorOptions, selectedWorkflowTrigger]);
 
   useEffect(() => {
     if (!editingTextareaRef.current || !editingTurnId) return;
@@ -5188,6 +5247,46 @@ export function RunnerChat({
         ? [...implicitAttachmentEntries, ...composerAttachmentEntries]
         : composerAttachmentEntries;
 
+      if (selectedWorkflowTrigger && onComposerWorkflowTriggerSubmit && !loopCommand) {
+        const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
+        const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
+          repositories: githubRepositories,
+          contexts: githubContexts,
+          selectedRepositoryId: selectedGithubRepositoryId,
+          selectedContextId: selectedGithubContextId,
+        });
+        const didStartWorkflow = await onComposerWorkflowTriggerSubmit({
+          workflow: selectedWorkflowTrigger,
+          command: selectedWorkflowTrigger.command,
+          prompt: taskText,
+          attachments: resolvedAttachments || [],
+          environmentId: effectiveEnvironmentId ?? null,
+          projectId: effectiveProjectId ?? null,
+          agentId: effectiveAgentId ?? null,
+          agentName: selectedAgent?.name || displayedAgentLabel || null,
+          reasoningEffort: effectiveReasoningEffort,
+          githubRepo: githubRepo || null,
+          enabledSkills: enabledSkillsPayload || null,
+          connectors: runConnectorPayload,
+          knowledgeContext: mergeRunnerKnowledgeContexts(
+            normalizedThreadKnowledgeContext,
+            buildRunnerKnowledgeContextFromAttachments(attachmentEntries),
+          ),
+          quotedSelection,
+        });
+        if (didStartWorkflow !== false) {
+          clearComposerDraft();
+          clearComposerAttachments(composerAttachmentEntries, {
+            revokePreviews: false,
+          });
+          if (keepFocusOnSubmit) {
+            focusComposerSoon();
+          }
+          await stopSpeechToText();
+        }
+        return;
+      }
+
       if (onComposerSubmit && taskText && !loopCommand) {
         const resolvedAttachments = await resolveAttachmentPayload(attachmentEntries);
         const githubRepo = buildSelectedGithubRepoReference(attachmentEntries, {
@@ -5625,29 +5724,31 @@ export function RunnerChat({
     if (
       showConnectorMentionPopup
       && connectorMentionInputState
-      && filteredConnectorOptions.length > 0
+      && mentionOptionCount > 0
     ) {
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         const direction = event.key === "ArrowDown" ? 1 : -1;
         setActiveConnectorOptionIndex((current) => {
-          const optionCount = filteredConnectorOptions.length;
+          const optionCount = mentionOptionCount;
           return (current + direction + optionCount) % optionCount;
         });
         return;
       }
       if (event.key === "Enter" || event.key === "Tab") {
         event.preventDefault();
-        const selectedOption =
-          filteredConnectorOptions[
-            Math.min(
-              activeConnectorOptionIndex,
-              filteredConnectorOptions.length - 1,
-            )
-          ];
-        if (selectedOption) {
+        const selectedConnectorOption = filteredConnectorOptions[activeConnectorOptionIndex];
+        const selectedWorkflowOption = filteredWorkflowTriggerOptions[
+          activeConnectorOptionIndex - filteredConnectorOptions.length
+        ];
+        if (selectedConnectorOption) {
           void selectComposerConnector(
-            selectedOption,
+            selectedConnectorOption,
+            connectorMentionInputState,
+          );
+        } else if (selectedWorkflowOption) {
+          selectComposerWorkflowTrigger(
+            selectedWorkflowOption,
             connectorMentionInputState,
           );
         }
@@ -5658,6 +5759,15 @@ export function RunnerChat({
         setDismissedConnectorMentionKey(connectorMentionKey);
         return;
       }
+    }
+    if (
+      event.key === "Backspace"
+      && input.length === 0
+      && selectedWorkflowTrigger
+    ) {
+      event.preventDefault();
+      removeSelectedWorkflowTrigger();
+      return;
     }
     if (
       event.key === "Backspace"
@@ -6097,20 +6207,6 @@ export function RunnerChat({
     };
   }, [displayedAgentLabel, displayedEnvironmentLabel, selectedSubagentDetail, turns]);
   const orderedAgents = useMemo(() => orderOptionsWithPinnedTop(agents, initialAgentTopId), [agents, initialAgentTopId]);
-  const availableAgentPopupModes = useMemo<RunnerAgentSelectorMode[]>(() => {
-    const nextModes: RunnerAgentSelectorMode[] = [];
-    for (const agent of orderedAgents) {
-      const nextMode = getRunnerAgentSelectorMode(agent);
-      if (!nextModes.includes(nextMode)) {
-        nextModes.push(nextMode);
-      }
-    }
-    return nextModes.length > 0 ? nextModes : ["agents"];
-  }, [orderedAgents]);
-  const filteredOrderedAgents = useMemo(
-    () => orderedAgents.filter((agent) => getRunnerAgentSelectorMode(agent) === agentPopupMode),
-    [agentPopupMode, orderedAgents]
-  );
   const orderedEnvironments = useMemo(
     () => orderOptionsWithPinnedTop(availableEnvironments, initialEnvironmentTopId),
     [availableEnvironments, initialEnvironmentTopId]
@@ -6133,22 +6229,6 @@ export function RunnerChat({
       : 0);
   }, [slashPopupItemCount]);
   const activeWorkspaceEnvironmentId = effectiveEnvironmentId || selectedEnvironment?.id || environmentId || "";
-  useEffect(() => {
-    if (availableAgentPopupModes.includes(agentPopupMode)) {
-      return;
-    }
-    if (activeInputPopup === "agent" || activeInputPopup === "agent-reasoning") {
-      return;
-    }
-    const nextMode = getRunnerAgentSelectorMode(
-      orderedAgents.find((agent) => agent.id === selectedAgentId) || orderedAgents[0] || null
-    );
-    const fallbackMode = (availableAgentPopupModes[0] || "agents") as RunnerAgentSelectorMode;
-    const resolvedMode: RunnerAgentSelectorMode = availableAgentPopupModes.includes(nextMode)
-      ? nextMode
-      : fallbackMode;
-    setAgentPopupMode(resolvedMode);
-  }, [activeInputPopup, agentPopupMode, availableAgentPopupModes, orderedAgents, selectedAgentId]);
   const githubConnected = githubConfig?.connected ?? false;
   const notionConnected = notionConfig?.connected ?? false;
   const googleDriveConnected = googleDriveConfig?.connected ?? false;
@@ -6817,7 +6897,12 @@ export function RunnerChat({
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (popupAreaRef.current?.contains(target)) return;
-      if (target instanceof Element && target.closest(".tb-composer-popup-portal-root")) return;
+      if (
+        target instanceof Element
+        && target.closest(
+          ".tb-composer-popup-portal-root, .platform-popup-surface[data-platform-popup-portaled='true']",
+        )
+      ) return;
       closeAllInputPopups("outside");
     }
 
@@ -7809,7 +7894,9 @@ export function RunnerChat({
                   ) : null}
                 >
                     {filteredConnectorOptions.length > 0 ? (
-                      filteredConnectorOptions.map((option, index) => {
+                      <>
+                        <div className="tb-composer-mention-section-label">Connectors</div>
+                        {filteredConnectorOptions.map((option, index) => {
                         const isSelected = selectedConnectorIds.includes(
                           option.id,
                         );
@@ -7877,12 +7964,43 @@ export function RunnerChat({
                             </span>
                           </button>
                         );
-                      })
-                    ) : (
+                        })}
+                      </>
+                    ) : null}
+                    {filteredWorkflowTriggerOptions.length > 0 ? (
+                      <>
+                        <div className="tb-composer-mention-section-label is-workflows">Workflows</div>
+                        {filteredWorkflowTriggerOptions.map((option, workflowIndex) => {
+                          const index = filteredConnectorOptions.length + workflowIndex;
+                          const isSelected = selectedWorkflowTrigger?.id === option.id;
+                          return (
+                            <button
+                              key={`${option.id}:${option.command}`}
+                              type="button"
+                              role="option"
+                              aria-selected={isSelected}
+                              className={`tb-popup-row tb-connector-mention-row tb-workflow-trigger-mention-row ${index === activeConnectorOptionIndex ? "is-active" : ""} ${isSelected ? "is-selected" : ""}`.trim()}
+                              onMouseDown={(event) => event.preventDefault()}
+                              onMouseEnter={() => setActiveConnectorOptionIndex(index)}
+                              onClick={() => selectComposerWorkflowTrigger(option, connectorMentionInputState)}
+                            >
+                              <span className="tb-workflow-trigger-mention-icon-shell" aria-hidden="true">
+                                <LucideWorkflow className="tb-workflow-trigger-mention-icon" strokeWidth={1.7} />
+                              </span>
+                              <span className="tb-connector-mention-copy">
+                                <span className="tb-connector-mention-name">{option.name}</span>
+                              </span>
+                              <span className="tb-workflow-trigger-mention-command">{option.command}</span>
+                            </button>
+                          );
+                        })}
+                      </>
+                    ) : null}
+                    {mentionOptionCount === 0 ? (
                       <div className="tb-connector-mention-empty">
-                        No connectors match that input.
+                        No connectors or workflows match that input.
                       </div>
-                    )}
+                    ) : null}
                 </RunnerComposerSuggestionPopup>
               ) : null}
               {showSlashCommandPopup ? (
@@ -8107,7 +8225,7 @@ export function RunnerChat({
                 </RunnerComposerSuggestionPopup>
               ) : null}
               {stagedAdCreationCommand ? (
-                <PlatformPopupSurface className="tb-popup-menu-main tb-ad-creation-popup" animation="up-in" role="dialog" aria-label="Create Ad settings">
+                <RunnerComposerPopupSurface className="tb-popup-menu-main tb-ad-creation-popup" animation="up-in" role="dialog" aria-label="Create Ad settings">
                   <div className="tb-ad-creation-popup-header">
                     <div className="tb-ad-creation-popup-title">Create Ad</div>
                     <button
@@ -8121,71 +8239,85 @@ export function RunnerChat({
                   </div>
                   <div className="tb-ad-creation-options">
                     <div className="tb-ad-creation-control">
-                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-style">Style</label>
+                      <span className="tb-ad-creation-control-label">Style</span>
                       <div className="tb-ad-creation-select-shell">
-                        <select
-                          id="tb-ad-creation-style"
-                          className="tb-ad-creation-select"
+                        <PlatformSelector<RunnerAdCreationStyleId>
                           value={adCreationSettings.style}
-                          onChange={(event) => updateAdCreationSettings({ style: event.target.value as RunnerAdCreationStyleId })}
-                          aria-label="Ad style"
-                        >
-                          {RUNNER_AD_STYLE_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>{option.label}</option>
-                          ))}
-                        </select>
-                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                          options={RUNNER_AD_STYLE_OPTIONS.map((option) => ({
+                            value: option.id,
+                            label: option.label,
+                          }))}
+                          onValueChange={(style) => updateAdCreationSettings({ style })}
+                          ariaLabel="Ad style"
+                          alignment="end"
+                          popupAlignment="right"
+                          fullWidth
+                          className="tb-composer-field-selector tb-ad-creation-selector"
+                          triggerClassName="tb-ad-creation-selector-trigger"
+                          popupClassName="tb-composer-field-selector-popup"
+                        />
                       </div>
                     </div>
                     <div className="tb-ad-creation-control tb-ad-creation-control-quality">
-                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-quality">Quality</label>
+                      <span className="tb-ad-creation-control-label">Quality</span>
                       <div className="tb-ad-creation-select-shell tb-ad-creation-select-shell-wide">
-                        <select
-                          id="tb-ad-creation-quality"
-                          className="tb-ad-creation-select"
+                        <PlatformSelector<RunnerAdCreationQualityId>
                           value={adCreationSettings.quality}
-                          onChange={(event) => updateAdCreationSettings({ quality: event.target.value as RunnerAdCreationQualityId })}
-                          aria-label="GPT Image 2 quality"
-                        >
-                          {RUNNER_AD_QUALITY_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>{option.label}</option>
-                          ))}
-                        </select>
-                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                          options={RUNNER_AD_QUALITY_OPTIONS.map((option) => ({
+                            value: option.id,
+                            label: option.label,
+                          }))}
+                          onValueChange={(quality) => updateAdCreationSettings({ quality })}
+                          ariaLabel="GPT Image 2 quality"
+                          alignment="end"
+                          popupAlignment="right"
+                          fullWidth
+                          className="tb-composer-field-selector tb-ad-creation-selector"
+                          triggerClassName="tb-ad-creation-selector-trigger"
+                          popupClassName="tb-composer-field-selector-popup"
+                        />
                       </div>
                     </div>
                     <div className="tb-ad-creation-control">
-                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-aspect-ratio">Aspect Ratio</label>
+                      <span className="tb-ad-creation-control-label">Aspect Ratio</span>
                       <div className="tb-ad-creation-select-shell">
-                        <select
-                          id="tb-ad-creation-aspect-ratio"
-                          className="tb-ad-creation-select"
+                        <PlatformSelector<RunnerAdCreationAspectRatioId>
                           value={adCreationSettings.aspectRatio}
-                          onChange={(event) => updateAdCreationSettings({ aspectRatio: event.target.value as RunnerAdCreationAspectRatioId })}
-                          aria-label="Ad aspect ratio"
-                        >
-                          {RUNNER_AD_ASPECT_RATIO_OPTIONS.map((option) => (
-                            <option key={option.id} value={option.id}>{option.label}</option>
-                          ))}
-                        </select>
-                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                          options={RUNNER_AD_ASPECT_RATIO_OPTIONS.map((option) => ({
+                            value: option.id,
+                            label: option.label,
+                          }))}
+                          onValueChange={(aspectRatio) => updateAdCreationSettings({ aspectRatio })}
+                          ariaLabel="Ad aspect ratio"
+                          alignment="end"
+                          popupAlignment="right"
+                          fullWidth
+                          className="tb-composer-field-selector tb-ad-creation-selector"
+                          triggerClassName="tb-ad-creation-selector-trigger"
+                          popupClassName="tb-composer-field-selector-popup"
+                        />
                       </div>
                     </div>
                     <div className="tb-ad-creation-control">
-                      <label className="tb-ad-creation-control-label" htmlFor="tb-ad-creation-variants">Images</label>
+                      <span className="tb-ad-creation-control-label">Images</span>
                       <div className="tb-ad-creation-select-shell">
-                        <select
-                          id="tb-ad-creation-variants"
-                          className="tb-ad-creation-select"
+                        <PlatformSelector
                           value={String(adCreationSettings.variants)}
-                          onChange={(event) => updateAdCreationSettings({ variants: Number(event.target.value) as RunnerAdCreationVariantCount })}
-                          aria-label="Ad image variants"
-                        >
-                          {RUNNER_AD_VARIANT_OPTIONS.map((option) => (
-                            <option key={option.id} value={String(option.id)}>{option.label}</option>
-                          ))}
-                        </select>
-                        <LucideChevronDown className="tb-ad-creation-select-chevron" strokeWidth={1.75} />
+                          options={RUNNER_AD_VARIANT_OPTIONS.map((option) => ({
+                            value: String(option.id),
+                            label: option.label,
+                          }))}
+                          onValueChange={(variants) => updateAdCreationSettings({
+                            variants: Number(variants) as RunnerAdCreationVariantCount,
+                          })}
+                          ariaLabel="Ad image variants"
+                          alignment="end"
+                          popupAlignment="right"
+                          fullWidth
+                          className="tb-composer-field-selector tb-ad-creation-selector"
+                          triggerClassName="tb-ad-creation-selector-trigger"
+                          popupClassName="tb-composer-field-selector-popup"
+                        />
                       </div>
                     </div>
                     <div className="tb-ad-creation-cost">
@@ -8193,7 +8325,7 @@ export function RunnerChat({
                       <span>Total estimate</span>
                     </div>
                   </div>
-                </PlatformPopupSurface>
+                </RunnerComposerPopupSurface>
               ) : null}
 
               {visibleComposerAttachments.length > 0 ? (
@@ -8246,9 +8378,9 @@ export function RunnerChat({
               ) : null}
 
               <div
-                className={`tb-composer-textarea-shell ${hasStagedComposerCommand ? "tb-composer-textarea-shell-staged" : ""} ${selectedConnectorOptions.length > 0 ? "tb-composer-textarea-shell-connectors" : ""}`.trim()}
+                className={`tb-composer-textarea-shell ${hasStagedComposerCommand ? "tb-composer-textarea-shell-staged" : ""} ${hasComposerMentionTokens ? "tb-composer-textarea-shell-connectors" : ""}`.trim()}
                 style={
-                  hasStagedComposerCommand || selectedConnectorOptions.length > 0
+                  hasStagedComposerCommand || hasComposerMentionTokens
                     ? ({
                         "--tb-staged-thread-command-offset": composerTextareaOffsetValue,
                         "--tb-selected-connectors-inline-start": selectedConnectorsInlineStartValue,
@@ -8263,13 +8395,30 @@ export function RunnerChat({
                     {stagedComposerLabel}
                   </span>
                 ) : null}
-                {selectedConnectorOptions.length > 0 ? (
+                {hasComposerMentionTokens ? (
                   <div
                     ref={selectedConnectorsInlineRef}
                     className="tb-composer-selected-connectors"
                     role="group"
-                    aria-label="Selected connectors"
+                    aria-label={selectedWorkflowTrigger ? "Selected composer context" : "Selected connectors"}
                   >
+                    {selectedWorkflowTrigger ? (
+                      <button
+                        type="button"
+                        className="tb-composer-selected-connector tb-composer-selected-workflow"
+                        aria-label={`Remove ${selectedWorkflowTrigger.name} workflow`}
+                        title={`Remove ${selectedWorkflowTrigger.name}`}
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={removeSelectedWorkflowTrigger}
+                      >
+                        <span className="tb-composer-selected-workflow-icon-shell" aria-hidden="true">
+                          <LucideWorkflow className="tb-composer-selected-workflow-icon" strokeWidth={1.7} />
+                        </span>
+                        <span className="tb-composer-selected-connector-name">
+                          {selectedWorkflowTrigger.name}
+                        </span>
+                      </button>
+                    ) : null}
                     {selectedConnectorOptions.map((option) => (
                       <button
                         key={option.id}
@@ -8304,7 +8453,7 @@ export function RunnerChat({
                 <textarea
                   ref={textareaRef}
                   rows={1}
-                  className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""} ${selectedConnectorOptions.length > 0 ? "sidebar-textarea-connectors" : ""}`.trim()}
+                  className={`sidebar-textarea ${hasStagedComposerCommand ? "sidebar-textarea-staged" : ""} ${hasComposerMentionTokens ? "sidebar-textarea-connectors" : ""}`.trim()}
                   value={input}
                   onChange={handleInputChange}
                   onPaste={handleInputPaste}
@@ -8312,7 +8461,7 @@ export function RunnerChat({
                   onClick={handleInputSelectionChange}
                   onKeyUp={handleInputSelectionChange}
                   placeholder={
-                    hasStagedComposerCommand || selectedConnectorOptions.length > 0
+                    hasStagedComposerCommand || hasComposerMentionTokens
                       ? ""
                       : placeholder
                   }
@@ -8340,13 +8489,13 @@ export function RunnerChat({
 
                       {renderComposerPopupPortal(
                         showMainMenu ? (
-                        <PlatformPopupSurface ref={plusMainPopupRef} className="tb-popup-menu-main" animation={mainPopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusMainPopupRef} className="tb-popup-menu-main" animation={mainPopupAnimation}>
                           <button
                             type="button"
                             className={`tb-popup-row tb-popup-row-divider tb-popup-row-core-action ${showAttachFilesPopup ? "selected" : ""}`}
                             onClick={handleAttachFilesMenuClick}
                           >
-                            <IconPaperclip className="tb-popup-icon" />
+                            <IconSidebarFiles className="tb-popup-icon" />
                             <span className="tb-popup-label">Attach Files</span>
                             <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command U">
                               <span className="tb-popup-shortcut-key">⌘</span>
@@ -8360,7 +8509,7 @@ export function RunnerChat({
                             disabled={!onOpenPromptSearch}
                             aria-disabled={!onOpenPromptSearch}
                           >
-                            <LucideMessageSquareText className="tb-popup-icon" strokeWidth={1.75} />
+                            <IconSidebarPrompts className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Prompts</span>
                             <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command P">
                               <span className="tb-popup-shortcut-key">⌘</span>
@@ -8374,7 +8523,7 @@ export function RunnerChat({
                             disabled={!onOpenKnowledgeSearch}
                             aria-disabled={!onOpenKnowledgeSearch}
                           >
-                            <LucideLibraryBig className="tb-popup-icon" strokeWidth={1.75} />
+                            <IconSidebarKnowledge className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Knowledge</span>
                           </button>
                           <button
@@ -8384,7 +8533,7 @@ export function RunnerChat({
                             disabled={!onOpenThreadSearch}
                             aria-disabled={!onOpenThreadSearch}
                           >
-                            <LucideMessageSquare className="tb-popup-icon" strokeWidth={1.75} />
+                            <IconSidebarThreads className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Threads</span>
                           </button>
                           <button
@@ -8392,7 +8541,7 @@ export function RunnerChat({
                             className={`tb-popup-row tb-popup-row-core-action ${showSkillsPopup ? "selected" : ""}`}
                             onClick={() => openPlusPopup("skills")}
                           >
-                            <IconLayers className="tb-popup-icon" />
+                            <LucideSquareMousePointer className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Skills</span>
                             <IconChevronRight className="tb-popup-chevron" />
                           </button>
@@ -8401,21 +8550,21 @@ export function RunnerChat({
                             className={`tb-popup-row tb-popup-row-core-action ${showSchedulePopup ? "selected" : ""} ${scheduleEnabled ? "tb-popup-row-accent" : ""}`}
                             onClick={() => openPlusPopup("schedule")}
                           >
-                            <IconClock className="tb-popup-icon" />
+                            <IconSidebarCalendar className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Schedule</span>
                             <span className="tb-popup-shortcut" aria-label="Keyboard shortcut Command S">
                               <span className="tb-popup-shortcut-key">⌘</span>
                               <span className="tb-popup-shortcut-key tb-popup-shortcut-key-letter">{SCHEDULE_SHORTCUT_KEY.toUpperCase()}</span>
                             </span>
                           </button>
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusMainPopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showSkillsPopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-skills" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-skills" animation={sidePopupAnimation}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSkillsPopup} aria-label="Close skills popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -8467,14 +8616,14 @@ export function RunnerChat({
                               <div className="tb-popup-empty-state">No custom skills yet.</div>
                             ) : null}
                           </div>
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showGithubPopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-panel" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-panel" animation={sidePopupAnimation}>
                           {!githubConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">GitHub not connected</div>
@@ -8492,25 +8641,49 @@ export function RunnerChat({
                             <>
                               <div className="tb-popup-panel-section">
                                 <label className="tb-popup-field-label">Repository</label>
-                                <select className="tb-popup-select" value={selectedGithubRepositoryId} onChange={(event) => selectGithubRepository(event.target.value)}>
-                                  <option value="">No repository</option>
-                                  {githubRepositories.map((repository) => (
-                                    <option key={repository.id} value={repository.id}>
-                                      {repository.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                <PlatformSelector
+                                  value={selectedGithubRepositoryId}
+                                  options={[
+                                    { value: "", label: "No repository" },
+                                    ...githubRepositories.map((repository) => ({
+                                      value: repository.id,
+                                      label: repository.name,
+                                    })),
+                                  ]}
+                                  onValueChange={selectGithubRepository}
+                                  ariaLabel="Repository"
+                                  fullWidth
+                                  popupMatchTriggerWidth="exact"
+                                  className="tb-composer-field-selector"
+                                  triggerClassName="tb-composer-field-selector-trigger"
+                                  popupClassName="tb-composer-field-selector-popup"
+                                />
                               </div>
                               <div className="tb-popup-panel-section tb-popup-panel-section-divider">
                                 <label className="tb-popup-field-label">{githubContextLabel}</label>
-                                <select className="tb-popup-select" value={selectedGithubContextId} onChange={(event) => selectGithubContext(event.target.value)}>
-                                  <option value="">{selectedGithubRepositoryId ? `Select ${githubContextLabel.toLowerCase()}...` : "Select repository first"}</option>
-                                  {githubContexts.map((context) => (
-                                    <option key={context.id} value={context.id}>
-                                      {context.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                <PlatformSelector
+                                  value={selectedGithubContextId}
+                                  options={[
+                                    {
+                                      value: "",
+                                      label: selectedGithubRepositoryId
+                                        ? `Select ${githubContextLabel.toLowerCase()}...`
+                                        : "Select repository first",
+                                    },
+                                    ...githubContexts.map((context) => ({
+                                      value: context.id,
+                                      label: context.name,
+                                    })),
+                                  ]}
+                                  onValueChange={selectGithubContext}
+                                  ariaLabel={githubContextLabel}
+                                  disabled={!selectedGithubRepositoryId}
+                                  fullWidth
+                                  popupMatchTriggerWidth="exact"
+                                  className="tb-composer-field-selector"
+                                  triggerClassName="tb-composer-field-selector-trigger"
+                                  popupClassName="tb-composer-field-selector-popup"
+                                />
                               </div>
                               <div className="tb-popup-panel-footer">
                                 <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
@@ -8523,14 +8696,14 @@ export function RunnerChat({
                               </div>
                             </>
                           )}
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showNotionPopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-panel" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-panel" animation={sidePopupAnimation}>
                           {!notionConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">Notion not connected</div>
@@ -8548,15 +8721,24 @@ export function RunnerChat({
                             <>
                               <div className="tb-popup-panel-section tb-popup-panel-section-divider">
                                 <label className="tb-popup-field-label">Notion Database</label>
-                                <select className="tb-popup-select" value={selectedNotionDatabaseId} onChange={(event) => selectNotionDatabase(event.target.value)}>
-                                  <option value="">No database selected</option>
-                                  <option value="__entire_workspace__">Entire workspace</option>
-                                  {notionDatabases.map((database) => (
-                                    <option key={database.id} value={database.id}>
-                                      {database.icon ? `${database.icon} ` : ""}{database.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                <PlatformSelector
+                                  value={selectedNotionDatabaseId}
+                                  options={[
+                                    { value: "", label: "No database selected" },
+                                    { value: "__entire_workspace__", label: "Entire workspace" },
+                                    ...notionDatabases.map((database) => ({
+                                      value: database.id,
+                                      label: `${database.icon ? `${database.icon} ` : ""}${database.name}`,
+                                    })),
+                                  ]}
+                                  onValueChange={selectNotionDatabase}
+                                  ariaLabel="Notion database"
+                                  fullWidth
+                                  popupMatchTriggerWidth="exact"
+                                  className="tb-composer-field-selector"
+                                  triggerClassName="tb-composer-field-selector-trigger"
+                                  popupClassName="tb-composer-field-selector-popup"
+                                />
                               </div>
                               <div className="tb-popup-panel-footer">
                                 <PlatformSecondaryButton size="large" type="button" className="tb-popup-action tb-popup-action-secondary" onClick={() => {
@@ -8569,14 +8751,14 @@ export function RunnerChat({
                               </div>
                             </>
                           )}
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showGoogleDrivePopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-filebrowser" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-filebrowser" animation={sidePopupAnimation}>
                           {!googleDriveConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">Google Drive not connected</div>
@@ -8643,14 +8825,14 @@ export function RunnerChat({
                               </div>
                             </>
                           )}
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showOneDrivePopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-filebrowser" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-filebrowser" animation={sidePopupAnimation}>
                           {!oneDriveConnected ? (
                             <div className="tb-popup-note">
                               <div className="tb-popup-note-title">OneDrive not connected</div>
@@ -8717,14 +8899,14 @@ export function RunnerChat({
                               </div>
                             </>
                           )}
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showSchedulePopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-schedule" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-schedule" animation={sidePopupAnimation}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeSchedulePopup} aria-label="Close schedule popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -8736,6 +8918,7 @@ export function RunnerChat({
                           </div>
                           <div className="tb-popup-panel-section tb-popup-panel-section-attach-header">
                             <PlatformSwitch
+                              fullWidth
                               ariaLabel="Schedule type"
                               value={scheduleType}
                               options={[
@@ -8787,14 +8970,14 @@ export function RunnerChat({
                               ) : null}
                             </>
                           </div>
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
 
                       {renderComposerPopupPortal(
                         showAttachFilesPopup ? (
-                        <PlatformPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-attach" animation={sidePopupAnimation}>
+                        <RunnerComposerPopupSurface ref={plusSidePopupRef} className="tb-popup-menu-side tb-popup-menu-attach" animation={sidePopupAnimation}>
                           <div className="tb-popup-attach-topbar">
                             <button type="button" className="tb-popup-attach-topbar-button tb-popup-attach-topbar-button-close" onClick={closeAttachFilesPopup} aria-label="Close attach files popup">
                               <LucideX className="tb-popup-attach-topbar-icon" strokeWidth={1.75} />
@@ -8834,7 +9017,7 @@ export function RunnerChat({
                               <span className="tb-popup-dropzone-copy">or click to browse</span>
                             </button>
                           </div>
-                        </PlatformPopupSurface>
+                        </RunnerComposerPopupSurface>
                         ) : null,
                         plusSidePopupStyle
                       )}
@@ -8850,22 +9033,19 @@ export function RunnerChat({
 
                     <RunnerAgentSelectorControl
                       animation={mainPopupAnimation}
-                      availableModes={availableAgentPopupModes}
                       buttonRef={agentSelectorButtonRef}
                       displayedAgentLabel={displayedAgentLabel}
                       hasApiKey={hasApiKey}
                       hidden={hideAgentSelector}
                       locked={lockAgentSelector}
-                      mode={agentPopupMode}
                       onCloseReasoning={closeAgentReasoningPopup}
                       onDoneReasoning={() => closeAllInputPopups()}
-                      onModeChange={setAgentPopupMode}
                       onOpenReasoning={() => setActiveInputPopup("agent-reasoning")}
                       onSelectAgent={selectAgent}
                       onSelectReasoningEffort={selectReasoningEffort}
                       onToggle={() => togglePopup("agent")}
                       open={showAgentPopup}
-                      options={filteredOrderedAgents}
+                      options={orderedAgents}
                       popupRef={agentPopupRef}
                       popupStyle={agentPopupStyle}
                       reasoningEffort={effectiveReasoningEffort}

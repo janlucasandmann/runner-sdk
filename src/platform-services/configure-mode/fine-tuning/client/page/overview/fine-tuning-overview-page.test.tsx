@@ -18,6 +18,7 @@ const rows: readonly FineTuningOverviewRow[] = [
     improvementScore: 0.18,
     improvementLabel: "72% -> 90% +18",
     creatorName: "Jan",
+    creatorAvatarUrl: "/jan.png",
     creatorFallback: "J",
     updatedAt: 1_720_000_000_000,
     status: "completed",
@@ -66,7 +67,7 @@ describe("FineTuningOverviewPage", () => {
     expect(screen.queryByRole("button", { name: "Status" })).toBeNull();
     expect(
       screen.getAllByRole("columnheader").map((header) => header.textContent),
-    ).toEqual(["", "Name", "Agent", "Sets", "Improvement", "Creator", "Updated", ""]);
+    ).toEqual(["", "Name", "Creator", "Updated", ""]);
     const jobRow = screen.getByRole("row", { name: "Improve Support Agent" });
     const jobCell = jobRow.querySelector(
       '.platform-data-table__cell[data-column-id="name"]',
@@ -75,6 +76,9 @@ describe("FineTuningOverviewPage", () => {
       jobCell?.querySelector(".resource-overview-identity__visual"),
     ).not.toBeNull();
     expect(screen.getByText("Improve support response quality.")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-name-cell")).not.toBeNull();
+    expect(container.querySelector(".resource-overview-standard-creator-cell")).not.toBeNull();
+    expect(container.querySelector('img[src="/jan.png"]')).not.toBeNull();
 
     await user.click(await screen.findByRole("button", { name: "Optimize Agent" }));
     expect(onCreate).toHaveBeenCalledOnce();

@@ -9,7 +9,7 @@ import {
   Monitor,
   Plus,
   type LucideIcon,
-} from "lucide-react";
+} from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,

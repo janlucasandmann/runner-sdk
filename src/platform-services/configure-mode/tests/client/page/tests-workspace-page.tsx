@@ -145,7 +145,6 @@ export function TestsWorkspacePage({
   onOpenPlan,
   onOpenRawConfiguration,
   onPlanDeleted,
-  onOpenCase,
   onOpenRun,
   onOpenRunTechnicalDetails,
   onIdentityChange,
@@ -455,6 +454,25 @@ export function TestsWorkspacePage({
     return created;
   }
 
+  async function tryScenarios(
+    plan: TestPlan,
+    definition: TestPlanDefinition,
+    scenarioIds: string[],
+  ): Promise<void> {
+    const created = await api.createPreviewRun(plan.id, {
+      definition,
+      scenarioIds,
+      environmentId: plan.defaultEnvironmentId || defaultEnvironmentId || undefined,
+      agentId: defaultAgentId || undefined,
+      projectId: plan.projectId || undefined,
+      metadata: { source: "scenario_workspace" },
+    });
+    setRuns((current) => [created, ...current.filter((run) => run.id !== created.id)]);
+    setActiveRun(created);
+    setActiveRunPlan(plan);
+    requestWorkspaceNavigation(() => onOpenRun(plan.id, created.id, plan.name));
+  }
+
   function replacePlan(nextPlan: TestPlan) {
     setActivePlan(nextPlan);
     identityChangeRef.current?.({
@@ -512,22 +530,9 @@ export function TestsWorkspacePage({
             onOpenRun={(run) => requestWorkspaceNavigation(() => (
               onOpenRun(activePlan.id, run.id, activePlan.name)
             ))}
-            onOpenCase={(testCase, definition: TestPlanDefinition) => {
-              requestWorkspaceNavigation(() => {
-                const contextPlan: TestPlan = {
-                  ...activePlan,
-                  definition,
-                  caseCount: definition.cases.length,
-                };
-                setActiveCaseContext({ plan: contextPlan, testCase });
-                onOpenCase(
-                  activePlan.id,
-                  testCase.id,
-                  activePlan.name,
-                  testCase.name,
-                );
-              });
-            }}
+            onTryScenarios={(definition, scenarioIds) => (
+              tryScenarios(activePlan, definition, scenarioIds)
+            )}
           />
         </PlatformServiceDetailFrame>
         <TestRunCreateModal
@@ -593,13 +598,13 @@ export function TestsWorkspacePage({
     ) {
       const caseError = error || (
         casePlan && !activeCase
-          ? "The selected test case no longer exists."
+          ? "The selected scenario no longer exists."
           : ""
       );
       return (
         <div className="tests-centered-state">
           {caseError ? <p className="tests-page-error" role="alert">{caseError}</p> : (
-            <PlatformLoadingState centered message="Loading test case…" />
+            <PlatformLoadingState centered message="Loading scenario…" />
           )}
         </div>
       );
@@ -665,6 +670,19 @@ export function TestsWorkspacePage({
             refreshing={refreshingRun}
             onRefresh={() => void loadRun(activeRun.id, true)}
             onRunAgain={() => setRunPlan(activeRunPlan)}
+            onCancel={async () => {
+              const cancelled = await api.cancelRun(activeRun.id);
+              setActiveRun(cancelled);
+              setRuns((current) => [
+                cancelled,
+                ...current.filter((run) => run.id !== cancelled.id),
+              ]);
+            }}
+            onRetryFailed={(scenarioIds) => tryScenarios(
+              activeRunPlan,
+              activeRunPlan.definition,
+              scenarioIds,
+            )}
             onOpenTechnicalDetails={() => requestWorkspaceNavigation(() => (
               onOpenRunTechnicalDetails(
                 activeRunPlan.id,
@@ -736,8 +754,10 @@ export function TestsWorkspacePage({
       />
       <TestPlanCreateModal
         open={createOpen}
+        api={api}
         projects={normalizedProjects}
         environments={normalizedEnvironments}
+        agents={normalizedAgents}
         defaultProjectId={defaultProjectId}
         defaultEnvironmentId={defaultEnvironmentId}
         onClose={() => setCreateOpen(false)}

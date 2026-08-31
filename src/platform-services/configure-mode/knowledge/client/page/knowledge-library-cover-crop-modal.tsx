@@ -1,4 +1,4 @@
-import { ArrowLeft, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, ZoomIn, ZoomOut } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   type CSSProperties,
   type KeyboardEvent,

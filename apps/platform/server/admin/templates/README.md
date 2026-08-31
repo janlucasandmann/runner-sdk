@@ -8,6 +8,7 @@ This directory contains escaped HTML templates used only by restricted administr
 
 ## Contents
 
+- [`admin-access-denied.html`](admin-access-denied.html) — Restricted-page access-denied and account-switch surface.
 - [`environment-gui.html`](environment-gui.html) — Focused implementation of Environment Gui.
 - [`feedback-summary.html`](feedback-summary.html) — Focused implementation of Feedback Summary.
 - [`product-usage-summary-v2.html`](product-usage-summary-v2.html) — Focused implementation of Product Usage Summary V2.

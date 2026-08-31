@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Circle, Clock3 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Circle, Clock3 } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 import type { RunnerEventType, RunnerLog, RunnerLogType } from "../../types.js";
 import { describeRunnerThreadAction } from "../../thread/action-presentation.js";

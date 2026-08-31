@@ -8,14 +8,29 @@ export {
   createResourceOverviewColumns,
   formatResourceOverviewUpdatedAt,
 } from "./resource-overview-columns.js";
+export { createResourceOverviewRowActions } from "./resource-overview-actions.js";
+export type {
+  CreateResourceOverviewRowActionsOptions,
+  ResourceOverviewCanonicalActionId,
+} from "./resource-overview-actions.js";
 export type {
   CreateResourceOverviewColumnsOptions,
   ResourceOverviewColumnExtensions,
+  ResourceOverviewCreatorResolver,
   ResourceOverviewIconStyle,
   ResourceOverviewNameVisual,
   ResourceOverviewStandardRow,
   ResourceOverviewUpdatedAt,
 } from "./resource-overview-columns.js";
+export {
+  ResourceOverviewStandardCreatorCell,
+  ResourceOverviewStandardNameCell,
+} from "./resource-overview-standard-cells.js";
+export type {
+  ResourceOverviewStandardCreatorCellProps,
+  ResourceOverviewStandardIconStyle,
+  ResourceOverviewStandardNameCellProps,
+} from "./resource-overview-standard-cells.js";
 export { ResourceOverviewChart } from "./resource-overview-chart.js";
 export { ResourceOverviewMenuButton, ResourceOverviewPage } from "./resource-overview-page.js";
 export type {
@@ -33,6 +48,7 @@ export type {
   ResourceOverviewPageProps,
   ResourceOverviewPeriod,
   ResourceOverviewPeriodOption,
+  ResourceOverviewRowActionMode,
   ResourceOverviewSeries,
   ResourceOverviewSeriesType,
   ResourceOverviewValueKind,

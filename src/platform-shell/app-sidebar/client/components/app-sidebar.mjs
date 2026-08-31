@@ -28,7 +28,7 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
                   tooltipShortcut: "⌘ K",
                   tooltipPlacement: "bottom",
                   tooltipAlign: "end",
-                }, React.createElement(Search, { className: "app-sidebar-top-action-icon", strokeWidth: 1.7 })),
+                }, React.createElement(AppSidebarSearchIcon, { className: "app-sidebar-top-action-icon", strokeWidth: 1.7 })),
                 React.createElement(PlatformIconButton, {
                   className: "app-sidebar-top-action",
                   onClick: () => setSidebarOpen(false),
@@ -38,7 +38,7 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
                   tooltipShortcut: "⌘ B",
                   tooltipPlacement: "bottom",
                   tooltipAlign: "end",
-                }, React.createElement(PanelLeft, { className: "app-sidebar-top-action-icon", strokeWidth: 1.7 }))
+                }, React.createElement(AppSidebarCloseIcon, { className: "app-sidebar-top-action-icon", strokeWidth: 1.7 }))
               )
             ),
             React.createElement("div", { className: "sidebar-action-list" },

@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload } from "../../ui/hugeicons-compat.js";
 
 import { PlatformSecondaryButton } from "../../ui/button/index.js";
 import { PlatformUiCard } from "../ui-card/index.js";

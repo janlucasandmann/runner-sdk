@@ -32,52 +32,6 @@ export const API_KEYS_SHARED_COMPONENTS_CSS = `      .playground-settings-api-ke
         background: rgba(137, 182, 255, 0.08);
       }
 
-      .playground-settings-api-key-modal-backdrop {
-        z-index: 10010;
-      }
-
-      .playground-settings-api-key-modal {
-        width: min(640px, 100%);
-      }
-
-      .playground-settings-api-key-modal-top {
-        margin-bottom: 12px;
-      }
-
-      .playground-settings-api-key-modal-title-shell {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 0;
-      }
-
-      .playground-settings-api-key-modal-title {
-        font-size: 17px;
-        line-height: 1.2;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.98);
-      }
-
-      .playground-settings-api-key-modal-subtitle {
-        font-size: 12px;
-        line-height: 1.45;
-        color: rgba(255, 255, 255, 0.46);
-      }
-
-      .playground-settings-api-key-modal-body {
-        gap: 18px;
-      }
-
-      .playground-settings-api-key-modal-scopes {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .playground-settings-api-key-modal textarea.playground-tasks-project-modal-textarea {
-        min-height: 96px;
-      }
-
       .playground-settings-api-key-header {
         display: flex;
         align-items: flex-start;
@@ -212,6 +166,7 @@ export const API_KEYS_SHARED_COMPONENTS_CSS = `      .playground-settings-api-ke
       }
 
       .playground-settings-created-key-notice {
+        position: relative;
         padding: 16px;
         border-radius: 14px;
         border: 1px solid rgba(34, 197, 94, 0.3);
@@ -219,17 +174,14 @@ export const API_KEYS_SHARED_COMPONENTS_CSS = `      .playground-settings-api-ke
       }
 
       .playground-settings-created-key-row {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
+        display: block;
       }
 
       .playground-settings-created-key-title {
         margin: 0 0 8px;
         font-size: 12px;
-        font-weight: 600;
-        color: rgba(74, 222, 128, 0.98);
+        font-weight: 400;
+        color: #fff;
       }
 
       .playground-settings-created-key-copy {
@@ -256,6 +208,33 @@ export const API_KEYS_SHARED_COMPONENTS_CSS = `      .playground-settings-api-ke
         display: flex;
         align-items: stretch;
         gap: 10px;
+      }
+
+      .playground-settings-created-key-secret {
+        position: relative;
+        min-width: 0;
+      }
+
+      .playground-settings-created-key-value.playground-settings-code {
+        box-sizing: border-box;
+        padding-right: 52px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .playground-settings-created-key-copy-button.playground-settings-icon-button {
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        width: 30px;
+        min-width: 30px;
+        height: 30px;
+        transform: translateY(-50%);
+      }
+
+      .playground-settings-created-key-dismiss-button.playground-settings-icon-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
       }
 
       .playground-settings-icon-button {

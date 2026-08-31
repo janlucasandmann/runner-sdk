@@ -1,0 +1,158 @@
+.computer-detail-page.is-general-tab,
+.computer-detail-page__content.is-general-tab,
+.computer-detail-page__general-sections {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.computer-detail-page.is-general-tab {
+  width: min(100%, var(--platform-page-content-max-width, 87.5rem));
+  max-width: var(--platform-page-content-max-width, 87.5rem);
+  margin-inline: auto;
+  padding: 42px 44px 56px;
+}
+
+.computer-detail-page__content.is-general-tab,
+.computer-detail-page__general-sections {
+  display: flex;
+  flex-direction: column;
+}
+
+.computer-detail-page__content.is-general-tab {
+  gap: 0;
+}
+
+.computer-detail-page__general-sections {
+  gap: 42px;
+}
+
+.computer-detail-page.is-runtime-tab,
+.computer-detail-page__content.is-runtime-tab,
+.computer-detail-page__runtime,
+.computer-detail-page__runtime-workspace,
+.computer-runtime-editor {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 0;
+  align-self: stretch;
+  margin: 0;
+}
+
+.computer-detail-page.is-runtime-tab,
+.computer-detail-page__content.is-runtime-tab,
+.computer-detail-page__runtime,
+.computer-detail-page__runtime-workspace {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.computer-detail-page__runtime-workspace,
+.computer-runtime-editor,
+.computer-runtime-editor .platform-code-editor-workspace__editor,
+.computer-runtime-editor .platform-code-editor-workspace__editor-body,
+.computer-runtime-editor__editor {
+  min-height: 0;
+  height: 100%;
+}
+
+.computer-detail-page__runtime-workspace {
+  min-height: min(
+    480px,
+    calc(100dvh - var(--playground-content-nav-height, 50px))
+  );
+}
+
+.computer-detail-page__notice {
+  flex: 0 0 auto;
+}
+
+.computer-runtime-source-notice {
+  box-sizing: border-box;
+  margin: 0 20px 12px;
+  padding: 10px 12px;
+  border: 1px solid rgb(248 113 113 / 25%);
+  border-radius: 8px;
+  background: rgb(248 113 113 / 8%);
+  color: rgb(254 202 202 / 92%);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.computer-detail-page__settings-frame {
+  padding: 0;
+}
+
+.playground-computer-detail-main:has(.computer-detail-page.is-runtime-tab),
+.playground-computer-detail-main:has(.computer-detail-page.is-runtime-tab)
+  > .playground-environments-detail-scroll,
+.playground-computer-detail-main:has(.computer-detail-page.is-runtime-tab)
+  .playground-computer-detail-content,
+.playground-computer-detail-main:has(.computer-detail-page.is-runtime-tab)
+  .computer-detail-page.is-runtime-tab {
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  flex: 1 1 0;
+}
+
+.playground-computer-detail-main:has(.computer-detail-page.is-runtime-tab)
+  > .playground-environments-detail-scroll,
+.playground-computer-detail-main
+  > .playground-environments-detail-scroll.is-computer-runtime-tab,
+.playground-computer-detail-main:has(.computer-detail-page.is-runtime-tab)
+  .playground-computer-detail-content,
+.playground-computer-detail-main
+  .playground-computer-detail-content.is-computer-runtime-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.playground-resources-page.is-develop-server-kind-page:has(
+    .playground-computer-detail-main .computer-detail-page
+  )
+  > .playground-environments-detail-scroll.playground-settings-detail-scroll,
+.playground-resources-page.is-develop-configure-page:has(
+    .playground-computer-detail-main .computer-detail-page
+  )
+  > .playground-environments-detail-scroll.playground-settings-detail-scroll {
+  padding: 0;
+}
+
+.playground-computer-detail-content.is-computer-runtime-tab {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.playground-computer-detail-content.is-computer-general-tab,
+.playground-computer-detail-content.is-computer-settings-tab {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.playground-computer-detail-main:has(.computer-detail-page)
+  .playground-computer-detail-content {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.playground-computer-detail-main:has(.computer-detail-page.is-settings-tab)
+  > .playground-environments-detail-scroll {
+  overflow: auto;
+}

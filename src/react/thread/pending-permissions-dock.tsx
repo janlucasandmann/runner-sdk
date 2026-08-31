@@ -1,4 +1,4 @@
-import { ArrowUpRight, ShieldAlert } from "lucide-react";
+import { ArrowUpRight, ShieldAlert } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type {
   RunnerThreadPermissionRequest,
   RunnerThreadProjection,

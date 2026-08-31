@@ -1,4 +1,4 @@
-import { ChevronRight, LibraryBig, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, LibraryBig, Plus, Trash2 } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo } from "react";
 import {
   createPlatformProjectIdentityFallback,
@@ -10,7 +10,6 @@ import type {
   PlatformDataTableAction,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
-import { PlatformLoadingState } from "../../../../../platform-ui/components/composite/loading-state/index.js";
 import { PlatformPageHero } from "../../../../../platform-ui/components/composite/page-hero/index.js";
 import {
   createResourceOverviewColumns,
@@ -134,12 +133,6 @@ export function KnowledgeOverviewPage({
         onRowActivate: onOpen,
         getRowAriaLabel: (library) => library.name,
         loading,
-        loadingState: (
-          <PlatformLoadingState
-            centered
-            message="Loading Knowledge libraries…"
-          />
-        ),
         error: error || undefined,
         emptyState: (
           <PlatformEmptyState

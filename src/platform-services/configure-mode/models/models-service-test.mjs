@@ -66,6 +66,7 @@ assert.match(appFragments.pageView, new RegExp(JSON.stringify(pricingUrl).replac
 assert.match(appFragments.pageView, /onCreateAgent: \(modelId\) => openAgentCreationInResources/);
 assert.match(appFragments.pageView, /sidebarMode: "configure"/);
 assert.match(appFragments.sidebarEntry, /id: "models"/);
+assert.match(appFragments.sidebarEntry, /Icon: ModelsSidebarIcon/);
 assert.doesNotThrow(() => new Function(`
   function modelsHostIntegration() {
     ${appFragments.state}

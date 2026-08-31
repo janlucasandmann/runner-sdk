@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, X } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 import {
   PlatformDataTable,

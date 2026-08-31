@@ -1,18 +1,17 @@
 import {
   AlertTriangle,
   Bookmark,
-  ChevronRight,
   Clock3,
   Copy,
   FileJson2,
+  FileUp,
   FlaskConical,
   FolderOpen,
   Monitor,
-  Plus,
   SquarePen,
   Trash2,
   UsersRound,
-} from "lucide-react";
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   createPortal,
 } from "react-dom";
@@ -29,7 +28,6 @@ import {
 } from "../../../../../platform-resources/access-control/index.js";
 import {
   PlatformDataTable,
-  type PlatformDataTableAction,
   type PlatformDataTableColumn,
 } from "../../../../../platform-ui/components/composite/data-table/index.js";
 import { PlatformAnalyticsSection } from "../../../../../platform-ui/components/composite/analytics/index.js";
@@ -82,13 +80,11 @@ import {
   PlatformServiceDetailPropertyList,
 } from "../../../../../platform-ui/pages/details/index.js";
 import { ResourceOverviewIdentityCell } from "../../../../../platform-ui/pages/overview/index.js";
+import { PlatformResourceSettingsIdentity } from "../../../../../platform-ui/pages/settings/index.js";
 import type { TestsApi } from "../api/index.js";
 import {
   addTestCaseToDefinition,
   duplicateTestCaseInDefinition,
-  getTestCaseCategoryLabel,
-  getTestCaseExecutionLabel,
-  getTestCaseTargetSummary,
   getTestOwnerCandidateKey,
   getTestPersonIdentityKeys,
   getTestPlanCreatorIdentity,
@@ -117,6 +113,8 @@ import {
   TestPlanSaveModal,
   type TestPlanSaveOutcome,
 } from "./test-plan-save-modal.js";
+import { TestScenarioWorkspace } from "./test-scenario-workspace.js";
+import { TestReportImportModal } from "./test-report-import-modal.js";
 
 type TestPlanTab = "overview" | "cases" | "settings";
 
@@ -143,7 +141,12 @@ interface TestPlanDetailPageProps {
   onRun: (plan: TestPlan) => void;
   onOpenRawConfiguration?: () => void;
   onOpenRun: (run: TestRun) => void;
-  onOpenCase: (
+  onTryScenarios?: (
+    definition: TestPlanDefinition,
+    scenarioIds: string[],
+  ) => Promise<void>;
+  /** Compatibility hook for direct case routes; the consolidated workspace is primary. */
+  onOpenCase?: (
     testCase: TestCaseDefinition,
     definition: TestPlanDefinition,
   ) => void;
@@ -248,7 +251,7 @@ export function TestPlanDetailPage({
   onRun,
   onOpenRawConfiguration,
   onOpenRun,
-  onOpenCase,
+  onTryScenarios = async () => undefined,
 }: TestPlanDetailPageProps) {
   const [activeTab, setActiveTab] = useState<TestPlanTab>(
     plan.definition.cases.length === 0 ? "cases" : "overview",
@@ -279,6 +282,8 @@ export function TestPlanDetailPage({
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [renameError, setRenameError] = useState("");
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [reportImportOpen, setReportImportOpen] = useState(false);
+  const [reportImportError, setReportImportError] = useState("");
   const [ownerSelectorOpen, setOwnerSelectorOpen] = useState(false);
   const [ownerCandidateState, setOwnerCandidateState] = useState<{
     planId: string;
@@ -323,6 +328,8 @@ export function TestPlanDetailPage({
     setRenameModalOpen(false);
     setRenameError("");
     setDeleteConfirmationOpen(false);
+    setReportImportOpen(false);
+    setReportImportError("");
     setOwnerSelectorOpen(false);
     setOwnerCandidateState({
       planId: plan.id,
@@ -577,8 +584,10 @@ export function TestPlanDetailPage({
         name: name.trim(),
         description: description.trim(),
         projectId: projectId || null,
-        targetType: projectId ? "project" : "custom",
-        targetId: projectId || null,
+        targetType: plan.targetType,
+        targetId: plan.targetType === "project"
+          ? projectId || null
+          : plan.targetId,
         defaultEnvironmentId: environmentId || null,
         definition: parsedDefinition.definition,
       } as Partial<TestPlan>);
@@ -775,69 +784,6 @@ export function TestPlanDetailPage({
     return resultById;
   }, [runs]);
 
-  const caseColumns = useMemo<PlatformDataTableColumn<TestCaseDefinition>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Case",
-        accessor: "name",
-        sortable: true,
-        width: "minmax(220px, 1.25fr)",
-        cell: ({ row }) => (
-          <span className="tests-table-identity">
-            <span>
-              <strong>{row.name}</strong>
-            </span>
-          </span>
-        ),
-      },
-      {
-        id: "execution",
-        header: "Execution",
-        accessor: (row) => getTestCaseExecutionLabel(row),
-        sortable: true,
-        width: "minmax(150px, .7fr)",
-      },
-      {
-        id: "category",
-        header: "Category",
-        accessor: (row) => getTestCaseCategoryLabel(row),
-        sortable: true,
-        width: "minmax(120px, .55fr)",
-      },
-      {
-        id: "target",
-        header: "Target",
-        accessor: (row) => getTestCaseTargetSummary(row),
-        width: "minmax(190px, .9fr)",
-        cell: ({ row }) => (
-          <span className="tests-table-truncated-value" title={getTestCaseTargetSummary(row)}>
-            {getTestCaseTargetSummary(row)}
-          </span>
-        ),
-      },
-      {
-        id: "status",
-        header: "State",
-        accessor: (row) => row.enabled ? "Enabled" : "Disabled",
-        sortable: true,
-        width: "minmax(110px, .5fr)",
-      },
-      {
-        id: "result",
-        header: "Last result",
-        accessor: (row) => latestCaseResultById.get(row.id)?.status || "Not run",
-        width: "minmax(120px, .55fr)",
-        cell: ({ row }) => {
-          const value = latestCaseResultById.get(row.id)?.status;
-          return value ? (
-            <PlatformLabel variant={statusLabelVariant(value)}>{formatStatus(value)}</PlatformLabel>
-          ) : "Not run";
-        },
-      },
-    ],
-    [latestCaseResultById],
-  );
   const runColumns = useMemo<PlatformDataTableColumn<TestRun>[]>(
     () => [
       {
@@ -896,7 +842,7 @@ export function TestPlanDetailPage({
       },
       {
         id: "cases",
-        label: "Cases",
+        label: "Scenarios",
         value: String(currentCases.length),
         color: "#7657ff",
       },
@@ -931,7 +877,7 @@ export function TestPlanDetailPage({
       },
       {
         id: "passed",
-        label: "Passed cases",
+        label: "Passed scenarios",
         values: analyticsRuns.map((run) => run.passedCount),
         color: "#9ff6ce",
         axis: "secondary" as const,
@@ -1186,6 +1132,17 @@ export function TestPlanDetailPage({
           label="Copy Test ID"
           onClick={() => void copyPlanId()}
         />
+        <PlatformResourceActionMenuItem
+          icon={<FileUp width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+          label="Import Report"
+          disabled={dirty || currentCases.length === 0}
+          title={dirty ? "Save test changes before importing a report." : undefined}
+          onClick={() => {
+            setTitleActionsOpen(false);
+            setReportImportError("");
+            setReportImportOpen(true);
+          }}
+        />
         <PlatformResourceActionsDivider />
         <PlatformResourceActionMenuItem
           icon={<SquarePen width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
@@ -1226,7 +1183,7 @@ export function TestPlanDetailPage({
       value={activeTab}
       options={[
         { value: "overview", label: "Overview" },
-        { value: "cases", label: "Cases" },
+        { value: "cases", label: "Scenarios" },
         { value: "settings", label: "Settings" },
       ]}
       onValueChange={(nextTab) => setActiveTab(
@@ -1239,22 +1196,126 @@ export function TestPlanDetailPage({
       ariaLabel="Test plan section"
     />
   );
+  const testIdentity = {
+    icon: <FlaskConical width={24} height={24} strokeWidth={1.7} />,
+    title: name,
+    description,
+    titlePlaceholder: "Test",
+    descriptionPlaceholder: "Describe the behavior this test protects",
+    titleAriaLabel: "Test name",
+    descriptionAriaLabel: "Test description",
+  };
   const settings = activeTab === "settings" ? {
     ariaLabel: "Test settings",
     className: "tests-settings-page",
     identity: {
-      icon: <FlaskConical width={24} height={24} strokeWidth={1.7} />,
-      title: name,
-      description,
+      ...testIdentity,
       onTitleChange: setName,
       onDescriptionChange: setDescription,
-      titlePlaceholder: "Test",
-      descriptionPlaceholder: "Describe the behavior this test protects",
-      titleAriaLabel: "Test name",
-      descriptionAriaLabel: "Test description",
     },
     details: {
-      children: properties,
+      variant: "standard" as const,
+      customAttributes: [
+        {
+          id: "computer",
+          label: "Computer",
+          title: computerLabel,
+          value: (
+            <PlatformSelector
+              value={environmentId}
+              options={[
+                {
+                  value: "",
+                  label: "Select when running",
+                  leading: <Monitor width={14} height={14} strokeWidth={1.85} />,
+                },
+                ...environments.map((environment) => ({
+                  value: environment.id,
+                  label: environment.name,
+                  description: environment.description,
+                  leading: <Monitor width={14} height={14} strokeWidth={1.85} />,
+                })),
+              ]}
+              label={(
+                <span className="tests-detail-target-selector-value">
+                  <Monitor width={14} height={14} strokeWidth={1.85} aria-hidden="true" />
+                  <span title={computerLabel}>{computerLabel}</span>
+                </span>
+              )}
+              placeholder="Select when running"
+              ariaLabel="Test computer"
+              alignment="end"
+              popupAlignment="right"
+              fullWidth
+              disabled={Boolean(busyAction)}
+              emptyContent="No computers available."
+              popupWidth="min(280px, calc(100vw - 48px))"
+              popupMaxWidth="calc(100vw - 48px)"
+              popupMaxHeight="min(320px, calc(100vh - 120px))"
+              className="playground-tasks-detail-central-selector playground-project-overview-sidebar-selector tests-detail-target-selector"
+              triggerClassName="playground-tasks-detail-central-selector-trigger playground-project-overview-sidebar-selector-trigger tests-detail-target-trigger"
+              popupClassName="playground-tasks-detail-central-selector-popup playground-project-overview-sidebar-selector-popup tests-detail-target-popup"
+              onValueChange={setEnvironmentId}
+            />
+          ),
+        },
+      ],
+      updatedAt: plan.updatedAt,
+      creator: {
+        value: creatorIdentity.id || creatorIdentity.email || "test-creator",
+        name: getIdentityLabel(creatorIdentity),
+        email: creatorIdentity.email || "",
+        avatarUrl: creatorIdentity.avatarUrl || "",
+      },
+      owner: {
+        value: selectedOwnerValue,
+        name: getIdentityLabel(ownerIdentity),
+        email: ownerIdentity.email || "",
+        avatarUrl: ownerIdentity.avatarUrl || "",
+      },
+      ownerOptions,
+      onOwnerTransfer: changeOwner,
+      ownerSelectorProps: {
+        open: ownerSelectorOpen,
+        onOpenChange: handleOwnerSelectorOpenChange,
+        ariaLabel: "Choose test plan owner",
+        resourceLabel: "test plan",
+        alignment: "end" as const,
+        popupAlignment: "right" as const,
+        fullWidth: true,
+        disabled: Boolean(busyAction) || dirty || !canManageOwner,
+        loading: currentOwnerCandidateState.status === "loading",
+        loadingContent: "Loading organization members...",
+        emptyContent: "No organization members are available.",
+        popupWidth: 260,
+        popupMaxHeight: "min(320px, calc(100vh - 180px))",
+        title: dirty ? "Save test plan changes before changing the owner." : undefined,
+      },
+      scope: {
+        values: projectId ? [projectId] : [],
+        options: projects.map((project) => ({
+          value: project.id,
+          label: project.name,
+          leading: <FolderOpen width={14} height={14} strokeWidth={1.85} />,
+        })),
+        onValuesChange: (values: readonly string[]) => setProjectId(values.at(-1) || ""),
+        ariaLabel: "Choose test plan scope",
+        disabled: Boolean(busyAction),
+      },
+      primaryActions: [
+        {
+          id: "run-test",
+          label: "Run Test",
+          onSelect: () => onRun(plan),
+          disabled: Boolean(busyAction) || currentCases.length === 0 || !plan.publishedVersionId,
+        },
+        {
+          id: "raw-configuration",
+          label: "Raw Configuration",
+          onSelect: onOpenRawConfiguration,
+          disabled: Boolean(busyAction) || !onOpenRawConfiguration,
+        },
+      ] as const,
       className: "tests-detail-sidebar-card",
     },
     additionalSections: (
@@ -1264,7 +1325,7 @@ export function TestPlanDetailPage({
             <AlertTriangle width={15} height={15} aria-hidden="true" />
             <span>
               <strong>Draft only</strong>
-              Add cases, save your changes, then publish an immutable version before running this plan.
+              Add scenarios, save your changes, then publish an immutable version for trusted runs.
             </span>
           </div>
         ) : null}
@@ -1280,30 +1341,30 @@ export function TestPlanDetailPage({
             bodyPresentation="flush"
           >
             <PlatformServiceDetailPropertyList className="tests-settings-detail-list tests-run-behavior-list">
-              <PlatformServiceDetailProperty label="Cases running at once">
+              <PlatformServiceDetailProperty label="Scenarios running at once">
                 <input
                   type="number"
                   min={1}
                   max={20}
                   className="tests-settings-detail-number-input"
                   value={definition.concurrency}
-                  aria-label="Cases running at once"
-                  title="Use 1 to run cases in order"
+                  aria-label="Scenarios running at once"
+                  title="Use 1 to run scenarios in order"
                   onChange={(event) => commitDefinition({
                     ...definition,
                     concurrency: Math.max(1, Math.min(20, Number(event.currentTarget.value) || 1)),
                   })}
                 />
               </PlatformServiceDetailProperty>
-              <PlatformServiceDetailProperty label="Attempts per case">
+              <PlatformServiceDetailProperty label="Attempts per scenario">
                 <input
                   type="number"
                   min={1}
                   max={10}
                   className="tests-settings-detail-number-input"
                   value={definition.retryPolicy.maxAttempts}
-                  aria-label="Attempts per case"
-                  title="The agent decides when to retry; this limit includes the first attempt"
+                  aria-label="Attempts per scenario"
+                  title="Maximum attempts including the first run; deterministic scenarios are retried by the Test worker"
                   onChange={(event) => commitDefinition({
                     ...definition,
                     retryPolicy: {
@@ -1313,10 +1374,10 @@ export function TestPlanDetailPage({
                   })}
                 />
               </PlatformServiceDetailProperty>
-              <PlatformServiceDetailProperty label="Stop remaining cases">
+              <PlatformServiceDetailProperty label="Stop remaining scenarios">
                 <PlatformToggle
                   checked={definition.stopOnFailure}
-                  aria-label="Stop after the first failed case"
+                  aria-label="Stop after the first failed scenario"
                   onCheckedChange={(nextChecked) => commitDefinition({
                     ...definition,
                     stopOnFailure: nextChecked,
@@ -1385,17 +1446,24 @@ export function TestPlanDetailPage({
         sidebarCollapsed={activeTab === "cases" || accessDetailOpen || versionHistoryOpen}
         ariaLabel={`${plan.name} test plan`}
         sidebarAriaLabel="Test plan information"
-        className="tests-detail-page"
+        className={`tests-detail-page is-${activeTab}-tab`}
         contentClassName="tests-detail-content"
         sidebarClassName="tests-detail-sidebar"
         propertiesCardClassName="tests-detail-sidebar-card"
       >
+        {activeTab === "overview" ? (
+          <PlatformResourceSettingsIdentity
+            {...testIdentity}
+            readOnly
+            className="tests-overview-identity"
+          />
+        ) : null}
         {!plan.publishedVersionId ? (
           <div className="tests-plan-state-banner is-warning" role="status">
             <AlertTriangle width={15} height={15} aria-hidden="true" />
             <span>
               <strong>Draft only</strong>
-              Add cases, save your changes, then publish an immutable version before running this plan.
+              Add scenarios, save your changes, then publish an immutable version for trusted runs.
             </span>
           </div>
         ) : null}
@@ -1438,7 +1506,7 @@ export function TestPlanDetailPage({
                 <PlatformEmptyState
                   icon={Clock3}
                   title="No test runs yet"
-                  description="Run the published plan to retain case-level verification evidence."
+                  description="Run the published Test to retain scenario-level verification evidence."
                   primaryAction={{ label: "Run Test", onClick: () => onRun(plan) }}
                 />
               )}
@@ -1448,72 +1516,17 @@ export function TestPlanDetailPage({
 
         {activeTab === "cases" ? (
           <div className="tests-cases-panel">
-            <PlatformDataTable
-              rows={currentCases}
-              columns={caseColumns}
-              getRowId={(testCase) => testCase.id}
-              ariaLabel="Test cases"
-              className="tests-cases-table"
-              variant="minimalistic-ui"
-              surface="plain"
-              sticky={false}
-              pagination={false}
-              toolbar={{
-                title: "All Cases",
-                search: {
-                  placeholder: "Search cases",
-                  getSearchText: (testCase) => [
-                    testCase.name,
-                    getTestCaseExecutionLabel(testCase),
-                    getTestCaseCategoryLabel(testCase),
-                    getTestCaseTargetSummary(testCase),
-                    testCase.enabled ? "enabled" : "disabled",
-                  ].join(" "),
-                },
-                primaryAction: {
-                  label: "Add Case",
-                  icon: Plus,
-                  onClick: () => setCaseCreateOpen(true),
-                },
-              }}
-              getRowActions={(testCase): readonly PlatformDataTableAction<TestCaseDefinition>[] => [
-                {
-                  id: "open",
-                  label: "Open",
-                  icon: ChevronRight,
-                  onSelect: () => onOpenCase(
-                    testCase,
-                    parsedDefinition.definition || plan.definition,
-                  ),
-                },
-                {
-                  id: "duplicate",
-                  label: "Duplicate",
-                  icon: Copy,
-                  onSelect: () => duplicateCase(testCase),
-                },
-                {
-                  id: "remove",
-                  label: "Remove",
-                  icon: Trash2,
-                  danger: true,
-                  separatorBefore: true,
-                  onSelect: () => removeCase(testCase),
-                },
-              ]}
-              onRowActivate={(testCase) => onOpenCase(
-                testCase,
-                parsedDefinition.definition || plan.definition,
-              )}
-              getRowAriaLabel={(testCase) => `Open test case ${testCase.name}`}
-              emptyState={(
-                <PlatformEmptyState
-                  icon={FlaskConical}
-                  title="No test cases"
-                  description="Choose an execution method and add the first case to this draft plan."
-                  primaryAction={{ label: "Add Case", onClick: () => setCaseCreateOpen(true) }}
-                />
-              )}
+            <TestScenarioWorkspace
+              plan={plan}
+              definition={parsedDefinition.definition || definition}
+              api={api}
+              latestResultById={latestCaseResultById}
+              busy={Boolean(busyAction)}
+              onDefinitionChange={commitDefinition}
+              onAdd={() => setCaseCreateOpen(true)}
+              onDuplicate={duplicateCase}
+              onRemove={removeCase}
+              onTry={onTryScenarios}
             />
           </div>
         ) : null}
@@ -1545,6 +1558,8 @@ export function TestPlanDetailPage({
       <TestCaseCreateModal
         open={caseCreateOpen}
         existingCases={definition.cases}
+        testTargetType={plan.targetType}
+        testTargetId={plan.targetId}
         onClose={() => setCaseCreateOpen(false)}
         onCreate={addCase}
       />
@@ -1562,6 +1577,30 @@ export function TestPlanDetailPage({
         onSave={({ outcome, description: versionDescription }) => (
           savePlan(outcome, versionDescription)
         )}
+      />
+      <TestReportImportModal
+        open={reportImportOpen}
+        scenarios={currentCases}
+        busy={busyAction === "import-report"}
+        error={reportImportError}
+        onClose={() => {
+          if (busyAction !== "import-report") setReportImportOpen(false);
+        }}
+        onImport={async (input) => {
+          setBusyAction("import-report");
+          setReportImportError("");
+          try {
+            const run = await api.importRun(plan.id, input);
+            setReportImportOpen(false);
+            onOpenRun(run);
+          } catch (nextError) {
+            setReportImportError(
+              nextError instanceof Error ? nextError.message : "Failed to import the report.",
+            );
+          } finally {
+            setBusyAction("");
+          }
+        }}
       />
       <PlatformResourceShareModal
         open={shareModalOpen}

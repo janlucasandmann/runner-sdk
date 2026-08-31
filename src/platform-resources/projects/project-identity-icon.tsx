@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   Award,
   Bell,
@@ -72,7 +72,7 @@ import {
   Wand2,
   Webhook,
   Zap,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 
 export interface PlatformProjectIconOption {
   id: string;

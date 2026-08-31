@@ -116,3 +116,30 @@ test("GitHub automation bindings are forwarded through the authenticated platfor
     assert.deepEqual(call, { upstreamPath: expectedUpstreamPath, method });
   }
 });
+
+test("resource source-control bindings and executions use the authenticated platform gateway", () => {
+  const calls = [];
+  const handler = createPlatformResourceRoutes({
+    matchPlaygroundBillingProxyRoute: () => null,
+    proxyUpstreamGet(_req, _res, upstreamPath) {
+      calls.push({ upstreamPath, method: "GET" });
+    },
+    proxyUpstreamJsonRequest(_req, _res, upstreamPath, method) {
+      calls.push({ upstreamPath, method });
+    },
+  });
+
+  const cases = [
+    ["GET", "/api/real/source-control/bindings?resourceKind=skill&resourceId=skill_1", "/source-control/bindings"],
+    ["POST", "/api/real/source-control/bindings", "/source-control/bindings"],
+    ["PATCH", "/api/real/source-control/bindings/binding%2Fone", "/source-control/bindings/binding%2Fone"],
+    ["DELETE", "/api/real/source-control/bindings/binding%2Fone", "/source-control/bindings/binding%2Fone"],
+    ["POST", "/api/real/source-control/bindings/binding%2Fone/sync", "/source-control/bindings/binding%2Fone/sync"],
+    ["GET", "/api/real/source-control/bindings/binding%2Fone/executions?limit=10", "/source-control/bindings/binding%2Fone/executions"],
+  ];
+
+  for (const [method, path, expectedUpstreamPath] of cases) {
+    assert.equal(handler({ method }, {}, new URL(`http://platform.test${path}`)), true);
+    assert.deepEqual(calls.at(-1), { upstreamPath: expectedUpstreamPath, method });
+  }
+});

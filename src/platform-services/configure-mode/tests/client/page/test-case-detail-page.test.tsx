@@ -137,7 +137,7 @@ describe("TestCaseDetailPage", () => {
     expect(container.querySelector(".platform-detail-sidebar")).toBeNull();
     expect(container.querySelector(".tests-case-detail-general__content")).not.toBeNull();
     expect(
-      (screen.getByLabelText("Case name") as HTMLInputElement).value,
+      (screen.getByLabelText("Scenario name") as HTMLInputElement).value,
     ).toBe("Readiness contract");
     expect(screen.queryByText("What are you testing?")).toBeNull();
     expect(screen.getByRole("button", { name: "Test type" })).not.toBeNull();
@@ -157,20 +157,20 @@ describe("TestCaseDetailPage", () => {
     expect(screen.queryByText("Advanced definition")).toBeNull();
     expect(screen.queryByText(/Secret redaction is/)).toBeNull();
     expect(container.querySelector(".platform-settings-section__icon")).toBeNull();
-    expect(screen.getByText("Case Settings")).not.toBeNull();
+    expect(screen.getByText("Scenario Settings")).not.toBeNull();
     expect(screen.getByText("Environment variables")).not.toBeNull();
     expect(screen.getByText("Secret references")).not.toBeNull();
     expect(screen.getAllByText("Category").length).toBeGreaterThan(0);
     expect(container.querySelector(".platform-code-editor-workspace")).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
     expect(
-      screen.getByRole("radiogroup", { name: "Test case section" }),
+      screen.getByRole("radiogroup", { name: "Test scenario section" }),
     ).not.toBeNull();
     expect(
       (screen.getByRole("button", { name: "Save Changes" }) as HTMLButtonElement).disabled,
     ).toBe(true);
     expect(
-      screen.getByRole("button", { name: "Save Changes" }).querySelector(".lucide-bookmark"),
+      screen.getByRole("button", { name: "Save Changes" }).querySelector(".hugeicons-bookmark"),
     ).not.toBeNull();
 
     fireEvent.click(screen.getByLabelText("Require database readiness"));
@@ -181,13 +181,13 @@ describe("TestCaseDetailPage", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Code" }));
 
     expect(container.querySelector(".platform-code-editor-workspace")).not.toBeNull();
-    expect((screen.getByLabelText("Case name") as HTMLInputElement).value).toBe(
+    expect((screen.getByLabelText("Scenario name") as HTMLInputElement).value).toBe(
       "Readiness contract",
     );
     expect(
-      (screen.getByLabelText("Case description") as HTMLInputElement).value,
+      (screen.getByLabelText("Scenario description") as HTMLInputElement).value,
     ).toBe("Verifies the service readiness endpoint.");
-    expect(screen.getByRole("button", { name: "Case metadata" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Scenario metadata" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Execution configuration" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Target request" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Assertions" })).not.toBeNull();
@@ -195,6 +195,6 @@ describe("TestCaseDetailPage", () => {
       screen.getByRole("button", { name: "Environment and secret references" }),
     ).not.toBeNull();
     expect(screen.queryByText("What are you testing?")).toBeNull();
-    expect(screen.queryByText("Case Settings")).toBeNull();
+    expect(screen.queryByText("Scenario Settings")).toBeNull();
   });
 });

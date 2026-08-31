@@ -15,7 +15,7 @@ import {
   MessageSquare,
   Rocket,
   Terminal,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import { extractQuotedArgument, formatShellCommandForDisplay } from "./command-parsing.js";
 import { CompactActionLogLine } from "./compact-action-log-line.js";

@@ -1,4 +1,4 @@
-import { Check, CreditCard, Loader2, LockKeyhole } from "lucide-react";
+import { Check, CreditCard, Loader2, LockKeyhole } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 import { PlatformModal } from "../../../platform-ui/components/composite/modal/index.js";
 import {
@@ -175,4 +175,3 @@ export function PlatformPlanGateModal({
     </PlatformModal>
   );
 }
-

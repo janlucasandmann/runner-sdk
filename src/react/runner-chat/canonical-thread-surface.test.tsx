@@ -201,7 +201,7 @@ describe("RunnerCanonicalThreadSurface", () => {
     expect(screen.queryByText(/1 of 1 completed/i)).toBeNull();
     expect(
       document.querySelector(
-        ".platform-thread-workbench__summary-item.is-complete .lucide-circle-check",
+        ".platform-thread-workbench__summary-item.is-complete .hugeicons-circle-check",
       ),
     ).toBeTruthy();
     expect(screen.getByText("Review the implementation")).toBeTruthy();

@@ -9,7 +9,7 @@ import {
   SquarePen,
   Trash2,
   Undo2,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type {
   DragEvent as ReactDragEvent,
   DragEventHandler,

@@ -4,6 +4,8 @@ import { PlatformConfirmationModal } from "../../../../../platform-ui/components
 import {
   createPlatformProjectIdentityFallback,
   getPlatformProjectReferenceFromKnowledgeMetadata,
+  getPlatformResourceProjectScopeIds,
+  normalizePlatformProjectIdentity,
   PlatformProjectIdentityApi,
   type PlatformProjectIdentity,
 } from "../../../../../platform-resources/projects/index.js";
@@ -47,6 +49,7 @@ export interface KnowledgeWorkspacePageProps {
   workspaceTeamMembers?: readonly unknown[];
   workspaceTeamMembersTeamId?: string;
   activeOrganizationId?: string;
+  projects?: readonly unknown[];
   onWorkspaceTeamsRequest?: () => void;
   onWorkspaceTeamMembersRequest?: (teamId: string) => void | Promise<void>;
   onVersionsSidebarOpenChange?: (open: boolean) => void;
@@ -89,6 +92,7 @@ export function KnowledgeWorkspacePage({
   workspaceTeamMembers = [],
   workspaceTeamMembersTeamId = "",
   activeOrganizationId = "",
+  projects = [],
   onWorkspaceTeamsRequest,
   onWorkspaceTeamMembersRequest,
   onVersionsSidebarOpenChange,
@@ -109,6 +113,12 @@ export function KnowledgeWorkspacePage({
     email: currentUserEmail,
     avatarUrl: currentUserAvatarUrl,
   }), [currentUserAvatarUrl, currentUserEmail, currentUserId, currentUserName]);
+  const workspaceProjectIdentities = useMemo(() => projects
+    .map((project) => normalizePlatformProjectIdentity(project))
+    .filter((project): project is PlatformProjectIdentity => Boolean(project)), [projects]);
+  const workspaceProjectIdentitiesById = useMemo(() => Object.fromEntries(
+    workspaceProjectIdentities.map((project) => [project.id, project]),
+  ), [workspaceProjectIdentities]);
   const personalizeLibrary = useCallback(
     (library: KnowledgeLibrary) => withKnowledgeLibraryViewerIdentity(library, viewerIdentity),
     [viewerIdentity],
@@ -166,7 +176,10 @@ export function KnowledgeWorkspacePage({
         }),
       );
       setLibraries(nextLibraries);
-      setProjectIdentitiesById(fallbackIdentities);
+      setProjectIdentitiesById({
+        ...workspaceProjectIdentitiesById,
+        ...fallbackIdentities,
+      });
       void Promise.all(references.map(async (reference) => {
         try {
           return await projectIdentityApi.get(reference.projectId, reference);
@@ -175,16 +188,20 @@ export function KnowledgeWorkspacePage({
         }
       })).then((identities) => {
         if (projectIdentityLoadRef.current !== identityLoad) return;
-        setProjectIdentitiesById(Object.fromEntries(
-          identities.flatMap((identity) => identity ? [[identity.id, identity] as const] : []),
-        ));
+        setProjectIdentitiesById((current) => ({
+          ...workspaceProjectIdentitiesById,
+          ...current,
+          ...Object.fromEntries(
+            identities.flatMap((identity) => identity ? [[identity.id, identity] as const] : []),
+          ),
+        }));
       });
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Failed to load Knowledge.");
     } finally {
       setLoading(false);
     }
-  }, [api, personalizeLibrary, projectIdentityApi]);
+  }, [api, personalizeLibrary, projectIdentityApi, workspaceProjectIdentitiesById]);
 
   const loadLibrary = useCallback(async (libraryId: string, options: { silent?: boolean } = {}) => {
     if (!libraryId) return;
@@ -207,6 +224,13 @@ export function KnowledgeWorkspacePage({
       }
       setActiveLibrary(library);
       setActiveProjectIdentity(projectIdentity);
+      if (projectIdentity) {
+        setProjectIdentitiesById((current) => ({
+          ...workspaceProjectIdentitiesById,
+          ...current,
+          [projectIdentity.id]: projectIdentity,
+        }));
+      }
       setLibraries((current) => [library, ...current.filter((item) => item.id !== library.id)]);
       const document = library.documents?.find((item) => item.id === selectedDocumentId);
       identityChangeRef.current?.({
@@ -225,7 +249,13 @@ export function KnowledgeWorkspacePage({
     } finally {
       if (!options.silent) setDetailLoading(false);
     }
-  }, [api, personalizeLibrary, projectIdentityApi, selectedDocumentId]);
+  }, [
+    api,
+    personalizeLibrary,
+    projectIdentityApi,
+    selectedDocumentId,
+    workspaceProjectIdentitiesById,
+  ]);
 
   useEffect(() => {
     if (!shouldLoadData) return;
@@ -235,6 +265,16 @@ export function KnowledgeWorkspacePage({
 
   function replaceLibrary(library: KnowledgeLibrary) {
     const personalizedLibrary = personalizeLibrary(library);
+    const [primaryProjectId] = getPlatformResourceProjectScopeIds(personalizedLibrary.metadata);
+    const primaryReference = getPlatformProjectReferenceFromKnowledgeMetadata(
+      personalizedLibrary.metadata,
+    );
+    setActiveProjectIdentity(
+      primaryProjectId
+        ? projectIdentitiesById[primaryProjectId]
+          || createPlatformProjectIdentityFallback(primaryReference)
+        : null,
+    );
     setActiveLibrary((current) => current?.id === personalizedLibrary.id ? {
       ...current,
       ...personalizedLibrary,
@@ -304,6 +344,7 @@ export function KnowledgeWorkspacePage({
       <KnowledgeLibraryDetailPage
         library={activeLibrary}
         relatedProjectIdentity={activeProjectIdentity}
+        availableProjectIdentities={Object.values(projectIdentitiesById)}
         api={api}
         backendUrl={backendUrl}
         requestHeaders={requestHeaders}

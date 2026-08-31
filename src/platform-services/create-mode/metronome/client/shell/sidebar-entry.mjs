@@ -64,7 +64,7 @@ export const METRONOME_APP_SIDEBAR_ENTRY_SCRIPT = `
                       ? React.createElement(RefreshCcwDot, { strokeWidth: 1.9 })
                     : isRunActive
                     ? React.createElement(Loader2, { className: "sidebar-thread-running-indicator", strokeWidth: 1.9 })
-                    : React.createElement(Metronome, { strokeWidth: 1.85 })
+                    : React.createElement(WorkflowsSidebarIcon, { strokeWidth: 1.85 })
                 ),
                 React.createElement("span", { className: "sidebar-metronome-run-copy" },
                   React.createElement("span", { className: "sidebar-metronome-run-title" }, runTitle)

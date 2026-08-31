@@ -98,6 +98,7 @@ assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /normalizedTarge
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openPlatformResourceCreationModal\(normalizedTargetId\)/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.topNavigation, /openToolsView\("skills", \{ create: true/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "configure-home"/);
+assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: HomeSidebarIcon/);
 assert.doesNotMatch(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Notifications/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry, /id: "admin-notifications"/);
 assert.match(CONFIGURE_HOME_APP_SCRIPT_FRAGMENTS.adminSidebarEntry, /Icon: Bell/);

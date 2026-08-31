@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "../../components/ui/hugeicons-compat.js";
 import type { PlatformPageHeroAction } from "../../components/composite/page-hero/index.js";
 
 export type PlatformHomeIconTone = "blue" | "cyan" | "green" | "violet" | "white";

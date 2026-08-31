@@ -24,6 +24,7 @@ describe("PlatformGitHubAutomations", () => {
     ["organization", "organization_123"],
     ["function", "function_123"],
     ["web_app", "web_app_123"],
+    ["skill", "skill_123"],
   ] as const)(
     "loads %s bindings through the shared scoped control plane",
     async (scopeType, scopeId) => {
@@ -164,6 +165,32 @@ describe("PlatformGitHubAutomations", () => {
     expect(screen.getByText("Branch pushed")).toBeTruthy();
     expect(screen.getByDisplayValue("production")).toBeTruthy();
     expect(screen.getByText("Deployment Agent")).toBeTruthy();
+  });
+
+  it("offers exact-revision update controls for a Skill scope", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse({ object: "list", data: [], hasMore: false }),
+    );
+
+    render(
+      <PlatformGitHubAutomations
+        scopeType="skill"
+        scopeId="skill_123"
+        repositoryFullName="computer-agents/custom-skill"
+        defaultBranch="main"
+        automationKinds={["security_scan", "pull_request_review", "sync_skill"]}
+        agentOptions={[{ id: "agent_maintainer", label: "Skill Maintainer" }]}
+      />,
+    );
+
+    const manageUpdate = await screen.findByRole("button", { name: "Manage Skill updates" });
+    fireEvent.click(manageUpdate);
+
+    expect(screen.getByText("Pull request merged")).toBeTruthy();
+    expect(screen.getByText("Branch pushed")).toBeTruthy();
+    expect(screen.getByDisplayValue("main")).toBeTruthy();
+    expect(screen.getByText("Skill maintenance Agent")).toBeTruthy();
+    expect(screen.getByText("Update instructions")).toBeTruthy();
   });
 
   it("renders structured API validation failures instead of a generic status label", async () => {

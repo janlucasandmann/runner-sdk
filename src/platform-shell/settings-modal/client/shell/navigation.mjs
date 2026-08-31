@@ -215,7 +215,7 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
           const requestedSectionId = typeof sectionId === "string" && sectionId.trim()
             ? sectionId.trim()
             : "profile";
-          const normalizedSectionId = requestedSectionId === "api" ? "profile" : requestedSectionId;
+          const normalizedSectionId = requestedSectionId;
 
           setAccountMenuOpen(false);
           setNotificationsOpen(false);
@@ -247,7 +247,7 @@ export const SETTINGS_MODAL_NAVIGATION_SCRIPT = String.raw`        function clos
           }
 
           setSettingsSection(
-            ["profile", "notifications", "password", "data-controls", "delete"].includes(normalizedSectionId)
+            ["profile", "notifications", "password", "api", "data-controls", "delete"].includes(normalizedSectionId)
               ? normalizedSectionId
               : "profile"
           );

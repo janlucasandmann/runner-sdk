@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Images, ScanEye, Video } from "lucide-react";
+import { Images, ScanEye, Video } from "../../ui/hugeicons-compat.js";
 
 import type { RunnerLog } from "../../../../types.js";
 import { DotLoader } from "../../ui/dot-loader/index.js";

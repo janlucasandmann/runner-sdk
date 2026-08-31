@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Ellipsis, Pencil, Trash2, X } from "lucide-react";
+import { Check, Ellipsis, Pencil, Trash2, X } from "../../ui/hugeicons-compat.js";
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformConfirmationModal } from "../modal/index.js";

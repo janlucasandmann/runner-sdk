@@ -28,7 +28,7 @@ describe("AssurancePolicyCreateModal", () => {
     expect(nameInput.closest(".platform-modal-header.is-search")).not.toBeNull();
     expect(
       document.body.querySelector(
-        ".platform-modal-header__search .lucide-shield-check",
+        ".platform-modal-header__search .hugeicons-shield-check",
       ),
     ).not.toBeNull();
     expect(

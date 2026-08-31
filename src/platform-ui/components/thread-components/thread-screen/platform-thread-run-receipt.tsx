@@ -6,7 +6,7 @@ import {
   CircleStop,
   Clock3,
   ShieldAlert,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { ReactNode } from "react";
 import type {
   RunnerThreadRunReceiptViewModel,

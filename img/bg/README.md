@@ -8,6 +8,8 @@ This directory contains background images consumed by platform presentation. Kee
 
 ## Contents
 
+- [`blur.jpg`](blur.jpg), [`blur2.jpg`](blur2.jpg), and [`blur3.jpg`](blur3.jpg) — Source artwork for connector cards.
+- [`blur.webp`](blur.webp) and [`blur3.webp`](blur3.webp) — Optimized connector-card delivery assets.
 - [`macapp-poster.jpg`](macapp-poster.jpg) — Presentation asset.
 - [`macapp.mp4`](macapp.mp4) — Presentation asset.
 - [`organizations.png`](organizations.png) — Presentation asset.

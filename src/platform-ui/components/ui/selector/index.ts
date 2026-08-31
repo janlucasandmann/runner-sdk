@@ -10,3 +10,14 @@ export type {
   PlatformSelectorPopupAlignment,
   PlatformSelectorProps,
 } from "./platform-selector.js";
+export {
+  PlatformAgentAvatar,
+  PlatformAgentSelector,
+  PlatformAgentSelectorPopup,
+} from "./platform-agent-selector.js";
+export type {
+  PlatformAgentAvatarProps,
+  PlatformAgentSelectorOption,
+  PlatformAgentSelectorPopupProps,
+  PlatformAgentSelectorProps,
+} from "./platform-agent-selector.js";

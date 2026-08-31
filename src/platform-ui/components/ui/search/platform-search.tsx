@@ -1,4 +1,4 @@
-import { type LucideIcon, Search } from "lucide-react";
+import { type LucideIcon, Search } from "../hugeicons-compat.js";
 import { forwardRef, type InputHTMLAttributes } from "react";
 
 export interface PlatformSearchProps

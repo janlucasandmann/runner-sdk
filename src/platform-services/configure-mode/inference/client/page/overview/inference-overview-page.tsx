@@ -1,4 +1,4 @@
-import { ChevronRight, CloudCog, HardDrive, Plus } from "lucide-react";
+import { ChevronRight, CloudCog, HardDrive, Plus } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 import type {
   PlatformDataTableAction,

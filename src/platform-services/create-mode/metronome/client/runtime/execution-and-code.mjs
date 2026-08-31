@@ -227,6 +227,59 @@ export const METRONOME_EXECUTION_RUNTIME_SCRIPT = String.raw`
           return normalizeMetronomeRun(data?.data || data);
         }
 
+        async function createMetronomeThreadCommandRunApi(workflowId, { command, prompt, inputs, idempotencyKey } = {}) {
+          const normalizedWorkflowId = String(workflowId || "").trim();
+          const normalizedCommand = normalizeMetronomeThreadTriggerCommand(command);
+          if (!normalizedWorkflowId) throw new Error("This workflow command is no longer available.");
+          if (!normalizedCommand || normalizedCommand === "@") throw new Error("Choose a valid workflow command.");
+          const normalizedPrompt = String(prompt || "").trim() || normalizedCommand;
+          const normalizedIdempotencyKey = String(idempotencyKey || "").trim();
+          const triggerInputs = {
+            ...(inputs && typeof inputs === "object" ? inputs : {}),
+            source: "composer_thread_trigger",
+            triggerType: "thread_event",
+            command: normalizedCommand,
+            triggerCommand: normalizedCommand,
+            message: normalizedPrompt,
+          };
+          let response = await fetch(
+            "/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/triggers/thread-command",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                command: normalizedCommand,
+                prompt: normalizedPrompt,
+                inputs: triggerInputs,
+                ...(normalizedIdempotencyKey
+                  ? { idempotencyKey: normalizedIdempotencyKey }
+                  : {}),
+              }),
+            }
+          );
+          // Keep the composer functional while a control-plane deployment is
+          // rolling from the established run route to the trigger-native route.
+          // A genuine workflow lookup failure is still returned by the fallback.
+          if (response.status === 404) {
+            response = await fetch(
+              "/api/real/metronomes/" + encodeURIComponent(normalizedWorkflowId) + "/runs",
+              {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(createMetronomeExecutionRequestPayload(normalizedWorkflowId, {
+                  prompt: normalizedPrompt,
+                  inputs: triggerInputs,
+                  idempotencyKey: normalizedIdempotencyKey,
+                })),
+              }
+            );
+          }
+          const data = await readMetronomeApiJson(response, "Failed to start workflow command.");
+          return normalizeMetronomeRun(data?.data?.run || data?.data || data);
+        }
+
         async function previewMetronomeTestRunApi(workflowId, options = {}) {
           const normalizedWorkflowId = String(workflowId || "").trim();
           if (!normalizedWorkflowId) throw new Error("Save this Metronome before testing it.");

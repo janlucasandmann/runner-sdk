@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Github } from "lucide-react";
+import { Github } from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import {
   formatRunnerUnitCount,

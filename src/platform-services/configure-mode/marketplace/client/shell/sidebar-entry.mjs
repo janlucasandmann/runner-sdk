@@ -1,7 +1,7 @@
 export const MARKETPLACE_APP_SIDEBAR_ENTRY_SCRIPT = `              {
                 id: "resource-templates",
                 label: "Marketplace",
-                Icon: LibraryBig,
+                Icon: MarketplaceSidebarIcon,
                 active: activePage === "resource-templates",
                 onClick: () => openResourceTemplatesOverviewPage(),
               },

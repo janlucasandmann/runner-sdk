@@ -1406,6 +1406,105 @@
 	            )
 	          );
 	          const databaseDetailSidebarCollapsed = Boolean(databaseDetailsCollapsed);
+	          const databaseCreatorIdentityKey = getDatabaseOwnerIdentityKey(databaseCreatorIdentity)
+	            || String(databaseCreatorIdentity?.id || databaseCreatorIdentity?.userId || databaseCreatorIdentity?.email || "database-creator");
+	          const databaseProjectScopeIds = getPlatformResourceProjectScopeIds(draftDatabase);
+	          const databaseResourceSettings = {
+	            ariaLabel: "Database settings",
+	            className: "playground-database-resource-settings",
+	            identity: {
+	              icon: React.createElement(Database, { width: 24, height: 24, strokeWidth: 1.8 }),
+	              title: String(draftDatabase.name || ""),
+	              description: String(draftDatabase.description || ""),
+	              onTitleChange: isDatabaseTemplatePreview
+	                ? undefined
+	                : (value) => updateDatabaseField("name", value),
+	              onDescriptionChange: isDatabaseTemplatePreview
+	                ? undefined
+	                : (value) => updateDatabaseField("description", value),
+	              onTitleBlur: isDatabaseTemplatePreview
+	                ? undefined
+	                : () => void handleDatabaseSave(),
+	              onDescriptionBlur: isDatabaseTemplatePreview
+	                ? undefined
+	                : () => void handleDatabaseSave(),
+	              titlePlaceholder: "Untitled database",
+	              descriptionPlaceholder: "Describe this database.",
+	              titleAriaLabel: "Database name",
+	              descriptionAriaLabel: "Database description",
+	              readOnly: isDatabaseTemplatePreview,
+	              className: "playground-database-settings-identity",
+	            },
+	            details: {
+	              variant: "standard",
+	              customAttributes: [
+	                { id: "provider", label: "Provider", value: draftDatabase.provider || "firestore" },
+	                { id: "location", label: "Location", value: draftDatabase.location || "eur3" },
+	                { id: "resource-id", label: "Resource ID", value: draftDatabase.id || "Unsaved database" },
+	                { id: "created", label: "Created", value: formatPlaygroundFileDate(draftDatabase.createdAt) },
+	              ],
+	              updatedAt: draftDatabase.updatedAt || draftDatabase.createdAt,
+	              creator: {
+	                value: databaseCreatorIdentityKey,
+	                name: String(databaseCreatorIdentity?.name || databaseCreatorIdentity?.email || "Unknown user"),
+	                email: String(databaseCreatorIdentity?.email || ""),
+	                avatarUrl: String(databaseCreatorIdentity?.avatarUrl || ""),
+	              },
+	              owner: {
+	                value: databaseOwnerIdentityKey || "database-owner",
+	                name: databaseOwnerLabel,
+	                email: String(databaseOwnerIdentity?.email || ""),
+	                avatarUrl: String(databaseOwnerIdentity?.avatarUrl || ""),
+	              },
+	              ownerOptions: databaseOwnerOptions,
+	              onOwnerTransfer: async (_nextValue, option) => {
+	                const selectedOwner = option?.data?.candidate;
+	                if (selectedOwner) await handleDatabaseOwnerSelect(selectedOwner);
+	              },
+	              ownerSelectorProps: {
+	                open: databaseOwnerPopoverOpen,
+	                onOpenChange: setDatabaseOwnerPopoverOpen,
+	                ariaLabel: "Choose database owner",
+	                resourceLabel: "database",
+	                alignment: "end",
+	                popupAlignment: "right",
+	                fullWidth: true,
+	                disabled: !canManageDatabaseTeamAccess || !isCurrentDatabaseOwner || databaseSaveState.isSaving,
+	                loading: databaseSharedTeamIds.length > 0 && databaseOwnerMissingTeamIds.length > 0,
+	                loadingContent: "Loading team members...",
+	                emptyContent: databaseSharedTeamIds.length === 0
+	                  ? "Grant a team access before choosing an owner."
+	                  : "No human team members are available.",
+	                popupWidth: 260,
+	                popupMaxHeight: "min(320px, calc(100vh - 180px))",
+	              },
+	              scope: databaseProjectScopeIds.length ? {
+	                values: databaseProjectScopeIds,
+	                options: databaseProjectScopeIds.map((projectId) => ({
+	                  value: projectId,
+	                  label: String(draftDatabase?.metadata?.projectName || draftDatabase?.projectName || "Project"),
+	                  leading: React.createElement(PlatformProjectIdentityIcon, {
+	                    icon: "folder-open",
+	                    size: 14,
+	                    strokeWidth: 1.8,
+	                  }),
+	                })),
+	                disabled: true,
+	              } : {},
+	              primaryActions: [{
+	                id: "browse-data",
+	                label: "Browse Data",
+	                onSelect: () => setDatabaseDetailTab("data"),
+	                disabled: !draftDatabase.id || draftDatabase.id === PLAYGROUND_DATABASE_DRAFT_ID,
+	              }],
+	              className: "playground-database-detail-properties-card",
+	            },
+	            location: databaseDeploymentMapSection,
+	            access: databaseSettingsPermissionContent || databaseTeamAccessPlatformSection,
+	            accessDetailOpen: Boolean(selectedDatabasePermissionTeam),
+	            detailsSidebarAriaLabel: (draftDatabase.name || "Database") + " properties",
+	            detailsSidebarClassName: "playground-database-resource-settings__sidebar",
+	          };
 	          const databaseEditorTabContent = normalizedDatabaseDetailTab === "data"
 	            ? databaseDataTabContent
 	            : normalizedDatabaseDetailTab === "settings"
@@ -1427,6 +1526,7 @@
 	                setDatabaseOwnerPopoverOpen(false);
 	                setDatabaseDetailTab(nextTab);
 	              },
+	              settings: databaseResourceSettings,
 	              sidebar: databaseDetailSidebar,
 	              sidebarCollapsed: databaseDetailSidebarCollapsed,
 	              sidebarAutoCollapseTabs: ["data"],

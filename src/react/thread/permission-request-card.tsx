@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Clock3, LoaderCircle, ShieldAlert, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, LoaderCircle, ShieldAlert, XCircle } from "../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useState } from "react";
 import type { RunnerThreadPermissionRequest } from "../../thread/types.js";
 import {

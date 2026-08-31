@@ -1,4 +1,4 @@
-import { Ellipsis, Plus } from "lucide-react";
+import { Ellipsis, Plus } from "../../components/ui/hugeicons-compat.js";
 import {
   createElement,
   isValidElement,
@@ -13,9 +13,11 @@ import {
   PlatformDataTable,
   type PlatformDataTableIcon,
   type PlatformDataTablePrimaryAction,
+  type PlatformDataTableRowActionState,
 } from "../../components/composite/data-table/index.js";
 import { PlatformPrimaryButton } from "../../components/ui/button/index.js";
 import { PlatformSwitch } from "../../components/ui/switch/index.js";
+import { createResourceOverviewRowActions } from "./resource-overview-actions.js";
 import type {
   ResourceOverviewPageProps,
   ResourceOverviewPeriodOption,
@@ -95,11 +97,29 @@ export function ResourceOverviewPage<TData>({
   periodOptions = DEFAULT_PERIOD_OPTIONS,
   headerActions,
   className = "",
+  rowActionMode = "resource",
 }: ResourceOverviewPageProps<TData>) {
   const primaryAction = table.toolbar?.primaryAction;
-  const resolvedTable = primaryAction
+  const tableWithoutPrimaryAction = primaryAction
     ? { ...table, toolbar: { ...table.toolbar, primaryAction: undefined } }
     : table;
+  const sourceGetRowActions = tableWithoutPrimaryAction.getRowActions;
+  const resolvedTable = rowActionMode === "custom"
+    ? tableWithoutPrimaryAction
+    : {
+        ...tableWithoutPrimaryAction,
+        getRowActions: (
+          row: TData,
+          state: PlatformDataTableRowActionState<TData>,
+        ) =>
+          createResourceOverviewRowActions({
+            row,
+            state,
+            actions: sourceGetRowActions?.(row, state) || [],
+            onEdit: tableWithoutPrimaryAction.onRowActivate,
+            disabled: Boolean(tableWithoutPrimaryAction.isRowDisabled?.(row)),
+          }),
+      };
   const hasDedicatedPeriodPortal = Boolean(periodPortalId);
   const hasHeaderControls =
     (showPeriodSelector && !hasDedicatedPeriodPortal) ||

@@ -1,0 +1,422 @@
+.platform-connector-preview-card {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 300px;
+  max-width: calc(50% - 12px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.platform-connector-preview-card:hover:not(.is-disabled),
+.platform-connector-preview-card:focus-within {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.09);
+  outline: none;
+}
+
+.platform-connector-preview-card.is-disabled {
+  opacity: 0.5;
+}
+
+.platform-connector-preview-card__action {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-connector-preview-card__action:disabled {
+  cursor: default;
+}
+
+.platform-connector-preview-card__media {
+  position: relative;
+  width: calc(100% - 10px);
+  min-height: 142px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 90%, rgba(124, 92, 255, 0.22), transparent 42%),
+    radial-gradient(circle at 82% 16%, rgba(55, 150, 255, 0.22), transparent 42%),
+    linear-gradient(135deg, rgba(38, 79, 138, 0.28), rgba(20, 20, 28, 0.08));
+}
+
+.platform-connector-preview-card__media::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.22)),
+    linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.055), transparent 58%);
+  pointer-events: none;
+}
+
+.platform-connector-preview-card__media-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.platform-connector-preview-card__icon {
+  position: relative;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+  color: #000;
+}
+
+.platform-connector-preview-card__icon > svg,
+.platform-connector-preview-card__icon > img {
+  width: 24px;
+  height: 24px;
+}
+
+.platform-connector-preview-card__body {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 13px 22px 18px;
+}
+
+.platform-connector-preview-card__title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.platform-connector-preview-card__title {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-connector-preview-card__description {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-connector-preview-card__connections {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  margin-top: 12px;
+  padding-right: 34px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-connector-preview-card__connections > svg {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+}
+
+.platform-connector-preview-card .platform-connector-preview-card__menu-anchor {
+  position: absolute;
+  z-index: 2;
+  right: 14px;
+  bottom: 12px;
+  display: inline-flex;
+}
+
+.platform-connector-preview-card__menu {
+  z-index: 1600;
+}
+
+.platform-connector-settings-modal.platform-modal-surface {
+  width: min(950px, calc(100vw - 48px));
+  height: min(720px, calc(100dvh - 48px));
+  max-width: 950px;
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.platform-connector-settings-modal__body.platform-modal-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.platform-connector-settings-modal__layout {
+  --platform-modal-sidebar-width: 240px;
+}
+
+.platform-connector-settings-modal__sidebar {
+  box-sizing: border-box;
+  width: var(--platform-modal-sidebar-width);
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex: 0 0 var(--platform-modal-sidebar-width);
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+}
+
+.platform-connector-settings-modal__sidebar-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.platform-connector-settings-modal__sidebar-title {
+  margin: 0 0 22px;
+  padding: 0 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-connector-settings-modal__navigation {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow-y: auto;
+}
+
+.platform-connector-settings-modal__group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.platform-connector-settings-modal__group-title {
+  margin: 0;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.platform-connector-settings-modal__group-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  flex: 0 0 14px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.platform-connector-settings-modal__group-icon > svg,
+.platform-connector-settings-modal__group-icon > img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  object-fit: contain;
+}
+
+.platform-connector-settings-modal__repository-list {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.platform-connector-settings-modal__repository-item {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.68);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-connector-settings-modal__repository-item:hover,
+.platform-connector-settings-modal__repository-item:focus-visible {
+  background: rgba(255, 255, 255, 0.075);
+  color: #fff;
+  outline: none;
+}
+
+.platform-connector-settings-modal__repository-item.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.platform-connector-settings-modal__repository-item > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-connector-settings-modal__primary-action.platform-button {
+  width: 100%;
+  flex: 0 0 auto;
+  margin-top: 16px;
+}
+
+.platform-connector-settings-modal__content {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.platform-connector-settings-modal__content-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: block;
+  padding: 24px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.platform-connector-settings-modal__content-body.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-connector-settings-modal__content-body.is-empty .platform-empty-state {
+  min-height: 220px;
+}
+
+.platform-connector-settings-modal__content-header {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 24px;
+}
+
+.platform-connector-settings-modal__content-title {
+  min-width: 0;
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.platform-connector-settings-modal__content-menu-anchor {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.platform-connector-settings-modal__content-menu {
+  z-index: 1600;
+}
+
+.platform-connector-settings-modal__repository-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-connector-settings-modal__repository-content .platform-connector-configuration.is-plain
+  .platform-connector-configuration__header,
+.platform-connector-settings-modal__repository-content .platform-connector-configuration.is-plain
+  .platform-connector-configuration__row,
+.platform-connector-settings-modal__repository-content .platform-resource-source-control__heading,
+.platform-connector-settings-modal__repository-content .platform-resource-source-control__status,
+.platform-connector-settings-modal__repository-content .platform-resource-source-control__setup,
+.platform-connector-settings-modal__repository-content .platform-resource-source-control__loading,
+.platform-connector-settings-modal__repository-content .platform-github-automations__heading,
+.platform-connector-settings-modal__repository-content .platform-github-automations__row {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.platform-connector-settings-modal__repository-content .platform-resource-source-control__error,
+.platform-connector-settings-modal__repository-content .platform-github-automations__error {
+  margin-right: 0;
+  margin-left: 0;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+@media (max-width: 720px) {
+  .platform-connector-preview-card__media {
+    min-height: 112px;
+  }
+
+  .platform-connector-settings-modal.platform-modal-surface {
+    width: calc(100vw - 24px);
+    height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .platform-connector-settings-modal__layout {
+    --platform-modal-sidebar-width: 190px;
+  }
+
+  .platform-connector-settings-modal__content-body {
+    padding: 16px;
+  }
+}

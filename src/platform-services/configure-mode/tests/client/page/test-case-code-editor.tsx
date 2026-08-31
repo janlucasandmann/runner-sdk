@@ -1,4 +1,4 @@
-import { Braces, FileJson2, Gauge, KeyRound, ListChecks } from "lucide-react";
+import { Braces, FileJson2, Gauge, KeyRound, ListChecks } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   type PlatformCodeEditorFile,
   PlatformCodeEditorWorkspace,
@@ -20,7 +20,7 @@ const TEST_CASE_CODE_FILES: readonly PlatformCodeEditorFile[] = [
     id: "case.json",
     label: "case.json",
     tabLabel: "case.json",
-    ariaLabel: "Case metadata",
+    ariaLabel: "Scenario metadata",
     leading: <FileJson2 aria-hidden="true" />,
     openInTab: true,
     selectable: false,
@@ -100,10 +100,10 @@ export function TestCaseCodeEditor({
       onFileSelect={(fileId) => {
         if (isTestCaseCodeFileId(fileId)) onFileSelect(fileId);
       }}
-      sidebarTitle="Case files"
+      sidebarTitle="Scenario files"
       variant="full-screen"
       className="tests-case-code-workspace"
-      ariaLabel="Test case configuration files"
+      ariaLabel="Test scenario configuration files"
       editor={
         <PlatformMonacoCodeEditor
           className="tests-case-code-editor"
@@ -111,7 +111,7 @@ export function TestCaseCodeEditor({
           onChange={(source) => onFileChange(activeFileId, source)}
           language="json"
           path={`tests/cases/${testCaseId}/${activeFileId}`}
-          ariaLabel={`${activeFileId} test case configuration`}
+          ariaLabel={`${activeFileId} test scenario configuration`}
         />
       }
     />

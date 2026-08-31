@@ -18,7 +18,7 @@ import {
   TextQuote,
   Type as TypeIcon,
   Underline,
-} from "lucide-react";
+} from "../../ui/hugeicons-compat.js";
 import type { MouseEvent, ReactNode } from "react";
 
 import { type PlatformPopupAnchorPoint, PlatformPopupSubmenu } from "../popup/index.js";

@@ -7,12 +7,18 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
         function renderAppHeaderNotificationButton() {
           return React.createElement("button", {
             type: "button",
-            className: "playground-content-menu-button" + (hasVisibleNotifications ? " has-notifications" : ""),
+            className: "playground-content-menu-button",
             "aria-label": "Notifications",
             "aria-expanded": notificationsOpen ? "true" : "false",
             onClick: () => setNotificationsOpen((current) => !current),
           },
-            React.createElement(Bell, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
+            React.createElement(HugeiconsIcon, {
+              icon: hasVisibleNotifications ? BellDotIcon : BellIcon,
+              className: "playground-content-menu-icon",
+              size: 16,
+              color: "white",
+              strokeWidth: 1.8,
+            })
           );
         }
 
@@ -26,7 +32,12 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
               title: runnerComposerPrivateMode ? "Private mode active" : "Private mode",
               onClick: handleGhostModeToggle,
             },
-              React.createElement(Ghost, { strokeWidth: 1.8 }),
+              React.createElement(HugeiconsIcon, {
+                icon: GhostIcon,
+                size: 16,
+                color: "currentColor",
+                strokeWidth: 1.8,
+              }),
               React.createElement("span", null, "Private Chat")
             );
           }
@@ -39,7 +50,13 @@ export const APP_HEADER_COMPONENT_SCRIPT = `        function toggleAccountMenuFr
             title: runnerComposerPrivateMode ? "Private mode active" : "Private mode",
             onClick: handleGhostModeToggle,
           },
-            React.createElement(Ghost, { className: "playground-content-menu-icon", strokeWidth: 1.8 })
+            React.createElement(HugeiconsIcon, {
+              icon: GhostIcon,
+              className: "playground-content-menu-icon",
+              size: 16,
+              color: "currentColor",
+              strokeWidth: 1.8,
+            })
           );
         }
 

@@ -111,4 +111,40 @@ describe("DevelopServerDetailPage", () => {
     expect(screen.getByRole("complementary").getAttribute("data-collapsed")).toBe("false");
     expect(screen.getByRole("button", { name: "Toggle database properties" })).not.toBeNull();
   });
+
+  it("owns the complete canonical settings layout when a resource settings contract is supplied", () => {
+    const { container } = render(
+      <DevelopServerDetailPage
+        activeTab="settings"
+        onTabChange={vi.fn()}
+        sidebar={<div>Legacy properties</div>}
+        settings={{
+          identity: {
+            icon: <span>D</span>,
+            title: "Customer Database",
+            description: "Customer records",
+            readOnly: true,
+          },
+          details: {
+            variant: "standard",
+            customAttributes: [{ id: "provider", label: "Provider", value: "Firestore" }],
+            updatedAt: "2026-08-30T10:00:00.000Z",
+            creator: { value: "creator", name: "Creator" },
+            owner: { value: "owner", name: "Owner" },
+            scope: {},
+            primaryActions: [{ id: "browse", label: "Browse Data", onSelect: () => undefined }],
+          },
+          access: <div>Database access</div>,
+        }}
+      >
+        <div>Legacy settings</div>
+      </DevelopServerDetailPage>,
+    );
+
+    expect(container.querySelector("[data-platform-resource-settings-page='true']")).not.toBeNull();
+    expect(screen.getByDisplayValue("Customer Database")).not.toBeNull();
+    expect(screen.getByText("Database access")).not.toBeNull();
+    expect(screen.queryByText("Legacy settings")).toBeNull();
+    expect(screen.queryByText("Legacy properties")).toBeNull();
+  });
 });

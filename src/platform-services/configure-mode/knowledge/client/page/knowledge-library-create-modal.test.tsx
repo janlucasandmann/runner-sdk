@@ -23,7 +23,7 @@ describe("KnowledgeLibraryCreateModal", () => {
     expect(nameInput.closest(".platform-modal-header.is-search")).not.toBeNull();
     expect(
       document.body.querySelector(
-        ".platform-modal-header__search .lucide-library-big",
+        ".platform-modal-header__search .hugeicons-library-big",
       ),
     ).not.toBeNull();
     expect(screen.queryByText("Name")).toBeNull();

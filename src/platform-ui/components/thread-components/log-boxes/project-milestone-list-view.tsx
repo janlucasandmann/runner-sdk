@@ -1,4 +1,4 @@
-import { Milestone } from "lucide-react";
+import { Milestone } from "../../ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../../../types.js";
 import {
   parseRunnerProjectMilestoneListDetails,

@@ -1,39 +1,42 @@
 export const METRONOME_INSPECTOR_02_FRAGMENT = String.raw`                    React.createElement("div", { className: "playground-tasks-detail-fact-label" }, "When"),
                     React.createElement("div", { className: "playground-tasks-detail-fact-control" },
                       React.createElement("div", { className: "playground-tasks-schedule-anchor playground-metronome-schedule-anchor" },
-                        React.createElement("button", {
-                          type: "button",
-                          className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isMetronomeSchedulePopoverOpen ? " is-active" : ""),
-                          onClick: (event) => {
-                            event.stopPropagation();
-                            if (isMetronomeSchedulePopoverOpen && !isMetronomeSchedulePopoverClosing) {
-                              closeMetronomeSchedulePopover();
-                              return;
-                            }
-                            if (metronomeSchedulePopoverCloseTimerRef.current && typeof window !== "undefined") {
-                              window.clearTimeout(metronomeSchedulePopoverCloseTimerRef.current);
-                              metronomeSchedulePopoverCloseTimerRef.current = null;
-                            }
-                            const nextRect = event.currentTarget?.getBoundingClientRect?.();
-                            setMetronomeSchedulePopoverRect(nextRect
-                              ? {
-                                  left: nextRect.left,
-                                  right: nextRect.right,
-                                  top: nextRect.top,
-                                  bottom: nextRect.bottom,
-                                  width: nextRect.width,
-                                  height: nextRect.height,
-                                }
-                              : null
-                            );
-                            setIsMetronomeSchedulePopoverClosing(false);
-                            setIsMetronomeSchedulePopoverOpen(true);
+                        React.createElement(MetronomeInspectorPickerPopup, {
+                          open: isMetronomeSchedulePopoverOpen,
+                          title: "Schedule",
+                          description: "Choose when this workflow should run.",
+                          onClose: () => closeMetronomeSchedulePopover(),
+                          placement: "bottom-end",
+                          animation: isMetronomeSchedulePopoverClosing ? "down-out" : "down-in",
+                          rootClassName: "playground-metronome-schedule-popup-shell",
+                          surfaceClassName: "playground-metronome-schedule-popover",
+                          surfaceProps: {
+                            width: "min(320px, calc(100vw - 40px))",
+                            maxHeight: "min(460px, calc(100dvh - 24px))",
                           },
-                        },
+                          trigger: React.createElement("button", {
+                            type: "button",
+                            className: "playground-tasks-detail-fact-button playground-tasks-detail-select-trigger" + (isMetronomeSchedulePopoverOpen ? " is-active" : ""),
+                            "aria-haspopup": "dialog",
+                            "aria-expanded": isMetronomeSchedulePopoverOpen ? "true" : "false",
+                            onClick: (event) => {
+                              event.stopPropagation();
+                              if (isMetronomeSchedulePopoverOpen && !isMetronomeSchedulePopoverClosing) {
+                                closeMetronomeSchedulePopover();
+                                return;
+                              }
+                              if (metronomeSchedulePopoverCloseTimerRef.current && typeof window !== "undefined") {
+                                window.clearTimeout(metronomeSchedulePopoverCloseTimerRef.current);
+                                metronomeSchedulePopoverCloseTimerRef.current = null;
+                              }
+                              setIsMetronomeSchedulePopoverClosing(false);
+                              setIsMetronomeSchedulePopoverOpen(true);
+                            },
+                          },
                           React.createElement("span", { className: "playground-tasks-detail-select-trigger-label" }, scheduleSummaryLabel || "None"),
                           React.createElement(ChevronDown, { className: "playground-tasks-detail-select-trigger-chevron", strokeWidth: 1.8 })
-                        ),
-                        schedulePopoverLayer
+                          ),
+                        }, schedulePopoverContent)
                       )
                     )
                   )
@@ -684,16 +687,23 @@ export const METRONOME_INSPECTOR_02_FRAGMENT = String.raw`                    Re
             const renderTriggerSettings = () => {
               const triggerFields = selectedTriggerType === "thread_event" || selectedTriggerType === "thread"
 		                ? React.createElement(React.Fragment, null,
-	                    React.createElement(MetronomeInspectorField, null,
+	                    React.createElement(MetronomeInspectorField, { className: "playground-metronome-thread-command-field" },
 	                      renderMetronomeFieldTitle("Command", "Runs immediately when a user message starts with this command."),
 	                      React.createElement(MetronomeInspectorInput, {
 	                        type: "text",
 	                        className: "playground-metronome-input",
                         value: config.threadCommand || "@metronome",
                         placeholder: "@campaign",
-	                        onChange: (event) => updateSelectedNodeConfig("threadCommand", event.target.value),
+	                        onKeyDown: stopMetronomeInputKeyPropagation,
+	                        onKeyUp: stopMetronomeInputKeyPropagation,
+	                        onChange: (event) => updateSelectedNodeConfig("threadCommand", normalizedThreadCommand(event.target.value)),
 	                        onBlur: (event) => updateSelectedNodeConfig("threadCommand", normalizedThreadCommand(event.target.value)),
-	                      })
+	                      }),
+                        React.createElement("div", {
+                          className: "playground-metronome-thread-command-status is-" + String(metronomeThreadCommandAvailability.status || "idle"),
+                          role: metronomeThreadCommandAvailability.status === "taken" || metronomeThreadCommandAvailability.status === "invalid" ? "alert" : "status",
+                          "aria-live": "polite",
+                        }, metronomeThreadCommandAvailability.message || "Commands must start with @.")
 	                    ),
 	                    renderMetronomeRichTextField({
 	                      fieldKey: "promptExtension",

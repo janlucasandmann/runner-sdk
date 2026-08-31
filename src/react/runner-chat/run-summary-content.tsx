@@ -3,7 +3,7 @@ import {
   Braces as LucideBraces,
   ChevronDown as LucideChevronDown,
   ChevronUp as LucideChevronUp,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import type { RunnerLog } from "../../types.js";
 import { RunnerCodeViewer } from "../../platform-ui/components/thread-components/log-boxes/index.js";
 import { PlatformSwitch } from "../../platform-ui/components/ui/switch/index.js";

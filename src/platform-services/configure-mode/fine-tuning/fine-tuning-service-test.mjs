@@ -119,6 +119,14 @@ assert.doesNotMatch(PLAYGROUND_FINE_TUNING_CSS, /\.playground-fine-tuning-create
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(FineTuningOverviewPage/);
 assert.doesNotMatch(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /React\.createElement\(PlatformDataTable/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview, /isPlanned[\s\S]*?"Planned"/);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.overview,
+  /resolvePlaygroundFineTuningConductorIdentity\([\s\S]*?normalizedJob[\s\S]*?\[currentFineTuningUser, \.\.\.normalizedAgents\]/,
+);
+assert.match(
+  FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.access,
+  /resolvePlaygroundFineTuningPersonIdentity\(storedOwner, \[currentFineTuningUser\]\)/,
+);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.jobs, /phase === "planned" \|\| status === "planned"/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(FineTuningDetailPage/);
 assert.match(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.detail, /React\.createElement\(React\.Fragment[\s\S]*?React\.createElement\(FineTuningDetailPage/);
@@ -148,6 +156,70 @@ assert.equal(
   Object.values(FINE_TUNING_PAGE_SCRIPT_FRAGMENTS).join(""),
   PLAYGROUND_FINE_TUNING_SCRIPT,
 );
+
+const {
+  resolvePlaygroundFineTuningPersonIdentity: resolveClientFineTuningPersonIdentity,
+  resolvePlaygroundFineTuningConductorIdentity: resolveClientFineTuningConductorIdentity,
+} = new Function(`${FINE_TUNING_PAGE_SCRIPT_FRAGMENTS.foundation}
+  return {
+    resolvePlaygroundFineTuningPersonIdentity,
+    resolvePlaygroundFineTuningConductorIdentity,
+  };
+`)();
+
+const currentFineTuningIdentity = {
+  id: "creator_1",
+  userId: "creator_1",
+  name: "Jan Luca Sandmann",
+  email: "jan@example.com",
+  avatarUrl: "/jan.png",
+};
+
+assert.deepEqual(
+  resolveClientFineTuningConductorIdentity(
+    {
+      id: "optimization_legacy",
+      createdBy: { id: "creator_1", userId: "creator_1" },
+    },
+    [currentFineTuningIdentity],
+  ),
+  currentFineTuningIdentity,
+);
+assert.deepEqual(
+  resolveClientFineTuningConductorIdentity(
+    {
+      id: "optimization_agent_created",
+      createdBy: "agent_creator",
+    },
+    [{ id: "agent_creator", name: "Optimizer Agent", photoUrl: "/agent.png" }],
+  ),
+  {
+    id: "agent_creator",
+    userId: "",
+    name: "Optimizer Agent",
+    email: "",
+    avatarUrl: "/agent.png",
+  },
+);
+assert.deepEqual(
+  resolveClientFineTuningPersonIdentity(
+    {
+      id: "creator_2",
+      userId: "creator_2",
+      name: "Other User",
+      email: "other@example.com",
+      avatarUrl: "/other.png",
+    },
+    [currentFineTuningIdentity],
+  ),
+  {
+    id: "creator_2",
+    userId: "creator_2",
+    name: "Other User",
+    email: "other@example.com",
+    avatarUrl: "/other.png",
+  },
+);
 assert.equal(normalizeFineTuningPhase("planned"), "planned");
 assert.equal(isFineTuningPhaseActive("planned"), false);
 
@@ -169,6 +241,7 @@ assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.topNavigation, /playground-fine-tu
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /function renderFineTuningPage/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.pageView, /topNavActionsPortalId/);
 assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry, /id: "fine-tuning"/);
+assert.match(FINE_TUNING_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: AgentOptimizationSidebarIcon/);
 assert.doesNotThrow(() => new Function(String.raw`
   function fineTuningHostIntegration() {
     ${FINE_TUNING_APP_SCRIPT_FRAGMENTS.state}

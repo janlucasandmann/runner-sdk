@@ -25,7 +25,7 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
             return activeVersion ? getGuardrailVersionCompareVersionSourceId(activeVersion.id) : GUARDRAIL_VERSION_COMPARE_CURRENT_EDITOR_ID;
           };
 
-          function openGuardrailVersionChangesPage(versionId, options = {}) {
+          function openGuardrailVersionChangesModal(versionId, options = {}) {
             if (!selectedGuardrailSet || selectedGuardrailSetReadonly) return;
             const normalizedVersionId = String(versionId || "").trim();
             const versions = readSelectedGuardrailVersions();
@@ -37,11 +37,11 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
             setOpenGuardrailVersionMenuId("");
             setGuardrailPublishMenuOpen(false);
             setGuardrailVersionsHeaderMenuOpen(false);
-            setGuardrailVersionsSidebarOpen(true);
+            setGuardrailVersionsSidebarOpen(false);
             setGuardrailVersionChangesState({ leftSourceId, rightSourceId });
           }
 
-          function closeGuardrailVersionChangesPage() {
+          function closeGuardrailVersionChangesModal() {
             setGuardrailVersionChangesState(null);
           }
 
@@ -116,7 +116,7 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
               onSelectVersion: (versionId) => void restoreGuardrailVersion(versionId),
               onPublishVersion: (versionId) => void publishGuardrailVersion(versionId),
               canPublishVersion: (version) => canPublishGuardrailVersion(version),
-              onViewChanges: () => openGuardrailVersionChangesPage(),
+              onViewChanges: () => openGuardrailVersionChangesModal(),
               getVersionCreatedAt: (version) => {
                 const timestamp = version.createdAt || version.updatedAt || version.publishedAt;
                 return timestamp ? formatGuardrailVersionTimestamp(timestamp) : "-";
@@ -132,7 +132,7 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
                   id: "compare",
                   label: "View Changes",
                   icon: Code2,
-                  onSelect: () => openGuardrailVersionChangesPage(version.id),
+                  onSelect: () => openGuardrailVersionChangesModal(version.id),
                 },
                 {
                   id: "delete",
@@ -188,7 +188,7 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
             });
           }
 
-          function renderGuardrailVersionChangesPage() {
+          function renderGuardrailVersionChangesModal() {
             if (!guardrailVersionChangesState || !selectedGuardrailSet) {
               return null;
             }
@@ -209,7 +209,7 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
               value: source.id,
               label: source.label,
             }));
-            return renderPlaygroundVersionChangesPage({
+            return renderPlaygroundVersionChangesModal({
               title: "Changes",
               leftSelector: {
                 value: leftSource.id,
@@ -225,12 +225,10 @@ export const GUARDRAILS_PAGE_VERSION_VIEWS_SCRIPT = `          const GUARDRAIL_V
               },
               actions: renderGuardrailPublishSplitButton(),
               files: diffFiles,
-              backIcon: ArrowLeft,
-              backText: "Back",
-              backLabel: "Back to guardrail set",
-              onBack: closeGuardrailVersionChangesPage,
+              closeButtonLabel: "Close guardrail version changes",
+              onClose: closeGuardrailVersionChangesModal,
               emptyMessage: "No differences from the current editor.",
-              className: "playground-guardrails-version-changes-page",
+              className: "playground-guardrails-version-changes-modal__content",
             });
           }
 

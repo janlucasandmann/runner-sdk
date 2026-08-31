@@ -1,4 +1,4 @@
-import { LibraryBig, Loader2 } from "lucide-react";
+import { LibraryBig, Loader2 } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";

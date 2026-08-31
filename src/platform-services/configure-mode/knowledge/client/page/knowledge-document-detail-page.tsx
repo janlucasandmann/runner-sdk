@@ -1,4 +1,4 @@
-import { Bookmark, MessageSquareText } from "lucide-react";
+import { Bookmark, MessageSquareText } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { PlatformInstructionsEditor } from "../../../../../platform-ui/components/composite/instructions-editor/index.js";

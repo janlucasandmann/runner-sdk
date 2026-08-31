@@ -1,4 +1,4 @@
-import { MessageSquareText, Plus } from "lucide-react";
+import { MessageSquareText, Plus } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, type ReactNode } from "react";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
 import { createResourceOverviewColumns } from "../../../platform-ui/pages/overview/index.js";

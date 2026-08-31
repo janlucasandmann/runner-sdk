@@ -36,7 +36,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               const evaluatorAvatarUrl = evaluatorAgent
                 ? getPlaygroundEvaluationAgentPhotoUrl(evaluatorAgent)
                 : "";
-              const creator = getPlaygroundEvaluationCreatorIdentity(set);
+              const creator = resolvePlaygroundEvaluationCreatorIdentity(set, [currentEvaluationCreator]);
               const creatorName = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
               const updatedValue = set?.updatedAt || set?.createdAt || "";
               const updatedDate = new Date(updatedValue || "");
@@ -136,7 +136,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
           const activeDetailTab = evaluationDetailTab === "cases" || evaluationDetailTab === "data"
             ? "cases"
             : (evaluationDetailTab === "settings" ? "settings" : "general");
-          const creator = normalizePlaygroundEvaluationPersonIdentity(activeSet.creator || activeSet.createdBy || activeSet.created_by || {});
+          const creator = resolvePlaygroundEvaluationCreatorIdentity(activeSet, [currentEvaluationCreator]);
           const creatorLabel = getPlaygroundEvaluationCreatorLabel(creator) || "Unknown";
           const creatorValue = React.createElement("span", {
               className: "platform-resource-detail-sidebar__identity playground-evaluations-detail-person",
@@ -231,6 +231,8 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
               )
             )
           );
+          const evaluationOwnerModel = getEvaluationOwnerSelectorModel(activeSet);
+          const evaluationProjectId = String(activeSet.projectId || "").trim();
           const properties = React.createElement(PlatformServiceDetailPropertyList, {
               className: "playground-evaluations-detail-property-list",
             },
@@ -327,7 +329,86 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                   descriptionAriaLabel: "Evaluation description",
                 },
                 details: {
-                  children: properties,
+                  variant: "standard",
+                  customAttributes: [
+                    {
+                      id: "evaluator",
+                      label: "Evaluator",
+                      value: evaluatorValue,
+                      className: evaluator.type === "agent"
+                        ? "playground-evaluations-detail-evaluator-row is-evaluator-selector"
+                        : "playground-evaluations-detail-evaluator-row",
+                    },
+                    {
+                      id: "pass-threshold",
+                      label: passThresholdLabel,
+                      value: renderEvaluationPassThresholdInline(activeSet, { showLabel: false }),
+                      className: "playground-evaluations-detail-pass-threshold-row",
+                    },
+                    {
+                      id: "created",
+                      label: "Created",
+                      value: formatPlaygroundEvaluationDate(activeSet.createdAt),
+                    },
+                  ],
+                  updatedAt: activeSet.updatedAt || activeSet.createdAt,
+                  creator: {
+                    value: String(creator.id || creator.userId || creator.email || "evaluation-creator"),
+                    name: creatorLabel,
+                    email: String(creator.email || ""),
+                    avatarUrl: String(creator.avatarUrl || ""),
+                  },
+                  owner: evaluationOwnerModel.owner,
+                  ownerOptions: evaluationOwnerModel.options,
+                  onOwnerTransfer: evaluationOwnerModel.onTransfer,
+                  ownerSelectorProps: evaluationOwnerModel.selectorProps,
+                  scope: {
+                    values: evaluationProjectId ? [evaluationProjectId] : [],
+                    options: projectOptions
+                      .filter((project) => String(project?.id || "").trim())
+                      .map((project) => ({
+                        value: String(project.id),
+                        label: String(project.name || project.title || project.id),
+                        leading: React.createElement(FolderOpen, {
+                          width: 14,
+                          height: 14,
+                          strokeWidth: 1.8,
+                          "aria-hidden": "true",
+                        }),
+                      })),
+                    onValuesChange: (values) => updateEvaluationSet(activeSet.id, (current) => ({
+                      ...current,
+                      projectId: String(values.at(-1) || ""),
+                    })),
+                    ariaLabel: "Choose evaluation scope",
+                  },
+                  primaryActions: [
+                    {
+                      id: "run-evaluation",
+                      label: "Run Evaluation",
+                      onSelect: () => openRunEvaluationModal(activeSet.id),
+                      disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+                    },
+                    {
+                      id: "add-to-batches",
+                      label: "Add to Batches",
+                      onSelect: () => openBatchComposer({
+                        name: "Run " + String(activeSet.name || "Evaluation"),
+                        description: "Evaluation queued from its details page.",
+                        targetKind: "evaluation_run",
+                        targetResourceId: activeSet.id,
+                        targetVersionId: String(activeSet.publishedVersionId || activeSet.currentVersionId || "").trim() || null,
+                        definition: {
+                          evaluationId: activeSet.id,
+                          versionId: String(activeSet.publishedVersionId || activeSet.currentVersionId || "").trim() || null,
+                          agentId: String(activeSet.targetAgentId || defaultAgentId || "").trim() || null,
+                          environmentId: String(activeSet.environmentId || defaultEnvironmentId || "").trim() || null,
+                        },
+                        startPolicy: "manual",
+                      }),
+                      disabled: getEvaluationRunnableCaseCount(activeSet) === 0,
+                    },
+                  ],
                   className: "playground-evaluations-detail-sidebar-card",
                 },
                 access: renderEvaluationAccessSettings(),

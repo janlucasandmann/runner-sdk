@@ -1,9 +1,9 @@
-import { type RefObject } from "react";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import {
   Cloud as LucideCloud,
   GitBranch as LucideGitBranch,
   Server as LucideServer,
-} from "lucide-react";
+} from "../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   PlatformModal,
   PlatformModalBody,
@@ -14,17 +14,15 @@ import {
   type PlatformInstructionsEditorUploadedFile,
 } from "../../platform-ui/components/composite/instructions-editor/index.js";
 import {
-  PlatformPopupSurface,
-} from "../../platform-ui/components/composite/popup/index.js";
-import {
   PlatformPrimaryButton,
   PlatformSecondaryButton,
 } from "../../platform-ui/components/ui/button/index.js";
-import { PlatformSelector } from "../../platform-ui/components/ui/selector/index.js";
+import { DotLoader } from "../../platform-ui/components/ui/dot-loader/index.js";
+import { PlatformInput } from "../../platform-ui/components/ui/input/index.js";
 import {
-  IconCheck,
-  IconChevronDown,
-} from "./icons.js";
+  PlatformSelector,
+  type PlatformSelectorOption,
+} from "../../platform-ui/components/ui/selector/index.js";
 import type {
   RunnerForkExistingEnvironmentFileCopyMode,
   RunnerForkFileCopyMode,
@@ -57,9 +55,7 @@ export function RunnerFeedbackDialog({
 }: RunnerFeedbackDialogProps) {
   if (!open) return null;
 
-  const uploadFiles = async (
-    files: File[],
-  ): Promise<PlatformInstructionsEditorUploadedFile[]> => {
+  const uploadFiles = async (files: File[]): Promise<PlatformInstructionsEditorUploadedFile[]> => {
     const uploaded = await onUploadFiles(files);
     return uploaded.map((attachment) => ({
       src: attachment.url || `/attachments/${encodeURIComponent(attachment.id)}`,
@@ -104,7 +100,9 @@ export function RunnerFeedbackDialog({
         />
 
         {error ? (
-          <div className="runner-inline-error" role="alert">{error}</div>
+          <div className="runner-inline-error" role="alert">
+            {error}
+          </div>
         ) : null}
       </PlatformModalBody>
       <PlatformModalFooter>
@@ -157,49 +155,6 @@ export interface RunnerForkThreadDialogProps {
   onClose: () => void;
 }
 
-interface RunnerForkCopyOptionProps {
-  selected: boolean;
-  title: string;
-  description: string;
-  icon: "cloud" | "branch" | "server";
-  disabled: boolean;
-  onClick: () => void;
-}
-
-function RunnerForkCopyOption({
-  selected,
-  title,
-  description,
-  icon,
-  disabled,
-  onClick,
-}: RunnerForkCopyOptionProps) {
-  const Icon = icon === "cloud"
-    ? LucideCloud
-    : icon === "branch"
-      ? LucideGitBranch
-      : LucideServer;
-
-  return (
-    <button
-      type="button"
-      className={`tb-fork-thread-copy-option ${selected ? "selected" : ""}`.trim()}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      <span className="tb-fork-thread-copy-option-icon-shell">
-        <Icon className="tb-fork-thread-copy-option-icon" strokeWidth={1.75} />
-      </span>
-      <span className="tb-fork-thread-copy-option-main">
-        <span className="tb-fork-thread-copy-option-copy">
-          <span className="tb-fork-thread-copy-option-title">{title}</span>
-          <span className="tb-fork-thread-copy-option-description">{description}</span>
-        </span>
-      </span>
-    </button>
-  );
-}
-
 export function RunnerForkThreadDialog({
   open,
   source,
@@ -226,13 +181,79 @@ export function RunnerForkThreadDialog({
   onConfirm,
   onClose,
 }: RunnerForkThreadDialogProps) {
+  const [environmentSearchQuery, setEnvironmentSearchQuery] = useState("");
+  const environmentOptions = useMemo<PlatformSelectorOption<string>[]>(() => {
+    const normalizedQuery = environmentSearchQuery.trim().toLocaleLowerCase();
+    return environments
+      .filter(
+        (environment) =>
+          !normalizedQuery || environment.name.toLocaleLowerCase().includes(normalizedQuery),
+      )
+      .map((environment) => ({
+        value: environment.id,
+        label: environment.name,
+      }));
+  }, [environmentSearchQuery, environments]);
+
+  useEffect(() => {
+    if (!environmentPopupOpen) setEnvironmentSearchQuery("");
+  }, [environmentPopupOpen]);
+
   if (!open) return null;
 
-  const description = source === "message"
-    ? "Choose where the forked thread should run before opening the new chat. The selected user message will be staged in the composer and not sent automatically."
-    : stagedPrompt.trim()
-      ? "Choose where the forked thread should run before opening the new chat. Your /fork prompt will be sent in the new thread after the fork is created."
-      : "Choose where the forked thread should run before opening the new chat. The full conversation will be copied into the new thread.";
+  const description =
+    source === "message"
+      ? "Choose where the forked thread should run before opening the new chat. The selected user message will be staged in the composer and not sent automatically."
+      : stagedPrompt.trim()
+        ? "Choose where the forked thread should run before opening the new chat. Your /fork prompt will be sent in the new thread after the fork is created."
+        : "Choose where the forked thread should run before opening the new chat. The full conversation will be copied into the new thread.";
+  const targetOptions: readonly PlatformSelectorOption<RunnerForkTarget>[] = [
+    {
+      value: "existing_environment",
+      label: "Existing Environment",
+      description: "Continue in an Environment that already exists.",
+    },
+    {
+      value: "new_forked_environment",
+      label: "Create new Environment",
+      description: "Create an isolated Environment for this branch.",
+    },
+  ];
+  const newEnvironmentCopyOptions: readonly PlatformSelectorOption<RunnerForkFileCopyMode>[] = [
+    {
+      value: "all",
+      label: "Copy full current workspace",
+      description: "Create the Environment from the source thread's current workspace.",
+      leading: <LucideCloud width={14} height={14} strokeWidth={1.75} />,
+    },
+    {
+      value: "thread_only",
+      label: "Copy only thread-touched files",
+      description: "Bring over only files changed before this message.",
+      leading: <LucideGitBranch width={14} height={14} strokeWidth={1.75} />,
+    },
+    {
+      value: "none",
+      label: "Start with an empty workspace",
+      description: "Create a fresh Environment without copying files.",
+      leading: <LucideServer width={14} height={14} strokeWidth={1.75} />,
+    },
+  ];
+  const existingEnvironmentCopyOptions: readonly PlatformSelectorOption<RunnerForkExistingEnvironmentFileCopyMode>[] =
+    [
+      {
+        value: "thread_only",
+        label: "Copy thread-touched files",
+        description: "Overlay files changed before this message onto the selected Environment.",
+        leading: <LucideGitBranch width={14} height={14} strokeWidth={1.75} />,
+      },
+      {
+        value: "none",
+        label: "Keep the selected Environment as-is",
+        description: "Do not copy files from the source thread.",
+        leading: <LucideServer width={14} height={14} strokeWidth={1.75} />,
+      },
+    ];
   const selectTarget = (nextTarget: RunnerForkTarget) => {
     onTargetChange(nextTarget);
     if (nextTarget === "new_forked_environment") {
@@ -246,275 +267,223 @@ export function RunnerForkThreadDialog({
       open
       visible
       size="medium"
+      width="560px"
+      maxHeight="min(720px, calc(100dvh - 48px))"
+      scrollable
+      animateResize
       title="Fork Thread"
       description={description}
-      backdropClassName="tb-popup-modal-scrim"
-      className="tb-popup-modal tb-fork-thread-modal"
+      className="tb-fork-thread-modal"
       onClose={() => {
         if (!creating) onClose();
       }}
       closeButtonLabel="Close fork thread dialog"
       closeButtonDisabled={creating}
     >
-      <div className="tb-fork-thread-modal-body">
-        <div className="tb-fork-thread-section">
+      <PlatformModalBody className="tb-fork-thread-modal-body">
+        <section
+          className="tb-fork-thread-section"
+          aria-labelledby="tb-fork-thread-environment-title"
+        >
           <div className="tb-fork-thread-section-header">
-            <div className="tb-fork-thread-section-title">Environment</div>
+            <h3 id="tb-fork-thread-environment-title" className="tb-fork-thread-section-title">
+              Environment
+            </h3>
             <div className="tb-fork-thread-section-copy">
               Pick an existing Environment or create a new Environment for this branch.
             </div>
           </div>
-          <div className="tb-fork-thread-environment-list">
-            {/* biome-ignore lint/a11y/useSemanticElements: This selectable row contains its own interactive environment selector. */}
-            <div
-              className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${
-                target === "existing_environment" ? "selected" : ""
-              }`.trim()}
-              role="button"
-              tabIndex={0}
-              aria-pressed={target === "existing_environment"}
-              onClick={() => selectTarget("existing_environment")}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  selectTarget("existing_environment");
-                }
-              }}
-            >
-              <span className="tb-popup-check-slot">
-                {target === "existing_environment" ? (
-                  <IconCheck className="tb-popup-check" />
-                ) : null}
-              </span>
-              <span className="tb-fork-thread-environment-main">
-                <span className="tb-fork-thread-environment-copy">
-                  <span className="tb-fork-thread-environment-name">
-                    Existing Environment
-                  </span>
-                </span>
-              </span>
-              <div className="tb-fork-thread-row-control">
-                <div className="tb-fork-thread-selector-anchor" ref={environmentPopupRef}>
-                  <button
-                    type="button"
-                    className={`tb-inline-selector tb-fork-thread-inline-selector ${
-                      environmentPopupOpen ? "active" : ""
-                    }`.trim()}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onTargetChange("existing_environment");
-                      onEnvironmentPopupOpenChange(!environmentPopupOpen);
-                      onClearError();
-                    }}
-                    disabled={creating || environments.length === 0}
-                  >
-                    <span>{selectedEnvironmentName || "Select Environment"}</span>
-                    <IconChevronDown className="tb-inline-selector-chevron" />
-                  </button>
-
-                  {environmentPopupOpen ? (
-                    <PlatformPopupSurface className="tb-popup-menu-inline tb-fork-thread-environment-popup">
-                      <div className="tb-popup-menu-inline-body">
-                        {environments.map((environment) => (
-                          <button
-                            key={environment.id}
-                            type="button"
-                            className={`tb-popup-row tb-popup-row-select ${
-                              selectedEnvironmentId === environment.id ? "selected" : ""
-                            }`}
-                            onClick={() => {
-                              onTargetChange("existing_environment");
-                              onEnvironmentSelect(environment.id);
-                              onExistingEnvironmentFileCopyModeChange("none");
-                              onEnvironmentPopupOpenChange(false);
-                              onClearError();
-                            }}
-                          >
-                            <span className="tb-popup-check-slot">
-                              {selectedEnvironmentId === environment.id ? (
-                                <IconCheck className="tb-popup-check" />
-                              ) : null}
-                            </span>
-                            <span className="tb-popup-label">{environment.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </PlatformPopupSurface>
-                  ) : null}
-                </div>
-              </div>
+          <div className="tb-fork-thread-fields">
+            <div className="tb-fork-thread-field">
+              <span className="tb-fork-thread-field-label">Run in</span>
+              <PlatformSelector<RunnerForkTarget>
+                value={target}
+                options={targetOptions}
+                onValueChange={selectTarget}
+                ariaLabel="Choose fork destination"
+                disabled={creating}
+                fullWidth
+                alignment="end"
+                popupAlignment="right"
+                popupMatchTriggerWidth="exact"
+                triggerClassName="tb-fork-thread-selector-trigger"
+                popupClassName="tb-fork-thread-selector-popup"
+              />
             </div>
 
-            {/* biome-ignore lint/a11y/useSemanticElements: This selectable row contains its own interactive environment-name input. */}
-            <div
-              className={`tb-popup-row tb-popup-row-select tb-fork-thread-environment-row ${
-                target === "new_forked_environment" ? "selected" : ""
-              }`.trim()}
-              role="button"
-              tabIndex={0}
-              aria-pressed={target === "new_forked_environment"}
-              onClick={() => selectTarget("new_forked_environment")}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  selectTarget("new_forked_environment");
-                }
-              }}
-            >
-              <span className="tb-popup-check-slot">
-                {target === "new_forked_environment" ? (
-                  <IconCheck className="tb-popup-check" />
-                ) : null}
-              </span>
-              <span className="tb-fork-thread-environment-main">
-                <span className="tb-fork-thread-environment-copy">
-                  <span className="tb-fork-thread-environment-name">
-                    Create new Environment
-                  </span>
-                </span>
-              </span>
-              <div className="tb-fork-thread-row-control">
-                <input
-                  type="text"
+            {target === "existing_environment" ? (
+              <div className="tb-fork-thread-field">
+                <span className="tb-fork-thread-field-label">Environment</span>
+                <PlatformSelector<string>
+                  ref={environmentPopupRef}
+                  value={selectedEnvironmentId}
+                  options={environmentOptions}
+                  label={selectedEnvironmentName || undefined}
+                  placeholder="Select Environment"
+                  onValueChange={(environmentId) => {
+                    onEnvironmentSelect(environmentId);
+                    onExistingEnvironmentFileCopyModeChange("none");
+                    onClearError();
+                  }}
+                  ariaLabel="Choose existing Environment"
+                  disabled={creating || environments.length === 0}
+                  open={environmentPopupOpen}
+                  onOpenChange={(nextOpen) => {
+                    onEnvironmentPopupOpenChange(nextOpen);
+                    if (!nextOpen) setEnvironmentSearchQuery("");
+                    onClearError();
+                  }}
+                  fullWidth
+                  alignment="end"
+                  popupAlignment="right"
+                  popupMatchTriggerWidth="exact"
+                  popupSearch={{
+                    "aria-label": "Search environments",
+                    placeholder: "Search environments...",
+                    value: environmentSearchQuery,
+                    onChange: (event) => setEnvironmentSearchQuery(event.target.value),
+                    showSearchIcon: true,
+                  }}
+                  emptyContent={
+                    environmentSearchQuery.trim()
+                      ? "No matching Environments."
+                      : "No Environments available."
+                  }
+                  triggerClassName="tb-fork-thread-selector-trigger"
+                  popupClassName="tb-fork-thread-selector-popup"
+                />
+              </div>
+            ) : (
+              <label className="tb-fork-thread-field" htmlFor="tb-fork-thread-new-environment-name">
+                <span className="tb-fork-thread-field-label">Environment name</span>
+                <PlatformInput
+                  id="tb-fork-thread-new-environment-name"
                   className="tb-fork-thread-name-input"
                   value={newEnvironmentName}
                   placeholder="Environment name"
+                  aria-label="New environment name"
                   disabled={creating}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onTargetChange("new_forked_environment");
-                    onEnvironmentPopupOpenChange(false);
-                  }}
+                  fullWidth
                   onChange={(event) => {
-                    onTargetChange("new_forked_environment");
                     onNewEnvironmentNameChange(event.target.value);
                     onClearError();
                   }}
                 />
-              </div>
-            </div>
+              </label>
+            )}
           </div>
-        </div>
+        </section>
 
         {target === "new_forked_environment" ? (
-          <div className="tb-fork-thread-section">
+          <section
+            className="tb-fork-thread-section"
+            aria-labelledby="tb-fork-thread-workspace-title"
+          >
             <div className="tb-fork-thread-section-header">
-              <div className="tb-fork-thread-section-title">Workspace files</div>
+              <h3 id="tb-fork-thread-workspace-title" className="tb-fork-thread-section-title">
+                Workspace files
+              </h3>
               <div className="tb-fork-thread-section-copy">
                 Choose what the new Environment should contain.
               </div>
             </div>
-            <div className="tb-fork-thread-copy-options">
-              <RunnerForkCopyOption
-                selected={newEnvironmentFileCopyMode === "all"}
-                title="Copy full current workspace"
-                description="Create a new Environment from the source thread's current workspace."
-                icon="cloud"
-                disabled={creating}
-                onClick={() => {
-                  onNewEnvironmentFileCopyModeChange("all");
-                  onClearError();
-                }}
-              />
-              <RunnerForkCopyOption
-                selected={newEnvironmentFileCopyMode === "thread_only"}
-                title="Copy only thread-touched files"
-                description="Start from an empty workspace and bring over only files the thread changed before this message."
-                icon="branch"
-                disabled={creating}
-                onClick={() => {
-                  onNewEnvironmentFileCopyModeChange("thread_only");
-                  onClearError();
-                }}
-              />
-              <RunnerForkCopyOption
-                selected={newEnvironmentFileCopyMode === "none"}
-                title="Start with an empty workspace"
-                description="Create a fresh Environment with no files copied from the source thread."
-                icon="server"
-                disabled={creating}
-                onClick={() => {
-                  onNewEnvironmentFileCopyModeChange("none");
-                  onClearError();
-                }}
-              />
-            </div>
-          </div>
-        ) : showExistingEnvironmentCopyOptions ? (
-          <div className="tb-fork-thread-section">
-            <div className="tb-fork-thread-section-header">
-              <div className="tb-fork-thread-section-title">Workspace files</div>
-              <div className="tb-fork-thread-section-copy">
-                Decide whether the selected Environment should receive files from the source thread
-                before the fork opens.
+            <div className="tb-fork-thread-fields">
+              <div className="tb-fork-thread-field">
+                <span className="tb-fork-thread-field-label">Files</span>
+                <PlatformSelector<RunnerForkFileCopyMode>
+                  value={newEnvironmentFileCopyMode}
+                  options={newEnvironmentCopyOptions}
+                  onValueChange={(mode) => {
+                    onNewEnvironmentFileCopyModeChange(mode);
+                    onClearError();
+                  }}
+                  ariaLabel="Choose files for the new Environment"
+                  disabled={creating}
+                  fullWidth
+                  alignment="end"
+                  popupAlignment="right"
+                  popupMatchTriggerWidth="exact"
+                  triggerClassName="tb-fork-thread-selector-trigger"
+                  popupClassName="tb-fork-thread-selector-popup"
+                />
               </div>
             </div>
-            <div className="tb-fork-thread-copy-options">
-              <RunnerForkCopyOption
-                selected={existingEnvironmentFileCopyMode === "thread_only"}
-                title="Copy thread-touched files"
-                description="Overlay files the thread changed before this message onto the selected Environment."
-                icon="branch"
-                disabled={creating}
-                onClick={() => {
-                  onExistingEnvironmentFileCopyModeChange("thread_only");
-                  onClearError();
-                }}
-              />
-              <RunnerForkCopyOption
-                selected={existingEnvironmentFileCopyMode === "none"}
-                title="Keep the selected Environment as-is"
-                description="Do not copy any files from the source thread into the selected Environment."
-                icon="server"
-                disabled={creating}
-                onClick={() => {
-                  onExistingEnvironmentFileCopyModeChange("none");
-                  onClearError();
-                }}
-              />
+          </section>
+        ) : showExistingEnvironmentCopyOptions ? (
+          <section
+            className="tb-fork-thread-section"
+            aria-labelledby="tb-fork-thread-workspace-title"
+          >
+            <div className="tb-fork-thread-section-header">
+              <h3 id="tb-fork-thread-workspace-title" className="tb-fork-thread-section-title">
+                Workspace files
+              </h3>
+              <div className="tb-fork-thread-section-copy">
+                Decide whether the selected Environment should receive files from the source thread.
+              </div>
             </div>
-          </div>
+            <div className="tb-fork-thread-fields">
+              <div className="tb-fork-thread-field">
+                <span className="tb-fork-thread-field-label">Files</span>
+                <PlatformSelector<RunnerForkExistingEnvironmentFileCopyMode>
+                  value={existingEnvironmentFileCopyMode}
+                  options={existingEnvironmentCopyOptions}
+                  onValueChange={(mode) => {
+                    onExistingEnvironmentFileCopyModeChange(mode);
+                    onClearError();
+                  }}
+                  ariaLabel="Choose files for the existing Environment"
+                  disabled={creating}
+                  fullWidth
+                  alignment="end"
+                  popupAlignment="right"
+                  popupMatchTriggerWidth="exact"
+                  triggerClassName="tb-fork-thread-selector-trigger"
+                  popupClassName="tb-fork-thread-selector-popup"
+                />
+              </div>
+            </div>
+          </section>
         ) : null}
 
         {error ? (
-          <div className="runner-inline-error tb-fork-thread-error">{error}</div>
+          <div className="runner-inline-error tb-fork-thread-error" role="alert">
+            {error}
+          </div>
         ) : null}
-
-        <div className="tb-edit-confirmation-actions tb-fork-thread-actions">
-          <PlatformSecondaryButton
-            size="large"
-            type="button"
-            className="tb-popup-action tb-popup-action-secondary"
-            onClick={onClose}
-            disabled={creating}
-          >
-            Cancel
-          </PlatformSecondaryButton>
-          <PlatformPrimaryButton
-            size="large"
-            type="button"
-            className={`tb-popup-action tb-popup-action-primary ${creating ? "loading" : ""}`.trim()}
-            onClick={() => void onConfirm()}
-            disabled={
-              creating
-              || (
-                target === "existing_environment"
-                  ? !selectedEnvironmentId
-                  : !newEnvironmentName.trim()
-              )
-            }
-          >
-            {creating ? (
-              <span className="tb-fork-thread-action-loading">
-                <span className="runner-spinner tb-fork-thread-action-spinner" />
-                <span>Creating Fork...</span>
-              </span>
-            ) : (
-              "Create Fork"
-            )}
-          </PlatformPrimaryButton>
-        </div>
-      </div>
+      </PlatformModalBody>
+      <PlatformModalFooter className="tb-fork-thread-actions">
+        <PlatformSecondaryButton
+          size="large"
+          type="button"
+          onClick={onClose}
+          disabled={creating}
+          minWidth="104px"
+        >
+          Cancel
+        </PlatformSecondaryButton>
+        <PlatformPrimaryButton
+          size="large"
+          type="button"
+          onClick={() => void onConfirm()}
+          disabled={
+            creating ||
+            (target === "existing_environment"
+              ? !selectedEnvironmentId
+              : !newEnvironmentName.trim())
+          }
+          minWidth="112px"
+        >
+          {creating ? (
+            <span className="tb-fork-thread-action-loading">
+              <DotLoader dotCount={4} dotSize={2} gap={2} color="currentColor" />
+              <span>Creating Fork...</span>
+            </span>
+          ) : (
+            "Create Fork"
+          )}
+        </PlatformPrimaryButton>
+      </PlatformModalFooter>
     </PlatformModal>
   );
 }

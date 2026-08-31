@@ -135,12 +135,12 @@ describe("PlatformResourceHeaderActions", () => {
       await Promise.resolve();
     });
     expect(writeText).toHaveBeenCalledWith("test-resource-id-that-must-remain-fully-visible");
-    expect(screen.getByRole("button", { name: "Copied" }).querySelector(".lucide-check")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Copied" }).querySelector(".hugeicons-check")).not.toBeNull();
     expect(screen.getByRole("dialog", { name: "Test information" })).not.toBeNull();
     expect(onOpenChange).not.toHaveBeenCalled();
 
     act(() => vi.advanceTimersByTime(1600));
-    expect(screen.getByRole("button", { name: "Copy Test ID" }).querySelector(".lucide-copy")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Copy Test ID" }).querySelector(".hugeicons-copy")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Show version history" }));
     expect(onOpenVersionHistory).toHaveBeenCalledTimes(1);

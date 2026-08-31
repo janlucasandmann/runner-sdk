@@ -1,4 +1,4 @@
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus } from "../../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import {
   useEffect,
   useRef,

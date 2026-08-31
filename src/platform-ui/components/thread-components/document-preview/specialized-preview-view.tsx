@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Globe as LucideGlobe } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe as LucideGlobe } from "../../ui/hugeicons-compat.js";
 import { useEffect, useRef, useState } from "react";
 import { PlatformConnectorActionDetail } from "../../composite/connector-action-detail/index.js";
 import type {

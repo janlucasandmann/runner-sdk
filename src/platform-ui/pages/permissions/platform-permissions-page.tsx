@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { Info } from "../../components/ui/hugeicons-compat.js";
 import { isValidElement, type ReactNode } from "react";
 import type { PlatformDataTableColumn } from "../../components/composite/data-table/index.js";
 import {

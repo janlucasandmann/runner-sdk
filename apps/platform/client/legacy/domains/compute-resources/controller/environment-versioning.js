@@ -1488,7 +1488,7 @@
             return activeVersion ? getEnvironmentVersionCompareVersionSourceId(activeVersion.id) : ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
           }
   
-          function openEnvironmentVersionChangesPage(versionId, options = {}) {
+          function openEnvironmentVersionChangesModal(versionId, options = {}) {
             const normalizedVersionId = String(versionId || "").trim();
             const versions = readDraftEnvironmentVersions();
             if (!versions.length && !draftEnvironment) {
@@ -1502,14 +1502,14 @@
             const leftSourceId = explicitLeftSourceId || fallbackLeftSourceId;
             const rightSourceId = explicitRightSourceId || ENVIRONMENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
             setOpenEnvironmentVersionMenuId("");
-            setEnvironmentVersionsSidebarOpen(true);
+            setEnvironmentVersionsSidebarOpen(false);
             setEnvironmentVersionChangesState({
               leftSourceId,
               rightSourceId,
             });
           }
   
-          function closeEnvironmentVersionChangesPage() {
+          function closeEnvironmentVersionChangesModal() {
             setEnvironmentVersionChangesState(null);
           }
   

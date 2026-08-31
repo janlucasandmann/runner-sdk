@@ -53,6 +53,36 @@ export function createPlatformResourceRoutes(bindings) {
                 return true;
             }
         }
+        if (url.pathname === "/api/real/source-control/bindings") {
+            if (req.method === "GET") {
+                void proxyUpstreamGet(req, res, "/source-control/bindings");
+                return true;
+            }
+            if (req.method === "POST") {
+                void proxyUpstreamJsonRequest(req, res, "/source-control/bindings", "POST");
+                return true;
+            }
+        }
+        const sourceControlBindingMatch = url.pathname.match(
+            /^\/api\/real\/source-control\/bindings\/([^/]+)(\/sync|\/executions)?$/,
+        );
+        if (sourceControlBindingMatch) {
+            const bindingId = encodeURIComponent(decodeURIComponent(sourceControlBindingMatch[1]));
+            const suffix = sourceControlBindingMatch[2] || "";
+            const upstreamPath = `/source-control/bindings/${bindingId}${suffix}`;
+            if (req.method === "GET" && suffix === "/executions") {
+                void proxyUpstreamGet(req, res, upstreamPath);
+                return true;
+            }
+            if (req.method === "POST" && suffix === "/sync") {
+                void proxyUpstreamJsonRequest(req, res, upstreamPath, "POST");
+                return true;
+            }
+            if (!suffix && ["PATCH", "DELETE"].includes(req.method || "")) {
+                void proxyUpstreamJsonRequest(req, res, upstreamPath, req.method);
+                return true;
+            }
+        }
         const accountDataControlMatch = url.pathname.match(/^\/api\/real\/account\/data-controls\/([^/]+)$/);
         if (req.method === "DELETE" && accountDataControlMatch) {
             void proxyUpstreamJsonRequest(

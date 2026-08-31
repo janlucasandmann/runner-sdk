@@ -1,4 +1,4 @@
-import { Bookmark, Loader2 } from "lucide-react";
+import { Bookmark, Loader2 } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { PlatformModal } from "../../../../../platform-ui/components/composite/modal/index.js";
 import {
@@ -109,7 +109,7 @@ export function TestPlanSaveModal({
     >
       <div className="tests-plan-save-modal__summary">
         <strong>{planName}</strong>
-        <span>{caseCount} {caseCount === 1 ? "case" : "cases"} · next version v{nextVersion}</span>
+        <span>{caseCount} {caseCount === 1 ? "scenario" : "scenarios"} · next version v{nextVersion}</span>
       </div>
       <div className="tests-form-field">
         <span>Save outcome</span>

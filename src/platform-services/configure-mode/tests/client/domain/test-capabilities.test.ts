@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 import type { TestCaseDefinition, TestPlanDefinition } from "./test-types.js";
 import {
   applyTestCasePresentation,
+  configureTestCaseForTestTarget,
   getTestCaseCategory,
   getTestCaseExecutionProfile,
   getTestCaseExecutionMethod,
   getTestCaseTargetKind,
   getTestPlanExecutionProfile,
+  getTestTargetScenarioPolicy,
   validateTestCaseConfiguration,
+  validateTestCaseTargetCompatibility,
 } from "./test-capabilities.js";
 
 function testCase(overrides: Partial<TestCaseDefinition> = {}): TestCaseDefinition {
@@ -62,9 +65,19 @@ describe("test capabilities", () => {
       command: "",
       request: { target: "control_plane_readiness" },
     });
+    const browser = testCase({
+      kind: "browser",
+      command: "Open the home page.",
+      request: { startUrl: "https://example.com", screenshotMode: "on_failure" },
+    });
     expect(getTestPlanExecutionProfile(definition([contract])).method).toBe("deterministic");
-    expect(getTestPlanExecutionProfile(definition([contract, testCase()])).method).toBe("hybrid");
-    expect(getTestPlanExecutionProfile(definition([testCase()])).method).toBe("agent");
+    expect(getTestPlanExecutionProfile(definition([contract, browser])).method).toBe("hybrid");
+    expect(getTestPlanExecutionProfile(definition([browser])).method).toBe("agent");
+    expect(getTestPlanExecutionProfile(definition([testCase()]))).toMatchObject({
+      method: "deterministic",
+      trust: "verified_worker",
+      requiresEnvironment: true,
+    });
   });
 
   it("keeps target, executor, and evidence trust separate", () => {
@@ -84,6 +97,27 @@ describe("test capabilities", () => {
       trust: "runner_captured",
       attestationEligible: false,
     });
+  });
+
+  it("validates the structured browser and visual comparison contract", () => {
+    const browser = testCase({
+      kind: "browser",
+      command: "Open the page and verify the hero.",
+      request: {
+        startUrl: "https://example.com",
+        screenshotMode: "each_step",
+        visualComparison: {
+          enabled: true,
+          baselineArtifactUri: "artifact://baseline/home.png",
+          maxDiffPercent: 0.5,
+        },
+      },
+    });
+    expect(validateTestCaseConfiguration(browser)).toBe("");
+    expect(validateTestCaseConfiguration({
+      ...browser,
+      request: { ...browser.request, startUrl: "file:///tmp/index.html" },
+    })).toBe("The browser start URL must use http or https.");
   });
 
   it("does not present an unsupported contract target as verified readiness", () => {
@@ -125,5 +159,61 @@ describe("test capabilities", () => {
       trust: "agent_reported",
       requiresEnvironment: true,
     });
+  });
+
+  it("binds single-resource Tests to their only compatible scenario adapter", () => {
+    const workflowScenario = configureTestCaseForTestTarget(
+      testCase(),
+      "workflow",
+      "workflow-1",
+    );
+    expect(getTestTargetScenarioPolicy("workflow")).toMatchObject({
+      allowedExecutionMethods: ["contract"],
+      allowedContractTargets: ["metronome_workflow"],
+      locked: true,
+    });
+    expect(workflowScenario).toMatchObject({
+      kind: "contract",
+      command: "",
+      request: {
+        target: "metronome_workflow",
+        workflowId: "workflow-1",
+      },
+    });
+    expect(validateTestCaseTargetCompatibility(
+      workflowScenario,
+      "workflow",
+      "workflow-1",
+    )).toBe("");
+    expect(validateTestCaseTargetCompatibility(
+      testCase(),
+      "workflow",
+      "workflow-1",
+    )).toContain("selected workflow");
+  });
+
+  it("creates browser journeys for web-app sources and commands for repositories", () => {
+    const browserScenario = configureTestCaseForTestTarget(
+      testCase({ command: "Verify the landing page." }),
+      "web_app",
+      "https://app.example.com/dashboard",
+    );
+    expect(browserScenario).toMatchObject({
+      kind: "browser",
+      request: {
+        startUrl: "https://app.example.com/dashboard",
+        screenshotMode: "on_failure",
+      },
+    });
+    expect(validateTestCaseTargetCompatibility(
+      browserScenario,
+      "web_app",
+      "https://app.example.com",
+    )).toBe("");
+    expect(getTestCaseTargetKind(configureTestCaseForTestTarget(
+      testCase({ kind: "agent" }),
+      "repository",
+      "github.com/example/repo",
+    ))).toBe("command");
   });
 });

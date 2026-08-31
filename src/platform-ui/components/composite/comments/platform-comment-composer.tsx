@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { ArrowUp, Bot, FileText, Paperclip, UserRound, X } from "lucide-react";
+import { ArrowUp, Bot, FileText, Paperclip, UserRound, X } from "../../ui/hugeicons-compat.js";
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import type {

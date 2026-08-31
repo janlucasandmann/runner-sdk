@@ -17,6 +17,7 @@ assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /AssuranceWorkspacePage/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationGuardChange: registerPlatformNavigationGuard/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.pageView, /onNavigationRequest: requestPlatformNavigation/);
 assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /label: "Assurance"/);
+assert.match(ASSURANCE_APP_SCRIPT_FRAGMENTS.sidebarEntry, /Icon: AssuranceSidebarIcon/);
 assert.match(
   ASSURANCE_APP_SCRIPT_FRAGMENTS.topNavigation,
   /playground-assurance-section-controls/,
@@ -91,6 +92,9 @@ assert.match(detailSource, /PlatformSwitch/);
 assert.match(detailSource, /PlatformDataTable/);
 assert.match(detailSource, /PlatformUiCard/);
 assert.match(detailSource, /AssurancePolicyAccessSettings/);
+assert.match(detailSource, /const settings = activeTab === "settings"/);
+assert.match(detailSource, /variant: "standard" as const/);
+assert.match(detailSource, /settings=\{settings\}/);
 assert.match(detailSource, /sidebarCollapsed=\{accessDetailOpen\}/);
 assert.match(detailSource, /onPermissionDetailOpenChange=\{setAccessDetailOpen\}/);
 assert.match(detailSource, /createVersion/);

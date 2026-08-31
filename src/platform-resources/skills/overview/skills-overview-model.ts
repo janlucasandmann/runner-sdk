@@ -1,4 +1,8 @@
 import type { SkillOverviewRow } from "./skills-overview-page.js";
+import {
+  formatPlatformResourceUpdatedAt,
+  getPlatformResourceUpdatedTimestamp,
+} from "../../../platform-ui/formatting/index.js";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -16,19 +20,9 @@ function firstString(values: readonly unknown[]): string {
   return values.map(asString).find(Boolean) || "";
 }
 
-function parseTimestamp(value: unknown): number {
-  const timestamp = Date.parse(asString(value));
-  return Number.isFinite(timestamp) ? timestamp : 0;
-}
-
-function formatDate(value: string): string {
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(timestamp);
+function normalizeSkillIconColor(value: unknown): string {
+  const color = asString(value);
+  return /^#[0-9a-f]{6}$/i.test(color) ? color : "#ffffff";
 }
 
 export function normalizeSkillOverviewRows(
@@ -59,10 +53,6 @@ export function normalizeSkillOverviewRows(
     const owner = Object.keys(asRecord(skill.owner)).length
       ? asRecord(skill.owner)
       : asRecord(metadata.owner);
-    const updatedValue = asString(skill.updatedAt)
-      || asString(skill.updated_at)
-      || asString(skill.createdAt)
-      || asString(skill.created_at);
     const isCustom = explicitlyCustom || !explicitlySystem;
     const creatorName = isCustom
       ? firstString([
@@ -118,6 +108,17 @@ export function normalizeSkillOverviewRows(
           metadata.owner_avatar_url,
         ]) || creatorAvatarUrl
       : "/img/agent-profile-pics/ca-profilepic.jpg";
+    const parsedUpdatedAt = isCustom
+      ? getPlatformResourceUpdatedTimestamp(firstString([
+          skill.updatedAt,
+          skill.updated_at,
+          skill.modifiedAt,
+          skill.modified_at,
+          skill.createdAt,
+          skill.created_at,
+        ]))
+      : Number.NaN;
+    const updatedAt = Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : 0;
     return [{
       id,
       name,
@@ -133,15 +134,16 @@ export function normalizeSkillOverviewRows(
           .toLowerCase() === "computer_agents",
       isActive: skill.isActive !== false && skill.enabled !== false,
       isCustom,
+      iconColor: isCustom
+        ? normalizeSkillIconColor(metadata.iconColor || metadata.skillIconColor)
+        : undefined,
       creatorName,
       creatorAvatarUrl,
       ownerName,
       ownerAvatarUrl,
-      updatedAt: parseTimestamp(updatedValue),
-      updatedLabel: updatedValue
-        ? formatDate(updatedValue)
-        : isCustom ? "Recently" : "System",
-      updatedTitle: updatedValue,
+      updatedAt,
+      updatedLabel: formatPlatformResourceUpdatedAt(updatedAt),
+      updatedTitle: updatedAt ? new Date(updatedAt).toLocaleString() : "",
     }];
   });
 }

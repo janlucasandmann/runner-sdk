@@ -16,6 +16,10 @@ export interface RunnerChatOption {
   name: string;
   description?: string;
   isDefault?: boolean;
+  photoUrl?: string | null;
+  photoURL?: string | null;
+  avatarUrl?: string | null;
+  avatarURL?: string | null;
   voiceMode?: RunnerChatVoiceMode | string | null;
   voiceProvider?: string | null;
   voiceModel?: string | null;

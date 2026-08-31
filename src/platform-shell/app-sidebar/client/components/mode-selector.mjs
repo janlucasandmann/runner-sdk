@@ -1,22 +1,48 @@
-export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function getAppSidebarModeOptions() {
+export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function renderSidebarModeHugeIcon(icon, props = {}) {
+          const { size = 14, ...iconProps } = props;
+          return React.createElement(HugeiconsIcon, {
+            ...iconProps,
+            icon,
+            size,
+            color: "currentColor",
+          });
+        }
+
+        function CreateModeSidebarIcon(props = {}) {
+          return renderSidebarModeHugeIcon(BadgePlusIcon, props);
+        }
+
+        function ConfigureModeSidebarIcon(props = {}) {
+          return renderSidebarModeHugeIcon(CustomizeIcon, props);
+        }
+
+        function DevelopModeSidebarIcon(props = {}) {
+          return renderSidebarModeHugeIcon(CodeIcon, props);
+        }
+
+        function AdminModeSidebarIcon(props = {}) {
+          return renderSidebarModeHugeIcon(AccountSetting02Icon, props);
+        }
+
+        function getAppSidebarModeOptions() {
           return [
             {
               id: "work",
               label: "Create",
               description: "Threads, projects, files",
-              Icon: PencilRuler,
+              Icon: CreateModeSidebarIcon,
             },
             {
               id: "configure",
               label: "Configure",
               description: "Agents, computers, plugins, skills",
-              Icon: SlidersHorizontal,
+              Icon: ConfigureModeSidebarIcon,
             },
             {
               id: "develop",
               label: "Develop",
               description: "Servers, actions, code",
-              Icon: Code2,
+              Icon: DevelopModeSidebarIcon,
             },
             {
               id: "admin",
@@ -24,7 +50,7 @@ export const APP_SIDEBAR_MODE_SELECTOR_SCRIPT = `        function getAppSidebarM
               description: platformHasCapability("billing")
                 ? "Organization, billing, access"
                 : "Organization and access",
-              Icon: ShieldCheck,
+              Icon: AdminModeSidebarIcon,
             },
           ];
         }

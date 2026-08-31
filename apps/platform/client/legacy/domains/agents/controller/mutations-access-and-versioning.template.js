@@ -3288,7 +3288,7 @@
             return activeVersion ? getAgentVersionCompareVersionSourceId(activeVersion.id) : AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
           }
   
-          function openAgentVersionChangesPage(versionId, options = {}) {
+          function openAgentVersionChangesModal(versionId, options = {}) {
             const normalizedVersionId = String(versionId || "").trim();
             const versions = readDraftAgentVersions();
             if (!versions.length && !draftAgent) {
@@ -3302,14 +3302,14 @@
             const leftSourceId = explicitLeftSourceId || fallbackLeftSourceId;
             const rightSourceId = explicitRightSourceId || AGENT_VERSION_COMPARE_CURRENT_EDITOR_ID;
             setOpenAgentVersionMenuId("");
-            setAgentVersionsSidebarOpen(true);
+            setAgentVersionsSidebarOpen(false);
             setAgentVersionChangesState({
               leftSourceId,
               rightSourceId,
             });
           }
   
-          function closeAgentVersionChangesPage() {
+          function closeAgentVersionChangesModal() {
             setAgentVersionChangesState(null);
           }
   

@@ -1,4 +1,4 @@
-import { Check, ChevronRight, ImageOff, ImagePlus, Monitor, Settings, Upload } from "lucide-react";
+import { Check, ChevronRight, ImageOff, ImagePlus, Monitor, Settings, Upload } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 
 import {
