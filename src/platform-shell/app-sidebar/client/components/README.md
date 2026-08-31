@@ -14,6 +14,7 @@ This directory contains focused presentation components for the App Sidebar shel
 - [`navigation.mjs`](navigation.mjs) — Focused implementation of Navigation.
 - [`status-indicators.mjs`](status-indicators.mjs) — Focused implementation of Status Indicators.
 - [`thread-list.mjs`](thread-list.mjs) — Focused implementation of Thread List.
+- [`thread-list-item.mjs`](thread-list-item.mjs) — Central row contract shared by ordinary threads, nested workflow threads, and workflow-run overview entries.
 
 ## Working in this directory
 

@@ -156,7 +156,10 @@ describe("KnowledgeLibraryDetailPage", () => {
         "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings.",
       ),
     ).not.toBeNull();
-    screen.getAllByRole("button", { name: "Manage" }).forEach((button) => {
+    [
+      screen.getByRole("button", { name: "Open Notion connector settings" }),
+      screen.getByRole("button", { name: "Open Atlassian connector settings" }),
+    ].forEach((button) => {
       expect((button as HTMLButtonElement).disabled).toBe(true);
     });
     const scopeTrigger = screen.getByRole("button", { name: "Choose Knowledge library scope" });

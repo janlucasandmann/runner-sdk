@@ -31,15 +31,23 @@
     transform 160ms ease;
 }
 
-.platform-checkbox:hover,
-.platform-checkbox.is-selected {
+.platform-checkbox:hover {
   border-color: rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.1);
 }
 
-.platform-checkbox.is-selected::after {
-  opacity: 1;
-  transform: scale(1);
+.platform-checkbox.is-selected {
+  border-color: transparent;
+  background: #016bdf;
+}
+
+.platform-checkbox__checkmark {
+  position: absolute;
+  inset: 1px;
+  width: 10px;
+  height: 10px;
+  color: #fff;
+  pointer-events: none;
 }
 
 .platform-checkbox.is-partial::after {
@@ -47,6 +55,11 @@
   border-radius: 999px;
   opacity: 1;
   transform: scale(1);
+}
+
+.platform-checkbox.is-partial {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .platform-checkbox:focus-visible {

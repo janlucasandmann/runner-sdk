@@ -25,7 +25,10 @@ const CONFIGURE_HOME_PAGE_TEMPLATE = `        function renderConfigureHomePage()
               title: "Skills",
               description: "Capabilities agents can call during work.",
               value: formatConfigureOverviewCount(demoSkills.length),
-              icon: Sparkles,
+              icon: (props = {}) => React.createElement(HugeiconsIcon, {
+                icon: CursorMagicSelection04Icon,
+                ...props,
+              }),
               onClick: () => openToolsView("skills"),
             },
           ];

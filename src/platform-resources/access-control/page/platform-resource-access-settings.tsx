@@ -10,6 +10,7 @@ import {
 } from "react";
 import { PlatformButton } from "../../../platform-ui/components/ui/button/index.js";
 import { PlatformButtonSelector } from "../../../platform-ui/components/ui/selector/index.js";
+import { usePlatformResourceAccessDetailOpenChange } from "../../../platform-ui/pages/settings/platform-resource-settings-page.js";
 import {
   normalizePlatformPermissionSet,
   normalizePlatformRolePermissionSet,
@@ -486,7 +487,7 @@ export function PlatformResourceAccessAddTeams<
   return (
     <PlatformButtonSelector
       mode="popup"
-      buttonVariant="secondary"
+      buttonVariant="primary"
       buttonSize="small"
       label={label}
       leading={<Plus width={14} height={14} strokeWidth={1.8} />}
@@ -611,6 +612,8 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
   onViewTeam,
   className = "",
 }: PlatformResourceAccessSettingsProps<TTeam>) {
+  const onAccessDetailOpenChange =
+    usePlatformResourceAccessDetailOpenChange();
   const navigationSourceId = `resource-access-${useId().replace(/:/g, "")}`;
   const detailSectionRef = useRef<HTMLElement | null>(null);
   const selectedPrincipalIdRef = useRef(selectedPrincipalId);
@@ -628,6 +631,10 @@ export function PlatformResourceAccessSettings<TTeam extends PlatformAccessPrinc
   selectedPrincipalIdRef.current = selectedPrincipalId;
   onSelectedPrincipalIdChangeRef.current = onSelectedPrincipalIdChange;
   onRequestTeamMembersRef.current = onRequestTeamMembers;
+
+  useLayoutEffect(() => {
+    onAccessDetailOpenChange?.(Boolean(selectedPrincipal));
+  }, [onAccessDetailOpenChange, selectedPrincipal?.id]);
 
   useEffect(() => {
     const selectedTeamId = String(selectedTeam?.id || "").trim();

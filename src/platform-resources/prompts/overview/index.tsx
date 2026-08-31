@@ -1,15 +1,25 @@
-import { MessageSquareText, Plus } from "../../../platform-ui/components/ui/hugeicons-compat.js";
-import { useMemo, type ReactNode } from "react";
+import { Chat01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
+import { type ReactNode, useMemo } from "react";
 import { PlatformEmptyState } from "../../../platform-ui/components/composite/empty-state/index.js";
+import { Plus } from "../../../platform-ui/components/ui/hugeicons-compat.js";
 import { createResourceOverviewColumns } from "../../../platform-ui/pages/overview/index.js";
 import {
+  type SkillOverviewRow,
   SkillsOverviewGuide,
   SkillsOverviewPage,
-  type SkillOverviewRow,
   type SkillsOverviewPageProps,
 } from "../../skills/overview/index.js";
 
 export type PromptOverviewRow = SkillOverviewRow;
+
+const PromptOverviewIcon = (props: Omit<HugeiconsIconProps, "icon">) => (
+  <HugeiconsIcon
+    icon={Chat01Icon}
+    {...props}
+    className={["hugeicons", "hugeicons-chat-01", props.className].filter(Boolean).join(" ")}
+  />
+);
 
 export interface PromptsOverviewPageProps
   extends Omit<
@@ -38,22 +48,24 @@ export function PromptsOverviewPage({
   rows,
   onCreate,
   emptyState,
+  selection,
   ...props
 }: PromptsOverviewPageProps) {
   const columns = useMemo(
-    () => createResourceOverviewColumns<PromptOverviewRow>({
-      name: {
-        getVisual: () => ({
-          icon: <MessageSquareText width={16} height={16} strokeWidth={1.8} />,
-          iconClassName: "is-skill",
-        }),
-      },
-    }),
+    () =>
+      createResourceOverviewColumns<PromptOverviewRow>({
+        name: {
+          getVisual: () => ({
+            icon: <PromptOverviewIcon width={16} height={16} strokeWidth={1.8} />,
+            iconClassName: "is-skill",
+          }),
+        },
+      }),
     [],
   );
   const promptEmptyState = (
     <PlatformEmptyState
-      icon={MessageSquareText}
+      icon={PromptOverviewIcon}
       title={emptyState || "No prompts available."}
       description="Create a reusable prompt to keep instructions consistent across threads."
       primaryAction={{
@@ -83,9 +95,13 @@ export function PromptsOverviewPage({
       pageClassName="is-skills is-prompts"
       grouping="flat"
       columns={columns}
-      getSearchText={(row) => (
-        `${row.searchText || row.name} ${row.creatorName || ""}`
-      )}
+      selection={
+        selection ?? {
+          enabled: true,
+          ariaLabel: (row) => `Select ${row.name}`,
+        }
+      }
+      getSearchText={(row) => `${row.searchText || row.name} ${row.creatorName || ""}`}
     />
   );
 }

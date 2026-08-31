@@ -178,7 +178,11 @@ assert.match(fragments.navigationItems, /requestPlatformNavigation\(item\?\.onCl
 assert.doesNotMatch(fragments.navigationItems, /if \(item\.active\)/);
 assert.match(
   fragments.navigationItems,
-  /id: "skills",[\s\S]{0,100}Icon: SquareMousePointer/,
+  /id: "skills",[\s\S]{0,100}Icon: SkillsSidebarIcon/,
+);
+assert.match(
+  fragments.navigationItems,
+  /function SkillsSidebarIcon\(props = \{\}\)[\s\S]*?renderSidebarHugeIcon\(CursorMagicSelection04Icon, props\)/,
 );
 assert.match(fragments.threadList, /variant: "minimal"/);
 assert.match(fragments.threadList, /const contextualActions = Array\.isArray\(threadActionMenuState\.menuActions\)/);
@@ -193,32 +197,48 @@ assert.match(
 );
 assert.match(
   fragments.threadList,
-  /className: "sidebar-thread-project-icon" \+ \(threadProject\.isMissionControl \? " is-mission-control" : ""\)[\s\S]*?style: threadProject\.color \? \{ color: threadProject\.color \} : undefined[\s\S]*?React\.createElement\(ThreadProjectIcon/,
+  /function getSidebarThreadLeadingPresentation[\s\S]*?React\.createElement\(ThreadProjectIcon[\s\S]*?className: "sidebar-thread-project-icon"[\s\S]*?threadProject\.isMissionControl[\s\S]*?threadProject\.isTaskLoop[\s\S]*?style: threadProject\.color \? \{ color: threadProject\.color \} : undefined/,
+  "Project, Loop, and Mission Control icons must be adapted into the shared leading slot.",
 );
 assert.match(
   fragments.threadList,
-  /isRunning[\s\S]*?React\.createElement\("img", \{[\s\S]*?className: "sidebar-thread-running-indicator"[\s\S]*?src: "\/img\/spinner\.svg"[\s\S]*?: threadProject/,
+  /function SidebarThreadListItem[\s\S]*?const showRunningIndicator = Boolean\(props\.running\) && !isWorkflowOverview[\s\S]*?React\.createElement\("img", \{[\s\S]*?className: "sidebar-thread-running-indicator"[\s\S]*?src: "\/img\/spinner\.svg"[\s\S]*?: props\.leadingIcon/,
   "A running thread must show the shared spinner in place of its project icon.",
 );
 assert.match(
   fragments.threadList,
-  /const isRunning = metronomeChild[\s\S]*?resolveMetronomeThreadLifecycle\(\[\{ record: safeThread[\s\S]*?\}\]\)\.isRunning[\s\S]*?: isRunningThreadDisplayStatus\(safeThread\?\.status\)/,
-  "Workflow children must use exact execution state while ordinary queued background threads keep their optimistic affordance.",
-);
-assert.match(
-  fragments.threadList,
-  /const fallbackIsRunning = options\?\.metronomeChild[\s\S]*?resolveMetronomeThreadLifecycle\(\[\{ record: fallbackThread[\s\S]*?\}\]\)\.isRunning[\s\S]*?: isRunningThreadDisplayStatus\(fallbackThread\?\.status\)/,
-  "Fallback workflow children must preserve the exact lifecycle presentation.",
+  /function isSidebarThreadActuallyRunning[\s\S]*?resolveMetronomeThreadLifecycle\(\[\{ record: thread, source: "sidebar-thread" \}\]\)\.isRunning[\s\S]*?\["active", "executing", "in_progress", "processing", "running", "started", "starting", "working"\]\.includes\(status\)/,
+  "The running affordance must represent active execution rather than queued or scheduled work.",
 );
 assert.doesNotMatch(
   fragments.threadList,
-  /isRunning[\s\S]{0,120}React\.createElement\(Loader2, \{ className: "sidebar-thread-running-indicator"/,
-  "The sidebar must not render a second Lucide spinner beside the thread icon.",
+  /\["active", "executing", "in_progress", "processing", "running", "started", "starting", "working", "queued"\]/,
+  "Queued work must not receive the running spinner.",
+);
+assert.doesNotMatch(
+  fragments.threadList,
+  /className: "sidebar-thread-menu-icon is-spinning"/,
+  "Thread rows must not replace their trailing action with another loading spinner.",
 );
 assert.match(
   fragments.threadList,
-  /Icon: isMissionControl \? RefreshCcwDot : \(iconConfig\.icon \|\| Rocket\)/,
-  "Mission Control threads must use the shared RefreshCcwDot icon in the sidebar.",
+  /function SidebarThreadListItem[\s\S]*?hasMenuAction = !isWorkflowOverview[\s\S]*?hasChevronAction = isWorkflowOverview[\s\S]*?React\.createElement\(EllipsisVertical[\s\S]*?React\.createElement\(ChevronRight/,
+  "The centralized item must enforce ellipsis actions for threads and chevrons for workflow overviews.",
+);
+assert.match(
+  fragments.threadList,
+  /return React\.createElement\(SidebarThreadListItem, \{[\s\S]*?running: isRunning[\s\S]*?timeLabel: threadLastActivityText[\s\S]*?trailingAction: canManageThread \? "menu" : "none"/,
+  "Ordinary and nested threads must render through the centralized row component.",
+);
+assert.match(
+  fragments.threadList,
+  /metronomeChild[\s\S]*?React\.createElement\(WorkflowsSidebarIcon[\s\S]*?className: "sidebar-thread-project-icon is-workflow"/,
+  "Completed workflow child threads without project context must retain a workflow icon.",
+);
+assert.match(
+  fragments.threadList,
+  /Icon: isMissionControl\s*\? RefreshCcwDot\s*:\s*isTaskLoop\s*\? RefreshCw\s*:\s*\(iconConfig\.icon \|\| Rocket\)/,
+  "Mission Control and Loop threads must retain the workflow overview's Lucide icons in the sidebar.",
 );
 assert.match(
   fragments.threadList,
@@ -365,7 +385,7 @@ const globalServiceRuntime = new Function(
   Plug: StubIcon,
   Tag: StubIcon,
   Layers: StubIcon,
-  SquareMousePointer: StubIcon,
+  CursorMagicSelection04Icon: [],
   MessageSquareText: StubIcon,
   SquarePen: StubIcon,
   RefreshCcwDot: StubIcon,
@@ -445,6 +465,13 @@ assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*color: rgba\(25
 assert.match(styles.foundation, /\.sidebar-action-subtitle[\s\S]*font-size: 11px;/);
 assert.match(styles.foundation, /\.sidebar-action-subtitle,\s*\.sidebar-thread-section-title[\s\S]*font-size: 11px;[\s\S]*font-weight: 400;/);
 assert.match(styles.foundation, /\.sidebar-thread-section-chevron[\s\S]*color: rgba\(255, 255, 255, 0\.5\);/);
+assert.match(styles.foundation, /\.sidebar-thread-list-item__time[\s\S]*opacity: 0;[\s\S]*pointer-events: none;/);
+assert.match(
+  styles.foundation,
+  /\.sidebar-thread-list-item:hover \.sidebar-thread-list-item__time,[\s\S]*?\.sidebar-thread-list-item\.is-active \.sidebar-thread-list-item__time[\s\S]*?opacity: 1;/,
+  "Thread timestamps must only appear for hover, keyboard focus, or active rows.",
+);
+assert.match(styles.foundation, /\.sidebar-thread-list-item__action\.sidebar-metronome-run-toggle\.is-expanded svg[\s\S]*rotate\(90deg\)/);
 assert.match(styles.foundation, /\.sidebar-rail-section-spacer[\s\S]*height: 8px;/);
 assert.match(styles.foundation, /\.sidebar-rail-button\.is-active[\s\S]*border-radius: 8px;/);
 assert.doesNotMatch(styles.foundation, /\.sidebar-rail-plan/);

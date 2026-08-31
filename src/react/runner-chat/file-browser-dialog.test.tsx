@@ -25,6 +25,7 @@ describe("RunnerFileBrowserDialog", () => {
           notion: { connected: false },
           "one-drive": { connected: false },
           github: { connected: false },
+          gitlab: { connected: false },
           atlassian: { connected: false },
         }}
         authSource={null}
@@ -130,6 +131,7 @@ describe("RunnerFileBrowserDialog", () => {
             selectedAccountId: "personal",
             onAccountChange,
           },
+          gitlab: { connected: false },
           atlassian: { connected: false },
         }}
         authSource={null}
@@ -191,6 +193,7 @@ describe("RunnerFileBrowserDialog", () => {
           notion: { connected: false },
           "one-drive": { connected: false },
           github: { connected: false },
+          gitlab: { connected: false },
           atlassian: { connected: true },
         }}
         authSource={null}
@@ -249,6 +252,7 @@ describe("RunnerFileBrowserDialog", () => {
           notion: { connected: false },
           "one-drive": { connected: false },
           github: { connected: false },
+          gitlab: { connected: false },
           atlassian: { connected: true, onConnect },
         }}
         authSource={null}

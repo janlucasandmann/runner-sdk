@@ -1,12 +1,119 @@
-.platform-resource-access-table__title {
+.platform-resource-access-table__layout {
+  display: flex;
   min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.platform-resource-access-table .platform-data-table__toolbar-title {
-  overflow: visible;
+.platform-resource-access-table__section-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.platform-resource-access-table__heading,
+.platform-resource-access-table__description {
+  margin: 0;
+}
+
+.platform-resource-access-table__heading {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.platform-resource-access-table__description {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.platform-resource-access-table__container {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 10px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.platform-resource-access-table__toolbar {
+  padding: 0 10px;
+}
+
+.platform-resource-access-table__toolbar
+  > .platform-data-table__toolbar-spacer {
+  display: none;
+}
+
+.platform-resource-access-table__toolbar
+  > .platform-data-table__toolbar-controls {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+  justify-content: flex-start;
+}
+
+.platform-resource-access-table__toolbar
+  .platform-data-table__toolbar-trailing {
+  margin-left: auto;
+}
+
+.platform-resource-access-table__container
+  > .platform-resource-access-table.is-fill-layout.is-minimalistic-ui
+  > .platform-data-table__surface,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__sticky,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__header-group,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__header,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__scroll,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__body,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__footer,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__pagination {
+  background: transparent;
+}
+
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__footer,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__pagination {
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__header {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__footer,
+.platform-resource-access-table__container
+  .platform-resource-access-table.is-minimalistic-ui
+  .platform-data-table__pagination {
+  border-top-color: rgba(255, 255, 255, 0.05);
 }
 
 .platform-resource-access-table__principal {
@@ -113,9 +220,9 @@
 }
 
 .platform-resource-access-settings:is(
-    .is-team-detail-view,
-    .is-system-detail-view
-  ) {
+  .is-team-detail-view,
+  .is-system-detail-view
+) {
   box-sizing: border-box;
   width: 100%;
   max-width: var(--platform-page-content-max-width, 87.5rem);
@@ -123,8 +230,7 @@
   margin-inline: auto;
 }
 
-.platform-resource-access-settings[data-platform-resource-access-view]
-  ~ * {
+.platform-resource-access-settings[data-platform-resource-access-view] ~ * {
   /* The component normally remains the final settings section. This fallback
      keeps later adapter-owned sections out of a focused access page. */
   display: none;
@@ -136,8 +242,8 @@
 }
 
 .resource-detail-page:has(
-    .platform-resource-access-settings[data-platform-resource-access-view]
-  ) {
+  .platform-resource-access-settings[data-platform-resource-access-view]
+) {
   grid-template-columns: minmax(0, 1fr);
   column-gap: 0;
 }

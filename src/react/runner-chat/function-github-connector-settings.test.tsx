@@ -93,6 +93,11 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
     expect(
       gitlabPreviewCard.querySelector(".platform-connector-preview-card__media-image")?.getAttribute("src"),
     ).toBe("/img/bg/blur3.webp");
+    expect(
+      gitlabPreviewCard
+        .querySelector(".platform-connector-preview-card__icon img")
+        ?.getAttribute("src"),
+    ).toBe("/img/04-skills/gitlab.svg");
     expect(document.querySelector(".playground-project-github-repository-settings")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "GitHub actions" }));
@@ -109,13 +114,18 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
       connectorDialog.querySelectorAll("[data-platform-modal-pane-part='header']"),
     ).toHaveLength(0);
     expect(screen.getByRole("heading", { name: "GitHub" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "GitLab" })).toBeTruthy();
+    const gitlabSidebarHeading = screen.getByRole("heading", { name: "GitLab" });
+    expect(
+      gitlabSidebarHeading.querySelector("img")?.getAttribute("src"),
+    ).toBe("/img/04-skills/gitlab.svg");
     expect(screen.getByRole("button", { name: "computer-agents/platform" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add another repo" })).toBeTruthy();
     const repositorySettings = connectorDialog.querySelector(
       "[data-github-repository-settings-variant='resource']",
     );
     expect(repositorySettings).toBeTruthy();
+    expect(screen.queryByText("Repository path")).toBeNull();
+    expect(screen.queryByPlaceholderText("Repository root")).toBeNull();
     expect(repositorySettings?.getAttribute("data-platform-connector-configuration-surface")).toBe(
       "plain",
     );
@@ -125,8 +135,25 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
     const synchronizationHeading = await screen.findByRole("heading", {
       name: "Version synchronization",
     });
+    const synchronizationHeader = synchronizationHeading.closest(
+      ".platform-connector-configuration__section-heading",
+    );
+    const importNowButton = await screen.findByRole("button", { name: "Import now" });
+    const publishNowButton = screen.getByRole("button", { name: "Publish now" });
+    expect(synchronizationHeader?.contains(importNowButton)).toBe(true);
+    expect(synchronizationHeader?.contains(publishNowButton)).toBe(true);
+    expect(
+      connectorDialog
+        .querySelector(".platform-resource-source-control__status")
+        ?.contains(importNowButton),
+    ).toBe(false);
+    const syncTriggersManageButton = screen.getByRole("button", { name: "Manage" });
+    expect(syncTriggersManageButton.dataset.platformButtonVariant).toBe("primary");
     const automationsHeading = screen.getByRole("heading", { name: "Automations" });
     const agentBehaviorHeading = screen.getByRole("heading", { name: "Agent Git behavior" });
+    expect(screen.queryByText(/Keep Computer Agents versions aligned/)).toBeNull();
+    expect(screen.queryByText(/Run checks, reviews, and exact-revision actions/)).toBeNull();
+    expect(screen.queryByText(/Define how agents create branches/)).toBeNull();
     const baseBranch = screen.getByText("Base branch");
     expect(
       synchronizationHeading.compareDocumentPosition(baseBranch)
@@ -147,6 +174,18 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
     const requestUrl = new URL(String(automationCall?.[0]), "https://example.test");
     expect(requestUrl.searchParams.get("scopeType")).toBe("function");
     expect(requestUrl.searchParams.get("scopeId")).toBe("function_123");
+
+    fireEvent.click(screen.getByRole("button", { name: "Add another repo" }));
+    const addRepositoryMenu = screen.getByRole("menu", { name: "Add another repo" });
+    expect(addRepositoryMenu.getAttribute("data-platform-popup-variant")).toBe("minimal");
+    expect(addRepositoryMenu.getAttribute("data-platform-popup-animation")).toBe("up-in");
+    const gitlabOption = screen.getByRole("menuitem", { name: "GitLab" });
+    expect(
+      gitlabOption.querySelector("img")?.getAttribute("src"),
+    ).toBe("/img/04-skills/gitlab.svg");
+    fireEvent.click(gitlabOption);
+    expect(await screen.findByRole("dialog", { name: "Attach files" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Connect to GitLab" })).toBeTruthy();
   });
 
   it("reuses the same repository policies with Web App-scoped deployment automation", async () => {
@@ -211,7 +250,7 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
     expect(requestUrl.searchParams.get("scopeId")).toBe("skill_123");
   });
 
-  it("opens the GitLab card in the shared connector settings shell", async () => {
+  it("opens the GitLab repository explorer directly when no repository is connected", async () => {
     render(
       <RunnerSourceGithubConnectorSettings
         resourceId="skill_gitlab"
@@ -224,11 +263,13 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open GitLab connector settings" }));
 
-    const dialog = await screen.findByRole("dialog", { name: "Skill connector settings" });
-    expect(dialog.querySelector("[data-platform-modal-part='sidebar']")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "GitHub" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "GitLab" })).toBeTruthy();
-    expect(screen.getByText("No repositories connected")).toBeTruthy();
+    const dialog = await screen.findByRole("dialog", { name: "Attach files" });
+    expect(dialog.querySelector("[data-platform-modal-part='sidebar']")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Connect to GitLab" })).toBeTruthy();
+    expect(
+      screen.getByText("Connect your GitLab account to browse and select repositories."),
+    ).toBeTruthy();
+    expect(screen.queryByRole("dialog", { name: "Skill connector settings" })).toBeNull();
   });
 
   it("routes View all Connectors through the shell navigation bridge", () => {
@@ -277,7 +318,7 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Open GitHub connector settings" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Add another repo" }));
+    expect(await screen.findByRole("dialog", { name: "Attach files" })).toBeTruthy();
     expect(
       await screen.findByRole("button", { name: "Create repository for this Function" }),
     ).toBeTruthy();

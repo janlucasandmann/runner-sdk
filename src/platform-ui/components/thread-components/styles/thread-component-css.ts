@@ -819,6 +819,13 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   height: var(--platform-popup-icon-size);
 }
 
+.platform-popup-surface .tb-popup-icon > :is(svg, img) {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
 .platform-popup-surface.is-fixed {
   position: fixed;
 }
@@ -2022,15 +2029,23 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
     transform 160ms ease;
 }
 
-.platform-checkbox:hover,
-.platform-checkbox.is-selected {
+.platform-checkbox:hover {
   border-color: rgba(255, 255, 255, 0.35);
   background: rgba(255, 255, 255, 0.1);
 }
 
-.platform-checkbox.is-selected::after {
-  opacity: 1;
-  transform: scale(1);
+.platform-checkbox.is-selected {
+  border-color: transparent;
+  background: #016bdf;
+}
+
+.platform-checkbox__checkmark {
+  position: absolute;
+  inset: 1px;
+  width: 10px;
+  height: 10px;
+  color: #fff;
+  pointer-events: none;
 }
 
 .platform-checkbox.is-partial::after {
@@ -2038,6 +2053,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   border-radius: 999px;
   opacity: 1;
   transform: scale(1);
+}
+
+.platform-checkbox.is-partial {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .platform-checkbox:focus-visible {
@@ -2963,9 +2983,26 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 
 .platform-connector-configuration__section-heading {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 12px;
+}
+
+.platform-connector-configuration__section-heading-copy {
+  min-width: 0;
+  display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 0 12px;
+}
+
+.platform-connector-configuration__section-actions {
+  min-width: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .platform-connector-configuration__section-heading h2,
@@ -3328,7 +3365,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-connector-settings-modal__sidebar-title {
-  margin: 0 0 22px;
+  margin: 16px 0 24px;
   padding: 0 10px;
   color: #fff;
   font-size: 14px;
@@ -3353,7 +3390,7 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
 }
 
 .platform-connector-settings-modal__group-title {
-  margin: 0;
+  margin: 0 0 6px;
   padding: 0 10px;
   display: flex;
   align-items: center;
@@ -3389,6 +3426,11 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   gap: 4px;
 }
 
+.platform-connector-settings-modal__repository-item-shell {
+  position: relative;
+  min-width: 0;
+}
+
 .platform-connector-settings-modal__repository-item {
   box-sizing: border-box;
   width: 100%;
@@ -3419,6 +3461,10 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   color: #fff;
 }
 
+.platform-connector-settings-modal__repository-item.has-actions {
+  padding-right: 42px;
+}
+
 .platform-connector-settings-modal__repository-item > span {
   min-width: 0;
   overflow: hidden;
@@ -3426,7 +3472,16 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   white-space: nowrap;
 }
 
-.platform-connector-settings-modal__primary-action.platform-button {
+.platform-connector-settings-modal__repository-menu-anchor {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  z-index: 1;
+  display: inline-flex;
+  transform: translateY(-50%);
+}
+
+.platform-connector-settings-modal__primary-action {
   width: 100%;
   flex: 0 0 auto;
   margin-top: 16px;
@@ -3477,6 +3532,25 @@ export const runnerChatCss = String.raw`.diff-tailwindcss-wrapper .container {
   font-weight: 400;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+.platform-connector-settings-modal
+  :where(
+    .playground-project-github-repository-settings__input,
+    .platform-resource-source-control__path
+  ) {
+  border: 0;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+}
+
+.platform-connector-settings-modal
+  :where(
+    .playground-project-github-repository-settings__input,
+    .platform-resource-source-control__path
+  ):focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.28);
+  outline-offset: 0;
 }
 
 .platform-connector-settings-modal__content-menu-anchor {

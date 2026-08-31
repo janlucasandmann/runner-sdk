@@ -30,6 +30,7 @@ export interface PlatformConnectorConfigurationSectionProps
   title: ReactNode;
   description?: ReactNode;
   children?: ReactNode;
+  actionsPortalId?: string;
 }
 
 function joinClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -219,6 +220,7 @@ export function PlatformConnectorConfigurationSection({
   title,
   description,
   children,
+  actionsPortalId,
   className = "",
   ...props
 }: PlatformConnectorConfigurationSectionProps) {
@@ -232,8 +234,16 @@ export function PlatformConnectorConfigurationSection({
       data-platform-connector-configuration-section="true"
     >
       <header className="platform-connector-configuration__section-heading">
-        <h2>{title}</h2>
-        {description ? <p>{description}</p> : null}
+        <div className="platform-connector-configuration__section-heading-copy">
+          <h2>{title}</h2>
+          {description ? <p>{description}</p> : null}
+        </div>
+        {actionsPortalId ? (
+          <div
+            id={actionsPortalId}
+            className="platform-connector-configuration__section-actions"
+          />
+        ) : null}
       </header>
       <div className="platform-connector-configuration__section-content">
         {children}

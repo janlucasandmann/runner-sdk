@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   PlatformConnectorConfiguration,
   PlatformConnectorConfigurationRow,
@@ -91,6 +91,7 @@ export function RunnerGithubRepositorySettings({
   const resolvedAutomationScopeId = String(automationScopeId || projectId || "").trim();
   const resolvedAutomationScopeType = automationScopeType || (projectId ? "project" : undefined);
   const [branchPrefixDraft, setBranchPrefixDraft] = useState(resolvedBranchPrefix);
+  const versionSynchronizationActionsPortalId = useId();
 
   useEffect(() => {
     setBranchPrefixDraft(resolvedBranchPrefix);
@@ -114,6 +115,10 @@ export function RunnerGithubRepositorySettings({
       createPullRequests={createPullRequests !== false}
       forcePush={forcePushCommits === true}
       showHeading={variant !== "resource"}
+      showRepositoryPath={variant !== "resource"}
+      manualActionsPortalId={variant === "resource"
+        ? versionSynchronizationActionsPortalId
+        : undefined}
     />
   ) : null;
 
@@ -136,7 +141,7 @@ export function RunnerGithubRepositorySettings({
     <PlatformConnectorConfigurationRow
       title="Base branch"
       description={variant === "resource"
-        ? "Branch used as the exact-revision boundary for imports and version creation."
+        ? "Branch used for imports and version creation."
         : "Branch agents use as the starting point for work in this repository."}
     >
       <div className="playground-project-github-repository-settings__branch">
@@ -178,7 +183,7 @@ export function RunnerGithubRepositorySettings({
 
       <PlatformConnectorConfigurationRow
         title="Pull requests"
-        description="Choose whether completed agent changes should be proposed as pull requests."
+        description="Create pull requests for completed agent changes."
       >
         <PlatformToggle
           className="playground-project-github-repository-settings__toggle"
@@ -190,7 +195,7 @@ export function RunnerGithubRepositorySettings({
 
       <PlatformConnectorConfigurationRow
         title="Force-push commits"
-        description="Permit a force update only when Computer Agents is selected to resolve a source conflict."
+        description="Allow force-push only to resolve conflicts."
       >
         <PlatformToggle
           className="playground-project-github-repository-settings__toggle"
@@ -217,7 +222,7 @@ export function RunnerGithubRepositorySettings({
         <>
           <PlatformConnectorConfigurationSection
             title="Version synchronization"
-            description="Keep Computer Agents versions aligned with exact revisions on the repository base branch."
+            actionsPortalId={versionSynchronizationActionsPortalId}
           >
             {baseBranchRow}
             {sourceControl}
@@ -226,7 +231,6 @@ export function RunnerGithubRepositorySettings({
           {automations ? (
             <PlatformConnectorConfigurationSection
               title="Automations"
-              description="Run checks, reviews, and exact-revision actions when GitHub events occur."
             >
               {automations}
             </PlatformConnectorConfigurationSection>
@@ -234,7 +238,6 @@ export function RunnerGithubRepositorySettings({
 
           <PlatformConnectorConfigurationSection
             title="Agent Git behavior"
-            description="Define how agents create branches, propose changes, and update repository history."
           >
             {agentGitBehavior}
           </PlatformConnectorConfigurationSection>

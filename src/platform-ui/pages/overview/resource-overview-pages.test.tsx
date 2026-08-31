@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { AgentsOverviewPage } from "../../../platform-resources/agents/overview/agents-overview-page.js";
 import { ComputersOverviewPage } from "../../../platform-resources/computers/overview/computers-overview-page.js";
@@ -322,6 +322,39 @@ describe("resource overview pages", () => {
         .getByRole("button", { name: "Manage Repos" })
         .querySelector("svg"),
     ).toBeNull();
+  });
+
+  it("reconnects the app-header action portal when its slot is recreated", async () => {
+    render(
+      <ResourceOverviewPage<{ id: string; name: string }>
+        showPeriodSelector={false}
+        controlsPortalId={CONTROLS_PORTAL_ID}
+        heroContent={<div>Overview</div>}
+        table={{
+          rows: [],
+          columns: [{ id: "name", header: "Name", accessor: "name" }],
+          getRowId: (row) => row.id,
+          ariaLabel: "Resources",
+          toolbar: {
+            primaryAction: {
+              label: "Create",
+              onClick: vi.fn(),
+            },
+          },
+        }}
+      />,
+    );
+
+    const controls = document.createElement("div");
+    controls.id = CONTROLS_PORTAL_ID;
+    document.body.appendChild(controls);
+
+    await waitFor(() => {
+      expect(
+        within(controls).getByRole("button", { name: "Create" }),
+      ).not.toBeNull();
+    });
+    controls.remove();
   });
 
   it("provides the canonical resource action set while preserving domain callbacks", async () => {
@@ -997,7 +1030,7 @@ describe("resource overview pages", () => {
 
     expect(container.querySelector(".platform-empty-state")).not.toBeNull();
     expect(
-      container.querySelector(".platform-empty-state__icon.hugeicons-square-mouse-pointer"),
+      container.querySelector(".platform-empty-state__icon.hugeicons-cursor-magic-selection-04"),
     ).not.toBeNull();
     expect(screen.getByText("No skills available")).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Custom Skill" }));

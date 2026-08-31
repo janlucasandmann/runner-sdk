@@ -1,39 +1,43 @@
+import ChevronsLeftRightIcon from "@hugeicons/core-free-icons/ChevronsLeftRightIcon";
+import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type PaginationState,
+  type RowSelectionState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from "@tanstack/react-table";
+import {
+  type CSSProperties,
   createElement,
+  type ElementType,
   isValidElement,
+  type KeyboardEvent,
+  type DragEvent as ReactDragEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
-  type DragEvent as ReactDragEvent,
-  type ElementType,
-  type KeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type PaginationState,
-  type RowSelectionState,
-  type SortingState,
-  type VisibilityState,
-} from "@tanstack/react-table";
+import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
+import { PlatformCheckbox } from "../../ui/checkbox/platform-checkbox.js";
 import {
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronsUpDown,
   EllipsisVertical,
   GripVertical,
   LayoutGrid,
@@ -42,18 +46,15 @@ import {
   Plus,
   Trash2,
 } from "../../ui/hugeicons-compat.js";
+import { PlatformSearch } from "../../ui/search/platform-search.js";
+import { PlatformLoadingState } from "../loading-state/index.js";
+import { PlatformPopupSurface } from "../popup/platform-popup.js";
 import {
   getNextPlatformDataTableSort,
   normalizePlatformDataTableIds,
   togglePlatformDataTableSelection,
   togglePlatformDataTableVisibleSelection,
 } from "./data-table-state.js";
-import { useAnimatedHeight } from "./use-animated-height.js";
-import { PlatformPrimaryButton } from "../../ui/button/platform-button.js";
-import { PlatformCheckbox } from "../../ui/checkbox/platform-checkbox.js";
-import { PlatformSearch } from "../../ui/search/platform-search.js";
-import { PlatformPopupSurface } from "../popup/platform-popup.js";
-import { PlatformLoadingState } from "../loading-state/index.js";
 import type {
   PlatformDataTableAction,
   PlatformDataTableActionContext,
@@ -64,6 +65,7 @@ import type {
   PlatformDataTableRowGroup,
   PlatformDataTableSortState,
 } from "./data-table-types.js";
+import { useAnimatedHeight } from "./use-animated-height.js";
 
 const DEFAULT_ACTION_MENU_WIDTH = 220;
 const DEFAULT_PAGE_SIZE = 20;
@@ -124,6 +126,18 @@ function isDeleteAction<TData>(
     actionId.startsWith(`${DELETE_ACTION_ID}-`) ||
     actionId.startsWith(`${DELETE_ACTION_ID}_`)
   );
+}
+
+function isShareAction<TData>(action: PlatformDataTableAction<TData>): boolean {
+  const actionId = action.id.trim().toLowerCase();
+  if (
+    actionId === "share" ||
+    actionId.startsWith("share-") ||
+    actionId.startsWith("share_")
+  ) {
+    return true;
+  }
+  return typeof action.label === "string" && /^share(?:\b|$)/i.test(action.label.trim());
 }
 
 function formatCellValue(value: unknown): ReactNode {
@@ -223,18 +237,26 @@ function PlatformDataTableSortIcon({
       ),
       "aria-hidden": "true",
     },
-    createElement(ChevronsUpDown, {
-      className: "platform-data-table__sort-icon-layer is-top",
-      width: 14,
-      height: 14,
-      strokeWidth: 1.8,
-    }),
-    createElement(ChevronsUpDown, {
-      className: "platform-data-table__sort-icon-layer is-bottom",
-      width: 14,
-      height: 14,
-      strokeWidth: 1.8,
-    }),
+    createElement(
+      "span",
+      { className: "platform-data-table__sort-icon-glyph is-top" },
+      createElement(HugeiconsIcon, {
+        icon: ChevronsLeftRightIcon,
+        className: "platform-data-table__sort-icon-glyph-icon",
+        size: 14,
+        strokeWidth: 1.8,
+      }),
+    ),
+    createElement(
+      "span",
+      { className: "platform-data-table__sort-icon-glyph is-bottom" },
+      createElement(HugeiconsIcon, {
+        icon: ChevronsLeftRightIcon,
+        className: "platform-data-table__sort-icon-glyph-icon",
+        size: 14,
+        strokeWidth: 1.8,
+      }),
+    ),
   );
 }
 
@@ -2411,6 +2433,7 @@ export function PlatformDataTable<TData>({
       customContent ||
       actions.map((action: PlatformDataTableAction<TData>) => {
         const deleteAction = isDeleteAction(action);
+        const shareAction = isShareAction(action);
         return createElement(
           "button",
           {
@@ -2433,7 +2456,15 @@ export function PlatformDataTable<TData>({
             "span",
             { className: "platform-data-table__menu-icon" },
             renderIcon(
-              action.icon || (deleteAction ? Trash2 : undefined),
+              shareAction
+                ? createElement(HugeiconsIcon, {
+                    icon: Share01Icon,
+                    className: "hugeicons hugeicons-share-01",
+                    size: 15,
+                    strokeWidth: 1.8,
+                    "aria-hidden": true,
+                  })
+                : action.icon || (deleteAction ? Trash2 : undefined),
               "",
               15,
             ),

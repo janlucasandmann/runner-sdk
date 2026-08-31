@@ -735,13 +735,28 @@ assert.match(
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
-  /className: "sidebar-metronome-run-main"[\s\S]*?openMetronomeRunTraceThread\(entry\)/,
+  /React\.createElement\(SidebarThreadListItem, \{[\s\S]*?variant: "workflow-overview"[\s\S]*?onSelect: \(\) => \{[\s\S]*?openMetronomeRunTraceThread\(entry\)/,
   "Opening a Metronome run from the sidebar must use the shared overview navigation path.",
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
-  /isRunActive[\s\S]*?React\.createElement\(WorkflowsSidebarIcon, \{ strokeWidth: 1\.85 \}\)/,
-  "Completed workflow runs must use the same workflow icon as the Workflows sidebar action.",
+  /const leadingIcon[\s\S]*?React\.createElement\(WorkflowsSidebarIcon, \{ strokeWidth: 1\.85 \}\)/,
+  "Workflow overview rows must keep the shared workflow icon regardless of run state.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /variant: "workflow-overview"[\s\S]*?timeLabel: lastActivityText[\s\S]*?trailingAction: "chevron"/,
+  "Workflow overview rows must expose a timestamp and one chevron through the shared item contract.",
+);
+assert.doesNotMatch(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /Loader2|EllipsisVertical/,
+  "Workflow overview rows must not render running, loading, or action-menu spinners and must not expose an ellipsis action.",
+);
+assert.match(
+  METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
+  /onContextMenu: \(event\) => openMetronomeRunActionMenu\(event, entry\)/,
+  "Workflow run actions must remain available by right click without consuming the trailing chevron slot.",
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.runController,
@@ -750,8 +765,8 @@ assert.match(
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.sidebarEntry,
-  /React\.createElement\(isCollapsed \? ChevronRight : ChevronDown/,
-  "Metronome run groups must render directionally accurate collapsed and expanded chevrons.",
+  /trailingAction: "chevron"[\s\S]*?expanded: !isCollapsed[\s\S]*?chevronBusy: isLoadingThreads/,
+  "Metronome run groups must delegate their expandable chevron state to the shared thread item.",
 );
 assert.match(
   METRONOME_APP_SCRIPT_FRAGMENTS.runController,

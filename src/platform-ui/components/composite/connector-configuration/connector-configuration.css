@@ -36,9 +36,26 @@
 
 .platform-connector-configuration__section-heading {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 12px;
+}
+
+.platform-connector-configuration__section-heading-copy {
+  min-width: 0;
+  display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 0 12px;
+}
+
+.platform-connector-configuration__section-actions {
+  min-width: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .platform-connector-configuration__section-heading h2,

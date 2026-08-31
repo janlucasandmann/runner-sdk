@@ -154,6 +154,13 @@
   height: var(--platform-popup-icon-size);
 }
 
+.platform-popup-surface .tb-popup-icon > :is(svg, img) {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
 .platform-popup-surface.is-fixed {
   position: fixed;
 }

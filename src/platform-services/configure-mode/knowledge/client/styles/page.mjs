@@ -111,7 +111,7 @@ export const PLAYGROUND_KNOWLEDGE_CSS = String.raw`
     display: flex;
     flex-direction: column;
     min-width: 0;
-    gap: 14px;
+    gap: 0;
   }
 
   .knowledge-connector-settings__heading,

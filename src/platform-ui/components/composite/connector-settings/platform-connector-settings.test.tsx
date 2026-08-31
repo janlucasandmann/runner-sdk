@@ -52,7 +52,8 @@ describe("Platform connector settings", () => {
 
   it("uses the headerless split modal with provider-grouped repositories", () => {
     const onClose = vi.fn();
-    const onAddRepository = vi.fn();
+    const onAddGithubRepository = vi.fn();
+    const onAddGitlabRepository = vi.fn();
     const onActiveItemChange = vi.fn();
     const onDisconnect = vi.fn();
     render(
@@ -62,7 +63,13 @@ describe("Platform connector settings", () => {
         activeItemId="github:acme/platform"
         onActiveItemChange={onActiveItemChange}
         onClose={onClose}
-        primaryAction={{ label: "Add another repo", onClick: onAddRepository }}
+        primaryAction={{
+          label: "Add another repo",
+          options: [
+            { id: "github", label: "GitHub", onSelect: onAddGithubRepository },
+            { id: "gitlab", label: "GitLab", onSelect: onAddGitlabRepository },
+          ],
+        }}
         groups={[
           {
             id: "github",
@@ -98,15 +105,30 @@ describe("Platform connector settings", () => {
     expect(
       screen.getByRole("heading", { name: "acme/platform", level: 1 }),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Repository actions" }));
-    expect(screen.getByRole("menu", { name: "Repository actions" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Connection actions" }));
+    expect(screen.getByRole("menu", { name: "Connection actions" })).toBeTruthy();
     fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
     expect(onDisconnect).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for active connection" }));
+    const sidebarMenu = screen.getByRole("menu", {
+      name: "Actions for active connection",
+    });
+    expect(sidebarMenu.getAttribute("data-platform-popup-variant")).toBe("minimal");
+    fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
+    expect(onDisconnect).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByRole("button", { name: "acme/platform" }));
     expect(onActiveItemChange).toHaveBeenCalledWith("github:acme/platform");
     expect(screen.getByText("Repository policy")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Add another repo" }));
-    expect(onAddRepository).toHaveBeenCalledOnce();
+    const addRepositoryMenu = screen.getByRole("menu", { name: "Add another repo" });
+    expect(addRepositoryMenu.getAttribute("data-platform-popup-variant")).toBe("minimal");
+    expect(addRepositoryMenu.getAttribute("data-platform-popup-animation")).toBe("up-in");
+    fireEvent.click(screen.getByRole("menuitem", { name: "GitHub" }));
+    expect(onAddGithubRepository).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("menu", { name: "Add another repo" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Add another repo options" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "GitLab" }));
+    expect(onAddGitlabRepository).toHaveBeenCalledOnce();
     expect(onClose).not.toHaveBeenCalled();
   });
 

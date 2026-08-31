@@ -16,6 +16,7 @@ describe("PlatformCheckbox", () => {
     const checkbox = screen.getByRole("checkbox", { name: "Select row" });
     expect(checkbox.getAttribute("aria-checked")).toBe("true");
     expect(checkbox.classList.contains("is-selected")).toBe(true);
+    expect(checkbox.querySelector(".platform-checkbox__checkmark")).not.toBeNull();
 
     rerender(
       <PlatformCheckbox

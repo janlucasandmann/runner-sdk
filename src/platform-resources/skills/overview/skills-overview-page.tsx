@@ -1,11 +1,11 @@
 import {
   ChevronRight,
   Plus,
-  Sparkles,
-  SquareMousePointer,
   SquarePen,
   Trash2,
 } from "../../../platform-ui/components/ui/hugeicons-compat.js";
+import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
+import CursorMagicSelection04Icon from "@hugeicons/core-free-icons/CursorMagicSelection04Icon";
 import { useMemo, type ReactNode } from "react";
 import type {
   PlatformDataTableAction,
@@ -32,6 +32,22 @@ import { SkillsOverviewGuide } from "./skills-overview-guide.js";
 const COMPUTER_AGENTS_CREATOR_NAME = "Computer Agents";
 const COMPUTER_AGENTS_CREATOR_PROFILE_URL =
   "/img/agent-profile-pics/ca-profilepic.jpg";
+
+const CursorMagicSelectionSkillIcon = (
+  props: Omit<HugeiconsIconProps, "icon">,
+) => (
+  <HugeiconsIcon
+    icon={CursorMagicSelection04Icon}
+    {...props}
+    className={[
+      "hugeicons",
+      "hugeicons-cursor-magic-selection-04",
+      props.className,
+    ]
+      .filter(Boolean)
+      .join(" ")}
+  />
+);
 
 export interface SkillOverviewRow {
   id: string;
@@ -172,7 +188,7 @@ export function SkillsOverviewPage({
   const resolveIdentity = identityColumn?.getIdentity || getCreatorIdentity;
   const resolvedEmptyState = emptyState ?? (
     <PlatformEmptyState
-      icon={SquareMousePointer}
+      icon={CursorMagicSelectionSkillIcon}
       title="No skills available"
       description="Create a custom skill to give agents reusable expertise and repeatable workflows."
       primaryAction={{
@@ -187,7 +203,9 @@ export function SkillsOverviewPage({
       return createResourceOverviewColumns<SkillOverviewRow>({
         name: {
           getVisual: (row) => ({
-            icon: row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />,
+            icon: row.icon || (
+              <CursorMagicSelectionSkillIcon width={16} height={16} strokeWidth={1.8} />
+            ),
             iconClassName: `is-skill${
               row.isComputerAgents
                 || row.id.trim().toLowerCase() === "computer_agents"
@@ -216,7 +234,9 @@ export function SkillsOverviewPage({
           <ResourceOverviewCatalogIdentityCell
             title={row.name}
             description={row.description}
-            icon={row.icon || <Sparkles width={16} height={16} strokeWidth={1.8} />}
+            icon={row.icon || (
+              <CursorMagicSelectionSkillIcon width={16} height={16} strokeWidth={1.8} />
+            )}
             iconClassName={`is-skill${
               row.isComputerAgents
                 || row.id.trim().toLowerCase() === "computer_agents"

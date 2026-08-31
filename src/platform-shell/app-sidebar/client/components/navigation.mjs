@@ -57,6 +57,10 @@ export function createAppSidebarNavigationScript(options = {}) {
           return renderSidebarHugeIcon(ComputerIcon, props);
         }
 
+        function SkillsSidebarIcon(props = {}) {
+          return renderSidebarHugeIcon(CursorMagicSelection04Icon, props);
+        }
+
         function KnowledgeSidebarIcon(props = {}) {
           return renderSidebarHugeIcon(LibraryIcon, props);
         }
@@ -142,7 +146,7 @@ ${configurePrimaryEntries}
               {
                 id: "skills",
                 label: "Skills",
-                Icon: SquareMousePointer,
+                Icon: SkillsSidebarIcon,
                 active: activePage === "tools" && toolsView === "skills",
                 onClick: handleOpenSkillsShortcut,
               },

@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { PlatformDetailSidebar, PlatformDetailSidebarSection } from "./platform-detail-sidebar.js";
@@ -7,6 +9,17 @@ import { PlatformDetailSidebar, PlatformDetailSidebarSection } from "./platform-
 afterEach(cleanup);
 
 describe("PlatformDetailSidebar", () => {
+  it("uses the shared sticky detail-sidebar baseline", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/platform-ui/components/composite/detail-sidebar/detail-sidebar.css"),
+      "utf8",
+    );
+    const baseRule = css.match(/\.platform-detail-sidebar\s*\{([\s\S]*?)\n\}/)?.[1] || "";
+
+    expect(baseRule).toContain("position: sticky;");
+    expect(baseRule).toContain("top: 0;");
+  });
+
   it("owns sidebar structure and collapsed accessibility state", () => {
     const { rerender } = render(
       <PlatformDetailSidebar ariaLabel="Agent settings">

@@ -2,6 +2,7 @@ import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import Upload01Icon from "@hugeicons/core-free-icons/Upload01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { RefreshCcw } from "../../ui/hugeicons-compat.js";
 import { PlatformPrimaryButton, PlatformSecondaryButton } from "../../ui/button/index.js";
@@ -96,6 +97,8 @@ export interface PlatformResourceSourceControlProps {
   forcePush?: boolean;
   disabled?: boolean;
   showHeading?: boolean;
+  showRepositoryPath?: boolean;
+  manualActionsPortalId?: string;
   /** Primarily used by embedded hosts and tests. The browser navigates in-place by default. */
   openSetupUrl?: (url: string) => void;
 }
@@ -283,6 +286,8 @@ export function PlatformResourceSourceControl({
   forcePush = false,
   disabled = false,
   showHeading = true,
+  showRepositoryPath = true,
+  manualActionsPortalId,
   openSetupUrl = defaultOpenSetupUrl,
 }: PlatformResourceSourceControlProps) {
   const baseUrl = normalizeBaseUrl(apiBaseUrl);
@@ -578,6 +583,23 @@ export function PlatformResourceSourceControl({
     errorCode === "RESOURCE_SOURCE_CONTROL_REPOSITORY_NOT_CONNECTED"
     || /install the computer agents github app/i.test(error)
   );
+  const manualActions = binding ? (
+    <div className="platform-resource-source-control__actions">
+      {binding.direction !== "resource_to_github" ? (
+        <PlatformSecondaryButton type="button" size="small" disabled={disabled || Boolean(syncing)} onClick={() => void synchronize("github_to_resource")}>
+          {syncing === "github_to_resource" ? <img src="/img/spinner.svg" alt="" /> : <HugeiconsIcon icon={Download01Icon} aria-hidden="true" />} Import now
+        </PlatformSecondaryButton>
+      ) : null}
+      {binding.direction !== "github_to_resource" ? (
+        <PlatformSecondaryButton type="button" size="small" disabled={disabled || Boolean(syncing)} onClick={() => void synchronize("resource_to_github")}>
+          {syncing === "resource_to_github" ? <img src="/img/spinner.svg" alt="" /> : <HugeiconsIcon icon={Upload01Icon} aria-hidden="true" />} Publish now
+        </PlatformSecondaryButton>
+      ) : null}
+    </div>
+  ) : null;
+  const manualActionsPortalTarget = manualActionsPortalId && typeof document !== "undefined"
+    ? document.getElementById(manualActionsPortalId)
+    : null;
 
   async function beginGitHubSetup() {
     if (startingGitHubSetup || disabled) return;
@@ -608,7 +630,8 @@ export function PlatformResourceSourceControl({
   }
 
   return (
-    <div
+    <>
+      <div
       className={`platform-resource-source-control${binding ? " is-ready" : " is-setup-required"}${showHeading ? "" : " without-heading"}`}
       data-platform-resource-source-control="true"
       data-source-control-status={binding ? "ready" : "setup-required"}
@@ -663,16 +686,16 @@ export function PlatformResourceSourceControl({
       {!showHeading && binding ? (
         <PlatformConnectorConfigurationRow
           title="Sync triggers"
-          description="Choose which GitHub and Computer Agents lifecycle events initiate synchronization."
+          description="Choose which events start synchronization."
         >
-          <PlatformSecondaryButton
+          <PlatformPrimaryButton
             type="button"
             size="small"
             disabled={disabled || saving}
             onClick={openConfiguration}
           >
             Manage
-          </PlatformSecondaryButton>
+          </PlatformPrimaryButton>
         </PlatformConnectorConfigurationRow>
       ) : null}
       {githubSetupRequired ? (
@@ -704,18 +727,20 @@ export function PlatformResourceSourceControl({
               onValueChange={(direction) => void update({ direction })}
             />
           </PlatformConnectorConfigurationRow>
-          <PlatformConnectorConfigurationRow title="Repository path" description="Optional folder containing this resource in a monorepo.">
-            <input
-              className="platform-resource-source-control__path"
-              value={rootPathDraft}
-              disabled={disabled || saving}
-              placeholder="Repository root"
-              onChange={(event) => setRootPathDraft(event.target.value)}
-              onBlur={() => rootPathDraft !== binding.rootPath && void update({ rootPath: rootPathDraft })}
-              onKeyDown={(event) => event.key === "Enter" && event.currentTarget.blur()}
-            />
-          </PlatformConnectorConfigurationRow>
-          <PlatformConnectorConfigurationRow title="Conflicts" description="Stop safely by default when both sides changed since the last sync.">
+          {showRepositoryPath ? (
+            <PlatformConnectorConfigurationRow title="Repository path" description="Optional folder containing this resource in a monorepo.">
+              <input
+                className="platform-resource-source-control__path"
+                value={rootPathDraft}
+                disabled={disabled || saving}
+                placeholder="Repository root"
+                onChange={(event) => setRootPathDraft(event.target.value)}
+                onBlur={() => rootPathDraft !== binding.rootPath && void update({ rootPath: rootPathDraft })}
+                onKeyDown={(event) => event.key === "Enter" && event.currentTarget.blur()}
+              />
+            </PlatformConnectorConfigurationRow>
+          ) : null}
+          <PlatformConnectorConfigurationRow title="Conflicts" description="Stop when both sides changed since the last sync.">
             <PlatformSelector
               value={binding.conflictPolicy}
               ariaLabel="Source synchronization conflict policy"
@@ -730,18 +755,7 @@ export function PlatformResourceSourceControl({
               <strong>{binding.state.lastStatus ? `Last sync: ${binding.state.lastStatus}` : "Not synchronized yet"}</strong>
               <span>{binding.state.lastError || formatSyncTime(binding.state.lastSyncAt)}</span>
             </div>
-            <div className="platform-resource-source-control__actions">
-              {binding.direction !== "resource_to_github" ? (
-                <PlatformSecondaryButton type="button" size="small" disabled={disabled || Boolean(syncing)} onClick={() => void synchronize("github_to_resource")}>
-                  {syncing === "github_to_resource" ? <img src="/img/spinner.svg" alt="" /> : <HugeiconsIcon icon={Download01Icon} aria-hidden="true" />} Import now
-                </PlatformSecondaryButton>
-              ) : null}
-              {binding.direction !== "github_to_resource" ? (
-                <PlatformSecondaryButton type="button" size="small" disabled={disabled || Boolean(syncing)} onClick={() => void synchronize("resource_to_github")}>
-                  {syncing === "resource_to_github" ? <img src="/img/spinner.svg" alt="" /> : <HugeiconsIcon icon={Upload01Icon} aria-hidden="true" />} Publish now
-                </PlatformSecondaryButton>
-              ) : null}
-            </div>
+            {!manualActionsPortalId ? manualActions : null}
           </div>
         </>
       ) : null}
@@ -776,6 +790,10 @@ export function PlatformResourceSourceControl({
           ))}
         </div>
       </PlatformModal>
-    </div>
+      </div>
+      {manualActions && manualActionsPortalTarget
+        ? createPortal(manualActions, manualActionsPortalTarget)
+        : null}
+    </>
   );
 }

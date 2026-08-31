@@ -11,6 +11,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPlatformRolePermissionSet } from "../../../platform-ui/pages/permissions/index.js";
+import { PlatformResourceSettingsPage } from "../../../platform-ui/pages/settings/platform-resource-settings-page.js";
 import {
   PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
   PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
@@ -99,9 +100,13 @@ describe("PlatformResourceAccessSettings", () => {
       />,
     );
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Add teams with Skill access" }),
+    const addTeamsButton = screen.getByRole("button", {
+      name: "Add teams with Skill access",
+    });
+    expect(addTeamsButton.getAttribute("data-platform-button-variant")).toBe(
+      "primary",
     );
+    fireEvent.click(addTeamsButton);
     const teamItem = screen.getByRole("menuitem", { name: "Design Admin" });
     expect(
       teamItem.querySelector(
@@ -341,6 +346,70 @@ describe("PlatformResourceAccessSettings", () => {
       PLATFORM_RESOURCE_ACCESS_NAVIGATION_EVENT,
       handleNavigation,
     );
+  });
+
+  it("promotes Skill access into the centralized dedicated settings page", async () => {
+    function SkillSettingsHarness() {
+      const [principalId, setPrincipalId] = useState("");
+      return (
+        <PlatformResourceSettingsPage
+          ariaLabel="Skill settings"
+          identity={{
+            icon: <span>S</span>,
+            title: "Repository skill",
+            description: "A reusable skill",
+          }}
+          details={{
+            variant: "standard",
+            updatedAt: null,
+            creator: { value: "creator", name: "Creator" },
+            owner: { value: "owner", name: "Owner" },
+            primaryActions: [
+              { id: "test", label: "Test Skill", onSelect: vi.fn() },
+            ],
+          }}
+          connectors={<div>Skill connectors</div>}
+          access={
+            <PlatformResourceAccessSettings
+              teams={[team]}
+              resourceLabel="Skill"
+              selectedPrincipalId={principalId}
+              onSelectedPrincipalIdChange={setPrincipalId}
+              subjectType="skill"
+              teamSubjectType="skill_team_role"
+              selectedRoleId="member"
+              onSelectedRoleIdChange={vi.fn()}
+              teamPermissionSet={createPlatformRolePermissionSet(
+                "skill_team_role",
+                "member",
+              )}
+              onTeamPermissionSetChange={vi.fn()}
+            />
+          }
+        />
+      );
+    }
+
+    const { container } = render(<SkillSettingsHarness />);
+    fireEvent.click(
+      screen.getByRole("row", { name: `Edit permissions for ${team.name}` }),
+    );
+
+    await waitFor(() => {
+      expect(
+        container
+          .querySelector("[data-platform-resource-settings-page]")
+          ?.getAttribute("data-access-detail-open"),
+      ).toBe("true");
+    });
+    expect(screen.queryByText("Skill connectors")).toBeNull();
+    expect(screen.queryByRole("textbox", { name: "Resource name" })).toBeNull();
+    expect(
+      screen.queryByRole("complementary", { name: "Resource details" }),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-platform-resource-access-view="team"]'),
+    ).not.toBeNull();
   });
 
   it("provides the canonical role sidebar when an adapter omits roles", () => {

@@ -1,4 +1,12 @@
-import type { CSSProperties, ReactNode, Ref } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type Ref,
+} from "react";
 
 import { PlatformDetailSidebar } from "../../components/composite/detail-sidebar/index.js";
 import {
@@ -7,6 +15,19 @@ import {
   PlatformResourceSettingsDetailsSidebar,
   type PlatformResourceSettingsDetailsSidebarProps,
 } from "../../components/composite/resource-detail-sidebar/index.js";
+
+type PlatformResourceAccessDetailOpenChange = (open: boolean) => void;
+
+const PlatformResourceAccessDetailContext =
+  createContext<PlatformResourceAccessDetailOpenChange | null>(null);
+
+/**
+ * Allows the centralized Access flow to promote itself into the dedicated
+ * resource-access page without every resource adapter owning parallel state.
+ */
+export function usePlatformResourceAccessDetailOpenChange() {
+  return useContext(PlatformResourceAccessDetailContext);
+}
 
 export interface PlatformResourceSettingsIdentityProps {
   icon: ReactNode;
@@ -208,53 +229,67 @@ export function PlatformResourceSettingsPage<TValue extends string = string, TDa
   sectionsClassName = "",
   detailsSidebarClassName = "",
 }: PlatformResourceSettingsPageProps<TValue, TData>) {
-  const sidebarCollapsed = accessDetailOpen || detailsSidebarCollapsed;
+  const [managedAccessDetailOpen, setManagedAccessDetailOpen] = useState(false);
+  const handleManagedAccessDetailOpenChange = useCallback(
+    (open: boolean) => setManagedAccessDetailOpen(open),
+    [],
+  );
+  const resolvedAccessDetailOpen =
+    accessDetailOpen || managedAccessDetailOpen;
+  const sidebarCollapsed =
+    resolvedAccessDetailOpen || detailsSidebarCollapsed;
   return (
-    <section
-      className={joinClassNames(
-        "platform-resource-settings-page",
-        accessDetailOpen && "is-access-detail-open",
-        sidebarCollapsed && "is-details-sidebar-collapsed",
-        className,
-      )}
-      aria-label={ariaLabel}
-      data-platform-resource-settings-page="true"
-      data-access-detail-open={accessDetailOpen ? "true" : "false"}
+    <PlatformResourceAccessDetailContext.Provider
+      value={handleManagedAccessDetailOpenChange}
     >
-      <div className={joinClassNames("platform-resource-settings-page__main", mainClassName)}>
-        <PlatformResourceSettingsIdentity {...identity} />
-        <div
-          className={joinClassNames("platform-resource-settings-page__sections", sectionsClassName)}
-        >
-          {!accessDetailOpen && location ? (
-            <SettingsSlot name="location">{location}</SettingsSlot>
+      <section
+        className={joinClassNames(
+          "platform-resource-settings-page",
+          resolvedAccessDetailOpen && "is-access-detail-open",
+          sidebarCollapsed && "is-details-sidebar-collapsed",
+          className,
+        )}
+        aria-label={ariaLabel}
+        data-platform-resource-settings-page="true"
+        data-access-detail-open={resolvedAccessDetailOpen ? "true" : "false"}
+      >
+        <div className={joinClassNames("platform-resource-settings-page__main", mainClassName)}>
+          {!resolvedAccessDetailOpen ? (
+            <PlatformResourceSettingsIdentity {...identity} />
           ) : null}
-          {!accessDetailOpen && connectors ? (
-            <SettingsSlot name="connectors">{connectors}</SettingsSlot>
-          ) : null}
-          {!accessDetailOpen && additionalSections ? (
-            <SettingsSlot name="additional">{additionalSections}</SettingsSlot>
-          ) : null}
-          <SettingsSlot name="access">{access}</SettingsSlot>
+          <div
+            className={joinClassNames("platform-resource-settings-page__sections", sectionsClassName)}
+          >
+            {!resolvedAccessDetailOpen && location ? (
+              <SettingsSlot name="location">{location}</SettingsSlot>
+            ) : null}
+            {!resolvedAccessDetailOpen && connectors ? (
+              <SettingsSlot name="connectors">{connectors}</SettingsSlot>
+            ) : null}
+            {!resolvedAccessDetailOpen && additionalSections ? (
+              <SettingsSlot name="additional">{additionalSections}</SettingsSlot>
+            ) : null}
+            <SettingsSlot name="access">{access}</SettingsSlot>
+          </div>
         </div>
-      </div>
 
-      {!accessDetailOpen ? (
-        <PlatformDetailSidebar
-          collapsed={detailsSidebarCollapsed}
-          ariaLabel={detailsSidebarAriaLabel}
-          className={joinClassNames(
-            "platform-resource-settings-page__sidebar",
-            detailsSidebarClassName,
-          )}
-        >
-          {details.variant === "standard" ? (
-            <PlatformResourceSettingsDetailsSidebar<TValue, TData> {...details} />
-          ) : (
-            <PlatformResourceDetailSidebar<TValue, TData> {...details} />
-          )}
-        </PlatformDetailSidebar>
-      ) : null}
-    </section>
+        {!resolvedAccessDetailOpen ? (
+          <PlatformDetailSidebar
+            collapsed={detailsSidebarCollapsed}
+            ariaLabel={detailsSidebarAriaLabel}
+            className={joinClassNames(
+              "platform-resource-settings-page__sidebar",
+              detailsSidebarClassName,
+            )}
+          >
+            {details.variant === "standard" ? (
+              <PlatformResourceSettingsDetailsSidebar<TValue, TData> {...details} />
+            ) : (
+              <PlatformResourceDetailSidebar<TValue, TData> {...details} />
+            )}
+          </PlatformDetailSidebar>
+        ) : null}
+      </section>
+    </PlatformResourceAccessDetailContext.Provider>
   );
 }

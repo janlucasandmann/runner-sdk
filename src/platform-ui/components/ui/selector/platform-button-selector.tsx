@@ -15,6 +15,7 @@ import {
 } from "react";
 import {
   PlatformPopup,
+  type PlatformPopupPlacement,
   type PlatformPopupSearchHeaderProps,
   type PlatformPopupVariant,
 } from "../../composite/popup/index.js";
@@ -49,6 +50,7 @@ export interface PlatformButtonSelectorProps {
   openOnHover?: boolean;
   hoverCloseDelayMs?: number;
   popupAlignment?: PlatformSelectorPopupAlignment;
+  popupPlacement?: PlatformPopupPlacement;
   popupRole?: AriaRole;
   popupVariant?: PlatformPopupVariant;
   popupWidth?: CSSProperties["width"];
@@ -114,6 +116,7 @@ export const PlatformButtonSelector = forwardRef<
     openOnHover = false,
     hoverCloseDelayMs = 120,
     popupAlignment = "left",
+    popupPlacement,
     popupRole = "menu",
     popupVariant = "minimal",
     popupWidth,
@@ -275,6 +278,8 @@ export const PlatformButtonSelector = forwardRef<
     </>
   );
   const popupAriaHasPopup = popupRole === "listbox" ? "listbox" : "menu";
+  const resolvedPopupPlacement = popupPlacement
+    ?? (popupAlignment === "right" ? "bottom-end" : "bottom-start");
   const mainButtonIsPopupTrigger = mode === "popup";
   const trigger = (
     <div
@@ -381,10 +386,10 @@ export const PlatformButtonSelector = forwardRef<
         onMouseEnter: handleHoverEnter,
         onMouseLeave: handleHoverLeave,
       }}
-      animation="down-in"
+      animation={resolvedPopupPlacement.startsWith("top") ? "up-in" : "down-in"}
       variant={popupVariant}
       portal
-      placement={popupAlignment === "right" ? "bottom-end" : "bottom-start"}
+      placement={resolvedPopupPlacement}
       portalMatchAnchorWidth={matchTriggerWidth}
       searchHeader={popupSearch}
       trigger={trigger}

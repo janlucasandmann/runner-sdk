@@ -11,6 +11,8 @@ export const PLATFORM_ALL_AGENTS_PRINCIPAL_ID = "all_agents";
 export const PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID =
   "all_organization_members";
 export const PLATFORM_RESOURCE_ACCESS_CONTROL_VERSION = 1;
+export const PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL =
+  "/img/agent-profile-pics/allagents.webp";
 
 export type PlatformSystemAccessPrincipalId =
   | typeof PLATFORM_ALL_AGENTS_PRINCIPAL_ID
@@ -71,6 +73,7 @@ export const PLATFORM_SYSTEM_ACCESS_PRINCIPALS: readonly PlatformSystemAccessPri
     id: PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
     name: "All Agents",
     kind: "system",
+    profileImageUrl: PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL,
     locked: true,
     description: "Every agent in this organization",
     roleId: "default",
@@ -81,6 +84,7 @@ export const PLATFORM_SYSTEM_ACCESS_PRINCIPALS: readonly PlatformSystemAccessPri
     id: PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
     name: "All Organization Members",
     kind: "system",
+    profileImageUrl: PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL,
     locked: true,
     description: "Every active member of this organization",
     roleId: "default",

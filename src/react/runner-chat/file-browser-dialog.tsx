@@ -15,6 +15,7 @@ import {
   IconAtlassian,
   IconFolderPlus,
   IconGithub,
+  IconGitlab,
   IconGoogleDrive,
   IconLoader2,
   IconNotion,
@@ -33,6 +34,7 @@ export type RunnerFileBrowserSource =
   | "notion"
   | "one-drive"
   | "github"
+  | "gitlab"
   | "atlassian";
 
 type RunnerFileBrowserIntegrationSource = Exclude<RunnerFileBrowserSource, "workspace">;
@@ -106,6 +108,7 @@ const SOURCE_LABELS: Record<RunnerFileBrowserIntegrationSource, string> = {
   notion: "Notion",
   "one-drive": "OneDrive",
   github: "GitHub",
+  gitlab: "GitLab",
   atlassian: "Atlassian",
 };
 
@@ -120,6 +123,7 @@ function RunnerFileBrowserSourceIcon({
   if (source === "notion") return <IconNotion className={className} />;
   if (source === "one-drive") return <IconOneDrive className={className} />;
   if (source === "atlassian") return <IconAtlassian className={className} />;
+  if (source === "gitlab") return <IconGitlab className={className} />;
   return <IconGithub className={className} />;
 }
 
@@ -128,6 +132,7 @@ function getFileBrowserAuthCopy(source: RunnerFileBrowserIntegrationSource): str
   if (source === "notion") return "Connect your Notion workspace to browse and select databases.";
   if (source === "one-drive") return "Connect your OneDrive to browse and attach files.";
   if (source === "atlassian") return "Connect Atlassian to select the Jira projects and Confluence spaces available to this project.";
+  if (source === "gitlab") return "Connect your GitLab account to browse and select repositories.";
   return "Connect your GitHub to browse and attach repository files.";
 }
 
@@ -266,7 +271,7 @@ export function RunnerFileBrowserDialog({
     .map((entry) => `${entry.id || "root"}:${entry.name}`)
     .join("/")}`;
   const authenticatedIntegrationSources = (
-    ["google-drive", "notion", "one-drive", "github", "atlassian"] as const
+    ["google-drive", "notion", "one-drive", "github", "gitlab", "atlassian"] as const
   ).filter((integrationSource) => connections[integrationSource].connected);
   const sourceGroups: PlatformFileExplorerSourceGroup[] = [
     {

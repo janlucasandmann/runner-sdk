@@ -2,6 +2,8 @@ import {
   forwardRef,
   type ButtonHTMLAttributes,
 } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import CheckIcon from "@hugeicons/core-free-icons/CheckIcon";
 
 export interface PlatformCheckboxProps
   extends Omit<
@@ -52,6 +54,17 @@ export const PlatformCheckbox = forwardRef<
         className,
       )}
       data-platform-checkbox="true"
-    />
+    >
+      {checked && !indeterminate ? (
+        <HugeiconsIcon
+          icon={CheckIcon}
+          className="platform-checkbox__checkmark"
+          size={10}
+          strokeWidth={2.2}
+          color="#fff"
+          aria-hidden="true"
+        />
+      ) : null}
+    </button>
   );
 });

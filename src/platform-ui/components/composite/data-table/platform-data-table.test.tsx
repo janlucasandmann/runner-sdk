@@ -95,9 +95,8 @@ describe("PlatformDataTable", () => {
         ?.classList.contains("is-bottom-active"),
     ).toBe(true);
     expect(
-      sortButton.querySelectorAll(".hugeicons-chevrons-up-down"),
+      sortButton.querySelectorAll(".platform-data-table__sort-icon-glyph"),
     ).toHaveLength(2);
-    expect(sortButton.querySelector(".hugeicons-arrow-up-down")).toBeNull();
 
     await user.click(sortButton);
 
@@ -869,6 +868,30 @@ describe("PlatformDataTable", () => {
     expect(
       document.querySelector(
         ".platform-data-table__floating-menu.platform-popup-surface.is-minimal.is-portaled",
+      ),
+    ).not.toBeNull();
+  });
+
+  it("uses the centralized Hugeicons share icon for share actions", async () => {
+    const user = userEvent.setup();
+    renderTable({
+      getRowActions: () => [
+        {
+          id: "share",
+          label: "Share",
+          icon: Copy,
+          onSelect: vi.fn(),
+        },
+      ],
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open actions for Alpha" }),
+    );
+
+    expect(
+      document.querySelector(
+        ".platform-data-table__floating-menu .hugeicons-share-01",
       ),
     ).not.toBeNull();
   });

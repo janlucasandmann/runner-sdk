@@ -2432,6 +2432,7 @@ ${CALENDAR_PROJECTS_PAGE_CONNECTOR_FRAGMENTS.attachmentRemoval}
             notion: buildCentralizedConnectorConnection("notion"),
             "one-drive": buildCentralizedConnectorConnection("one-drive"),
             github: buildCentralizedConnectorConnection("github"),
+            gitlab: buildCentralizedConnectorConnection("gitlab"),
             atlassian: buildCentralizedConnectorConnection("atlassian"),
           };
           const centralizedEnvironments = isProjectConnectorMode

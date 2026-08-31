@@ -42,6 +42,7 @@ export interface RunnerKnowledgeConfluenceResourceSettingsProps {
   strategyKnowledgeSyncFromConfluenceEnabled?: boolean | null;
   onChange?: (change: RunnerProjectConfluenceResourceSettingsChange) => void | Promise<void>;
   onDisconnect?: () => void | Promise<void>;
+  variant?: "project" | "resource";
 }
 
 export type RunnerProjectConfluenceResourceSettingsProps =
@@ -79,6 +80,7 @@ export function RunnerKnowledgeConfluenceResourceSettings({
   strategyKnowledgeSyncFromConfluenceEnabled,
   onChange,
   onDisconnect,
+  variant = "project",
 }: RunnerKnowledgeConfluenceResourceSettingsProps) {
   const hasTarget = Boolean(projectId || libraryId);
   const canLoad = Boolean(hasTarget && spaceId && cloudId);
@@ -264,9 +266,11 @@ export function RunnerKnowledgeConfluenceResourceSettings({
 
   return (
     <PlatformConnectorConfiguration
-      className="playground-project-confluence-resource-settings playground-project-github-repository-settings"
+      className={`playground-project-confluence-resource-settings playground-project-github-repository-settings is-${variant}`}
       data-project-confluence-resource={resourceId}
       data-knowledge-confluence-resource={resourceId}
+      surface={variant === "resource" ? "plain" : "contained"}
+      showHeader={variant !== "resource"}
       title={resourceName}
       actionLabel={`Actions for ${resourceName}`}
       onDisconnect={!disabled && onDisconnect ? disconnectResource : undefined}

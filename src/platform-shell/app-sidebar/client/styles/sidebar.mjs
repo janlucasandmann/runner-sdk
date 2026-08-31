@@ -912,6 +912,207 @@ ${metronomeSidebarCss}
         font-weight: 500;
       }
 
+      /*
+       * Central thread-list item contract. Domain-specific rows only supply
+       * data, a leading visual, and the permitted trailing action.
+       */
+      .sidebar-thread-list-item {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--sidebar-link-color);
+        text-align: left;
+        position: relative;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+
+      .sidebar-thread-list-item.has-time:not(.has-trailing-action) {
+        padding-right: 42px;
+      }
+
+      .sidebar-thread-list-item.has-trailing-action {
+        padding-right: 66px;
+      }
+
+      .sidebar-thread-list-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .sidebar-thread-list-item.is-active {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--sidebar-link-active-color);
+      }
+
+      .sidebar-thread-list-item__main {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .sidebar-thread-list-item__content,
+      .sidebar-thread-list-item__title-row {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        align-items: center;
+      }
+
+      .sidebar-thread-list-item__content {
+        min-height: 16px;
+        padding-right: 0;
+      }
+
+      .sidebar-thread-list-item__title-row {
+        gap: 6px;
+      }
+
+      .sidebar-thread-list-item__leading {
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: inherit;
+      }
+
+      .sidebar-thread-list-item__leading > svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      .sidebar-thread-list-item__copy {
+        min-width: 0;
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        overflow: hidden;
+      }
+
+      .sidebar-thread-list-item__title {
+        min-width: 0;
+        flex: 1;
+        color: var(--sidebar-link-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sidebar-thread-list-item.is-workflow-overview .sidebar-thread-list-item__title {
+        color: inherit;
+        font-weight: 500;
+      }
+
+      .sidebar-thread-list-item.is-active .sidebar-thread-list-item__title {
+        color: var(--sidebar-link-active-color);
+      }
+
+      .sidebar-thread-list-item__side {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 2px;
+        min-width: 0;
+        max-width: none;
+        height: 24px;
+        padding: 0;
+        transform: translateY(-50%);
+      }
+
+      .sidebar-thread-list-item__time {
+        position: static;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transform: none;
+        transition: opacity 120ms ease;
+      }
+
+      .sidebar-thread-list-item__action {
+        position: static;
+        top: auto;
+        right: auto;
+        width: 24px;
+        height: 24px;
+        flex: 0 0 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--sidebar-link-color);
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transform: none;
+        transition: opacity 120ms ease, background-color 160ms ease, color 160ms ease;
+      }
+
+      .sidebar-thread-list-item__action:hover,
+      .sidebar-thread-list-item__action.is-open {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--sidebar-link-active-color);
+      }
+
+      .sidebar-thread-list-item:hover .sidebar-thread-list-item__time,
+      .sidebar-thread-list-item:focus-within .sidebar-thread-list-item__time,
+      .sidebar-thread-list-item.is-active .sidebar-thread-list-item__time,
+      .sidebar-thread-list-item.is-menu-open .sidebar-thread-list-item__time,
+      .sidebar-thread-list-item:hover .sidebar-thread-list-item__action,
+      .sidebar-thread-list-item:focus-within .sidebar-thread-list-item__action,
+      .sidebar-thread-list-item.is-active .sidebar-thread-list-item__action,
+      .sidebar-thread-list-item.is-menu-open .sidebar-thread-list-item__action {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sidebar-thread-list-item__action:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+
+      .sidebar-thread-list-item__action.sidebar-metronome-run-toggle svg {
+        width: 11px;
+        height: 11px;
+        transition: transform 160ms ease;
+      }
+
+      .sidebar-thread-list-item__action.sidebar-metronome-run-toggle.is-expanded svg {
+        transform: rotate(90deg);
+      }
+
       .sidebar-thread-section {
         min-height: 0;
         display: flex;

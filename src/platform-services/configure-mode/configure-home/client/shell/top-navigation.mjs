@@ -28,7 +28,14 @@ export const CONFIGURE_HOME_TOP_NAVIGATION_SCRIPT = `        function openConfig
           const createTargets = [
             { id: "agent", label: "Agent", Icon: Bot },
             { id: "computer", label: "Computer", Icon: Monitor },
-            { id: "skill", label: "Skill", Icon: Sparkles },
+            {
+              id: "skill",
+              label: "Skill",
+              Icon: (props = {}) => React.createElement(HugeiconsIcon, {
+                icon: CursorMagicSelection04Icon,
+                ...props,
+              }),
+            },
             { id: "team", label: "Team", Icon: Users },
             { id: "organization", label: "Organization", Icon: Building2 },
           ];

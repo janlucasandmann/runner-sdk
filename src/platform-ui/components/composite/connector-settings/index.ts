@@ -6,4 +6,5 @@ export {
   type PlatformConnectorSettingsItem,
   type PlatformConnectorSettingsModalProps,
   type PlatformConnectorSettingsPrimaryAction,
+  type PlatformConnectorSettingsPrimaryActionOption,
 } from "./platform-connector-settings.js";

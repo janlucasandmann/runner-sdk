@@ -58,7 +58,10 @@ describe("KnowledgeConnectorSettings", () => {
 
     expect(screen.getByText("Managed at project level")).toBeTruthy();
     expect(screen.getByText(/has to be changed in the project settings/)).toBeTruthy();
-    screen.getAllByRole("button", { name: "Manage" }).forEach((button) => {
+    [
+      screen.getByRole("button", { name: "Open Notion connector settings" }),
+      screen.getByRole("button", { name: "Open Atlassian connector settings" }),
+    ].forEach((button) => {
       expect((button as HTMLButtonElement).disabled).toBe(true);
     });
     expect(fetchMock).not.toHaveBeenCalled();
@@ -89,7 +92,9 @@ describe("KnowledgeConnectorSettings", () => {
       />,
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Manage" })[0]);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open Notion connector settings" }),
+    );
     const resource = await screen.findByText("Product roadmap");
     fireEvent.click(resource.closest("button") as HTMLButtonElement);
     fireEvent.click(screen.getByRole("button", { name: "Use 1 database" }));
@@ -145,7 +150,9 @@ describe("KnowledgeConnectorSettings", () => {
       />,
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Manage" })[1]);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open Atlassian connector settings" }),
+    );
     const resource = await screen.findByText("Product strategy");
     fireEvent.click(resource.closest("button") as HTMLButtonElement);
     fireEvent.click(screen.getByRole("button", { name: "Use 1 space" }));
@@ -229,14 +236,17 @@ describe("KnowledgeConnectorSettings", () => {
       />,
     );
 
-    const notionProviderGroup = screen
-      .getByText("Notion")
-      .closest(".knowledge-connector-settings__provider-group");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open Notion connector settings" }),
+    );
+    await screen.findByRole("dialog", { name: "Knowledge connector settings" });
     expect(
-      notionProviderGroup?.querySelector(".playground-project-notion-resource-settings"),
+      document.querySelector(".playground-project-notion-resource-settings"),
     ).toBeTruthy();
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Manage" })[0]);
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Add another connection" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Notion" }));
     await screen.findByText("Current database name");
     fireEvent.click(screen.getByRole("button", { name: "Use 1 database" }));
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+  PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL,
   PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
   buildPlatformSystemPrincipalPermissionMetadata,
   buildPlatformSystemPrincipalRolePermissionMetadata,
@@ -32,6 +33,21 @@ describe("platform access principals", () => {
         locked: true,
       }),
     ]);
+  });
+
+  it("assigns the optimized All Agents image to the shared system team", () => {
+    expect(createPlatformSystemAccessPrincipalRows()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: PLATFORM_ALL_AGENTS_PRINCIPAL_ID,
+          profileImageUrl: PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL,
+        }),
+        expect.objectContaining({
+          id: PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
+          profileImageUrl: PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL,
+        }),
+      ]),
+    );
   });
 
   it("uses full access for organization members until an explicit policy is saved", () => {

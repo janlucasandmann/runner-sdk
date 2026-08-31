@@ -1,6 +1,6 @@
 import { Plug01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Ellipsis } from "../../ui/hugeicons-compat.js";
+import { Ellipsis, EllipsisVertical } from "../../ui/hugeicons-compat.js";
 import {
   type ButtonHTMLAttributes,
   type ReactNode,
@@ -11,6 +11,7 @@ import {
 
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import { PlatformPrimaryButton } from "../../ui/button/index.js";
+import { PlatformButtonSelector } from "../../ui/selector/index.js";
 import {
   PlatformModal,
   PlatformModalBody,
@@ -46,8 +47,18 @@ export interface PlatformConnectorSettingsGroup {
 
 export interface PlatformConnectorSettingsPrimaryAction {
   label: ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
+  popupAriaLabel?: string;
+  options?: readonly PlatformConnectorSettingsPrimaryActionOption[];
+}
+
+export interface PlatformConnectorSettingsPrimaryActionOption {
+  id: string;
+  label: ReactNode;
+  icon?: ReactNode;
+  disabled?: boolean;
+  onSelect: () => void;
 }
 
 export interface PlatformConnectorSettingsModalProps {
@@ -72,10 +83,16 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     .join(" ");
 }
 
-function PlatformConnectorSettingsContentHeader({
+function PlatformConnectorSettingsItemActions({
   item,
+  triggerLabel = "Connection actions",
+  vertical = false,
+  rootClassName = "platform-connector-settings-modal__content-menu-anchor",
 }: {
   item: PlatformConnectorSettingsItem;
+  triggerLabel?: string;
+  vertical?: boolean;
+  rootClassName?: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -118,53 +135,67 @@ function PlatformConnectorSettingsContentHeader({
     }
   }
 
+  if (!item.onDisconnect) return null;
+
+  return (
+    <PlatformPopup
+      open={menuOpen}
+      variant="minimal"
+      portal
+      placement="bottom-end"
+      animation="down-in"
+      rootRef={menuAnchorRef}
+      surfaceRef={menuSurfaceRef}
+      rootClassName={rootClassName}
+      surfaceClassName="platform-connector-settings-modal__content-menu"
+      surfaceProps={{
+        role: "menu",
+        "aria-label": triggerLabel,
+        width: 180,
+      }}
+      trigger={({ open: popupOpen }) => (
+        <PlatformIconButton
+          type="button"
+          size="compact"
+          active={popupOpen}
+          aria-label={triggerLabel}
+          aria-haspopup="menu"
+          aria-expanded={popupOpen}
+          disabled={disconnecting}
+          onClick={() => setMenuOpen((current) => !current)}
+        >
+          {vertical ? (
+            <EllipsisVertical aria-hidden="true" />
+          ) : (
+            <Ellipsis aria-hidden="true" />
+          )}
+        </PlatformIconButton>
+      )}
+    >
+      <button
+        type="button"
+        role="menuitem"
+        className="tb-popup-row"
+        disabled={disconnecting}
+        onClick={() => void disconnect()}
+      >
+        <span className="tb-popup-label">Disconnect</span>
+      </button>
+    </PlatformPopup>
+  );
+}
+
+function PlatformConnectorSettingsContentHeader({
+  item,
+}: {
+  item: PlatformConnectorSettingsItem;
+}) {
   return (
     <div className="platform-connector-settings-modal__content-header">
       <h1 className="platform-connector-settings-modal__content-title">
         {item.label}
       </h1>
-      {item.onDisconnect ? (
-        <PlatformPopup
-          open={menuOpen}
-          variant="minimal"
-          portal
-          placement="bottom-end"
-          animation="down-in"
-          rootRef={menuAnchorRef}
-          surfaceRef={menuSurfaceRef}
-          rootClassName="platform-connector-settings-modal__content-menu-anchor"
-          surfaceClassName="platform-connector-settings-modal__content-menu"
-          surfaceProps={{
-            role: "menu",
-            "aria-label": "Repository actions",
-            width: 180,
-          }}
-          trigger={({ open: popupOpen }) => (
-            <PlatformIconButton
-              type="button"
-              size="compact"
-              active={popupOpen}
-              aria-label="Repository actions"
-              aria-haspopup="menu"
-              aria-expanded={popupOpen}
-              disabled={disconnecting}
-              onClick={() => setMenuOpen((current) => !current)}
-            >
-              <Ellipsis aria-hidden="true" />
-            </PlatformIconButton>
-          )}
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className="tb-popup-row"
-            disabled={disconnecting}
-            onClick={() => void disconnect()}
-          >
-            <span className="tb-popup-label">Disconnect</span>
-          </button>
-        </PlatformPopup>
-      ) : null}
+      <PlatformConnectorSettingsItemActions item={item} />
     </div>
   );
 }
@@ -363,7 +394,7 @@ export function PlatformConnectorSettingsModal({
           <aside
             className="platform-modal-sidebar platform-connector-settings-modal__sidebar"
             data-platform-modal-part="sidebar"
-            aria-label={`${String(title)} repositories`}
+            aria-label={`${String(title)} connections`}
           >
             <div
               className="platform-modal-sidebar__body platform-connector-settings-modal__sidebar-body"
@@ -374,7 +405,7 @@ export function PlatformConnectorSettingsModal({
               </h1>
               <nav
                 className="platform-connector-settings-modal__navigation"
-                aria-label="Connected repositories"
+                aria-label="Connected resources"
               >
                 {groups.map((group) => (
                   <section
@@ -397,18 +428,31 @@ export function PlatformConnectorSettingsModal({
                         {group.items.map((item) => {
                           const active = item.id === activeItem?.id;
                           return (
-                            <button
+                            <div
                               key={item.id}
-                              type="button"
-                              className={joinClassNames(
-                                "platform-connector-settings-modal__repository-item",
-                                active && "is-active",
-                              )}
-                              aria-current={active ? "page" : undefined}
-                              onClick={() => onActiveItemChange?.(item.id)}
+                              className="platform-connector-settings-modal__repository-item-shell"
                             >
-                              <span>{item.label}</span>
-                            </button>
+                              <button
+                                type="button"
+                                className={joinClassNames(
+                                  "platform-connector-settings-modal__repository-item",
+                                  active && "is-active",
+                                  active && item.onDisconnect && "has-actions",
+                                )}
+                                aria-current={active ? "page" : undefined}
+                                onClick={() => onActiveItemChange?.(item.id)}
+                              >
+                                <span>{item.label}</span>
+                              </button>
+                              {active && item.onDisconnect ? (
+                                <PlatformConnectorSettingsItemActions
+                                  item={item}
+                                  triggerLabel="Actions for active connection"
+                                  vertical
+                                  rootClassName="platform-connector-settings-modal__repository-menu-anchor"
+                                />
+                              ) : null}
+                            </div>
                           );
                         })}
                       </div>
@@ -417,15 +461,49 @@ export function PlatformConnectorSettingsModal({
                 ))}
               </nav>
               {primaryAction ? (
-                <PlatformPrimaryButton
-                  type="button"
-                  size="small"
-                  className="platform-connector-settings-modal__primary-action"
-                  disabled={primaryAction.disabled}
-                  onClick={primaryAction.onClick}
-                >
-                  {primaryAction.label}
-                </PlatformPrimaryButton>
+                primaryAction.options?.length ? (
+                  <PlatformButtonSelector
+                    mode="popup"
+                    buttonVariant="primary"
+                    buttonSize="small"
+                    label={primaryAction.label}
+                    popupAriaLabel={primaryAction.popupAriaLabel || String(primaryAction.label)}
+                    className="platform-connector-settings-modal__primary-action"
+                    disabled={primaryAction.disabled}
+                    closeOnSelect
+                    matchTriggerWidth
+                    fullWidth
+                    popupPlacement="top-start"
+                  >
+                    {primaryAction.options.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        role="menuitem"
+                        className="tb-popup-row"
+                        disabled={option.disabled}
+                        onClick={option.onSelect}
+                      >
+                        {option.icon ? (
+                          <span className="tb-popup-icon" aria-hidden="true">
+                            {option.icon}
+                          </span>
+                        ) : null}
+                        <span className="tb-popup-label">{option.label}</span>
+                      </button>
+                    ))}
+                  </PlatformButtonSelector>
+                ) : (
+                  <PlatformPrimaryButton
+                    type="button"
+                    size="small"
+                    className="platform-connector-settings-modal__primary-action"
+                    disabled={primaryAction.disabled || !primaryAction.onClick}
+                    onClick={primaryAction.onClick}
+                  >
+                    {primaryAction.label}
+                  </PlatformPrimaryButton>
+                )
               ) : null}
             </div>
           </aside>

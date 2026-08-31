@@ -27,7 +27,7 @@
 .resource-overview-page.is-fine-tuning {
   width: 100%;
   max-width: none;
-  padding: 24px;
+  padding: 24px 24px 0;
 }
 
 .resource-overview-page.is-organizations,

@@ -1,10 +1,28 @@
+import { APP_SIDEBAR_THREAD_LIST_ITEM_SCRIPT } from "./thread-list-item.mjs";
+
 export function createAppSidebarThreadListScript(options = {}) {
   const metronomeSidebarEntryScript = String(options.metronomeSidebarEntryScript || "");
   const metronomeRunActionMenuScript = String(options.metronomeRunActionMenuScript || "");
-  return `${metronomeSidebarEntryScript}
+  return `${APP_SIDEBAR_THREAD_LIST_ITEM_SCRIPT}${metronomeSidebarEntryScript}
         function getSidebarThreadProjectPresentation(safeThread, taskPreview, safeThreadId) {
           const missionControlMetadata = getThreadMissionControlMetadata(safeThread);
           const isMissionControl = Boolean(missionControlMetadata);
+          const taskContext = safeThread?.metadata?.taskContext
+            && typeof safeThread.metadata.taskContext === "object"
+            && !Array.isArray(safeThread.metadata.taskContext)
+              ? safeThread.metadata.taskContext
+              : {};
+          const taskType = String(
+            taskPreview?.taskType
+            || taskPreview?.type
+            || safeThread?.taskType
+            || taskContext.taskType
+            || ""
+          ).trim().toLowerCase();
+          const isTaskLoop = !isMissionControl && (
+            taskType === "loop"
+            || Boolean(String(taskContext.loopRole || "").trim())
+          );
           const cachedProjectContext = safeThreadId
             ? (threadProjectContextById[safeThreadId] || null)
             : null;
@@ -50,8 +68,13 @@ export function createAppSidebarThreadListScript(options = {}) {
               || safeThread?.projectName
               || "Project"
             ).trim() || "Project",
-            Icon: isMissionControl ? RefreshCcwDot : (iconConfig.icon || Rocket),
+            Icon: isMissionControl
+              ? RefreshCcwDot
+              : isTaskLoop
+                ? RefreshCw
+                : (iconConfig.icon || Rocket),
             isMissionControl,
+            isTaskLoop,
             color: String(
               isMissionControl
                 ? ""
@@ -64,6 +87,53 @@ export function createAppSidebarThreadListScript(options = {}) {
               || ""
             ).trim(),
           };
+        }
+
+        function isSidebarThreadActuallyRunning(thread, metronomeChild = false) {
+          if (metronomeChild) {
+            return resolveMetronomeThreadLifecycle([{ record: thread, source: "sidebar-thread" }]).isRunning;
+          }
+          const completedAt = String(
+            thread?.completedAt
+            || thread?.completed_at
+            || thread?.finishedAt
+            || thread?.finished_at
+            || thread?.endedAt
+            || thread?.ended_at
+            || ""
+          ).trim();
+          if (completedAt) return false;
+          const status = String(
+            thread?.status
+            || thread?.state
+            || thread?.executionStatus
+            || thread?.execution_status
+            || ""
+          ).trim().toLowerCase().replace(/[\\s-]+/g, "_");
+          return ["active", "executing", "in_progress", "processing", "running", "started", "starting", "working"].includes(status);
+        }
+
+        function getSidebarThreadLeadingPresentation(threadProject, metronomeChild = false) {
+          if (threadProject) {
+            const ThreadProjectIcon = threadProject.Icon || Rocket;
+            return {
+              icon: React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }),
+              className: "sidebar-thread-project-icon"
+                + (threadProject.isMissionControl ? " is-mission-control" : "")
+                + (threadProject.isTaskLoop ? " is-loop" : ""),
+              title: threadProject.title,
+              style: threadProject.color ? { color: threadProject.color } : undefined,
+            };
+          }
+          if (metronomeChild) {
+            return {
+              icon: React.createElement(WorkflowsSidebarIcon, { strokeWidth: 1.85 }),
+              className: "sidebar-thread-project-icon is-workflow",
+              title: "Workflow thread",
+              style: undefined,
+            };
+          }
+          return null;
         }
 
         function renderSidebarThreadRow(thread, options = {}) {
@@ -81,22 +151,16 @@ export function createAppSidebarThreadListScript(options = {}) {
               : rawDisplayThreadTitle;
             const safeThreadId = typeof safeThread.id === "string" && safeThread.id.trim() ? safeThread.id.trim() : generateId("thread");
             const isActive = activeSidebarThreadId === safeThreadId;
-            // The sidebar's running affordance represents active work, not only
-            // the narrow moment after a worker has transitioned to running.
-            // Background Threads are inserted optimistically as queued, and
-            // must already look active without requiring the user to open them.
-            const isRunning = metronomeChild
-              ? resolveMetronomeThreadLifecycle([{ record: safeThread, source: "sidebar-thread" }]).isRunning
-              : isRunningThreadDisplayStatus(safeThread?.status);
+            const isRunning = isSidebarThreadActuallyRunning(safeThread, metronomeChild);
             const needsPermissionAttention = isPendingPermissionThreadDisplayStatus(safeThread?.status) || permissionAttentionThreadIds.has(safeThreadId);
             const canManageThread = hasRealAccess && isRealThreadId(safeThreadId);
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === safeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === safeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === safeThreadId;
             const threadProject = getSidebarThreadProjectPresentation(safeThread, taskPreview, safeThreadId);
-            const ThreadProjectIcon = threadProject?.Icon || Rocket;
-            const threadMetaText = threadMetaLabel(safeThread);
-            const threadLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(safeThread));
+            const leadingPresentation = getSidebarThreadLeadingPresentation(threadProject, metronomeChild);
+            const threadLastActivityTimestamp = resolveThreadSortTimestamp(safeThread);
+            const threadLastActivityText = formatCompactThreadActivityTime(threadLastActivityTimestamp);
             const handleSidebarThreadSelect = () => {
               if (metronomeChild && safeThreadId && isRealThreadId(safeThreadId)) {
                 upsertRealThreadRecord(safeThread, { status: safeThread.status || "running" });
@@ -104,166 +168,79 @@ export function createAppSidebarThreadListScript(options = {}) {
               handleThreadSelect(safeThreadId);
             };
 
-            return React.createElement("div", {
+            return React.createElement(SidebarThreadListItem, {
               key: safeThreadId,
-              className: (pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (isActive ? " is-active" : "") + (needsPermissionAttention ? " has-permission-attention" : "") + (metronomeChild ? " is-metronome-child" : ""),
-            },
-              pinned && !isRunning
-                ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
-                : null,
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-thread-main",
-                onClick: () => requestPlatformNavigation(handleSidebarThreadSelect),
-                "aria-label": "Open " + displayThreadTitle + (needsPermissionAttention ? ", permission needed" : ""),
-              },
-                React.createElement("div", { className: "sidebar-thread-content" },
-                  React.createElement("div", { className: "sidebar-thread-title-row" },
-                    isRunning
-                      ? React.createElement("img", {
-                          className: "sidebar-thread-running-indicator",
-                          src: "/img/spinner.svg",
-                          alt: "",
-                          "aria-hidden": "true",
-                        })
-                      : threadProject
-                        ? React.createElement("span", {
-                            className: "sidebar-thread-project-icon" + (threadProject.isMissionControl ? " is-mission-control" : ""),
-                            title: threadProject.title,
-                            style: threadProject.color ? { color: threadProject.color } : undefined,
-                          }, React.createElement(ThreadProjectIcon, { strokeWidth: 1.85 }))
-                        : null,
-                    needsPermissionAttention
-                      ? React.createElement("span", { className: "sidebar-thread-attention-dot", title: "Permission needed" })
-                      : null,
-                    React.createElement("span", { className: "sidebar-thread-title-copy" },
-                      taskTicketNumber
-                        ? React.createElement("span", { className: "sidebar-thread-ticket-number" }, taskTicketNumber)
-                        : null,
-                      React.createElement("span", { className: "sidebar-thread-title" }, displayThreadTitle)
-                    )
-                  )
-                )
-              ),
-              React.createElement("div", { className: "sidebar-thread-side" },
-                React.createElement("span", { className: "sidebar-thread-meta" },
-                  threadMetaText
-                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, threadMetaText)
-                    : null
-                ),
-                threadLastActivityText
-                  ? React.createElement("span", {
-                      className: "sidebar-thread-hover-meta",
-                      title: formatThreadSearchTimestamp(resolveThreadSortTimestamp(safeThread)) || "",
-                    }, threadLastActivityText)
-                  : null,
-                canManageThread
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                      onClick: (event) => openThreadActionMenu(event, safeThreadId),
-                      "aria-label": "Thread actions",
-                      "aria-expanded": isMenuOpen ? "true" : "false",
-                      disabled: isDeleting || isPinMutating,
-                    },
-                      isDeleting || isPinMutating
-                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                    )
-                  : null
-              )
-            );
+              active: isActive,
+              pinned,
+              nested: metronomeChild,
+              attention: needsPermissionAttention,
+              running: isRunning,
+              title: displayThreadTitle,
+              ticketNumber: taskTicketNumber,
+              leadingIcon: leadingPresentation?.icon || null,
+              leadingClassName: leadingPresentation?.className || "",
+              leadingTitle: leadingPresentation?.title || "",
+              leadingStyle: leadingPresentation?.style,
+              timeLabel: threadLastActivityText,
+              timeTitle: formatThreadSearchTimestamp(threadLastActivityTimestamp) || "",
+              trailingAction: canManageThread ? "menu" : "none",
+              menuOpen: isMenuOpen,
+              menuBusy: isDeleting || isPinMutating,
+              menuDisabled: isDeleting || isPinMutating,
+              onMenuClick: (event) => openThreadActionMenu(event, safeThreadId),
+              onSelect: () => requestPlatformNavigation(handleSidebarThreadSelect),
+              selectAriaLabel: "Open " + displayThreadTitle + (needsPermissionAttention ? ", permission needed" : ""),
+            });
           } catch (error) {
             const fallbackThread = normalizeThreadItem(thread);
-            const fallbackMetronomeMeta = options?.metronomeChild ? getThreadMetronomeMetadata(fallbackThread) : null;
+            const metronomeChild = Boolean(options?.metronomeChild);
+            const fallbackMetronomeMeta = metronomeChild ? getThreadMetronomeMetadata(fallbackThread) : null;
             const fallbackSafeThreadId = typeof fallbackThread.id === "string" && fallbackThread.id.trim() ? fallbackThread.id.trim() : generateId("thread");
-            const fallbackMetaText = threadMetaLabel(fallbackThread);
-            const fallbackIsRunning = options?.metronomeChild
-              ? resolveMetronomeThreadLifecycle([{ record: fallbackThread, source: "sidebar-thread" }]).isRunning
-              : isRunningThreadDisplayStatus(fallbackThread?.status);
+            const fallbackIsRunning = isSidebarThreadActuallyRunning(fallbackThread, metronomeChild);
             const {
               taskTicketNumber,
               displayThreadTitle: fallbackRawDisplayThreadTitle,
             } = getSidebarThreadTitleParts(fallbackThread);
-            const displayThreadTitle = options?.metronomeChild && fallbackMetronomeMeta?.nodeName
+            const displayThreadTitle = metronomeChild && fallbackMetronomeMeta?.nodeName
               ? fallbackMetronomeMeta.nodeName
               : fallbackRawDisplayThreadTitle;
             const canManageThread = hasRealAccess && isRealThreadId(fallbackSafeThreadId);
             const isMenuOpen = canManageThread && threadActionMenuState?.threadId === fallbackSafeThreadId;
             const isDeleting = threadMutationState.action === "delete" && threadMutationState.threadId === fallbackSafeThreadId;
             const isPinMutating = threadMutationState.action === "pin" && threadMutationState.threadId === fallbackSafeThreadId;
-            const fallbackLastActivityText = formatCompactThreadActivityTime(resolveThreadSortTimestamp(fallbackThread));
+            const fallbackLastActivityTimestamp = resolveThreadSortTimestamp(fallbackThread);
+            const fallbackLastActivityText = formatCompactThreadActivityTime(fallbackLastActivityTimestamp);
             const fallbackNeedsPermissionAttention = isPendingPermissionThreadDisplayStatus(fallbackThread?.status) || permissionAttentionThreadIds.has(fallbackSafeThreadId);
+            const fallbackLeadingPresentation = getSidebarThreadLeadingPresentation(null, metronomeChild);
             const handleFallbackSidebarThreadSelect = () => {
-              if (options?.metronomeChild && fallbackSafeThreadId && isRealThreadId(fallbackSafeThreadId)) {
+              if (metronomeChild && fallbackSafeThreadId && isRealThreadId(fallbackSafeThreadId)) {
                 upsertRealThreadRecord(fallbackThread, { status: fallbackThread.status || "running" });
               }
               handleThreadSelect(fallbackSafeThreadId);
             };
             console.error("Failed to render sidebar thread row", error, thread);
-            return React.createElement("div", {
+            return React.createElement(SidebarThreadListItem, {
               key: fallbackSafeThreadId,
-              className: (options?.pinned ? "sidebar-pinned-button" : "sidebar-thread-item") + (activeSidebarThreadId === fallbackSafeThreadId ? " is-active" : "") + (fallbackNeedsPermissionAttention ? " has-permission-attention" : "") + (options?.metronomeChild ? " is-metronome-child" : ""),
-            },
-              options?.pinned && !fallbackIsRunning
-                ? React.createElement(Pin, { className: "sidebar-pin-icon", strokeWidth: 1.75 })
-                : null,
-              React.createElement("button", {
-                type: "button",
-                className: "sidebar-thread-main",
-                onClick: () => requestPlatformNavigation(handleFallbackSidebarThreadSelect),
-                "aria-label": "Open " + displayThreadTitle + (fallbackNeedsPermissionAttention ? ", permission needed" : ""),
-              },
-                React.createElement("div", { className: "sidebar-thread-content" },
-                  React.createElement("div", { className: "sidebar-thread-title-row" },
-                    fallbackIsRunning
-                      ? React.createElement("img", {
-                          className: "sidebar-thread-running-indicator",
-                          src: "/img/spinner.svg",
-                          alt: "",
-                          "aria-hidden": "true",
-                        })
-                      : null,
-                    fallbackNeedsPermissionAttention
-                      ? React.createElement("span", { className: "sidebar-thread-attention-dot", title: "Permission needed" })
-                      : null,
-                    React.createElement("span", { className: "sidebar-thread-title-copy" },
-                      taskTicketNumber
-                        ? React.createElement("span", { className: "sidebar-thread-ticket-number" }, taskTicketNumber)
-                        : null,
-                      React.createElement("span", { className: "sidebar-thread-title" }, displayThreadTitle)
-                    )
-                  )
-                )
-              ),
-              React.createElement("div", { className: "sidebar-thread-side" },
-                React.createElement("span", { className: "sidebar-thread-meta" },
-                  fallbackMetaText
-                    ? React.createElement("span", { className: "sidebar-thread-meta-neutral" }, fallbackMetaText)
-                    : null
-                ),
-                fallbackLastActivityText
-                  ? React.createElement("span", {
-                      className: "sidebar-thread-hover-meta",
-                      title: formatThreadSearchTimestamp(resolveThreadSortTimestamp(fallbackThread)) || "",
-                    }, fallbackLastActivityText)
-                  : null,
-                canManageThread
-                  ? React.createElement("button", {
-                      type: "button",
-                      className: "sidebar-thread-menu-button" + (isMenuOpen ? " is-open" : ""),
-                      onClick: (event) => openThreadActionMenu(event, fallbackSafeThreadId),
-                      "aria-label": "Thread actions",
-                      "aria-expanded": isMenuOpen ? "true" : "false",
-                      disabled: isDeleting || isPinMutating,
-                    },
-                      isDeleting || isPinMutating
-                        ? React.createElement(Loader2, { className: "sidebar-thread-menu-icon is-spinning", strokeWidth: 1.85 })
-                        : React.createElement(EllipsisVertical, { className: "sidebar-thread-menu-icon", strokeWidth: 1.85 })
-                    )
-                  : null
-              )
-            );
+              active: activeSidebarThreadId === fallbackSafeThreadId,
+              pinned: Boolean(options?.pinned),
+              nested: metronomeChild,
+              attention: fallbackNeedsPermissionAttention,
+              running: fallbackIsRunning,
+              title: displayThreadTitle,
+              ticketNumber: taskTicketNumber,
+              leadingIcon: fallbackLeadingPresentation?.icon || null,
+              leadingClassName: fallbackLeadingPresentation?.className || "",
+              leadingTitle: fallbackLeadingPresentation?.title || "",
+              timeLabel: fallbackLastActivityText,
+              timeTitle: formatThreadSearchTimestamp(fallbackLastActivityTimestamp) || "",
+              trailingAction: canManageThread ? "menu" : "none",
+              menuOpen: isMenuOpen,
+              menuBusy: isDeleting || isPinMutating,
+              menuDisabled: isDeleting || isPinMutating,
+              onMenuClick: (event) => openThreadActionMenu(event, fallbackSafeThreadId),
+              onSelect: () => requestPlatformNavigation(handleFallbackSidebarThreadSelect),
+              selectAriaLabel: "Open " + displayThreadTitle + (fallbackNeedsPermissionAttention ? ", permission needed" : ""),
+            });
           }
         }
 

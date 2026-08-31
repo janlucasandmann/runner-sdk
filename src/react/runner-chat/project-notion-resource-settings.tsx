@@ -40,6 +40,7 @@ export interface RunnerKnowledgeNotionResourceSettingsProps {
   strategyKnowledgeSyncFromNotionEnabled?: boolean | null;
   onChange?: (change: RunnerProjectNotionResourceSettingsChange) => void | Promise<void>;
   onDisconnect?: () => void | Promise<void>;
+  variant?: "project" | "resource";
 }
 
 export type RunnerProjectNotionResourceSettingsProps = RunnerKnowledgeNotionResourceSettingsProps;
@@ -73,6 +74,7 @@ export function RunnerKnowledgeNotionResourceSettings({
   strategyKnowledgeSyncFromNotionEnabled,
   onChange,
   onDisconnect,
+  variant = "project",
 }: RunnerKnowledgeNotionResourceSettingsProps) {
   const hasTarget = Boolean(projectId || libraryId);
   const canLoad = resourceType === "database" && hasTarget && Boolean(resourceId);
@@ -253,9 +255,11 @@ export function RunnerKnowledgeNotionResourceSettings({
 
   return (
     <PlatformConnectorConfiguration
-      className="playground-project-notion-resource-settings playground-project-github-repository-settings"
+      className={`playground-project-notion-resource-settings playground-project-github-repository-settings is-${variant}`}
       data-project-notion-resource={resourceId}
       data-knowledge-notion-resource={resourceId}
+      surface={variant === "resource" ? "plain" : "contained"}
+      showHeader={variant !== "resource"}
       title={resourceName}
       actionLabel={`Actions for ${resourceName}`}
       onDisconnect={!disabled && onDisconnect ? disconnectResource : undefined}

@@ -64,6 +64,7 @@ export interface RunnerFunctionGithubConnectorSettingsProps
 export type RunnerFunctionGithubRepository = RunnerSourceGithubRepository;
 
 const EMPTY_CONNECTION = { connected: false } as const;
+type RunnerSourceRepositoryProvider = "github" | "gitlab";
 
 type RunnerConnectorNavigationGlobal = typeof globalThis & {
   computerAgentsOpenConnectors?: () => void;
@@ -119,6 +120,7 @@ export function RunnerSourceGithubConnectorSettings({
       "",
   ).trim();
   const [open, setOpen] = useState(false);
+  const [explorerProvider, setExplorerProvider] = useState<RunnerSourceRepositoryProvider>("github");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeRepositoryId, setActiveRepositoryId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,7 +134,14 @@ export function RunnerSourceGithubConnectorSettings({
   const [createError, setCreateError] = useState("");
 
   useEffect(() => {
-    if (!open || !github?.connected || !github.fetchItems) return;
+    if (!open) return;
+    if (explorerProvider !== "github") {
+      setItems([]);
+      setLoading(false);
+      setError("");
+      return;
+    }
+    if (!github?.connected || !github.fetchItems) return;
     let active = true;
     setLoading(true);
     setError("");
@@ -159,7 +168,7 @@ export function RunnerSourceGithubConnectorSettings({
     return () => {
       active = false;
     };
-  }, [accountId, github?.connected, github?.fetchItems, open]);
+  }, [accountId, explorerProvider, github?.connected, github?.fetchItems, open]);
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -169,12 +178,14 @@ export function RunnerSourceGithubConnectorSettings({
     );
   }, [items, searchQuery]);
 
-  function openManager() {
+  function openManager(provider: RunnerSourceRepositoryProvider) {
+    setExplorerProvider(provider);
     setSelectedRepositoryName(String(repository?.repoFullName || "").trim());
     setAccountId(String(repository?.accountId || defaultAccountId).trim());
     setSearchQuery("");
     setError("");
     setCreateError("");
+    setSettingsOpen(false);
     setOpen(true);
   }
 
@@ -291,6 +302,7 @@ export function RunnerSourceGithubConnectorSettings({
   }
 
   function viewAllConnectors() {
+    setOpen(false);
     if (onViewAllConnectors) {
       setSettingsOpen(false);
       onViewAllConnectors();
@@ -333,7 +345,9 @@ export function RunnerSourceGithubConnectorSettings({
           activeConnectionCount={repository?.repoFullName ? 1 : 0}
           aria-label="Open GitHub connector settings"
           disabled={disabled}
-          onOpenSettings={() => openConnectorSettings("github")}
+          onOpenSettings={() => repository?.repoFullName
+            ? openConnectorSettings("github")
+            : openManager("github")}
           onViewAllConnectors={viewAllConnectors}
         />
         <PlatformConnectorPreviewCard
@@ -346,7 +360,7 @@ export function RunnerSourceGithubConnectorSettings({
           activeConnectionCount={0}
           aria-label="Open GitLab connector settings"
           disabled={disabled}
-          onOpenSettings={() => openConnectorSettings("gitlab")}
+          onOpenSettings={() => openManager("gitlab")}
           onViewAllConnectors={viewAllConnectors}
         />
       </div>
@@ -361,7 +375,20 @@ export function RunnerSourceGithubConnectorSettings({
         primaryAction={{
           label: "Add another repo",
           disabled: disabled || saving,
-          onClick: openManager,
+          options: [
+            {
+              id: "github",
+              label: "GitHub",
+              icon: <IconGithub />,
+              onSelect: () => openManager("github"),
+            },
+            {
+              id: "gitlab",
+              label: "GitLab",
+              icon: <IconGitlab />,
+              onSelect: () => openManager("gitlab"),
+            },
+          ],
         }}
         emptyState={(
           <div className="playground-source-connector-settings__modal-empty">
@@ -431,7 +458,7 @@ export function RunnerSourceGithubConnectorSettings({
       <RunnerFileBrowserDialog
         open={open}
         apiKeyPromptOpen={false}
-        source="github"
+        source={explorerProvider}
         showSourceSidebar={false}
         showFilterTabs={false}
         searchQuery={searchQuery}
@@ -442,13 +469,19 @@ export function RunnerSourceGithubConnectorSettings({
         onSourceChange={() => undefined}
         connections={{
           github: githubConnection,
+          gitlab: {
+            connected: false,
+            onConnect: viewAllConnectors,
+          },
           notion: EMPTY_CONNECTION,
           atlassian: EMPTY_CONNECTION,
           "google-drive": EMPTY_CONNECTION,
           "one-drive": EMPTY_CONNECTION,
         }}
-        authSource={github?.connected ? null : "github"}
-        path={[{ id: null, name: "GitHub" }]}
+        authSource={explorerProvider === "github"
+          ? github?.connected ? null : "github"
+          : "gitlab"}
+        path={[{ id: null, name: explorerProvider === "github" ? "GitHub" : "GitLab" }]}
         historyIndex={0}
         historyLength={1}
         onBack={() => undefined}
@@ -459,7 +492,7 @@ export function RunnerSourceGithubConnectorSettings({
         loading={loading}
         error={error || null}
         showGoogleDrivePickerPrompt={false}
-        items={filteredItems}
+        items={explorerProvider === "github" ? filteredItems : []}
         renderItem={(item) => {
           const repoFullName = normalizeRepositoryName(item);
           const selected = repoFullName.toLowerCase() === selectedRepositoryName.toLowerCase();
@@ -479,7 +512,11 @@ export function RunnerSourceGithubConnectorSettings({
                   <Check className="tb-file-browser-check-icon" strokeWidth={2.2} />
                 ) : null}
               </span>
-              <IconGithub className="tb-file-browser-item-icon tb-file-browser-source-brand-icon" />
+              {explorerProvider === "github" ? (
+                <IconGithub className="tb-file-browser-item-icon tb-file-browser-source-brand-icon" />
+              ) : (
+                <IconGitlab className="tb-file-browser-item-icon tb-file-browser-source-brand-icon" />
+              )}
               <span className="tb-file-browser-item-name" title={repoFullName}>
                 {item.name}
               </span>
@@ -488,7 +525,7 @@ export function RunnerSourceGithubConnectorSettings({
           );
         }}
         listFooter={
-          onCreateRepository && github?.connected ? (
+          explorerProvider === "github" && onCreateRepository && github?.connected ? (
             <div className="playground-source-connector-settings__create-repository">
               <PlatformSecondaryButton
                 type="button"
@@ -527,11 +564,11 @@ export function RunnerSourceGithubConnectorSettings({
         previewKind={null}
         isPreviewLoading={false}
         renderPreviewIcon={() => null}
-        selectedItemCount={selectedRepositoryName ? 1 : 0}
+        selectedItemCount={explorerProvider === "github" && selectedRepositoryName ? 1 : 0}
         selectedItemLabel="Repository"
-        allowEmptySelection={Boolean(repository?.repoFullName)}
+        allowEmptySelection={explorerProvider === "github" && Boolean(repository?.repoFullName)}
         isAttaching={saving}
-        onAttach={applySelection}
+        onAttach={explorerProvider === "github" ? applySelection : () => undefined}
         onPreviewClose={() => undefined}
         onClose={() => setOpen(false)}
         onApiKeyPromptClose={() => setOpen(false)}

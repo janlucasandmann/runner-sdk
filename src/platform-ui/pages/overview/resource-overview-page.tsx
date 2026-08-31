@@ -2,7 +2,7 @@ import { Ellipsis, Plus } from "../../components/ui/hugeicons-compat.js";
 import {
   createElement,
   isValidElement,
-  useEffect,
+  useLayoutEffect,
   useState,
   type ElementType,
   type ReactNode,
@@ -39,15 +39,39 @@ function renderHeaderActions(actions: ReactNode) {
 function useOverviewControlsPortalTarget(portalId: string) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!portalId || typeof document === "undefined") {
       setTarget(null);
       return undefined;
     }
 
-    const nextTarget = document.getElementById(portalId);
-    setTarget((current) => (current === nextTarget ? current : nextTarget));
-    return undefined;
+    let disposed = false;
+    const resolveTarget = () => {
+      if (disposed) return;
+      const nextTarget = document.getElementById(portalId);
+      setTarget((current) => (current === nextTarget ? current : nextTarget));
+    };
+
+    resolveTarget();
+
+    // The app header and routed page are committed together, but navigating
+    // from a detail page can briefly leave the portal slot out of the DOM.
+    // Observe the document so the action is restored as soon as the header
+    // recreates its slot, without requiring a full page remount.
+    const Observer = globalThis.MutationObserver;
+    const observationRoot = document.documentElement;
+    if (Observer && observationRoot) {
+      const observer = new Observer(resolveTarget);
+      observer.observe(observationRoot, { childList: true, subtree: true });
+      return () => {
+        disposed = true;
+        observer.disconnect();
+      };
+    }
+
+    return () => {
+      disposed = true;
+    };
   }, [portalId]);
 
   return target;

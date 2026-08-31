@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 
 import { fireEvent, render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -47,6 +49,20 @@ function renderSettings(accessDetailOpen = false) {
 }
 
 describe("PlatformResourceSettingsPage", () => {
+  it("sticks its details sidebar from the initial settings-tab position", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/platform-ui/pages/settings/resource-settings-page.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.platform-resource-settings-page > \.platform-detail-sidebar\.platform-resource-settings-page__sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?margin-top:\s*calc\(-1 \* var\(--platform-resource-settings-top-inset\)\);/,
+    );
+    expect(css).toMatch(
+      /\.platform-resource-settings-page > \.platform-detail-sidebar\.platform-resource-settings-page__sidebar > \.platform-resource-detail-sidebar:first-child\s*\{[\s\S]*?margin-top:\s*var\(--platform-resource-settings-top-inset\);/,
+    );
+  });
+
   it("owns the canonical identity, ordered settings slots, access, and details sidebar", () => {
     const { container, onTitleChange, onDescriptionChange, titleRef } = renderSettings();
     const page = screen.getByRole("region", { name: "Knowledge Library settings" });
@@ -81,13 +97,15 @@ describe("PlatformResourceSettingsPage", () => {
     expect(onDescriptionChange).toHaveBeenLastCalledWith("First line\nSecond line");
   });
 
-  it("keeps identity and Access mounted while hiding optional settings and the sidebar", () => {
+  it("promotes Access to a dedicated page without the parent identity or sidebar", () => {
     const { container } = renderSettings(true);
     const page = screen.getByRole("region", { name: "Knowledge Library settings" });
 
     expect(page.classList.contains("is-access-detail-open")).toBe(true);
     expect(screen.getByText("Access section")).not.toBeNull();
-    expect(screen.getByRole("textbox", { name: "Knowledge library name" })).not.toBeNull();
+    expect(
+      screen.queryByRole("textbox", { name: "Knowledge library name" }),
+    ).toBeNull();
     expect(screen.queryByText("Location section")).toBeNull();
     expect(screen.queryByText("Connectors section")).toBeNull();
     expect(screen.queryByText("Retention section")).toBeNull();

@@ -263,6 +263,7 @@ function PlatformResourceSettingsPrimaryActions({
   actions: PlatformResourceSettingsDetailsSidebarProps["primaryActions"];
 }) {
   const [primaryAction, ...alternativeActions] = actions;
+  if (!primaryAction) return null;
   if (!alternativeActions.length) {
     return (
       <PlatformPrimaryButton

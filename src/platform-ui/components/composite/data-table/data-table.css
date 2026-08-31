@@ -275,11 +275,23 @@
   display: grid;
   grid-template-columns: var(--platform-data-table-columns);
   align-items: center;
-  gap: 12px;
+  gap: 24px;
   min-width: 0;
   width: 100%;
   padding-right: 18px;
   padding-left: 18px;
+}
+
+/* Selection controls keep the compact 12px rhythm to the first content icon;
+   the expanded first cell preserves the wider 24px spacing thereafter. */
+.platform-data-table__header
+  > .platform-data-table__header-cell.is-selection
+  + .platform-data-table__header-cell,
+.platform-data-table__row
+  > .platform-data-table__cell.is-selection
+  + .platform-data-table__cell {
+  width: calc(100% + 12px);
+  transform: translateX(-12px);
 }
 
 .platform-data-table__row-group {
@@ -465,24 +477,39 @@
   color: rgba(255, 255, 255, 0.3);
 }
 
-.platform-data-table__sort-icon-layer {
+.platform-data-table__sort-icon-glyph {
   position: absolute;
   inset: 0;
   width: 14px;
   height: 14px;
-  color: rgba(255, 255, 255, 0.3);
 }
 
-.platform-data-table__sort-icon-layer.is-top {
+.platform-data-table__sort-icon-glyph-icon {
+  display: block;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+  transform: rotate(90deg);
+}
+
+.platform-data-table__sort-icon-glyph.is-top {
   clip-path: inset(0 0 50% 0);
 }
 
-.platform-data-table__sort-icon-layer.is-bottom {
+.platform-data-table__sort-icon-glyph.is-bottom {
   clip-path: inset(50% 0 0 0);
 }
 
-.platform-data-table__sort-icon.is-bottom-active .platform-data-table__sort-icon-layer.is-bottom,
-.platform-data-table__sort-icon.is-top-active .platform-data-table__sort-icon-layer.is-top {
+.platform-data-table__sort-icon.is-active {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.platform-data-table__sort-icon.is-bottom-active
+  .platform-data-table__sort-icon-glyph.is-bottom
+  .platform-data-table__sort-icon-glyph-icon,
+.platform-data-table__sort-icon.is-top-active
+  .platform-data-table__sort-icon-glyph.is-top
+  .platform-data-table__sort-icon-glyph-icon {
   color: #fff;
 }
 
@@ -608,9 +635,14 @@
 }
 
 .platform-data-table__row[tabindex]:hover,
-.platform-data-table__row.is-menu-open,
-.platform-data-table__row.is-selected {
+.platform-data-table__row.is-menu-open {
   background: rgba(255, 255, 255, 0.0375);
+}
+
+.platform-data-table__row.is-selected,
+.platform-data-table__row.is-selected[tabindex]:hover,
+.platform-data-table__row.is-selected.is-menu-open {
+  background: rgba(1, 107, 223, 0.1);
 }
 
 .platform-data-table__row[tabindex] {
@@ -1189,7 +1221,7 @@
 
   .platform-data-table__header,
   .platform-data-table__row {
-    gap: 9px;
+    gap: 24px;
     padding-right: 12px;
     padding-left: 12px;
   }

@@ -1,8 +1,15 @@
-import { Check } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
+import {
+  Check,
+  Database,
+} from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { useMemo, useState } from "react";
 
 import { beginPlatformPluginConnection } from "../../../../../platform-resources/plugins/connections/index.js";
-import { PlatformPrimaryButton } from "../../../../../platform-ui/components/ui/button/index.js";
+import {
+  PlatformConnectorPreviewCard,
+  PlatformConnectorSettingsModal,
+} from "../../../../../platform-ui/components/composite/connector-settings/index.js";
+import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
 import { PlatformLabel } from "../../../../../platform-ui/components/ui/label/index.js";
 import { RunnerFileBrowserDialog } from "../../../../../react/runner-chat/file-browser-dialog.js";
 import { IconAtlassian, IconNotion } from "../../../../../react/runner-chat/icons.js";
@@ -31,6 +38,10 @@ interface KnowledgeConnectorMetadata {
   schemaVersion: "computer_agents_knowledge_connectors_v1";
   notion: KnowledgeConnectorResource[];
   confluence: KnowledgeConnectorResource[];
+}
+
+interface KnowledgeConnectorNavigationGlobal {
+  computerAgentsOpenConnectors?: () => void;
 }
 
 export interface KnowledgeConnectorSettingsProps {
@@ -154,6 +165,8 @@ export function KnowledgeConnectorSettings({
   const [browserError, setBrowserError] = useState("");
   const [authSource, setAuthSource] = useState<"notion" | "atlassian" | null>(null);
   const [settingsError, setSettingsError] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeResourceId, setActiveResourceId] = useState("");
   const headers = useMemo(
     () => ({
       ...requestHeaders,
@@ -213,11 +226,51 @@ export function KnowledgeConnectorSettings({
 
   function openBrowser(provider: KnowledgeConnectorProvider) {
     if (projectManaged || saving) return;
+    setSettingsOpen(false);
     setBrowserProvider(provider);
     setSelectedIds(connectorMetadata[provider].map((resource) => resource.id));
     setCatalog([...connectorMetadata[provider]]);
     setSearchQuery("");
     void loadCatalog(provider);
+  }
+
+  function getSettingsResourceId(
+    provider: KnowledgeConnectorProvider,
+    resourceId: string,
+  ) {
+    return `${provider === "confluence" ? "atlassian" : provider}:${resourceId}`;
+  }
+
+  function openConnectorSettings(provider: KnowledgeConnectorProvider) {
+    if (projectManaged || saving) return;
+    const resources = connectorMetadata[provider];
+    if (!resources.length) {
+      openBrowser(provider);
+      return;
+    }
+    setActiveResourceId(getSettingsResourceId(provider, resources[0].id));
+    setSettingsOpen(true);
+  }
+
+  function viewAllConnectors() {
+    setBrowserProvider(null);
+    const openConnectors = (globalThis as KnowledgeConnectorNavigationGlobal)
+      .computerAgentsOpenConnectors;
+    if (typeof openConnectors === "function") {
+      setSettingsOpen(false);
+      openConnectors();
+      return;
+    }
+    const firstNotion = connectorMetadata.notion[0];
+    const firstConfluence = connectorMetadata.confluence[0];
+    setActiveResourceId(
+      firstNotion
+        ? getSettingsResourceId("notion", firstNotion.id)
+        : firstConfluence
+          ? getSettingsResourceId("confluence", firstConfluence.id)
+          : "",
+    );
+    setSettingsOpen(true);
   }
 
   function closeBrowser() {
@@ -254,13 +307,20 @@ export function KnowledgeConnectorSettings({
     setSettingsError("");
     try {
       const selected = catalog.filter((resource) => selectedIds.includes(resource.id));
-      await persistProviderResources(browserProvider, selected);
+      const savedProvider = browserProvider;
+      await persistProviderResources(savedProvider, selected);
       setBrowserProvider(null);
       setCatalog([]);
       setSelectedIds([]);
       setSearchQuery("");
       setBrowserError("");
       setAuthSource(null);
+      if (selected[0]) {
+        setActiveResourceId(
+          getSettingsResourceId(savedProvider, selected[0].id),
+        );
+        setSettingsOpen(true);
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to update Knowledge connectors.";
@@ -295,9 +355,22 @@ export function KnowledgeConnectorSettings({
   async function disconnectResource(provider: KnowledgeConnectorProvider, resourceId: string) {
     setSettingsError("");
     try {
+      const remainingResources = connectorMetadata[provider].filter(
+        (resource) => resource.id !== resourceId,
+      );
       await persistProviderResources(
         provider,
-        connectorMetadata[provider].filter((resource) => resource.id !== resourceId),
+        remainingResources,
+      );
+      const nextNotionResources =
+        provider === "notion" ? remainingResources : connectorMetadata.notion;
+      const nextConfluenceResources =
+        provider === "confluence" ? remainingResources : connectorMetadata.confluence;
+      const nextResource = nextNotionResources[0] || nextConfluenceResources[0];
+      setActiveResourceId(
+        nextResource
+          ? getSettingsResourceId(nextResource.provider, nextResource.id)
+          : "",
       );
     } catch (error) {
       setSettingsError(
@@ -329,6 +402,7 @@ export function KnowledgeConnectorSettings({
     : [];
   const connections = {
     github: { connected: false },
+    gitlab: { connected: false },
     "google-drive": { connected: false },
     "one-drive": { connected: false },
     notion: {
@@ -377,119 +451,164 @@ export function KnowledgeConnectorSettings({
 
   return (
     <section
-      className={`knowledge-connector-settings${projectManaged ? " is-project-managed" : ""}`}
+      className={`knowledge-connector-settings playground-source-connector-settings${projectManaged ? " is-project-managed" : ""}`}
       aria-labelledby="knowledge-connectors-title"
       aria-disabled={projectManaged || undefined}
     >
-      <div className="knowledge-connector-settings__heading">
-        <div className="knowledge-connector-settings__heading-copy">
-          <div className="knowledge-connector-settings__title-line">
-            <h2 id="knowledge-connectors-title">Connectors</h2>
-            {projectManaged ? (
-              <PlatformLabel variant="gray">Managed at project level</PlatformLabel>
-            ) : null}
-          </div>
-          <p>
-            {projectManaged
-              ? "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings."
-              : "Keep this Knowledge library synchronized with selected Notion databases and Confluence spaces."}
-          </p>
+      <div className="playground-source-connector-settings__heading">
+        <div className="knowledge-connector-settings__title-line">
+          <h2 id="knowledge-connectors-title">Connectors</h2>
+          {projectManaged ? (
+            <PlatformLabel variant="gray">Managed at project level</PlatformLabel>
+          ) : null}
         </div>
+        <p>
+          {projectManaged
+            ? "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings."
+            : "Keep this Knowledge library synchronized with selected Notion databases and Confluence spaces."}
+        </p>
       </div>
 
-      <div className="knowledge-connector-settings__providers">
-        <div className="knowledge-connector-settings__provider-group">
-          <div className="knowledge-connector-settings__provider-row">
-            <div className="knowledge-connector-settings__provider-identity">
-              <IconNotion className="knowledge-connector-settings__provider-icon" />
-              <span>Notion</span>
-            </div>
-            <PlatformPrimaryButton
-              type="button"
-              size="small"
-              disabled={projectManaged || saving}
-              onClick={() => openBrowser("notion")}
-            >
-              Manage
-            </PlatformPrimaryButton>
-          </div>
-          {!projectManaged && connectorMetadata.notion.length > 0 ? (
-            <div className="knowledge-connector-settings__resources">
-              {connectorMetadata.notion.map((resource) => (
-                <RunnerKnowledgeNotionResourceSettings
-                  key={resource.id}
-                  organizationId={activeOrganizationId}
-                  libraryId={library.id}
-                  requestHeaders={requestHeaders}
-                  resourceId={resource.id}
-                  resourceName={resource.name}
-                  resourceType="database"
-                  knowledgeLabel="this Knowledge library"
-                  strategyKnowledgeSyncEnabled={resource.strategyKnowledgeSyncEnabled}
-                  strategyKnowledgeSyncToNotionEnabled={
-                    resource.strategyKnowledgeSyncToNotionEnabled
-                  }
-                  strategyKnowledgeSyncFromNotionEnabled={
-                    resource.strategyKnowledgeSyncFromNotionEnabled
-                  }
-                  onChange={(patch) => updateResource("notion", resource.id, patch)}
-                  onDisconnect={() => disconnectResource("notion", resource.id)}
-                />
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="knowledge-connector-settings__provider-group">
-          <div className="knowledge-connector-settings__provider-row">
-            <div className="knowledge-connector-settings__provider-identity">
-              <IconAtlassian className="knowledge-connector-settings__provider-icon" />
-              <span>Confluence</span>
-            </div>
-            <PlatformPrimaryButton
-              type="button"
-              size="small"
-              disabled={projectManaged || saving}
-              onClick={() => openBrowser("confluence")}
-            >
-              Manage
-            </PlatformPrimaryButton>
-          </div>
-          {!projectManaged && connectorMetadata.confluence.length > 0 ? (
-            <div className="knowledge-connector-settings__resources">
-              {connectorMetadata.confluence.map((resource) => (
-                <RunnerKnowledgeConfluenceResourceSettings
-                  key={resource.id}
-                  organizationId={activeOrganizationId}
-                  libraryId={library.id}
-                  requestHeaders={requestHeaders}
-                  resourceId={resource.id}
-                  resourceName={resource.name}
-                  spaceId={confluenceSpaceId(resource)}
-                  cloudId={resource.cloudId}
-                  siteUrl={resource.siteUrl}
-                  knowledgeLabel="this Knowledge library"
-                  strategyKnowledgeSyncEnabled={resource.strategyKnowledgeSyncEnabled}
-                  strategyKnowledgeSyncToConfluenceEnabled={
-                    resource.strategyKnowledgeSyncToConfluenceEnabled
-                  }
-                  strategyKnowledgeSyncFromConfluenceEnabled={
-                    resource.strategyKnowledgeSyncFromConfluenceEnabled
-                  }
-                  onChange={(patch) => updateResource("confluence", resource.id, patch)}
-                  onDisconnect={() => disconnectResource("confluence", resource.id)}
-                />
-              ))}
-            </div>
-          ) : null}
-        </div>
+      <div className="playground-source-connector-settings__previews">
+        <PlatformConnectorPreviewCard
+          className="playground-source-connector-settings__preview"
+          connectorName="Notion"
+          title="Notion"
+          description="Synchronize Knowledge documents."
+          icon={<IconNotion />}
+          backgroundImageSrc="/img/bg/blur.webp"
+          activeConnectionCount={connectorMetadata.notion.length}
+          aria-label="Open Notion connector settings"
+          disabled={projectManaged || saving}
+          onOpenSettings={() => openConnectorSettings("notion")}
+          onViewAllConnectors={viewAllConnectors}
+        />
+        <PlatformConnectorPreviewCard
+          className="playground-source-connector-settings__preview"
+          connectorName="Atlassian"
+          title="Atlassian"
+          description="Synchronize Knowledge documents."
+          icon={<IconAtlassian />}
+          backgroundImageSrc="/img/bg/blur3.webp"
+          activeConnectionCount={connectorMetadata.confluence.length}
+          aria-label="Open Atlassian connector settings"
+          disabled={projectManaged || saving}
+          onOpenSettings={() => openConnectorSettings("confluence")}
+          onViewAllConnectors={viewAllConnectors}
+        />
       </div>
 
       {settingsError ? (
-        <p className="knowledge-inline-error" role="alert">
+        <p className="playground-source-connector-settings__error" role="alert">
           {settingsError}
         </p>
       ) : null}
+
+      <PlatformConnectorSettingsModal
+        open={settingsOpen}
+        title="Connectors"
+        ariaLabel="Knowledge connector settings"
+        activeItemId={activeResourceId}
+        onActiveItemChange={setActiveResourceId}
+        onClose={() => setSettingsOpen(false)}
+        primaryAction={{
+          label: "Add another connection",
+          disabled: projectManaged || saving,
+          options: [
+            {
+              id: "notion",
+              label: "Notion",
+              icon: <IconNotion />,
+              onSelect: () => openBrowser("notion"),
+            },
+            {
+              id: "atlassian",
+              label: "Atlassian",
+              icon: <IconAtlassian />,
+              onSelect: () => openBrowser("confluence"),
+            },
+          ],
+        }}
+        emptyState={(
+          <div className="playground-source-connector-settings__modal-empty">
+            <PlatformEmptyState
+              icon={Database}
+              title="No Knowledge connections"
+              description="Add a Notion database or Confluence space to synchronize this Knowledge library."
+            />
+          </div>
+        )}
+        groups={[
+          {
+            id: "notion",
+            label: "Notion",
+            icon: <IconNotion />,
+            items: connectorMetadata.notion.map((resource) => ({
+              id: getSettingsResourceId("notion", resource.id),
+              label: resource.name,
+              onDisconnect: () => disconnectResource("notion", resource.id),
+              content: (
+                <div className="platform-connector-settings-modal__repository-content">
+                  <RunnerKnowledgeNotionResourceSettings
+                    variant="resource"
+                    organizationId={activeOrganizationId}
+                    libraryId={library.id}
+                    requestHeaders={requestHeaders}
+                    resourceId={resource.id}
+                    resourceName={resource.name}
+                    resourceType="database"
+                    knowledgeLabel="this Knowledge library"
+                    strategyKnowledgeSyncEnabled={resource.strategyKnowledgeSyncEnabled}
+                    strategyKnowledgeSyncToNotionEnabled={
+                      resource.strategyKnowledgeSyncToNotionEnabled
+                    }
+                    strategyKnowledgeSyncFromNotionEnabled={
+                      resource.strategyKnowledgeSyncFromNotionEnabled
+                    }
+                    onChange={(patch) => updateResource("notion", resource.id, patch)}
+                  />
+                </div>
+              ),
+            })),
+          },
+          {
+            id: "atlassian",
+            label: "Atlassian",
+            icon: <IconAtlassian />,
+            items: connectorMetadata.confluence.map((resource) => ({
+              id: getSettingsResourceId("confluence", resource.id),
+              label: resource.name,
+              onDisconnect: () => disconnectResource("confluence", resource.id),
+              content: (
+                <div className="platform-connector-settings-modal__repository-content">
+                  <RunnerKnowledgeConfluenceResourceSettings
+                    variant="resource"
+                    organizationId={activeOrganizationId}
+                    libraryId={library.id}
+                    requestHeaders={requestHeaders}
+                    resourceId={resource.id}
+                    resourceName={resource.name}
+                    spaceId={confluenceSpaceId(resource)}
+                    cloudId={resource.cloudId}
+                    siteUrl={resource.siteUrl}
+                    knowledgeLabel="this Knowledge library"
+                    strategyKnowledgeSyncEnabled={resource.strategyKnowledgeSyncEnabled}
+                    strategyKnowledgeSyncToConfluenceEnabled={
+                      resource.strategyKnowledgeSyncToConfluenceEnabled
+                    }
+                    strategyKnowledgeSyncFromConfluenceEnabled={
+                      resource.strategyKnowledgeSyncFromConfluenceEnabled
+                    }
+                    onChange={(patch) =>
+                      updateResource("confluence", resource.id, patch)
+                    }
+                  />
+                </div>
+              ),
+            })),
+          },
+        ]}
+      />
 
       <RunnerFileBrowserDialog
         open={Boolean(browserProvider)}

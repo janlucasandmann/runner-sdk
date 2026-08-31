@@ -1,6 +1,5 @@
 import {
   Copy,
-  Metronome,
   Plus,
   RefreshCcwDot,
   RefreshCw,
@@ -9,6 +8,8 @@ import {
   Trash2,
   UsersRound,
 } from "lucide-react";
+import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
+import { WorkflowIcon } from "@hugeicons/core-free-icons";
 import { useMemo } from "react";
 import type {
   PlatformDataTableAction,
@@ -27,6 +28,10 @@ type MetronomeOverviewAction = (row: MetronomeOverviewRow) => void | Promise<voi
 type MetronomeOverviewBulkAction = (
   rows: readonly MetronomeOverviewRow[],
 ) => void | Promise<void>;
+
+const WorkflowOverviewIcon = (
+  props: Omit<HugeiconsIconProps, "icon">,
+) => <HugeiconsIcon icon={WorkflowIcon} {...props} />;
 
 export interface MetronomesOverviewPageProps {
   rows: readonly MetronomeOverviewRow[];
@@ -87,7 +92,7 @@ export function MetronomesOverviewPage({
             };
           }
           return {
-            icon: <Metronome width={16} height={16} strokeWidth={1.8} />,
+            icon: <WorkflowOverviewIcon width={16} height={16} strokeWidth={1.8} />,
             iconClassName: "is-metronome",
           };
         },
@@ -250,7 +255,7 @@ export function MetronomesOverviewPage({
               [row.name, row.description, row.statusLabel, row.triggerLabel, row.creatorName].join(" "),
           },
           primaryAction: {
-            label: "Metronome",
+            label: "Workflow",
             icon: Plus,
             onClick: onCreate,
           },
@@ -265,7 +270,7 @@ export function MetronomesOverviewPage({
         error,
         emptyState: (
           <PlatformEmptyState
-            icon={Metronome}
+            icon={WorkflowOverviewIcon}
             title="No metronomes yet"
             description="Create a workflow to coordinate agents, triggers, and deterministic actions."
             primaryAction={{ label: "Create Metronome", onClick: onCreate }}

@@ -10,17 +10,19 @@ describe("PromptsOverviewPage", () => {
   it("uses the canonical prompt icon for every prompt row", () => {
     const { container } = render(
       <PromptsOverviewPage
-        rows={[{
-          id: "prompt-1",
-          name: "Release summary",
-          description: "Summarize a release.",
-          isActive: true,
-          isCustom: true,
-          creatorName: "Jane Doe",
-          creatorAvatarUrl: "/jane.png",
-          updatedAt: 1_787_990_400_000,
-          updatedLabel: "Today",
-        }]}
+        rows={[
+          {
+            id: "prompt-1",
+            name: "Release summary",
+            description: "Summarize a release.",
+            isActive: true,
+            isCustom: true,
+            creatorName: "Jane Doe",
+            creatorAvatarUrl: "/jane.png",
+            updatedAt: 1_787_990_400_000,
+            updatedLabel: "Today",
+          },
+        ]}
         onOpen={vi.fn()}
         onCreate={vi.fn()}
         onEdit={vi.fn()}
@@ -31,12 +33,17 @@ describe("PromptsOverviewPage", () => {
 
     expect(screen.getByText("Release summary")).not.toBeNull();
     expect(screen.getByText("Summarize a release.")).not.toBeNull();
-    expect(
-      screen.getAllByRole("columnheader").map((header) => header.textContent),
-    ).toEqual(["Name", "Creator", "Updated", ""]);
+    expect(screen.getAllByRole("columnheader").map((header) => header.textContent)).toEqual([
+      "",
+      "Name",
+      "Creator",
+      "Updated",
+      "",
+    ]);
+    expect(screen.getByRole("checkbox", { name: "Select all visible rows" })).not.toBeNull();
     expect(container.querySelector('img[src="/jane.png"]')).not.toBeNull();
     expect(
-      container.querySelector(".resource-overview-identity__visual .hugeicons-message-square-text"),
+      container.querySelector(".resource-overview-identity__visual .hugeicons-chat-01"),
     ).not.toBeNull();
   });
 

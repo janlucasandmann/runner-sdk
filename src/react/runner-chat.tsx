@@ -38,7 +38,6 @@ import {
   RefreshCw as LucideRefreshCw,
   Repeat2 as LucideRepeat2,
   Split as LucideSplit,
-  SquareMousePointer as LucideSquareMousePointer,
   Star as LucideStar,
   Telescope as LucideTelescope,
   TextQuote as LucideTextQuote,
@@ -53,6 +52,8 @@ import {
   X as LucideX,
   Zap as LucideZap,
 } from "../platform-ui/components/ui/hugeicons-compat.js";
+import { HugeiconsIcon } from "@hugeicons/react";
+import CursorMagicSelection04Icon from "@hugeicons/core-free-icons/CursorMagicSelection04Icon";
 import { RunnerDeepResearchSession, RunnerLog } from "../types.js";
 import {
   PlatformPopupSurface,
@@ -8541,7 +8542,7 @@ export function RunnerChat({
                             className={`tb-popup-row tb-popup-row-core-action ${showSkillsPopup ? "selected" : ""}`}
                             onClick={() => openPlusPopup("skills")}
                           >
-                            <LucideSquareMousePointer className="tb-popup-icon" strokeWidth={1.75} />
+                            <HugeiconsIcon icon={CursorMagicSelection04Icon} className="tb-popup-icon" strokeWidth={1.75} />
                             <span className="tb-popup-label">Skills</span>
                             <IconChevronRight className="tb-popup-chevron" />
                           </button>
@@ -9324,7 +9325,7 @@ export function RunnerChat({
           // Atlassian resource selection is currently exposed from project
           // settings. The regular thread attachment browser keeps its
           // existing source contract and therefore never advertises it.
-          if (source !== "atlassian") switchFileBrowserSource(source);
+          if (source !== "atlassian" && source !== "gitlab") switchFileBrowserSource(source);
         }}
         connections={{
           "google-drive": {
@@ -9359,6 +9360,7 @@ export function RunnerChat({
             onConnect: githubConfig?.onConnect,
             onDisconnect: githubConfig?.onDisconnect,
           },
+          gitlab: { connected: false },
           atlassian: { connected: false },
         }}
         authSource={

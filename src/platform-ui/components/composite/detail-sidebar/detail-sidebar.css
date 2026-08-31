@@ -57,5 +57,7 @@
 .platform-detail-sidebar__section-body { min-width: 0; }
 
 @media (max-width: 1180px) {
-  .platform-detail-sidebar { position: static; }
+  .platform-detail-sidebar {
+    position: static;
+  }
 }

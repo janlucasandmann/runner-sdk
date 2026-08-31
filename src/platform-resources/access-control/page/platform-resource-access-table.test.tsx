@@ -5,6 +5,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID,
+  PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL,
   type PlatformAccessPrincipal,
 } from "../domain/access-principals.js";
 import { PlatformResourceAccessTable } from "./platform-resource-access-table.js";
@@ -40,6 +41,11 @@ describe("PlatformResourceAccessTable", () => {
       '.platform-resource-access-table__principal-avatar-image[src="/img/teams/platform.webp"]',
     );
     expect(teamAvatar).not.toBeNull();
+    expect(
+      table.querySelector(
+        `.platform-resource-access-table__principal-avatar-image[src="${PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL}"]`,
+      ),
+    ).not.toBeNull();
     expect(within(table).queryByText("4 members")).toBeNull();
     expect(
       (
@@ -96,11 +102,11 @@ describe("PlatformResourceAccessTable", () => {
         within(table).getByRole("checkbox", {
           name: "All Agents is always included",
         }) as HTMLButtonElement
-    ).disabled,
+      ).disabled,
     ).toBe(true);
   });
 
-  it("places the Add Teams control before the search field", () => {
+  it("places search and Add Teams on a dedicated row beneath the title", () => {
     const { container } = render(
       <PlatformResourceAccessTable
         teams={teams}
@@ -113,13 +119,28 @@ describe("PlatformResourceAccessTable", () => {
     const controls = container.querySelector(
       ".platform-data-table__toolbar-controls",
     );
+    const title = container.querySelector(
+      ".platform-resource-access-table__heading",
+    );
+    const accessContainer = container.querySelector(
+      ".platform-resource-access-table__container",
+    );
     const addTeams = screen.getByRole("button", { name: "Add Teams" });
     const search = screen.getByRole("searchbox", { name: "Search access" });
+    const table = screen.getByRole("table", { name: "Function access" });
 
-    expect(controls?.firstElementChild?.contains(addTeams)).toBe(true);
+    expect(title?.textContent).toBe("Manage Function Access");
     expect(
-      controls?.firstElementChild?.nextElementSibling?.contains(search),
-    ).toBe(true);
+      screen.getByText(
+        "Choose which organization roles and teams can access and manage this Function.",
+      ),
+    ).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /About Manage Function Access/i })).toBeNull();
+    expect(accessContainer?.contains(title)).toBe(false);
+    expect(accessContainer?.contains(controls)).toBe(true);
+    expect(accessContainer?.contains(table)).toBe(true);
+    expect(controls?.firstElementChild?.contains(search)).toBe(true);
+    expect(controls?.lastElementChild?.contains(addTeams)).toBe(true);
   });
 
   it("renders a shared leading toolbar control in place of a page-specific title", () => {
@@ -137,7 +158,7 @@ describe("PlatformResourceAccessTable", () => {
     expect(screen.queryByText("Manage Agent Access")).toBeNull();
   });
 
-  it("renders contextual help beside the access title", () => {
+  it("renders contextual help as visible section copy without a tooltip", () => {
     render(
       <PlatformResourceAccessTable
         teams={teams}
@@ -147,10 +168,10 @@ describe("PlatformResourceAccessTable", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "About Manage Agent Access" })).not.toBeNull();
+    expect(screen.getByText("Explains who can manage this agent.")).not.toBeNull();
     expect(
-      screen.getByRole("button", { name: "About Manage Agent Access" }).getAttribute("data-tooltip"),
-    ).toBe("Explains who can manage this agent.");
+      screen.queryByRole("button", { name: "About Manage Agent Access" }),
+    ).toBeNull();
   });
 
   it("renders the centralized footer when pagination is enabled", () => {

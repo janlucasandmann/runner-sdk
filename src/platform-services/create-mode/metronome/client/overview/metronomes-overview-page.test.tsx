@@ -114,7 +114,7 @@ describe("MetronomesOverviewPage", () => {
 
     const controls = screen.getByTestId("overview-controls");
     expect(within(controls).queryByRole("radiogroup")).toBeNull();
-    expect(within(controls).getByRole("button", { name: "Metronome" })).not.toBeNull();
+    expect(within(controls).getByRole("button", { name: "Workflow" })).not.toBeNull();
     expect(screen.queryByRole("button", { name: /filter/i })).toBeNull();
     expect(screen.queryByRole("columnheader", { name: /trigger/i })).toBeNull();
     expect(
