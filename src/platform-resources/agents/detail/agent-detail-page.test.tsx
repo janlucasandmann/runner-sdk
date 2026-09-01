@@ -33,6 +33,52 @@ afterEach(() => {
 });
 
 describe("AgentDetailPage", () => {
+  it("uses the centralized Settings page and standard details sidebar", () => {
+    const { container } = render(
+      <AgentDetailPage
+        sidebar={<div>Legacy agent sidebar</div>}
+        activeTab="settings"
+        settings={{
+          className: "playground-agent-resource-settings",
+          identity: {
+            icon: <span>AG</span>,
+            title: "Research Agent",
+            description: "Researches product strategy",
+          },
+          details: {
+            variant: "standard",
+            customAttributes: [{ id: "created", label: "Created", value: "Aug 24" }],
+            updatedAt: "2026-08-25T09:30:00.000Z",
+            creator: { value: "creator-1", name: "Creator Name" },
+            owner: { value: "owner-1", name: "Owner Name" },
+            scope: false,
+            primaryActions: [{ id: "start", label: "Start a Thread", onSelect: vi.fn() }],
+          },
+          access: <section>Agent access</section>,
+          detailsSidebarAriaLabel: "Agent settings",
+        }}
+      >
+        <div>Legacy settings content</div>
+      </AgentDetailPage>,
+    );
+
+    const settingsPage = container.querySelector(
+      "[data-platform-resource-settings-page='true']",
+    );
+    expect(settingsPage).not.toBeNull();
+    expect(settingsPage?.classList.contains("playground-agent-resource-settings")).toBe(true);
+    expect(
+      container.querySelector("[data-platform-resource-settings-sidebar-content='true']"),
+    ).not.toBeNull();
+    expect(screen.getByRole("complementary", { name: "Agent settings" })).not.toBeNull();
+    expect(screen.getByText("Created")).not.toBeNull();
+    expect(screen.getByText("Updated")).not.toBeNull();
+    expect(screen.getByText("Creator")).not.toBeNull();
+    expect(screen.getByText("Owner")).not.toBeNull();
+    expect(screen.queryByText("Legacy agent sidebar")).toBeNull();
+    expect(screen.queryByText("Legacy settings content")).toBeNull();
+  });
+
   it("composes the shared detail shell without local header navigation", () => {
     const { container } = render(
       <AgentDetailPage

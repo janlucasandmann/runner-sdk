@@ -136,8 +136,6 @@
                       value: normalizedDatabaseId,
                       title: normalizedDatabaseId,
                       monospace: true,
-                      copyValue: normalizedDatabaseId,
-                      copyAriaLabel: "Copy Database ID",
                     },
                     {
                       id: "created",
@@ -158,14 +156,6 @@
                   onClick: () => {
                     closeDatabaseActions();
                     window.open("http://localhost:3001/developers/libraries/databases", "_blank", "noopener,noreferrer");
-                  },
-                }),
-                React.createElement(PlatformResourceActionMenuItem, {
-                  icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  label: "Copy Database ID",
-                  onClick: () => {
-                    closeDatabaseActions();
-                    void copyTextToClipboard(normalizedDatabaseId);
                   },
                 }),
                 React.createElement(PlatformResourceActionsDivider),
@@ -245,8 +235,6 @@
                       value: normalizedServerId,
                       title: normalizedServerId,
                       monospace: true,
-                      copyValue: normalizedServerId,
-                      copyAriaLabel: "Copy " + serverResourceLabel + " ID",
                     },
                     {
                       id: "created",
@@ -288,14 +276,6 @@
                       },
                     })
                   : null,
-                React.createElement(PlatformResourceActionMenuItem, {
-                  icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  label: "Copy " + serverResourceLabel + " ID",
-                  onClick: () => {
-                    closeServerActions();
-                    void copyTextToClipboard(normalizedServerId);
-                  },
-                }),
                 React.createElement(PlatformResourceActionsDivider),
                 React.createElement(PlatformResourceActionMenuItem, {
                   icon: React.createElement(SquarePen, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
@@ -1514,6 +1494,11 @@
   	            && embeddedActiveServerKind === "secrets"
   	            && secretsDetailTab === "secrets"
   	          );
+	          const isEmbeddedComputerRuntimeTab = Boolean(
+	            !isServersMode
+	            && selectedEnvironmentId
+	            && normalizedEnvironmentDetailTab === "runtime"
+	          );
   	          const isEmbeddedResourceTypeOverview = Boolean(
   	            isServersMode
   	            && normalizedEmbeddedServerKind
@@ -1539,6 +1524,7 @@
 	            + (isEmbeddedAuthUsersTab ? " is-auth-users-tab" : "")
 	            + (isEmbeddedSecretsTab ? " is-secrets-tab" : "");
 	          const resourcesDetailContentClassName = "playground-resources-detail-content"
+	            + (isEmbeddedComputerRuntimeTab ? " is-computer-runtime-tab" : "")
 	            + (isEmbeddedDatabaseDataTab ? " is-database-data-tab" : "")
 	            + (isEmbeddedServerCodeTab ? " is-code-tab" : "")
 	            + (isEmbeddedServerCodeTab ? " is-source-server-code-tab" : "")

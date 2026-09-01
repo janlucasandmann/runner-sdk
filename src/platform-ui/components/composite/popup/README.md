@@ -61,10 +61,11 @@ Prefer the first-class `searchHeader` option on `PlatformPopup`, or
 and focus behavior remain consistent. The lower-level component stays
 available for composite popup layouts that own their own header structure.
 
-`PlatformInfoTooltip` is the centralized compact information sign for form and
-settings labels. It opens on hover or keyboard focus, uses a portaled minimal
-surface to avoid clipping, and can separate a plain-language description from
-an optional “At runtime” enforcement note.
+`PlatformInfoTooltip` is the centralized information sign for form and settings
+labels. It opens on hover or keyboard focus, uses a centered portaled surface
+to avoid clipping, and supports an optional title, required explanatory text,
+and an optional action. Keep help content in this component instead of adding
+feature-owned pseudo-element tooltips.
 
 ## Variants and animation
 

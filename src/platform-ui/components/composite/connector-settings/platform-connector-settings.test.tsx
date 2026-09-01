@@ -5,12 +5,38 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   PlatformConnectorPreviewCard,
+  PlatformConnectorSettingsSectionHeading,
   PlatformConnectorSettingsModal,
 } from "./platform-connector-settings.js";
 
 afterEach(cleanup);
 
 describe("Platform connector settings", () => {
+  it("moves section copy into the centralized text-only info tooltip", () => {
+    render(
+      <PlatformConnectorSettingsSectionHeading
+        titleId="connectors-title"
+        description="Synchronize this resource with connected repositories."
+        trailing={<span>Managed centrally</span>}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Connectors" }).id).toBe(
+      "connectors-title",
+    );
+    expect(
+      screen.queryByText("Synchronize this resource with connected repositories."),
+    ).toBeNull();
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "About Connectors" }));
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip.textContent).toBe(
+      "Synchronize this resource with connected repositories.",
+    );
+    expect(tooltip.querySelector(".platform-info-tooltip__title")).toBeNull();
+    expect(tooltip.querySelector(".platform-info-tooltip__action")).toBeNull();
+    expect(screen.getByText("Managed centrally")).toBeTruthy();
+  });
+
   it("renders the compact card with its settings action and minimal action menu", () => {
     const onOpenSettings = vi.fn();
     const onViewAllConnectors = vi.fn();

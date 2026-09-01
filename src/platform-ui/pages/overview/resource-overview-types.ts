@@ -12,6 +12,7 @@ export type ResourceOverviewPeriod = "day" | "week" | "month";
 export type ResourceOverviewSeriesType = PlatformAnalyticsChartType;
 export type ResourceOverviewValueKind = PlatformAnalyticsValueKind;
 export type ResourceOverviewRowActionMode = "resource" | "custom";
+export type ResourceOverviewPageVariant = "standard" | "analytics-catalog";
 
 export interface ResourceOverviewPeriodOption {
   id: ResourceOverviewPeriod;
@@ -53,6 +54,16 @@ interface ResourceOverviewCustomHeroPageProps {
 }
 
 export type ResourceOverviewPageProps<TData> = ResourceOverviewPageBaseProps<TData> & (
-  | ResourceOverviewAnalyticsPageProps
-  | ResourceOverviewCustomHeroPageProps
+  | (ResourceOverviewAnalyticsPageProps & {
+      /**
+       * `analytics-catalog` keeps the analytics/KPI stack as the page header
+       * while applying the same full-width catalog table layout used by
+       * resource pages such as Workflows.
+       */
+      variant?: ResourceOverviewPageVariant;
+    })
+  | (ResourceOverviewCustomHeroPageProps & { variant?: "standard" })
 );
+
+export type ResourceOverviewAnalyticsCatalogPageProps<TData> =
+  ResourceOverviewPageBaseProps<TData> & ResourceOverviewAnalyticsPageProps;

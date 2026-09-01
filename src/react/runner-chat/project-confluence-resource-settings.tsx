@@ -29,6 +29,7 @@ export interface RunnerKnowledgeConfluenceResourceSettingsProps {
   organizationId?: string;
   projectId?: string;
   libraryId?: string;
+  promptId?: string;
   requestHeaders?: Headers | Record<string, string> | null;
   resourceId: string;
   resourceName: string;
@@ -67,6 +68,7 @@ export function RunnerKnowledgeConfluenceResourceSettings({
   organizationId,
   projectId = "",
   libraryId = "",
+  promptId = "",
   requestHeaders,
   resourceId,
   resourceName,
@@ -82,10 +84,14 @@ export function RunnerKnowledgeConfluenceResourceSettings({
   onDisconnect,
   variant = "project",
 }: RunnerKnowledgeConfluenceResourceSettingsProps) {
-  const hasTarget = Boolean(projectId || libraryId);
+  const hasTarget = [projectId, libraryId, promptId].filter(Boolean).length === 1;
   const canLoad = Boolean(hasTarget && spaceId && cloudId);
   const canSync = canLoad && !disabled;
-  const targetPayload = projectId ? { projectId } : { libraryId };
+  const targetPayload = projectId
+    ? { projectId }
+    : promptId
+      ? { promptId }
+      : { libraryId };
   const legacyEnabled = strategyKnowledgeSyncEnabled === true;
   const initialSyncToConfluence =
     typeof strategyKnowledgeSyncToConfluenceEnabled === "boolean"
@@ -137,7 +143,10 @@ export function RunnerKnowledgeConfluenceResourceSettings({
     const controller = new AbortController();
     setLoading(true);
     const query = new URLSearchParams();
-    query.set(projectId ? "projectId" : "libraryId", projectId || libraryId);
+    query.set(
+      projectId ? "projectId" : promptId ? "promptId" : "libraryId",
+      projectId || promptId || libraryId,
+    );
     query.set("spaceId", spaceId);
     void fetch(`/api/aios/confluence/strategy-sync?${query.toString()}`, {
       headers,
@@ -148,7 +157,7 @@ export function RunnerKnowledgeConfluenceResourceSettings({
       .then(async (response) => {
         const payload = await response.json().catch(() => ({}));
         if (!response.ok)
-          throw new Error(payload?.error || "Failed to load Strategy Knowledge sync.");
+          throw new Error(payload?.error || `Failed to load ${knowledgeLabel} synchronization.`);
         setSync(normalizeSyncState(payload?.sync || { enabled: false, status: "disabled" }));
       })
       .catch((error) => {
@@ -156,14 +165,14 @@ export function RunnerKnowledgeConfluenceResourceSettings({
         setSync((current) => ({
           ...current,
           status: "error",
-          error: error instanceof Error ? error.message : "Failed to load Strategy Knowledge sync.",
+          error: error instanceof Error ? error.message : `Failed to load ${knowledgeLabel} synchronization.`,
         }));
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [canLoad, headers, libraryId, projectId, spaceId]);
+  }, [canLoad, headers, knowledgeLabel, libraryId, projectId, promptId, spaceId]);
 
   async function setDirection(direction: "toConfluence" | "fromConfluence", checked: boolean) {
     if (!canSync || saving) return;
@@ -200,7 +209,7 @@ export function RunnerKnowledgeConfluenceResourceSettings({
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok)
-        throw new Error(payload?.error || "Failed to update Strategy Knowledge sync.");
+        throw new Error(payload?.error || `Failed to update ${knowledgeLabel} synchronization.`);
       setSync(
         normalizeSyncState(
           payload?.sync || {
@@ -220,7 +229,7 @@ export function RunnerKnowledgeConfluenceResourceSettings({
       setSync({
         ...previous,
         status: "error",
-        error: error instanceof Error ? error.message : "Failed to update Strategy Knowledge sync.",
+        error: error instanceof Error ? error.message : `Failed to update ${knowledgeLabel} synchronization.`,
       });
     } finally {
       setSaving(false);

@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { beginPlatformPluginConnection } from "../../../../../platform-resources/plugins/connections/index.js";
 import {
   PlatformConnectorPreviewCard,
+  PlatformConnectorSettingsSectionHeading,
   PlatformConnectorSettingsModal,
 } from "../../../../../platform-ui/components/composite/connector-settings/index.js";
 import { PlatformEmptyState } from "../../../../../platform-ui/components/composite/empty-state/index.js";
@@ -35,7 +36,7 @@ interface KnowledgeConnectorResource extends RunnerChatFileNode {
 }
 
 interface KnowledgeConnectorMetadata {
-  schemaVersion: "computer_agents_knowledge_connectors_v1";
+  schemaVersion: string;
   notion: KnowledgeConnectorResource[];
   confluence: KnowledgeConnectorResource[];
 }
@@ -50,6 +51,10 @@ export interface KnowledgeConnectorSettingsProps {
   requestHeaders?: Readonly<Record<string, string>>;
   activeOrganizationId?: string;
   onLibraryChange: (library: KnowledgeLibrary) => void;
+  /** Optional document resource target. Knowledge libraries remain the default. */
+  promptId?: string;
+  resourceLabel?: string;
+  connectorMetadataKey?: string;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -103,14 +108,18 @@ function normalizeResource(
   };
 }
 
-function readConnectorMetadata(library: KnowledgeLibrary): KnowledgeConnectorMetadata {
-  const metadata = asRecord(library.metadata.knowledgeConnectors);
+function readConnectorMetadata(
+  library: KnowledgeLibrary,
+  connectorMetadataKey: string,
+  schemaVersion: string,
+): KnowledgeConnectorMetadata {
+  const metadata = asRecord(library.metadata[connectorMetadataKey]);
   const readResources = (provider: KnowledgeConnectorProvider) =>
     (Array.isArray(metadata[provider]) ? metadata[provider] : [])
       .map((value) => normalizeResource(provider, value))
       .filter((resource): resource is KnowledgeConnectorResource => Boolean(resource));
   return {
-    schemaVersion: "computer_agents_knowledge_connectors_v1",
+    schemaVersion,
     notion: readResources("notion"),
     confluence: readResources("confluence"),
   };
@@ -153,9 +162,22 @@ export function KnowledgeConnectorSettings({
   requestHeaders = {},
   activeOrganizationId = "",
   onLibraryChange,
+  promptId = "",
+  resourceLabel = "Knowledge library",
+  connectorMetadataKey = "knowledgeConnectors",
 }: KnowledgeConnectorSettingsProps) {
-  const connectorMetadata = useMemo(() => readConnectorMetadata(library), [library]);
-  const projectManaged = isProjectManagedStrategyKnowledgeLibrary(library);
+  const connectorSchemaVersion = promptId
+    ? "computer_agents_prompt_connectors_v1"
+    : "computer_agents_knowledge_connectors_v1";
+  const connectorMetadata = useMemo(
+    () => readConnectorMetadata(library, connectorMetadataKey, connectorSchemaVersion),
+    [connectorMetadataKey, connectorSchemaVersion, library],
+  );
+  const projectManaged = !promptId && isProjectManagedStrategyKnowledgeLibrary(library);
+  const resourceReference = `this ${resourceLabel}`;
+  const connectorAriaLabel = promptId
+    ? `${resourceLabel} connector settings`
+    : "Knowledge connector settings";
   const [browserProvider, setBrowserProvider] = useState<KnowledgeConnectorProvider | null>(null);
   const [catalog, setCatalog] = useState<KnowledgeConnectorResource[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -294,7 +316,7 @@ export function KnowledgeConnectorSettings({
     const nextLibrary = await api.updateLibrary(library.id, {
       metadata: {
         ...library.metadata,
-        knowledgeConnectors: nextConnectorMetadata,
+        [connectorMetadataKey]: nextConnectorMetadata,
       },
     });
     onLibraryChange(nextLibrary);
@@ -323,7 +345,7 @@ export function KnowledgeConnectorSettings({
       }
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to update Knowledge connectors.";
+        error instanceof Error ? error.message : `Failed to update ${resourceLabel} connectors.`;
       setBrowserError(message);
       setSettingsError(message);
     } finally {
@@ -455,26 +477,22 @@ export function KnowledgeConnectorSettings({
       aria-labelledby="knowledge-connectors-title"
       aria-disabled={projectManaged || undefined}
     >
-      <div className="playground-source-connector-settings__heading">
-        <div className="knowledge-connector-settings__title-line">
-          <h2 id="knowledge-connectors-title">Connectors</h2>
-          {projectManaged ? (
-            <PlatformLabel variant="gray">Managed at project level</PlatformLabel>
-          ) : null}
-        </div>
-        <p>
-          {projectManaged
-            ? "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings."
-            : "Keep this Knowledge library synchronized with selected Notion databases and Confluence spaces."}
-        </p>
-      </div>
+      <PlatformConnectorSettingsSectionHeading
+        titleId="knowledge-connectors-title"
+        description={projectManaged
+          ? "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings."
+          : `Keep ${resourceReference} synchronized with selected Notion databases and Confluence spaces.`}
+        trailing={projectManaged
+          ? <PlatformLabel variant="gray">Managed at project level</PlatformLabel>
+          : null}
+      />
 
       <div className="playground-source-connector-settings__previews">
         <PlatformConnectorPreviewCard
           className="playground-source-connector-settings__preview"
           connectorName="Notion"
           title="Notion"
-          description="Synchronize Knowledge documents."
+          description={`Synchronize ${resourceLabel} content.`}
           icon={<IconNotion />}
           backgroundImageSrc="/img/bg/blur.webp"
           activeConnectionCount={connectorMetadata.notion.length}
@@ -487,7 +505,7 @@ export function KnowledgeConnectorSettings({
           className="playground-source-connector-settings__preview"
           connectorName="Atlassian"
           title="Atlassian"
-          description="Synchronize Knowledge documents."
+          description={`Synchronize ${resourceLabel} content.`}
           icon={<IconAtlassian />}
           backgroundImageSrc="/img/bg/blur3.webp"
           activeConnectionCount={connectorMetadata.confluence.length}
@@ -507,7 +525,7 @@ export function KnowledgeConnectorSettings({
       <PlatformConnectorSettingsModal
         open={settingsOpen}
         title="Connectors"
-        ariaLabel="Knowledge connector settings"
+        ariaLabel={connectorAriaLabel}
         activeItemId={activeResourceId}
         onActiveItemChange={setActiveResourceId}
         onClose={() => setSettingsOpen(false)}
@@ -533,8 +551,8 @@ export function KnowledgeConnectorSettings({
           <div className="playground-source-connector-settings__modal-empty">
             <PlatformEmptyState
               icon={Database}
-              title="No Knowledge connections"
-              description="Add a Notion database or Confluence space to synchronize this Knowledge library."
+              title={`No ${resourceLabel} connections`}
+              description={`Add a Notion database or Confluence space to synchronize ${resourceReference}.`}
             />
           </div>
         )}
@@ -552,12 +570,13 @@ export function KnowledgeConnectorSettings({
                   <RunnerKnowledgeNotionResourceSettings
                     variant="resource"
                     organizationId={activeOrganizationId}
-                    libraryId={library.id}
+                    libraryId={promptId ? undefined : library.id}
+                    promptId={promptId || undefined}
                     requestHeaders={requestHeaders}
                     resourceId={resource.id}
                     resourceName={resource.name}
                     resourceType="database"
-                    knowledgeLabel="this Knowledge library"
+                    knowledgeLabel={resourceReference}
                     strategyKnowledgeSyncEnabled={resource.strategyKnowledgeSyncEnabled}
                     strategyKnowledgeSyncToNotionEnabled={
                       resource.strategyKnowledgeSyncToNotionEnabled
@@ -584,14 +603,15 @@ export function KnowledgeConnectorSettings({
                   <RunnerKnowledgeConfluenceResourceSettings
                     variant="resource"
                     organizationId={activeOrganizationId}
-                    libraryId={library.id}
+                    libraryId={promptId ? undefined : library.id}
+                    promptId={promptId || undefined}
                     requestHeaders={requestHeaders}
                     resourceId={resource.id}
                     resourceName={resource.name}
                     spaceId={confluenceSpaceId(resource)}
                     cloudId={resource.cloudId}
                     siteUrl={resource.siteUrl}
-                    knowledgeLabel="this Knowledge library"
+                    knowledgeLabel={resourceReference}
                     strategyKnowledgeSyncEnabled={resource.strategyKnowledgeSyncEnabled}
                     strategyKnowledgeSyncToConfluenceEnabled={
                       resource.strategyKnowledgeSyncToConfluenceEnabled
@@ -668,3 +688,6 @@ export function KnowledgeConnectorSettings({
     </section>
   );
 }
+
+/** Shared document-resource connector surface used by Knowledge and Prompt Settings. */
+export const DocumentConnectorSettings = KnowledgeConnectorSettings;

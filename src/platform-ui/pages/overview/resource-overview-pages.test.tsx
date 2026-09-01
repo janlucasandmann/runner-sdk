@@ -186,6 +186,7 @@ describe("resource overview pages", () => {
   ])("renders the canonical shell for %s", (kind, createPage) => {
     const { container } = renderWithOverviewControls(createPage());
     const isGuideOverview = kind === "tags" || kind === "skills";
+    const isCatalogOverview = isGuideOverview || kind === "agents";
     const toolbarTitles: Record<string, string> = {
       computers: "All Computers",
       tags: "All Tags",
@@ -235,10 +236,10 @@ describe("resource overview pages", () => {
     }
     expect(
       container.querySelector(
-        `.platform-data-table.is-fill-layout.${isGuideOverview ? "is-catalog-ui" : "is-minimalistic-ui"}`,
+        `.platform-data-table.is-fill-layout.${isCatalogOverview ? "is-catalog-ui" : "is-minimalistic-ui"}`,
       ),
     ).not.toBeNull();
-    if (isGuideOverview) {
+    if (isCatalogOverview) {
       expect(
         screen.queryByRole("navigation", { name: /pagination/ }),
       ).toBeNull();
@@ -248,6 +249,16 @@ describe("resource overview pages", () => {
       ).not.toBeNull();
     }
     if (kind === "agents") {
+      expect(
+        container
+          .querySelector(".resource-overview-page")
+          ?.getAttribute("data-resource-overview-page-variant"),
+      ).toBe("analytics-catalog");
+      expect(
+        container.querySelector(
+          '.resource-overview-page__analytics-header[data-resource-overview-header="analytics"]',
+        ),
+      ).not.toBeNull();
       const tabBar = screen.getByRole("navigation", {
         name: "Agent categories",
       });
@@ -289,7 +300,7 @@ describe("resource overview pages", () => {
         screen.getByRole("heading", { name: toolbarTitles[kind], level: 2 }),
       ).not.toBeNull();
     }
-    if (!isGuideOverview) {
+    if (!isCatalogOverview) {
       expect(screen.getByText("1-1 of 1")).not.toBeNull();
     }
     expect(screen.getByRole("button", { name: /Sort Name/ })).not.toBeNull();

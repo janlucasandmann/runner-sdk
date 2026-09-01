@@ -8,6 +8,11 @@
 layout for editable resource settings: a compact title row, optional icon and
 actions, and a flat content surface.
 
+`PlatformSettingsTableSection` owns the matching resource-management table
+shell: an external title and info tooltip plus a single framed, transparent
+toolbar/table/pagination surface. Use it for Access, Guardrails, and similar
+Settings tables so those sections cannot drift visually.
+
 `PlatformSettingsDataTable` applies the matching table defaults used by
 permission rings and other settings grids. Resource pages keep their domain
 state and editors while sharing this presentation layer.

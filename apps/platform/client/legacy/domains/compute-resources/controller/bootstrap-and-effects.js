@@ -507,7 +507,6 @@
           const [environmentApiSnippetTab, setEnvironmentApiSnippetTab] = useState("curl");
           const [environmentApiAgentId, setEnvironmentApiAgentId] = useState("");
           const [copiedEnvironmentApiSnippet, setCopiedEnvironmentApiSnippet] = useState("");
-          const [environmentDetailCopiedFact, setEnvironmentDetailCopiedFact] = useState("");
           const [environmentRenameState, setEnvironmentRenameState] = useState(null);
           const [environmentRenameValue, setEnvironmentRenameValue] = useState("");
           const [environmentRenameError, setEnvironmentRenameError] = useState("");

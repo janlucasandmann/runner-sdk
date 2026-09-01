@@ -203,11 +203,16 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
       />,
     );
 
+    const connectorHelp = screen.getByRole("button", { name: "About Connectors" });
     expect(
-      screen.getByText(
+      screen.queryByText(
         "Synchronize this Web App with a GitHub or GitLab repository and automate exact-revision deployments.",
       ),
-    ).toBeTruthy();
+    ).toBeNull();
+    fireEvent.mouseEnter(connectorHelp);
+    expect(screen.getByRole("tooltip").textContent).toBe(
+      "Synchronize this Web App with a GitHub or GitLab repository and automate exact-revision deployments.",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Open GitHub connector settings" }));
     expect(await screen.findByRole("button", { name: "Manage Web App deployments" })).toBeTruthy();
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
@@ -233,11 +238,10 @@ describe("RunnerFunctionGithubConnectorSettings", () => {
       />,
     );
 
-    expect(
-      screen.getByText(
-        "Synchronize this Skill with a GitHub or GitLab repository and automate exact-revision updates.",
-      ),
-    ).toBeTruthy();
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "About Connectors" }));
+    expect(screen.getByRole("tooltip").textContent).toBe(
+      "Synchronize this Skill with a GitHub or GitLab repository and automate exact-revision updates.",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Open GitHub connector settings" }));
     expect(await screen.findByRole("heading", { name: "Version synchronization" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Automations" })).toBeTruthy();

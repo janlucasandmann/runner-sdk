@@ -14,8 +14,10 @@
         import { HugeiconsIcon } from "@hugeicons/react";
         import * as ConfigureHugeicons from "/dist/platform-ui/components/ui/hugeicons-compat.js";
         import CursorMagicSelection04Icon from "@hugeicons/core-free-icons/CursorMagicSelection04Icon";
+        import LayoutAlignRightIcon from "@hugeicons/core-free-icons/LayoutAlignRightIcon";
+        import ListFilterIcon from "@hugeicons/core-free-icons/ListFilterIcon";
         const { AlertCircle, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpDown, ArrowUpFromLine, ArrowUpRight, AudioLines, Award, Battery, BatteryFull, BatteryLow, BatteryMedium, Bell, Bold, BookOpen, Bookmark, Bot, Braces, Brain, Building2, Cable, Calendar: CalendarIcon, Calculator, Camera, ChartColumnIncreasing, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUpDown, Circle, CircleCheck, CircleCheckBig, CircleDashed, CircleEllipsis, CircleHelp, CircleMinus, ClipboardList, Clapperboard, Clock, Cloud, Code, Code2, CodeXml, Coins, Copy, Cpu, Crop, Database, DollarSign, Download, Ellipsis, EllipsisVertical, Equal, ExternalLink, Eye, EyeOff, File, FilePlus2, FileText, Film, Filter, FingerprintPattern, Flag, Flame, FlaskConical, Folder, FolderOpen, FunctionSquare, Ghost, GitBranch, GitBranchPlus, GitCommitHorizontal, GitFork, GitPullRequestArrow, Globe, Grid3x3, Hand, HardDrive, Heart, History, House, Image: ImageIcon, Info, Italic, Key, KeyRound, LassoSelect, Layers, LayoutDashboard, LayoutGrid, LibraryBig, Lightbulb, Link2, List, ListFilter, ListOrdered, ListTodo, Loader2, LogIn, LogOut, Mail, MapPin, Maximize2, MessageCircle, MessageSquare, MessageSquareText, Milestone, Metronome, Mic, Minimize2, Minus, Monitor, MousePointer2, Package, Paintbrush, PanelLeft, PanelLeftClose, PanelLeftOpen, PanelRight, Paperclip, PauseCircle, PenTool, PencilRuler, Pin, Play, Plug, Plus, ReceiptText, Redo2, RefreshCcwDot, RefreshCw, Rocket, RotateCcw, RotateCw, Save, Scan, ScanEye, Search, Server, Settings, Settings2, Shield, ShieldCheck, Slash, SlidersHorizontal, Sparkles, Split, Square, SquareMousePointer, SquarePen, StickyNote, Tag, Telescope, Terminal, TestTubeDiagonal, Trash2, Truck, Underline, Undo2, Unlink, User, UserRound, UserRoundMinus, UserRoundPlus, Users, UsersRound, Vault, Wand2, Webhook, X, Zap } = ConfigureHugeicons;
-        import { AccountSetting02Icon, AiArtIcon, Award05Icon, BadgePlusIcon, BellDotIcon, BellIcon, BookOpen01Icon, BookTextIcon, Calendar04Icon, ChartAnalysisIcon, Chat01Icon, ChatLockIcon, Chatting01Icon, ChipIcon, ClapperboardIcon, CodeIcon, ComputerIcon, CorporateIcon, CustomizeIcon, Folder02Icon, GhostIcon, HelpSquareIcon, Home01Icon, LayoutAlignLeftIcon, LibraryIcon, Logout02Icon, Mic02Icon, PencilEdit02Icon, PlugIcon, PlusIcon, Robot01Icon, Search01Icon, Settings01Icon, StarIcon, StartUp02Icon, Store01Icon, TestTube01Icon, TestTubeIcon, TruckIcon, WorkflowIcon } from "@hugeicons/core-free-icons";
+        import { AccountSetting02Icon, AiArtIcon, Award05Icon, BadgePlusIcon, BellDotIcon, BellIcon, BookOpen01Icon, BookTextIcon, Calendar04Icon, ChartAnalysisIcon, Chat01Icon, ChatLockIcon, Chatting01Icon, ChipIcon, ClapperboardIcon, CodeIcon, ComputerIcon, CorporateIcon, CustomizeIcon, Folder02Icon, GhostIcon, HelpSquareIcon, Home01Icon, LayoutAlignLeftIcon, LibraryIcon, Logout02Icon, Mic02Icon, Note01Icon, PencilEdit02Icon, PlugIcon, PlusIcon, Robot01Icon, Search01Icon, Settings01Icon, StarIcon, StartUp02Icon, Store01Icon, TestTube01Icon, TestTubeIcon, TruckIcon, WorkflowIcon } from "@hugeicons/core-free-icons";
         import { RunnerClient, buildRunnerThreadActivityTree, collectRunnerConnectorIdsFromStructuredEvidence, describeRunnerThreadActivityGroup, extractRunnerThreadPlanSteps, flattenRunnerThreadActivityTree, presentRunnerThreadAction } from "/dist/index.js";
 	      import { RunnerChat, RunnerDocumentPreviewDrawer, RunnerFileBrowserDialog, RunnerFileDiffSurface, RunnerSourceGithubConnectorSettings, RunnerGithubBranchSelector, RunnerImagePreviewSurface, RunnerProjectConfluenceResourceSettings, RunnerProjectConnectorResourceSettings, RunnerProjectGithubRepositorySettings, RunnerProjectNotionResourceSettings, RunnerThreadLiveWorkStatus, RunnerTurnIdentity, createGithubBrowserNodeId, createGithubBrowserRepoFolderId } from "/dist/react/index.js";
 	      import { PlatformAnalyticsChart, PlatformAnalyticsSection } from "/dist/platform-ui/components/composite/analytics/index.js";
@@ -38,7 +40,7 @@
         import { PlatformVersionChangesModal, PlatformVersionHistorySidebar, PlatformVersionLabel, PlatformVersionNavigationGuardRegistration, PlatformVersionPublishControl, PlatformVersionSaveDialog, formatPlatformVersionLabel, normalizePlatformVersionNumber, usePlatformVersionNavigationGuard } from "/dist/platform-ui/components/composite/versioning/index.js";
         import { PlatformInstructionsEditor, normalizePlatformInstructionsEditorImageSource, replacePlatformInstructionsEditorImageMarkdown, serializePlatformInstructionsEditorFileMarkdown, serializePlatformInstructionsEditorImageMarkdown } from "/dist/platform-ui/components/composite/instructions-editor/index.js";
   	      import { PlatformLoadingState } from "/dist/platform-ui/components/composite/loading-state/index.js";
-        import { PlatformSettingsSection, PlatformSettingsSectionList } from "/dist/platform-ui/components/composite/settings-section/index.js";
+        import { PlatformSettingsSection, PlatformSettingsSectionList, PlatformSettingsTableSection } from "/dist/platform-ui/components/composite/settings-section/index.js";
         import { PlatformStatusIndicatorStack } from "/dist/platform-ui/components/composite/status-indicator/index.js";
         import { PlatformResourceShareModal } from "/dist/platform-ui/components/composite/resource-action-modals/index.js";
         import { PlatformUiCard } from "/dist/platform-ui/components/composite/ui-card/index.js";
@@ -49,7 +51,7 @@
   	      import { PlatformSearch } from "/dist/platform-ui/components/ui/search/index.js";
         import { PlatformAgentSelector, PlatformButtonSelector, PlatformSelector } from "/dist/platform-ui/components/ui/selector/index.js";
         import { PlatformInfoTooltip, PlatformPopup, PlatformPopupDismissLayer, PlatformPopupSearchHeader, PlatformPopupSubmenu, PlatformPopupSurface } from "/dist/platform-ui/components/composite/popup/index.js";
-        import { PlatformResourceActionMenuItem, PlatformResourceActionsDivider, PlatformResourceActionsInformation, PlatformResourceActionsMenu, PlatformResourceHeaderActions, PlatformResourceVersionHistoryMenuItem, PlatformResourceVersionLabel } from "/dist/platform-ui/components/composite/resource-header-actions/index.js";
+        import { PlatformResourceActionMenuItem, PlatformResourceActionsDivider, PlatformResourceActionsInformation, PlatformResourceActionsMenu, PlatformResourceCopyMenuItem, PlatformResourceHeaderActions, PlatformResourceShareMenuItem, PlatformResourceVersionHistoryMenuItem, PlatformResourceVersionLabel } from "/dist/platform-ui/components/composite/resource-header-actions/index.js";
         import { PlatformResourceDetailSidebar } from "/dist/platform-ui/components/composite/resource-detail-sidebar/index.js";
         import { PlatformProjectIdentityIcon, getPlatformResourceProjectScopeIds, normalizePlatformProjectIdentity, withPlatformResourceProjectScope } from "/dist/platform-resources/projects/index.js";
         import { PLATFORM_PROFILE_IMAGE_PRESET_OPTIONS, PlatformProfileImagePicker, getPlatformProfileImageInitials } from "/dist/platform-ui/components/composite/profile-image-picker/index.js";
@@ -93,6 +95,7 @@
         import { AgentPermissionRingIcons, AgentPublishControl, AgentsOverviewAnalyticsRequestError, ComputersOverviewAnalyticsRequestError, arePlatformAgentListRecordsEquivalent as arePlaygroundAgentListsEquivalent, buildPlatformAgentListScopeKey as buildPlaygroundAgentListScopeKey, createAgentsOverviewAnalytics, createComputersOverviewAnalytics, deleteComputerResource, fetchAgentsOverviewAnalytics, fetchComputersOverviewAnalytics, getAgentPermissionSummary, invalidateAgentsOverviewAnalytics, invalidateComputersOverviewAnalytics, isThreadFunctionalAgentRole, loadComputerDockerfile, normalizeComputerOverviewRows, normalizePlatformAgentListRecords, readCachedAgentsOverviewAnalytics, readCachedComputersOverviewAnalytics, readCachedPlatformAgentList as readCachedPlaygroundAgentList, saveComputerResource, writeCachedPlatformAgentList as writeCachedPlaygroundAgentList } from "/dist/platform-shell/presentation/platform-resource-api.js";
 	      import { ApiKeysOverviewAnalyticsRequestError, createApiKeysOverviewAnalytics, createDevelopResourceOverviewRows, createDevelopVoiceAgentOverviewRows, deleteDevelopResource, fetchApiKeysOverviewAnalytics, getDevelopResourceCreatorIdentity, getDevelopResourceOwnerIdentity, initializeDevelopResourceIdentityMetadata, invalidateApiKeysOverviewAnalytics, readCachedApiKeysOverviewAnalytics, saveDevelopResource } from "/dist/platform-shell/presentation/platform-develop-api.js";
         import { AgentDetailPage, AgentPermissionsPage, AgentsOverviewPage, ApiKeyCreateDialog, AssuranceWorkspacePage, BatchesWorkspacePage, ComputerDetailPage, ComputersOverviewPage, ConfigureHomeOverviewPage, DevelopApiKeysOverviewPage, DevelopEvidenceAgentsWorkspacePage, DevelopHomeOverviewPage, DevelopResourceOverviewRoute, DevelopSecurityWorkspacePage, DevelopServerDetailPage, DevelopVoiceAgentsOverviewPage, DevelopWebhooksOverviewPage, EvaluationCaseDetailPage, EvaluationDetailPage, EvaluationsOverviewPage, ExternalAgentTriggersPage, FineTuningDetailPage, FineTuningOverviewPage, GuardrailDetailPage, GuardrailsOverviewPage, InferenceEndpointDetailPage, InferenceOverviewPage, KnowledgeWorkspacePage, MarketplaceOverviewPage, MetronomesOverviewPage, ModelsFeaturedSection, ModelsOverviewPage, NotificationsOverviewPage, OrganizationAccessControlPage, OrganizationsOverviewPage, PlatformFileResourceIdentity, ProjectDeliveryWorkspace, ProjectDetailPage, ProjectIconPicker, ProjectMilestonesOverviewPage, ProjectsOverviewPage, ProjectSummary, ProjectSummaryDetails, PromptDetailPage, PromptsOverviewPage, SkillDetailPage, SkillsOverviewPage, SourceDeployableServerDetailPage, TagDetailPage, TagsOverviewPage, TeamDetailPage, TeamsOverviewPage, TestsWorkspacePage, TicketDetailPage } from "/dist/platform-shell/presentation/platform-pages.js";
+        import { DocumentConnectorSettings as PlatformDocumentConnectorSettings } from "/dist/platform-services/configure-mode/knowledge/client/page/index.js";
         import { buildQuickBatchThreadJobDraft, createBatchJob } from "/dist/platform-services/create-mode/batches/client/index.js";
 	      import { beginPlatformPluginConnection, buildPlatformPluginConnectionReturnUrl, clearPlatformPluginConnectionRedirectState, clearPlatformPluginConnectionReturnUrlState, createPlatformPluginConnectionReturnUrlState, disconnectPlatformPluginConnection, fetchPlatformPluginConnectionStatus, fetchPlatformPluginFileSourceStatuses, fetchPlatformPluginFiles, getPlatformPluginConnectionDefinition, getPlatformPluginConnectionIdentity, normalizePlatformPluginConnectionReturnTarget, readCachedPlatformPluginConnectionStatus, readPlatformPluginConnectionRedirectState, readPlatformPluginConnectionReturnUrlState, savePlatformPluginCredentials, writeCachedPlatformPluginConnectionStatus, writePlatformPluginConnectionRedirectState } from "/dist/platform-resources/plugins/connections/index.js";
         import { createPlatformGitHubRepositoryFolderId, fetchPlatformGitHubRepositoryBranches } from "/dist/platform-resources/plugins/connections/index.js";
@@ -104,7 +107,7 @@
           listPlatformConnectorCatalogEntries,
         } from "/dist/platform-integrations/connectors/index.js";
         import { createPlatformConnectionCredential, finalizePlatformConnectionCredential, normalizePlatformConnectionCredentials, reconcilePlatformConnectionCredentials, removePlatformConnectionCredential, upsertPlatformConnectionCredential } from "/dist/platform-resources/shared/connections/connection-credentials.js";
-	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessAddTeams, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSets, getPlatformTeamRolePermissionSet, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
+	      import { PLATFORM_ALL_AGENTS_PRINCIPAL_ID, PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL, PLATFORM_ALL_ORGANIZATION_MEMBERS_PRINCIPAL_ID, PlatformResourceAccessAddTeams, PlatformResourceAccessSettings, PlatformResourceAccessTable, buildPlatformSystemPrincipalPermissionMetadata, buildPlatformSystemPrincipalRolePermissionMetadata, buildPlatformTeamAccessMetadata, buildPlatformTeamRolePermissionMetadata, composePlatformAccessPrincipalRows, createPlatformSystemAccessPrincipalRows, getPlatformAccessPrincipalProfileImageUrl, getPlatformSharedTeamIds, getPlatformSystemAccessPrincipal, getPlatformSystemPrincipalPermissionSet, getPlatformSystemPrincipalRolePermissionSet, getPlatformTeamPermissionSet, getPlatformTeamRolePermissionSets, getPlatformTeamRolePermissionSet, isPlatformRoleScopedSystemAccessPrincipalId, isPlatformSystemAccessPrincipalId, normalizePlatformAccessPrincipalId } from "/dist/platform-resources/access-control/index.js";
 	      import { MetronomeWorkflowAccessSettings } from "/dist/platform-services/create-mode/metronome/client/settings/index.js";
 	      import { loadMetronomeManualRunContext as loadPlatformMetronomeManualRunContext } from "/dist/platform-services/create-mode/metronome/client/manual-run-context.js";
 	      import {
@@ -4669,6 +4672,10 @@
         }
   
         function getPlaygroundAgentProfilePhotoUrl(agent) {
+          if (isPlaygroundDefaultTeamAgent(agent)) {
+            return PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL;
+          }
+
           const profileMetadata = getPlaygroundAgentProfileMetadata(agent?.metadata);
           if (profileMetadata?.photoURL) {
             return profileMetadata.photoURL;
@@ -4803,12 +4810,7 @@
             if (isPlaygroundAssistantAgent(agent)) return platformHasBuiltInAgent("spark");
             if (isPlaygroundDeveloperAgent(agent)) return platformHasBuiltInAgent("forge");
             if (isPlaygroundResearcherAgent(agent)) return platformHasBuiltInAgent("foundry");
-            const isDefaultTeam = getPlaygroundAgentListMode(agent) === "teams"
-              && (
-                agent?.isDefault
-                || String(agent?.id || "").trim() === "agent_default_team"
-                || String(agent?.name || "").trim().toLowerCase() === "default team"
-              );
+            const isDefaultTeam = isPlaygroundDefaultTeamAgent(agent);
             return !isDefaultTeam || defaultTeamEnabled;
           }).slice();
           if (platformHasBuiltInAgent("spark") && !nextAgents.some((agent) => isPlaygroundAssistantAgent(agent))) {
@@ -4820,14 +4822,7 @@
           if (platformHasBuiltInAgent("foundry") && !nextAgents.some((agent) => isPlaygroundResearcherAgent(agent))) {
             nextAgents.push(buildPlaygroundComposerDefaultAgentFallback("foundry"));
           }
-          const hasDefaultTeam = nextAgents.some((agent) => (
-            getPlaygroundAgentListMode(agent) === "teams"
-            && (
-              agent?.isDefault
-              || String(agent?.id || "").trim() === "agent_default_team"
-              || String(agent?.name || "").trim().toLowerCase() === "default team"
-            )
-          ));
+          const hasDefaultTeam = nextAgents.some((agent) => isPlaygroundDefaultTeamAgent(agent));
           if (defaultTeamEnabled && !hasDefaultTeam) {
             nextAgents.push(buildPlaygroundComposerDefaultTeamFallback(nextAgents));
           }
@@ -4851,6 +4846,15 @@
   
         function isPlaygroundTeamAgent(agent) {
           return Boolean(getPlaygroundAgentTeamMetadata(agent?.metadata));
+        }
+
+        function isPlaygroundDefaultTeamAgent(agent) {
+          return getPlaygroundAgentListMode(agent) === "teams"
+            && (
+              agent?.isDefault === true
+              || String(agent?.id || "").trim() === "agent_default_team"
+              || String(agent?.name || "").trim().toLowerCase() === "default team"
+            );
         }
   
         function getPlaygroundAgentListMode(agent) {

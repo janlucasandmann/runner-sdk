@@ -29,6 +29,7 @@ export type {
 } from "./platform-popup.js";
 export type { PlatformPopupSearchHeaderProps } from "./platform-popup-search-header.js";
 export type { PlatformInfoTooltipProps } from "./platform-info-tooltip.js";
+export type { PlatformInfoTooltipAction } from "./platform-info-tooltip.js";
 export type {
   PlatformAnchoredPopupOptions,
   PlatformAnchoredPopupPlacement,

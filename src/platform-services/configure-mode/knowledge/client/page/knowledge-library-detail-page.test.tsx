@@ -152,10 +152,16 @@ describe("KnowledgeLibraryDetailPage", () => {
     expect(screen.getByRole("heading", { name: "Connectors" })).not.toBeNull();
     expect(screen.getByText("Managed at project level")).not.toBeNull();
     expect(
-      screen.getByText(
+      screen.queryByText(
         "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings.",
       ),
-    ).not.toBeNull();
+    ).toBeNull();
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "About Connectors" }));
+    expect(
+      screen.getByRole("tooltip").textContent,
+    ).toBe(
+      "Connector synchronization for this Strategy Knowledge library has to be changed in the project settings.",
+    );
     [
       screen.getByRole("button", { name: "Open Notion connector settings" }),
       screen.getByRole("button", { name: "Open Atlassian connector settings" }),
@@ -259,7 +265,7 @@ describe("KnowledgeLibraryDetailPage", () => {
     });
     expect(container.querySelector(".knowledge-detail-page__settings-content")).not.toBeNull();
     expect(
-      container.querySelector(".knowledge-detail-sidebar.playground-agents-detail-sidebar"),
+      container.querySelector(".knowledge-detail-sidebar"),
     ).not.toBeNull();
     expect(screen.getByText("Location")).not.toBeNull();
     expect(screen.getByText("Updated")).not.toBeNull();
@@ -277,7 +283,7 @@ describe("KnowledgeLibraryDetailPage", () => {
     expect(screen.getByRole("menuitem", { name: /Information/ })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Show version history" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: /Share/ })).not.toBeNull();
-    expect(screen.getByRole("menuitem", { name: "Copy Knowledge Library ID" })).not.toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Copy Knowledge Library ID" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Knowledge Library actions" }));
 
     const selectAll = screen.getByRole("checkbox", { name: "Select all documents" });
@@ -514,7 +520,7 @@ describe("KnowledgeLibraryDetailPage", () => {
     expect(page?.classList.contains("has-sidebar")).toBe(false);
     expect(page?.classList.contains("is-access-detail-view")).toBe(true);
     expect(
-      container.querySelector(".knowledge-detail-sidebar.playground-agents-detail-sidebar"),
+      container.querySelector(".knowledge-detail-sidebar"),
     ).toBeNull();
     expect(
       container.querySelector(".platform-role-permissions-page__details-sidebar"),

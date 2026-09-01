@@ -1,7 +1,9 @@
 export {
   PlatformConnectorPreviewCard,
+  PlatformConnectorSettingsSectionHeading,
   PlatformConnectorSettingsModal,
   type PlatformConnectorPreviewCardProps,
+  type PlatformConnectorSettingsSectionHeadingProps,
   type PlatformConnectorSettingsGroup,
   type PlatformConnectorSettingsItem,
   type PlatformConnectorSettingsModalProps,

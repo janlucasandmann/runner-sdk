@@ -2,7 +2,6 @@ import {
   AlertTriangle,
   Bookmark,
   Clock3,
-  Copy,
   FileJson2,
   FileUp,
   FlaskConical,
@@ -649,18 +648,6 @@ export function TestPlanDetailPage({
     }
   }
 
-  async function copyPlanId() {
-    setTitleActionsOpen(false);
-    try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error("Clipboard access is unavailable.");
-      }
-      await navigator.clipboard.writeText(plan.id);
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Failed to copy the test ID.");
-    }
-  }
-
   function openShareModal() {
     onWorkspaceTeamsRequest?.();
     setTitleActionsOpen(false);
@@ -1097,8 +1084,6 @@ export function TestPlanDetailPage({
               value: plan.id,
               title: plan.id,
               monospace: true,
-              copyValue: plan.id,
-              copyAriaLabel: "Copy Test ID",
             },
             {
               id: "created",
@@ -1126,11 +1111,6 @@ export function TestPlanDetailPage({
           disabled={dirty}
           title={dirty ? "Save test changes before sharing." : undefined}
           onClick={openShareModal}
-        />
-        <PlatformResourceActionMenuItem
-          icon={<Copy width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
-          label="Copy Test ID"
-          onClick={() => void copyPlanId()}
         />
         <PlatformResourceActionMenuItem
           icon={<FileUp width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
@@ -1430,7 +1410,7 @@ export function TestPlanDetailPage({
     accessDetailOpen,
     detailsSidebarCollapsed: versionHistoryOpen,
     detailsSidebarAriaLabel: "Test plan information",
-    detailsSidebarClassName: "tests-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+    detailsSidebarClassName: "tests-detail-sidebar",
   } : undefined;
 
   return (

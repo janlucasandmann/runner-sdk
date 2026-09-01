@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Ellipsis, EllipsisVertical } from "../../ui/hugeicons-compat.js";
 import {
   type ButtonHTMLAttributes,
+  type HTMLAttributes,
   type ReactNode,
   useEffect,
   useRef,
@@ -17,7 +18,16 @@ import {
   PlatformModalBody,
   PlatformModalSplitLayout,
 } from "../modal/index.js";
-import { PlatformPopup } from "../popup/index.js";
+import { PlatformInfoTooltip, PlatformPopup } from "../popup/index.js";
+
+export interface PlatformConnectorSettingsSectionHeadingProps
+  extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  description: ReactNode;
+  title?: ReactNode;
+  titleId?: string;
+  tooltipAriaLabel?: string;
+  trailing?: ReactNode;
+}
 
 export interface PlatformConnectorPreviewCardProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "onClick" | "title"> {
@@ -81,6 +91,50 @@ function joinClassNames(...classNames: Array<string | false | null | undefined>)
     )
     .map((className) => className.trim())
     .join(" ");
+}
+
+/**
+ * Canonical heading for connector sections on resource Details pages.
+ *
+ * Explanatory copy intentionally lives in the centralized info tooltip so
+ * connector cards retain a compact, consistent section rhythm.
+ */
+export function PlatformConnectorSettingsSectionHeading({
+  description,
+  title = "Connectors",
+  titleId,
+  tooltipAriaLabel,
+  trailing,
+  className = "",
+  ...props
+}: PlatformConnectorSettingsSectionHeadingProps) {
+  const resolvedTooltipAriaLabel = tooltipAriaLabel
+    || (typeof title === "string" ? `About ${title}` : "About connectors");
+
+  return (
+    <header
+      {...props}
+      className={joinClassNames(
+        "platform-connector-settings-section-heading",
+        className,
+      )}
+      data-platform-connector-settings-section-heading="true"
+    >
+      <div className="platform-connector-settings-section-heading__title-line">
+        <h2 id={titleId}>{title}</h2>
+        <PlatformInfoTooltip
+          ariaLabel={resolvedTooltipAriaLabel}
+          description={description}
+          placement="bottom-center"
+        />
+        {trailing ? (
+          <div className="platform-connector-settings-section-heading__trailing">
+            {trailing}
+          </div>
+        ) : null}
+      </div>
+    </header>
+  );
 }
 
 function PlatformConnectorSettingsItemActions({

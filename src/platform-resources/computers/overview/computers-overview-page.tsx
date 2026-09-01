@@ -1,4 +1,6 @@
 import { Copy, Plus, SquarePen, Trash2, UsersRound } from "../../../platform-ui/components/ui/hugeicons-compat.js";
+import { ComputerIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type HugeiconsIconProps } from "@hugeicons/react";
 import { useMemo, useState } from "react";
 import type { PlatformDataTableAction, PlatformDataTableColumn } from "../../../platform-ui/components/composite/data-table/index.js";
 import {
@@ -6,12 +8,17 @@ import {
   type PlatformLabelVariant,
 } from "../../../platform-ui/components/ui/label/index.js";
 import {
+  ResourceOverviewAnalyticsCatalogPage,
   ResourceOverviewIdentityCell,
-  ResourceOverviewPage,
+  ResourceOverviewStandardNameCell,
   ResourceOverviewValue,
   type ResourceOverviewAnalyticsModel,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
+
+const ComputerOverviewIcon = (
+  props: Omit<HugeiconsIconProps, "icon">,
+) => <HugeiconsIcon icon={ComputerIcon} {...props} />;
 
 function getComputerProfileLabelVariant(profileLabel: string): PlatformLabelVariant {
   switch (profileLabel.trim().toLowerCase()) {
@@ -30,6 +37,7 @@ function getComputerProfileLabelVariant(profileLabel: string): PlatformLabelVari
 export interface ComputerOverviewRow {
   id: string;
   name: string;
+  description?: string;
   searchText?: string;
   profileLabel: string;
   status: string;
@@ -98,7 +106,16 @@ export function ComputersOverviewPage({
       accessor: "name",
       sortable: true,
       width: "minmax(220px, 1.5fr)",
-      cell: ({ row }) => <span className="resource-overview-identity__title" title={row.name}>{row.name}</span>,
+      cell: ({ row }) => (
+        <ResourceOverviewStandardNameCell
+          title={row.name}
+          description={row.description?.trim() || "No description"}
+          icon={(
+            <ComputerOverviewIcon width={16} height={16} strokeWidth={1.8} />
+          )}
+          iconClassName="is-computer"
+        />
+      ),
     },
     {
       id: "profile",
@@ -169,7 +186,7 @@ export function ComputersOverviewPage({
   };
 
   return (
-    <ResourceOverviewPage<ComputerOverviewRow>
+    <ResourceOverviewAnalyticsCatalogPage<ComputerOverviewRow>
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={analytics}
@@ -184,6 +201,7 @@ export function ComputersOverviewPage({
         ariaLabel: "Computers",
         className: "resource-overview-table is-computers",
         sorting: { defaultValue: { id: "name", direction: "asc" } },
+        pagination: false,
         selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         toolbar: {
           title: "All Computers",

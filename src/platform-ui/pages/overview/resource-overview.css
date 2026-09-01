@@ -15,6 +15,7 @@
 }
 
 .resource-overview-page.is-tags-and-plugins,
+.resource-overview-page.is-analytics-catalog,
 .resource-overview-page.is-skills,
 .resource-overview-page.is-evaluations,
 .resource-overview-page.is-tests,
@@ -28,6 +29,11 @@
   width: 100%;
   max-width: none;
   padding: 24px 24px 0;
+}
+
+.resource-overview-page__analytics-header {
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .resource-overview-page.is-organizations,
@@ -101,6 +107,81 @@
 .resource-overview-table.is-agents .agents-overview-tab-bar {
   width: auto;
   max-width: 100%;
+}
+
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-agent,
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-squad {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-agent img,
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-squad img,
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-creator img {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+}
+
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-creator {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-model {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-model img,
+.resource-overview-table.is-agents.is-catalog-ui
+  .resource-overview-identity__visual.is-model > svg {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.resource-overview-table.is-computers.is-catalog-ui
+  .resource-overview-identity__visual.is-creator {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.resource-overview-table.is-computers.is-catalog-ui
+  .resource-overview-identity__visual.is-creator img {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
 }
 
 .resource-overview-segmented {

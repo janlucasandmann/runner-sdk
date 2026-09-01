@@ -642,7 +642,7 @@ assert.match(
 );
 assert.match(
   skillTitleActionsSource,
-  /React\.createElement\(PlatformResourceVersionHistoryMenuItem,[\s\S]{0,900}label: "Send to Team"[\s\S]{0,700}label: "Copy Skill"[\s\S]{0,900}label: "Delete"/,
+  /React\.createElement\(PlatformResourceVersionHistoryMenuItem,[\s\S]{0,900}React\.createElement\(PlatformResourceShareMenuItem,[\s\S]{0,240}label: "Send to Team"[\s\S]{0,500}React\.createElement\(PlatformResourceCopyMenuItem,[\s\S]{0,240}label: "Copy Skill"[\s\S]{0,900}label: "Delete"/,
   "Skill title actions must expose version history, sharing, copying, and deletion through centralized menu rows.",
 );
 assert.match(
@@ -1254,6 +1254,11 @@ assert.match(
 );
 assert.match(
   platformTemplateCss,
+  /\.playground-agents-detail-assistant-page \.playground-agents-detail-main-pane \.playground-agents-detail-content\.is-agent-settings\s*\{[\s\S]{0,80}padding-top:\s*0;/,
+  "Agent Settings must not stack the legacy Agent gutter above the centralized Settings gutter.",
+);
+assert.match(
+  platformTemplateCss,
   /\.playground-agents-page \.playground-agents-detail-main-pane \.playground-environments-detail-scroll,[\s\S]{0,180}\.playground-environments-detail-scroll\.playground-settings-detail-scroll\s*\{[\s\S]{0,80}padding:\s*0 24px 56px;/,
   "Agent detail scroll surfaces must use twenty-four pixels of horizontal padding.",
 );
@@ -1342,15 +1347,10 @@ assert.match(
   /titleTooltip: "Controls the access levels and permissions users inside teams have when editing or managing this agent\."/,
   "Agent access management must explain that team policies govern users who edit or manage the Agent.",
 );
-assert.match(
+assert.doesNotMatch(
   agentDialogsSource,
-  /const agentSettingsTableTabs = React\.createElement\(PlatformDetailTabBar,[\s\S]{0,700}\{ id: "access", label: "Access" \},[\s\S]{0,120}\{ id: "guardrails", label: "Guardrails" \}/,
-  "Agent Settings must expose Access and Guardrails as adjacent table tabs.",
-);
-assert.match(
-  agentDialogsSource,
-  /tableProps: \{[\s\S]{0,180}title: null,[\s\S]{0,260}leading: agentSettingsTableTabs[\s\S]{0,900}const agentSettingsGuardrailsSection = renderAgentGuardrailsSection\([\s\S]{0,180}leading: agentSettingsTableTabs/,
-  "Agent Access and Guardrails must share the same centralized table toolbar tabs.",
+  /agentSettingsTableTabs|normalizedAgentSettingsTableMode/,
+  "Agent Access and Guardrails must be independent Settings sections instead of mutually exclusive tabs.",
 );
 assert.match(
   agentDialogsSource,
@@ -1359,8 +1359,35 @@ assert.match(
 );
 assert.match(
   agentDialogsSource,
-  /const agentSettingsSection = agentAccessPrincipalId\s*\?\s*agentAccessSettingsSection\s*:\s*React\.createElement\([\s\S]{0,300}agentSettingsPermissionsSummary,[\s\S]{0,220}normalizedAgentSettingsTableMode === "guardrails"\s*\?\s*agentSettingsGuardrailsSection\s*:\s*agentAccessSettingsSection[\s\S]{0,300}normalizedAgentDetailTab === "settings"\s*\?\s*agentSettingsSection/,
-  "Agent Settings must keep permissions above the selected table and isolate principal permission subpages.",
+  /const agentSettingsGuardrailsSection = renderAgentGuardrailsSection\(\{\s*key: "settings-guardrails",\s*\}\);[\s\S]{0,300}const agentSettingsAdditionalSections = React\.createElement\(\s*"div",\s*\{ className: "playground-agent-settings-additional-sections" \},\s*agentSettingsPermissionsSummary,\s*agentSettingsGuardrailsSection\s*\)/,
+  "Agent Settings must render Guardrails as a standalone section below permissions.",
+);
+const agentSettingsAdapterStart = agentDialogsSource.indexOf(
+  "const agentSettings = normalizedAgentDetailTab === \"settings\"",
+);
+const agentSettingsAdapterEnd = agentDialogsSource.indexOf(
+  "const agentDetailActiveSection",
+  agentSettingsAdapterStart,
+);
+assert.ok(agentSettingsAdapterStart >= 0 && agentSettingsAdapterEnd > agentSettingsAdapterStart);
+const agentSettingsAdapterSource = agentDialogsSource.slice(
+  agentSettingsAdapterStart,
+  agentSettingsAdapterEnd,
+);
+assert.match(
+  agentSettingsAdapterSource,
+  /details:\s*\{[\s\S]*?variant:\s*"standard"/,
+  "Agent Settings must use the centralized standard details-sidebar contract.",
+);
+assert.doesNotMatch(
+  agentSettingsAdapterSource,
+  /id:\s*"(?:model|engine|voice)"/,
+  "Agent Settings must keep model, engine, and voice selectors out of the details sidebar.",
+);
+assert.match(
+  agentSettingsAdapterSource,
+  /additionalSections:\s*agentSettingsAdditionalSections,[\s\S]{0,160}access:\s*agentAccessSettingsSection/,
+  "Agent Settings must pass the standalone centralized Access table through the canonical access slot.",
 );
 assert.match(
   agentDialogsSource,
@@ -1651,6 +1678,21 @@ assert.match(
   platformTemplateSource,
   /normalizePlatformAgentListRecords\(data\)\.map\(normalizePlaygroundAgentRecord\)/,
   "The legacy shell must consume the typed Agent list normalization boundary.",
+);
+assert.match(
+  platformTemplateSource,
+  /PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL[\s\S]*?from "\/dist\/platform-resources\/access-control\/index\.js";/,
+  "The Agent catalog must consume the centralized All Agents profile image contract.",
+);
+assert.match(
+  platformTemplateSource,
+  /function getPlaygroundAgentProfilePhotoUrl\(agent\)[\s\S]{0,180}isPlaygroundDefaultTeamAgent\(agent\)[\s\S]{0,100}return PLATFORM_ALL_AGENTS_PROFILE_IMAGE_URL;[\s\S]{0,220}profileMetadata\?\.photoURL/,
+  "Default Team must always reuse the All Agents profile image without affecting custom squad photos.",
+);
+assert.match(
+  platformTemplateSource,
+  /function isPlaygroundDefaultTeamAgent\(agent\)[\s\S]{0,260}agent_default_team[\s\S]{0,180}default team/,
+  "Default Team identity detection must be centralized for profile and availability behavior.",
 );
 
 const agentApiModalSource =

@@ -57,7 +57,11 @@ describe("KnowledgeConnectorSettings", () => {
     );
 
     expect(screen.getByText("Managed at project level")).toBeTruthy();
-    expect(screen.getByText(/has to be changed in the project settings/)).toBeTruthy();
+    expect(screen.queryByText(/has to be changed in the project settings/)).toBeNull();
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "About Connectors" }));
+    expect(screen.getByRole("tooltip").textContent).toContain(
+      "has to be changed in the project settings",
+    );
     [
       screen.getByRole("button", { name: "Open Notion connector settings" }),
       screen.getByRole("button", { name: "Open Atlassian connector settings" }),
@@ -264,6 +268,59 @@ describe("KnowledgeConnectorSettings", () => {
             ],
           }),
         }),
+      });
+    });
+  });
+
+  it("persists Prompt connections in Prompt metadata through the same connector surface", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ databases: [{ id: "database-1", name: "Prompt catalog" }] }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ sync: { enabled: false, status: "disabled" } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    const prompt = {
+      ...library,
+      id: "prompt-1",
+      name: "Support Prompt",
+      metadata: {},
+    };
+    const updateLibrary = vi.fn(async (_promptId: string, input: Partial<KnowledgeLibrary>) => ({
+      ...prompt,
+      ...input,
+    }));
+
+    render(
+      <KnowledgeConnectorSettings
+        library={prompt}
+        api={{ updateLibrary } as unknown as KnowledgeApi}
+        promptId="prompt-1"
+        resourceLabel="Prompt"
+        connectorMetadataKey="promptConnectors"
+        onLibraryChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open Notion connector settings" }));
+    fireEvent.click((await screen.findByText("Prompt catalog")).closest("button") as HTMLButtonElement);
+    fireEvent.click(screen.getByRole("button", { name: "Use 1 database" }));
+
+    await waitFor(() => {
+      expect(updateLibrary).toHaveBeenCalledWith("prompt-1", {
+        metadata: {
+          promptConnectors: expect.objectContaining({
+            schemaVersion: "computer_agents_prompt_connectors_v1",
+            notion: [expect.objectContaining({ id: "database-1", name: "Prompt catalog" })],
+            confluence: [],
+          }),
+        },
       });
     });
   });

@@ -16,11 +16,21 @@ import {
 
 export interface PlatformInfoTooltipProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "title"> {
+  action?: PlatformInfoTooltipAction;
   ariaLabel?: string;
   description: ReactNode;
   placement?: PlatformPopupPlacement;
+  /** @deprecated Fold this copy into `description`; retained for runtime adapters. */
   runtime?: ReactNode;
   title?: ReactNode;
+}
+
+export interface PlatformInfoTooltipAction {
+  ariaLabel?: string;
+  disabled?: boolean;
+  icon?: ReactNode;
+  label: ReactNode;
+  onSelect: () => void;
 }
 
 const PLATFORM_INFO_TOOLTIP_CLOSE_DELAY_MS = 100;
@@ -33,6 +43,7 @@ const PLATFORM_INFO_TOOLTIP_CLOSE_DELAY_MS = 100;
  * expose the same content, while the trigger remains a real accessible button.
  */
 export function PlatformInfoTooltip({
+  action,
   ariaLabel = "More information",
   className = "",
   description,
@@ -40,13 +51,15 @@ export function PlatformInfoTooltip({
   onFocus,
   onMouseEnter,
   onMouseLeave,
-  placement = "top-start",
+  placement = "bottom-center",
   runtime,
   title,
   ...props
 }: PlatformInfoTooltipProps) {
   const [open, setOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const surfaceRef = useRef<HTMLDivElement | null>(null);
   const tooltipId = useId();
 
   const cancelScheduledClose = useCallback(() => {
@@ -79,7 +92,23 @@ export function PlatformInfoTooltip({
       setOpen(false);
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (
+        rootRef.current?.contains(target) ||
+        surfaceRef.current?.contains(target)
+      ) {
+        return;
+      }
+      cancelScheduledClose();
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
   }, [cancelScheduledClose, open]);
 
   return (
@@ -88,8 +117,10 @@ export function PlatformInfoTooltip({
       portal
       variant="minimal"
       placement={placement}
-      portalOffset={6}
+      portalOffset={9}
       portalCollisionPadding={12}
+      rootRef={rootRef}
+      surfaceRef={surfaceRef}
       rootClassName={joinPlatformPopupClassNames("platform-info-tooltip", className)}
       rootProps={{
         ...props,
@@ -115,7 +146,10 @@ export function PlatformInfoTooltip({
           type="button"
           className="platform-info-tooltip__trigger"
           aria-label={ariaLabel}
-          aria-describedby={open ? tooltipId : undefined}
+          aria-controls={open ? tooltipId : undefined}
+          aria-describedby={!action && open ? tooltipId : undefined}
+          aria-expanded={action ? open : undefined}
+          aria-haspopup={action ? "dialog" : undefined}
           data-platform-info-tooltip-trigger="true"
           onClick={(event) => {
             event.preventDefault();
@@ -133,18 +167,40 @@ export function PlatformInfoTooltip({
       surfaceClassName="platform-info-tooltip__surface"
       surfaceProps={{
         id: tooltipId,
-        role: "tooltip",
+        role: action ? "dialog" : "tooltip",
+        "aria-label": action ? ariaLabel : undefined,
+        onBlur: scheduleTooltipClose,
+        onFocus: cancelScheduledClose,
         onMouseEnter: cancelScheduledClose,
         onMouseLeave: scheduleTooltipClose,
       }}
     >
       {title ? <span className="platform-info-tooltip__title">{title}</span> : null}
-      <span className="platform-info-tooltip__description">{description}</span>
-      {runtime ? (
-        <span className="platform-info-tooltip__runtime">
-          <span className="platform-info-tooltip__runtime-label">At runtime</span>
-          <span>{runtime}</span>
-        </span>
+      <span className="platform-info-tooltip__description">
+        {description}
+        {runtime ? <> {runtime}</> : null}
+      </span>
+      {action ? (
+        <button
+          type="button"
+          className="platform-info-tooltip__action"
+          aria-label={action.ariaLabel}
+          disabled={action.disabled}
+          onClick={() => {
+            cancelScheduledClose();
+            setOpen(false);
+            action.onSelect();
+          }}
+        >
+          <span className="platform-info-tooltip__action-label">
+            {action.label}
+          </span>
+          {action.icon ? (
+            <span className="platform-info-tooltip__action-icon" aria-hidden="true">
+              {action.icon}
+            </span>
+          ) : null}
+        </button>
       ) : null}
     </PlatformPopup>
   );

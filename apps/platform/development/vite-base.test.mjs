@@ -18,6 +18,20 @@ const remoteBrowserImportsPlugin = developmentPlugins.find(
 );
 assert.ok(remoteBrowserImportsPlugin);
 assert.deepEqual(
+  remoteBrowserImportsPlugin.resolveId("@hugeicons/core-free-icons/ListFilterIcon"),
+  {
+    id: "https://esm.sh/@hugeicons/core-free-icons@4.3.0/ListFilterIcon",
+    external: true,
+  },
+);
+assert.deepEqual(
+  remoteBrowserImportsPlugin.resolveId("@hugeicons/core-free-icons/TablePropertiesIcon"),
+  {
+    id: "https://esm.sh/@hugeicons/core-free-icons@4.3.0/TablePropertiesIcon",
+    external: true,
+  },
+);
+assert.deepEqual(
   remoteBrowserImportsPlugin.resolveId("@tiptap/react"),
   {
     id: "https://esm.sh/@tiptap/react@3.28.0?bundle&external=react,react-dom",
@@ -69,6 +83,10 @@ assert.deepEqual(
 const platformShellTemplate = readFileSync(
   new URL("../client/legacy/templates/platform-shell.template.html", import.meta.url),
   "utf8",
+);
+assert.match(
+  platformShellTemplate,
+  /"@hugeicons\/core-free-icons\/":\s*"https:\/\/esm\.sh\/@hugeicons\/core-free-icons@4\.3\.0\/"/,
 );
 assert.match(
   platformShellTemplate,

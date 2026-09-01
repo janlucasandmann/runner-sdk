@@ -674,7 +674,7 @@ export function AssurancePolicyDetailPage({
     ),
     accessDetailOpen,
     detailsSidebarAriaLabel: "Assurance Policy information",
-    detailsSidebarClassName: "assurance-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+    detailsSidebarClassName: "assurance-detail-sidebar",
   } : undefined;
 
   return (

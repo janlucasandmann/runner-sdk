@@ -1,6 +1,6 @@
-import { Info } from "../../components/ui/hugeicons-compat.js";
 import { isValidElement, type ReactNode } from "react";
 import type { PlatformDataTableColumn } from "../../components/composite/data-table/index.js";
+import { PlatformInfoTooltip } from "../../components/composite/popup/index.js";
 import {
   PlatformSettingsDataTable,
   PlatformSettingsSection,
@@ -293,14 +293,12 @@ export function PlatformPermissionHelpTooltip({
   className?: string;
 }) {
   return (
-    <button
-      type="button"
-      className={`platform-permission-help-tooltip platform-permissions-page__summary-info playground-permission-ring-summary-info is-${placement}${className ? ` ${className}` : ""}`}
-      aria-label={ariaLabel || text}
-      data-tooltip={text}
-    >
-      <Info width={12} height={12} strokeWidth={1.8} />
-    </button>
+    <PlatformInfoTooltip
+      className={`platform-permission-help-tooltip${className ? ` ${className}` : ""}`}
+      ariaLabel={ariaLabel || text}
+      description={text}
+      placement={placement === "bottom" ? "bottom-center" : "top-center"}
+    />
   );
 }
 

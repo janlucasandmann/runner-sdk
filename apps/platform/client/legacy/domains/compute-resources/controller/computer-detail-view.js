@@ -14,7 +14,6 @@
                 ? "System"
                 : "Custom";
             const officeAppsEnabled = draftEnvironment.officeAppsEnabled === true;
-            const activeEnvironmentComputeProfile = getPlaygroundEnvironmentComputeProfileConfig(draftEnvironment.computeProfile);
             const isEnvironmentDescriptionLocked = Boolean(draftEnvironment.isDefault);
             const shouldShowEnvironmentAnalytics = Boolean(
               draftEnvironment.id && draftEnvironment.id !== PLAYGROUND_ENVIRONMENT_DRAFT_ID
@@ -608,95 +607,10 @@
               menuAriaLabel: "Computer version save options",
               className: "playground-computer-detail-publish-control",
             });
-            const renderEnvironmentFactCopyButton = (fieldId, value, label) => {
-              const normalizedValue = String(value || "").trim();
-              const isCopied = environmentDetailCopiedFact === fieldId;
-              return React.createElement("button", {
-                  type: "button",
-                  className: "playground-computer-detail-copy-button",
-                  title: isCopied ? "Copied" : "Copy " + label,
-                  "aria-label": isCopied ? label + " copied" : "Copy " + label,
-                  disabled: !normalizedValue,
-                  onClick: async (event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (!normalizedValue) {
-                      return;
-                    }
-                    const copied = await copyTextToClipboard(normalizedValue);
-                    if (!copied) {
-                      return;
-                    }
-                    setEnvironmentDetailCopiedFact(fieldId);
-                    window.setTimeout(() => {
-                      setEnvironmentDetailCopiedFact((current) => current === fieldId ? "" : current);
-                    }, 1400);
-                  },
-                },
-                isCopied
-                  ? React.createElement(Check, { width: 12, height: 12, strokeWidth: 1.6 })
-                  : React.createElement(Copy, { width: 12, height: 12, strokeWidth: 1.45 })
-              );
-            };
-            const renderEnvironmentCopyableDetailValue = (fieldId, value, label, className = "", displayValue = value) =>
-              React.createElement("span", { className: "playground-computer-detail-copy-value" },
-                React.createElement("span", {
-                  className: "playground-environments-editor-fact-value" + (className ? " " + className : ""),
-                  title: String(displayValue || ""),
-                }, displayValue || "Not set"),
-                renderEnvironmentFactCopyButton(fieldId, value, label)
-              );
             const environmentRuntimeStatusNode = React.createElement(PlatformLabel, {
               variant: environmentDesktopStatusVariant,
               className: "playground-computer-detail-status",
             }, environmentDesktopStatusLabel);
-            const selectedEnvironmentComputeProfile = activeEnvironmentComputeProfile || getPlaygroundEnvironmentComputeProfileConfig(draftEnvironment.computeProfile);
-            const environmentComputeProfilePopoverOpen = environmentRuntimePopover === "compute-profile";
-            const environmentComputeProfileSelector = React.createElement("div", {
-                className: "playground-environments-runtime-popup-shell playground-tasks-toolbar-popup-shell playground-agents-model-select-popup playground-computer-profile-select-popup" + (environmentComputeProfilePopoverOpen ? " is-open" : ""),
-                ref: environmentComputeProfilePopoverOpen ? environmentRuntimePopoverRef : null,
-              },
-              React.createElement("button", {
-                  type: "button",
-                  className: "playground-environments-runtime-value-button playground-agents-model-picker-trigger",
-                  onClick: () => setEnvironmentRuntimePopover((current) => current === "compute-profile" ? "" : "compute-profile"),
-                  title: selectedEnvironmentComputeProfile.label || "Computer profile",
-                  "aria-label": "Computer profile: " + (selectedEnvironmentComputeProfile.label || "Computer profile"),
-                  "aria-expanded": environmentComputeProfilePopoverOpen ? "true" : "false",
-                },
-                React.createElement("span", { className: "playground-agents-model-picker-trigger-copy" },
-                  React.createElement("span", { className: "playground-agents-model-provider-icon-shell", "aria-hidden": "true" },
-                    React.createElement(Monitor, { width: 14, height: 14, strokeWidth: 1.8 })
-                  ),
-                  React.createElement("span", { className: "playground-agents-model-picker-trigger-labels" },
-                    React.createElement("span", { className: "playground-environments-runtime-value-label" }, selectedEnvironmentComputeProfile.label || "Computer profile")
-                  )
-                ),
-                React.createElement(ChevronDown, { width: 14, height: 14, strokeWidth: 1.8 })
-              ),
-              environmentComputeProfilePopoverOpen
-                ? React.createElement(PlatformPopupSurface, { className: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-animate-down-in" },
-                    PLAYGROUND_ENVIRONMENT_COMPUTE_PROFILES.map((profile) =>
-                      React.createElement("button", {
-                          key: profile.id,
-                          type: "button",
-                          className: "tb-popup-row tb-popup-row-select" + (profile.id === selectedEnvironmentComputeProfile.id ? " selected" : ""),
-                          onClick: () => {
-                            updateEnvironmentField("computeProfile", profile.id);
-                            setEnvironmentRuntimePopover("");
-                          },
-                        },
-                        React.createElement("span", { className: "tb-popup-check-slot" },
-                          profile.id === selectedEnvironmentComputeProfile.id
-                            ? React.createElement(Check, { className: "tb-popup-check", width: 14, height: 14, strokeWidth: 1.8 })
-                            : null
-                        ),
-                        React.createElement("span", null, profile.label)
-                      )
-                    )
-                  )
-                : null
-            );
             const canMutateEnvironmentRecord = Boolean(draftEnvironment.id && !draftEnvironment.isSystem && !draftEnvironment.isDefault);
             const environmentSystemIdentity = {
               id: "computer-agents",
@@ -1246,65 +1160,14 @@
                 customAttributes: [
                   { id: "status", label: "Status", value: environmentRuntimeStatusNode },
                   {
-                    id: "profile",
-                    label: "Computer Profile",
-                    value: environmentComputeProfileSelector,
-                  },
-                  {
-                    id: "rate",
-                    label: "Rate",
-                    value: formatPlaygroundEnvironmentProfileRate(activeEnvironmentComputeProfile),
-                  },
-                  {
-                    id: "ram",
-                    label: "RAM",
-                    value: formatPlaygroundEnvironmentProfileMemory(activeEnvironmentComputeProfile),
-                  },
-                  {
-                    id: "computer-id",
-                    label: "Computer ID",
-                    value: renderEnvironmentCopyableDetailValue(
-                      "computer-id",
-                      draftEnvironment.id,
-                      "computer ID",
-                      "is-id",
-                      draftEnvironment.id || "Unsaved computer"
-                    ),
-                  },
-                  {
-                    id: "resources",
-                    label: "Resources",
-                    value: formatPlaygroundEnvironmentProfileResources(activeEnvironmentComputeProfile),
-                  },
-                  {
                     id: "internet",
-                    label: "Internet",
+                    label: "Internet access",
                     value: React.createElement(PlatformToggle, {
                       checked: Boolean(draftEnvironment.internetAccess),
                       onCheckedChange: (nextChecked) => updateEnvironmentField("internetAccess", nextChecked),
                       "aria-label": "Internet access",
                       disabled: !canMutateEnvironmentRecord,
                     }),
-                  },
-                  ...(draftEnvironment.computeProfile === "desktop" ? [{
-                    id: "office-apps",
-                    label: "Office Apps",
-                    value: React.createElement(PlatformToggle, {
-                      checked: officeAppsEnabled,
-                      onCheckedChange: (nextChecked) => updateEnvironmentField("officeAppsEnabled", nextChecked),
-                      "aria-label": "Office apps",
-                      disabled: !canMutateEnvironmentRecord,
-                    }),
-                  }] : []),
-                  ...(draftEnvironment.isSystem ? [{
-                    id: "type",
-                    label: "Type",
-                    value: "System",
-                  }] : []),
-                  {
-                    id: "created",
-                    label: "Created",
-                    value: formatPlaygroundFileDate(draftEnvironment.createdAt),
                   },
                 ],
                 updatedAt: draftEnvironment.updatedAt || draftEnvironment.createdAt,
@@ -1383,7 +1246,7 @@
               accessDetailOpen: Boolean(environmentPermissionPrincipalId),
               detailsSidebarCollapsed: environmentDetailsCollapsed || environmentVersionsSidebarOpen,
               detailsSidebarAriaLabel: "Computer settings",
-              detailsSidebarClassName: "playground-computer-resource-settings__sidebar playground-ticket-detail-sidebar",
+              detailsSidebarClassName: "playground-computer-resource-settings__sidebar",
             };
             const runtimeEnvironmentId = String(draftEnvironment.id || selectedEnvironmentId || "").trim();
             const environmentDockerfileSourceRecord = environmentDockerfileSourcesById[runtimeEnvironmentId] || null;
@@ -2019,8 +1882,6 @@
                             value: draftEnvironment.id || "Unsaved computer",
                             title: draftEnvironment.id || "Unsaved computer",
                             monospace: true,
-                            copyValue: draftEnvironment.id || undefined,
-                            copyAriaLabel: "Copy Computer ID",
                           },
                           {
                             id: "created",

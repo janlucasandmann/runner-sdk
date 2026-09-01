@@ -10,31 +10,42 @@ afterEach(() => {
 });
 
 describe("PlatformInfoTooltip", () => {
-  it("opens the centralized explanatory surface on hover and keeps runtime guidance separate", () => {
+  it("renders the optional title and action around the required explanatory text", () => {
     vi.useFakeTimers();
+    const onSelect = vi.fn();
     render(
       <PlatformInfoTooltip
         ariaLabel="About iteration budget"
         title="Iteration budget"
         description="Maximum number of cycles."
-        runtime="Checked before the next cycle starts."
+        action={{
+          label: "Review with AI",
+          icon: <span data-testid="action-icon">→</span>,
+          onSelect,
+        }}
       />,
     );
 
     const trigger = screen.getByRole("button", { name: "About iteration budget" });
-    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
 
     fireEvent.mouseEnter(trigger);
-    const tooltip = screen.getByRole("tooltip");
+    const tooltip = screen.getByRole("dialog", { name: "About iteration budget" });
     expect(tooltip.textContent).toContain("Iteration budget");
     expect(tooltip.textContent).toContain("Maximum number of cycles.");
-    expect(tooltip.textContent).toContain("At runtime");
-    expect(tooltip.textContent).toContain("Checked before the next cycle starts.");
-    expect(trigger.getAttribute("aria-describedby")).toBe(tooltip.id);
+    expect(screen.getByRole("button", { name: "Review with AI" })).toBeTruthy();
+    expect(screen.getByTestId("action-icon")).toBeTruthy();
+    expect(trigger.getAttribute("aria-controls")).toBe(tooltip.id);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    expect(tooltip.getAttribute("data-platform-popup-placement")).toBe("bottom-center");
+
+    fireEvent.click(screen.getByRole("button", { name: "Review with AI" }));
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("dialog")).toBeNull();
 
     fireEvent.mouseLeave(trigger);
     act(() => vi.advanceTimersByTime(100));
-    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("supports keyboard focus and Escape dismissal", () => {
@@ -44,7 +55,11 @@ describe("PlatformInfoTooltip", () => {
 
     const trigger = screen.getByRole("button", { name: "About passing score" });
     fireEvent.focus(trigger);
-    expect(screen.getByRole("tooltip").textContent).toContain("Minimum verified score.");
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip.textContent).toContain("Minimum verified score.");
+    expect(tooltip.querySelector(".platform-info-tooltip__title")).toBeNull();
+    expect(tooltip.querySelector(".platform-info-tooltip__action")).toBeNull();
+    expect(trigger.getAttribute("aria-describedby")).toBe(tooltip.id);
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("tooltip")).toBeNull();

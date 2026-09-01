@@ -1,3 +1,5 @@
+import ListIcon from "@hugeicons/core-free-icons/ListIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AlignCenter,
   AlignJustify,
@@ -9,7 +11,6 @@ import {
   Heading2,
   Heading3,
   Italic,
-  List,
   ListOrdered,
   ListTodo,
   Pilcrow,
@@ -63,7 +64,15 @@ function renderSelectionBlockTypeIcon(
   if (blockType === "heading-1") return <Heading1 {...iconProps} />;
   if (blockType === "heading-2") return <Heading2 {...iconProps} />;
   if (blockType === "heading-3") return <Heading3 {...iconProps} />;
-  if (blockType === "bullet-list") return <List {...iconProps} />;
+  if (blockType === "bullet-list") {
+    return (
+      <HugeiconsIcon
+        icon={ListIcon}
+        {...iconProps}
+        data-hugeicons-icon="ListIcon"
+      />
+    );
+  }
   if (blockType === "ordered-list") return <ListOrdered {...iconProps} />;
   if (blockType === "task-list") return <ListTodo {...iconProps} />;
   if (blockType === "paragraph-quote") return <TextQuote {...iconProps} />;

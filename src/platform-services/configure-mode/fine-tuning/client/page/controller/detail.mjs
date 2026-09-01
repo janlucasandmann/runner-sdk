@@ -1065,7 +1065,7 @@ export const FINE_TUNING_PAGE_CONTROLLER_DETAIL_SCRIPT = String.raw`        func
                 access: renderFineTuningAccessSettings(job),
                 accessDetailOpen: Boolean(fineTuningAccessTeamId),
                 detailsSidebarAriaLabel: "Agent Optimization information",
-                detailsSidebarClassName: "playground-fine-tuning-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+                detailsSidebarClassName: "playground-fine-tuning-detail-sidebar",
               }
             : undefined;
           const detailContent = fineTuningDetailTab === "analysis"

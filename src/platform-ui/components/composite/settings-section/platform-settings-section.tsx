@@ -2,6 +2,7 @@ import type {
   HTMLAttributes,
   ReactNode,
 } from "react";
+import { PlatformInfoTooltip } from "../popup/index.js";
 import {
   PlatformDataTable,
   type PlatformDataTableProps,
@@ -22,6 +23,18 @@ export interface PlatformSettingsSectionProps
   children: ReactNode;
   bodyClassName?: string;
   bodyPresentation?: PlatformSettingsSectionBodyPresentation;
+}
+
+export interface PlatformSettingsTableSectionProps
+  extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  title?: ReactNode;
+  description?: ReactNode;
+  titleAriaLabel?: string;
+  titleActions?: ReactNode;
+  children: ReactNode;
+  headingClassName?: string;
+  titleClassName?: string;
+  surfaceClassName?: string;
 }
 
 export type PlatformSettingsDataTableProps<TData> = PlatformDataTableProps<TData>;
@@ -46,6 +59,77 @@ export function PlatformSettingsSectionList({
     >
       {children}
     </div>
+  );
+}
+
+/**
+ * Canonical Settings section shell for searchable resource tables.
+ *
+ * The heading sits outside the framed surface while the toolbar, table, and
+ * pagination share one transparent surface. Access, guardrails, and future
+ * resource-management tables should compose through this component so their
+ * spacing and visual hierarchy cannot drift.
+ */
+export function PlatformSettingsTableSection({
+  title,
+  description,
+  titleAriaLabel,
+  titleActions,
+  children,
+  className = "",
+  headingClassName = "",
+  titleClassName = "",
+  surfaceClassName = "",
+  ...props
+}: PlatformSettingsTableSectionProps) {
+  const resolvedTitleAriaLabel = titleAriaLabel || (
+    typeof title === "string" ? `About ${title}` : "About this section"
+  );
+
+  return (
+    <section
+      {...props}
+      className={joinClassNames("platform-settings-table-section", className)}
+      data-platform-settings-table-section="true"
+    >
+      {title ? (
+        <div
+          className={joinClassNames(
+            "platform-settings-table-section__heading",
+            headingClassName,
+          )}
+        >
+          <h2
+            className={joinClassNames(
+              "platform-settings-table-section__title",
+              titleClassName,
+            )}
+          >
+            {title}
+          </h2>
+          {titleActions ? (
+            <div className="platform-settings-table-section__title-actions">
+              {titleActions}
+            </div>
+          ) : null}
+          {description ? (
+            <PlatformInfoTooltip
+              description={description}
+              ariaLabel={resolvedTitleAriaLabel}
+              placement="bottom-center"
+            />
+          ) : null}
+        </div>
+      ) : null}
+      <div
+        className={joinClassNames(
+          "platform-settings-table-section__surface",
+          surfaceClassName,
+        )}
+      >
+        {children}
+      </div>
+    </section>
   );
 }
 

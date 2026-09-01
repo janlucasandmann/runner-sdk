@@ -384,7 +384,11 @@ describe("PlatformInstructionsEditor", () => {
     expect(typeMenu.getAttribute("data-platform-popup-variant")).toBe("minimal");
     expect(screen.getByRole("menuitemradio", { name: "Normal text" })).not.toBeNull();
     expect(screen.getByRole("menuitemradio", { name: "Heading 1" })).not.toBeNull();
-    expect(screen.getByRole("menuitemradio", { name: "Bulleted list" })).not.toBeNull();
+    expect(
+      screen
+        .getByRole("menuitemradio", { name: "Bulleted list" })
+        .querySelector('[data-hugeicons-icon="ListIcon"]'),
+    ).not.toBeNull();
 
     await user.click(screen.getByRole("menuitemradio", { name: "Heading 1" }));
     expect(screen.getByRole("menu", { name: "Text formatting" })).not.toBeNull();
@@ -596,6 +600,11 @@ describe("PlatformInstructionsEditor", () => {
       false,
     );
 
+    expect(
+      screen
+        .getByRole("button", { name: "List" })
+        .querySelector('[data-hugeicons-icon="ListIcon"]'),
+    ).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Insert" }));
     const insertMenu = screen.getByRole("menu", { name: "Insert" });
     expect(
@@ -604,7 +613,11 @@ describe("PlatformInstructionsEditor", () => {
     expect(screen.getByRole("menuitem", { name: "Code" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Link" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "File" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("menuitem", { name: "Table" })).not.toBeNull();
+    expect(
+      screen
+        .getByRole("menuitem", { name: "Table" })
+        .querySelector('[data-hugeicons-icon="TablePropertiesIcon"]'),
+    ).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Divider" })).not.toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Prompt" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Code" })).toBeNull();
@@ -821,12 +834,18 @@ describe("PlatformInstructionsEditor", () => {
     expect(screen.getByRole("menuitem", { name: "Align center" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Align right" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Align justify" })).not.toBeNull();
-    expect(screen.getByRole("menuitem", { name: "Bulleted list" })).not.toBeNull();
+    expect(
+      screen
+        .getByRole("menuitem", { name: "Bulleted list" })
+        .querySelector('[data-hugeicons-icon="ListIcon"]'),
+    ).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Checklist" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Code" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "File" })).not.toBeNull();
     const tableCommand = screen.getByRole("menuitem", { name: "Table" });
-    expect(tableCommand).not.toBeNull();
+    expect(
+      tableCommand.querySelector('[data-hugeicons-icon="TablePropertiesIcon"]'),
+    ).not.toBeNull();
     expect(
       tableCommand.querySelector(".platform-instructions-editor__slash-shortcut")?.textContent,
     ).toBe("⇧ ⌥ T");

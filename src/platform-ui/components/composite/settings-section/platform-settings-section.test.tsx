@@ -2,12 +2,13 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   PlatformSettingsDataTable,
   PlatformSettingsSection,
   PlatformSettingsSectionList,
+  PlatformSettingsTableSection,
 } from "./platform-settings-section.js";
 
 afterEach(cleanup);
@@ -72,5 +73,44 @@ describe("PlatformSettingsSection", () => {
     expect(tableRoot?.classList.contains("is-minimalistic-ui")).toBe(true);
     expect(container.querySelector(".platform-data-table__footer")).toBeNull();
     expect(container.querySelector(".platform-data-table__pagination")).toBeNull();
+  });
+
+  it("owns the shared resource-management table shell", () => {
+    const { container } = render(
+      <PlatformSettingsTableSection
+        title="Guardrails"
+        description="Choose which guardrails apply."
+        titleActions={<button type="button">Filter guardrails</button>}
+      >
+        <div data-testid="guardrail-table">Table</div>
+      </PlatformSettingsTableSection>,
+    );
+
+    const section = container.querySelector(
+      "[data-platform-settings-table-section='true']",
+    );
+    const surface = container.querySelector(
+      ".platform-settings-table-section__surface",
+    );
+    const table = screen.getByTestId("guardrail-table");
+    expect(section).not.toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Guardrails", level: 2 }),
+    ).not.toBeNull();
+    const titleActions = container.querySelector(
+      ".platform-settings-table-section__title-actions",
+    );
+    expect(
+      titleActions?.contains(
+        screen.getByRole("button", { name: "Filter guardrails" }),
+      ),
+    ).toBe(true);
+    expect(surface?.contains(table)).toBe(true);
+
+    const help = screen.getByRole("button", { name: "About Guardrails" });
+    fireEvent.mouseEnter(help);
+    expect(screen.getByRole("tooltip").textContent).toBe(
+      "Choose which guardrails apply.",
+    );
   });
 });

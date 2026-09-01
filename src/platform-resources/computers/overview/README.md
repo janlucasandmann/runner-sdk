@@ -12,6 +12,7 @@ This directory contains overview models, analytics, tables, and page composition
 - [`computers-overview-analytics-client.ts`](computers-overview-analytics-client.ts) — Boundary adapter for Computers Overview Analytics Client.
 - [`computers-overview-model.test.ts`](computers-overview-model.test.ts) — Regression coverage for Computers Overview Model.
 - [`computers-overview-model.ts`](computers-overview-model.ts) — State and projection logic for Computers Overview Model.
+- [`computers-overview-page.test.tsx`](computers-overview-page.test.tsx) — Regression coverage for the shared analytics-catalog layout and progressive table loading.
 - [`computers-overview-page.tsx`](computers-overview-page.tsx) — Presentation composition for Computers Overview Page.
 - [`index.ts`](index.ts) — Public barrel or composition entry point.
 

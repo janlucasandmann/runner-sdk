@@ -139,7 +139,13 @@ export const APP_SIDEBAR_COMPONENT_SCRIPT = `        function renderExpandedSide
                   width: 16,
                   height: 16,
                 }),
-                React.createElement(PanelLeftOpen, { className: "sidebar-rail-logo-open-icon", strokeWidth: 1.5 })
+                React.createElement(HugeiconsIcon, {
+                  icon: LayoutAlignRightIcon,
+                  className: "sidebar-rail-logo-open-icon",
+                  size: 14,
+                  color: "currentColor",
+                  strokeWidth: 1.5,
+                })
               )
             ),
             React.createElement("div", { className: "sidebar-rail-actions" },

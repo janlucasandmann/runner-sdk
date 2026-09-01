@@ -236,7 +236,7 @@ describe("TestPlanDetailPage", () => {
     const informationAction = screen.getByRole("menuitem", { name: "Information" });
     expect(screen.getByRole("menuitem", { name: "Show version history" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Share" })).not.toBeNull();
-    expect(screen.getByRole("menuitem", { name: "Copy Test ID" })).not.toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Copy Test ID" })).toBeNull();
     expect(screen.getByRole("menuitem", { name: "Rename" })).not.toBeNull();
     expect(screen.getByRole("menuitem", { name: "Delete" })).not.toBeNull();
 

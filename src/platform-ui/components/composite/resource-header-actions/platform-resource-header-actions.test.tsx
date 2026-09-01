@@ -6,9 +6,11 @@ import {
   PlatformResourceActionMenuItem,
   PlatformResourceActionsInformation,
   PlatformResourceActionsMenu,
+  PlatformResourceCopyMenuItem,
   PlatformResourceHeaderActions,
-  PlatformResourceVersionLabel,
+  PlatformResourceShareMenuItem,
   PlatformResourceVersionHistoryMenuItem,
+  PlatformResourceVersionLabel,
 } from "./platform-resource-header-actions.js";
 
 afterEach(() => {
@@ -18,6 +20,35 @@ afterEach(() => {
 });
 
 describe("PlatformResourceHeaderActions", () => {
+  it("uses the canonical Hugeicons for version history, sharing, and resource copies", () => {
+    const onHistory = vi.fn();
+    const onShare = vi.fn();
+    const onCopy = vi.fn();
+    render(
+      <PlatformResourceActionsMenu open onOpenChange={() => {}} resourceLabel="Skill">
+        <PlatformResourceVersionHistoryMenuItem onClick={onHistory} />
+        <PlatformResourceShareMenuItem onClick={onShare} />
+        <PlatformResourceCopyMenuItem label="Copy Skill" onClick={onCopy} />
+      </PlatformResourceActionsMenu>,
+    );
+
+    const historyItem = screen.getByRole("menuitem", { name: "Show version history" });
+    const shareItem = screen.getByRole("menuitem", { name: "Send to Team" });
+    const copyItem = screen.getByRole("menuitem", { name: "Copy Skill" });
+    expect(
+      historyItem.querySelector('[data-platform-resource-action-icon="history"]'),
+    ).not.toBeNull();
+    expect(shareItem.querySelector('[data-platform-resource-action-icon="share"]')).not.toBeNull();
+    expect(copyItem.querySelector('[data-platform-resource-action-icon="copy"]')).not.toBeNull();
+
+    fireEvent.click(historyItem);
+    fireEvent.click(shareItem);
+    fireEvent.click(copyItem);
+    expect(onHistory).toHaveBeenCalledTimes(1);
+    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(onCopy).toHaveBeenCalledTimes(1);
+  });
+
   it("marks the highest current version as Latest", () => {
     const onOpenVersionHistory = vi.fn();
     render(
@@ -80,7 +111,7 @@ describe("PlatformResourceHeaderActions", () => {
     expect((menu as HTMLElement).style.width).toBe("240px");
   });
 
-  it("opens resource information beside the compact menu and confirms successful copies", async () => {
+  it("opens resource information, suppresses ID copying, and retains non-ID copy actions", async () => {
     vi.useFakeTimers();
     const onOpenVersionHistory = vi.fn();
     const onOpenChange = vi.fn();
@@ -103,6 +134,13 @@ describe("PlatformResourceHeaderActions", () => {
               copyValue: "test-resource-id-that-must-remain-fully-visible",
               copyAriaLabel: "Copy Test ID",
             },
+            {
+              id: "endpoint",
+              label: "Endpoint",
+              value: "https://api.example.test/resource",
+              copyValue: "https://api.example.test/resource",
+              copyAriaLabel: "Copy endpoint",
+            },
             { id: "created", label: "Created", value: "August 4, 2026" },
             { id: "updated", label: "Updated", value: "August 5, 2026" },
           ]}
@@ -124,23 +162,24 @@ describe("PlatformResourceHeaderActions", () => {
     expect(informationPopup.getAttribute("data-platform-popup-placement")).toBe("right-start");
     expect(informationPopup.getAttribute("data-platform-popup-animation")).toBe("left-in");
     const resourceId = screen.getByText("test-resource-id-that-must-remain-fully-visible");
-    expect(resourceId.classList.contains("is-copyable")).toBe(true);
+    expect(resourceId.classList.contains("is-copyable")).toBe(false);
+    expect(screen.queryByRole("button", { name: "Copy Test ID" })).toBeNull();
     expect(screen.getByText("August 4, 2026")).not.toBeNull();
     expect(screen.getByText("August 5, 2026")).not.toBeNull();
 
-    const copyButton = screen.getByRole("button", { name: "Copy Test ID" });
+    const copyButton = screen.getByRole("button", { name: "Copy endpoint" });
     fireEvent.pointerDown(copyButton);
     await act(async () => {
       fireEvent.click(copyButton);
       await Promise.resolve();
     });
-    expect(writeText).toHaveBeenCalledWith("test-resource-id-that-must-remain-fully-visible");
+    expect(writeText).toHaveBeenCalledWith("https://api.example.test/resource");
     expect(screen.getByRole("button", { name: "Copied" }).querySelector(".hugeicons-check")).not.toBeNull();
     expect(screen.getByRole("dialog", { name: "Test information" })).not.toBeNull();
     expect(onOpenChange).not.toHaveBeenCalled();
 
     act(() => vi.advanceTimersByTime(1600));
-    expect(screen.getByRole("button", { name: "Copy Test ID" }).querySelector(".hugeicons-copy")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Copy endpoint" }).querySelector(".hugeicons-copy")).not.toBeNull();
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Show version history" }));
     expect(onOpenVersionHistory).toHaveBeenCalledTimes(1);

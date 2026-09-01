@@ -3014,25 +3014,6 @@
                 onEdit: () => setAgentDetailTab("permissions"),
               }
             );
-            const normalizedAgentSettingsTableMode = agentDetailSettingsTableMode === "guardrails"
-              ? "guardrails"
-              : "access";
-            const agentSettingsTableTabs = React.createElement(PlatformDetailTabBar, {
-              ariaLabel: "Agent settings resources",
-              value: normalizedAgentSettingsTableMode,
-              tabs: [
-                { id: "access", label: "Access" },
-                { id: "guardrails", label: "Guardrails" },
-              ],
-              onValueChange: (nextMode) => {
-                const normalizedNextMode = nextMode === "guardrails" ? "guardrails" : "access";
-                setAgentDetailSettingsTableMode(normalizedNextMode);
-                setAgentAccessTeamMenuOpen(false);
-                setAgentGuardrailImportPopoverOpen(false);
-              },
-              variant: "minimal",
-              className: "agents-overview-tab-bar playground-agent-settings-table-tabs",
-            });
             const agentAccessSettingsSection = React.createElement(PlatformResourceAccessSettings, {
               teams: agentAccessTeams,
               resourceLabel: isTeamAgent ? "Squad" : "Agent",
@@ -3098,9 +3079,7 @@
                   },
               tableProps: {
                 className: "playground-agent-access-platform-data-table",
-                title: null,
                 titleTooltip: "Controls the access levels and permissions users inside teams have when editing or managing this agent.",
-                leading: agentSettingsTableTabs,
                 selectedIds: selectedAgentAccessTeamIds,
                 onSelectedIdsChange: setSelectedAgentAccessTeamIds,
                 pagination: {},
@@ -3114,23 +3093,13 @@
             });
             const agentSettingsGuardrailsSection = renderAgentGuardrailsSection({
               key: "settings-guardrails",
-              leading: agentSettingsTableTabs,
             });
-            const agentSettingsSection = agentAccessPrincipalId
-              ? agentAccessSettingsSection
-              : React.createElement(
-                  React.Fragment,
-                  null,
-                  agentSettingsPermissionsSummary,
-                  normalizedAgentSettingsTableMode === "guardrails"
-                    ? agentSettingsGuardrailsSection
-                    : agentAccessSettingsSection
-                );
-            const agentSettingsAccessSection = agentAccessPrincipalId
-              ? agentAccessSettingsSection
-              : normalizedAgentSettingsTableMode === "guardrails"
-                ? agentSettingsGuardrailsSection
-                : agentAccessSettingsSection;
+            const agentSettingsAdditionalSections = React.createElement(
+              "div",
+              { className: "playground-agent-settings-additional-sections" },
+              agentSettingsPermissionsSummary,
+              agentSettingsGuardrailsSection
+            );
             const agentSettingsMetadata = getAgentMetadataRecord(draftAgent);
             const agentGithubConnector = agentSettingsMetadata.agentGithubConnector
               && typeof agentSettingsMetadata.agentGithubConnector === "object"
@@ -3324,22 +3293,6 @@
                 variant: "standard",
                 customAttributes: [
                   {
-                    id: "model",
-                    label: "Model",
-                    value: agentPrimaryModelControl,
-                    className: "is-model",
-                  },
-                  {
-                    id: "engine",
-                    label: "Engine",
-                    value: renderAgentExecutionEngineSelector(),
-                  },
-                  {
-                    id: "voice",
-                    label: "Voice",
-                    value: renderAgentVoiceSelector(),
-                  },
-                  {
                     id: "created",
                     label: "Created",
                     value: formatPlaygroundFileDate(draftAgent.createdAt),
@@ -3420,18 +3373,17 @@
                 ],
                 className: "playground-agents-detail-about-card",
               },
-              additionalSections: agentSettingsPermissionsSummary,
+              additionalSections: agentSettingsAdditionalSections,
               connectors: agentConnectorsSection,
-              access: agentSettingsAccessSection,
+              access: agentAccessSettingsSection,
               accessDetailOpen: Boolean(agentAccessPrincipalId),
               detailsSidebarCollapsed: agentDetailSidebarCollapsed,
               detailsSidebarAriaLabel: isTeamAgent ? "Squad settings" : "Agent settings",
-              detailsSidebarClassName: "playground-agents-detail-sidebar playground-ticket-detail-sidebar",
             } : undefined;
             const agentDetailActiveSection = normalizedAgentDetailTab === "permissions"
               ? null
               : normalizedAgentDetailTab === "settings"
-                ? agentSettingsSection
+                ? null
               : normalizedAgentDetailTab === "insights"
                 ? agentInsightsSection
                 : normalizedAgentDetailTab === "general"
@@ -3466,7 +3418,7 @@
               return React.createElement(React.Fragment, null,
                 React.createElement("div", { className: "playground-environments-editor-main playground-tasks-detail-main", ref: agentDetailMainRef },
                   React.createElement("div", { className: "playground-environments-detail-scroll playground-tasks-detail-scroll playground-environments-editor-scroll" },
-                    React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails" || normalizedAgentDetailTab === "settings") ? " is-agent-overview-general" : "") },
+                    React.createElement("div", { className: "playground-agents-detail-content" + ((normalizedAgentDetailTab === "general" || normalizedAgentDetailTab === "insights" || normalizedAgentDetailTab === "permissions" || normalizedAgentDetailTab === "evaluation" || normalizedAgentDetailTab === "guardrails" || normalizedAgentDetailTab === "settings") ? " is-agent-overview-general" : "") + (normalizedAgentDetailTab === "settings" ? " is-agent-settings" : "") },
                       agentDetailWorkspaceSection
                     ),
   ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.modal}                )

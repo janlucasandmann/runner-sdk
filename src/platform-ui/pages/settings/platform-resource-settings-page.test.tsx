@@ -43,6 +43,7 @@ function renderSettings(accessDetailOpen = false) {
         primaryActions: [{ id: "open", label: "Open", onSelect: vi.fn() }],
       }}
       detailsSidebarAriaLabel="Knowledge Library details"
+      detailsSidebarClassName="knowledge-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
     />,
   );
   return { ...result, onTitleChange, onDescriptionChange, titleRef };
@@ -56,10 +57,39 @@ describe("PlatformResourceSettingsPage", () => {
     );
 
     expect(css).toMatch(
-      /\.platform-resource-settings-page > \.platform-detail-sidebar\.platform-resource-settings-page__sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?margin-top:\s*calc\(-1 \* var\(--platform-resource-settings-top-inset\)\);/,
+      /\.platform-resource-settings-page > \.platform-detail-sidebar\.platform-resource-settings-page__sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--platform-resource-settings-top-inset\);[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/,
     );
     expect(css).toMatch(
-      /\.platform-resource-settings-page > \.platform-detail-sidebar\.platform-resource-settings-page__sidebar > \.platform-resource-detail-sidebar:first-child\s*\{[\s\S]*?margin-top:\s*var\(--platform-resource-settings-top-inset\);/,
+      /\.platform-resource-settings-page__sidebar-content\s*\{[\s\S]*?margin:\s*0;[\s\S]*?padding:\s*0;/,
+    );
+  });
+
+  it("owns one invariant desktop details-sidebar width", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/platform-ui/pages/settings/resource-settings-page.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(/--platform-resource-settings-sidebar-width:\s*340px;/);
+    expect(css).toMatch(
+      /grid-template-columns:\s*minmax\(0, 1fr\) var\(--platform-resource-settings-sidebar-width\);/,
+    );
+    expect(css).toMatch(
+      /\.platform-resource-settings-page__sidebar-content\s*\{[\s\S]*?width:\s*100%;/,
+    );
+    expect(css).toMatch(
+      /\.platform-resource-settings-page__sidebar-content > \.platform-resource-detail-sidebar\s*\{[\s\S]*?width:\s*100%;[\s\S]*?max-width:\s*none;/,
+    );
+  });
+
+  it("keeps the Agent Settings identity avatar circular without changing other resources", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "src/platform-ui/pages/settings/resource-settings-page.css"),
+      "utf8",
+    );
+
+    expect(css).toMatch(
+      /\.platform-resource-settings-page\.playground-agent-resource-settings[\s\S]*?\.platform-resource-settings-identity__icon[\s\S]*?border-radius:\s*50%;/,
     );
   });
 
@@ -77,6 +107,14 @@ describe("PlatformResourceSettingsPage", () => {
       ),
     ).toEqual(["location", "connectors", "additional", "access"]);
     expect(screen.getByRole("complementary", { name: "Knowledge Library details" })).not.toBeNull();
+    const sidebar = screen.getByRole("complementary", {
+      name: "Knowledge Library details",
+    });
+    const sidebarContent = container.querySelector(
+      "[data-platform-resource-settings-sidebar-content='true']",
+    );
+    expect(sidebar.classList.contains("playground-project-overview-sidebar")).toBe(false);
+    expect(sidebarContent?.classList.contains("playground-project-overview-sidebar")).toBe(true);
     expect(screen.getByText("Status")).not.toBeNull();
     expect(screen.getByText("Updated")).not.toBeNull();
     expect(screen.getByText("Creator")).not.toBeNull();

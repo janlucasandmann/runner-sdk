@@ -179,32 +179,6 @@ export const ORGANIZATIONS_GENERAL_CSS = `      .playground-organization-admin-p
         color: rgba(255, 255, 255, 0.58);
       }
 
-      .playground-organization-settings-id-control {
-        display: flex;
-        min-width: 0;
-      }
-
-      .playground-organization-settings-id-control .playground-organization-settings-input {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-      }
-
-      .playground-organization-settings-copy-button.platform-icon-button {
-        --platform-icon-button-size: 40px;
-        width: 40px !important;
-        height: 40px !important;
-        min-width: 40px !important;
-        min-height: 40px !important;
-        flex: 0 0 40px;
-        border: 0 !important;
-        border-radius: 0 8px 8px 0 !important;
-        background: rgba(255, 255, 255, 0.075) !important;
-      }
-
-      .playground-organization-settings-copy-button.platform-icon-button:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.12) !important;
-      }
-
       .playground-organization-settings-card-footer {
         display: flex;
         align-items: center;

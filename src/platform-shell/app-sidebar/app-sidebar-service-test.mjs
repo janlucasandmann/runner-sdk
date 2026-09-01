@@ -341,9 +341,15 @@ sidebarShortcutCleanup();
 assert.equal(sidebarShortcutHandler, null);
 assert.match(fragments.sidebar, /React\.createElement\(AppSidebarSearchIcon,/);
 assert.match(fragments.sidebar, /React\.createElement\(AppSidebarCloseIcon,/);
+assert.match(
+  fragments.sidebar,
+  /React\.createElement\(HugeiconsIcon, \{[\s\S]*?icon: LayoutAlignRightIcon,[\s\S]*?className: "sidebar-rail-logo-open-icon"/,
+  "The collapsed logo hover affordance must use the requested LayoutAlignRightIcon.",
+);
 assert.doesNotMatch(fragments.sidebar, /React\.createElement\(Search,/);
 assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeft,/);
 assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeftClose,/);
+assert.doesNotMatch(fragments.sidebar, /React\.createElement\(PanelLeftOpen,/);
 assert.match(fragments.sidebar, /className: "sidebar-organization-card"[\s\S]*?onClick: \(\) => toggleAccountMenuFrom\("sidebar"\)/);
 assert.match(fragments.sidebar, /"aria-label": "Open account menu for " \+ sidebarOrganizationDisplay\.name/);
 assert.ok(fragments.sidebar.includes('renderAccountAvatar("sidebar-organization-avatar"'));

@@ -190,6 +190,24 @@ assert.match(
   /details: \{\s*variant: "standard",[\s\S]{0,12000}access: environmentAccessSettingsSection,[\s\S]{0,180}location: environmentLocationSection,[\s\S]{0,180}connectors: computerConnectorsSection/,
   "Computer Settings must use the canonical details sidebar, location, GitHub connector, and access slots.",
 );
+const computerSettingsCustomAttributes = computerSettingsComposition.match(
+  /customAttributes: \[[\s\S]*?\n\s*\],\n\s*updatedAt:/,
+)?.[0] || "";
+assert.match(
+  computerSettingsCustomAttributes,
+  /id: "status"[\s\S]{0,180}label: "Status"[\s\S]{0,500}id: "internet"[\s\S]{0,180}label: "Internet access"[\s\S]{0,600}"aria-label": "Internet access"/,
+  "Computer Settings must keep only Status and Internet access as resource-specific sidebar attributes.",
+);
+assert.deepEqual(
+  [...computerSettingsCustomAttributes.matchAll(/id: "([^"]+)"/g)].map((match) => match[1]),
+  ["status", "internet"],
+  "Computer Settings must expose exactly two resource-specific sidebar attributes.",
+);
+assert.doesNotMatch(
+  computerSettingsCustomAttributes,
+  /id: "(?:profile|rate|ram|computer-id|resources|office-apps|type|created)"/,
+  "Computer Settings must not duplicate compute profile, billing, identity, resource, app, type, or creation metadata in its sidebar attributes.",
+);
 assert.doesNotMatch(
   computerSettingsComposition,
   /additionalSections:/,
@@ -229,6 +247,21 @@ assert.match(
   computerDetailPageCssSource,
   /\.playground-computer-detail-content\.is-computer-runtime-tab\s*\{[\s\S]{0,180}width:\s*100%;[\s\S]{0,120}max-width:\s*none;[\s\S]{0,120}margin:\s*0;/,
   "Computer Runtime must stretch its content wrapper to the route bounds.",
+);
+assert.match(
+  COMPUTE_RESOURCES_PAGE_SCRIPT,
+  /const isEmbeddedComputerRuntimeTab = Boolean\([\s\S]{0,180}normalizedEnvironmentDetailTab === "runtime"[\s\S]{0,2300}resourcesDetailContentClassName = "playground-resources-detail-content"[\s\S]{0,160}isEmbeddedComputerRuntimeTab \? " is-computer-runtime-tab"/,
+  "The embedded Computer route must mark only Runtime's outer detail-content wrapper as full width.",
+);
+assert.match(
+  platformTemplateCssSource,
+  /\.playground-resources-page\.is-develop-server-kind-page \.playground-resources-detail-content\.is-computer-runtime-tab,[\s\S]{0,180}\.playground-resources-page\.is-develop-configure-page \.playground-resources-detail-content\.is-computer-runtime-tab\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}max-width:\s*none;/,
+  "Only Computer Runtime may clear the shared Develop detail-content width constraint.",
+);
+assert.match(
+  platformTemplateCssSource,
+  /\.playground-resources-page\.is-develop-configure-page\s+\.playground-resources-detail-content\.is-computer-runtime-tab\s+\.playground-computer-detail-content\.is-computer-runtime-tab\s*\{[\s\S]{0,100}width:\s*100%;[\s\S]{0,100}max-width:\s*none;[\s\S]{0,100}margin:\s*0;/,
+  "Computer Runtime must override the later centered Computer detail wrapper without changing General or Settings.",
 );
 assert.match(
   computerDetailPageCssSource,
@@ -1597,9 +1630,10 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const renderDatabaseTitleActionsControl = \(\) => \{[\s\S]{0,1800}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,500}React\.createElement\(PlatformResourceActionsMenu[\s\S]{0,700}resourceLabel: "Database"[\s\S]{0,2200}React\.createElement\(PlatformResourceActionsInformation[\s\S]{0,3000}label: "Copy Database ID"[\s\S]{0,1800}shortcut: "rename"[\s\S]{0,1000}shortcut: "delete"/,
+  /const renderDatabaseTitleActionsControl = \(\) => \{[\s\S]{0,1800}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,500}React\.createElement\(PlatformResourceActionsMenu[\s\S]{0,700}resourceLabel: "Database"[\s\S]{0,2200}React\.createElement\(PlatformResourceActionsInformation[\s\S]{0,2200}label: "Documentation"[\s\S]{0,1000}shortcut: "rename"[\s\S]{0,1000}shortcut: "delete"/,
   "Database title actions must reuse the shared resource-actions composite.",
 );
+assert.doesNotMatch(COMPUTE_RESOURCES_PAGE_SCRIPT, /Copy Database ID/);
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /const databaseTitleActions = databaseTitleActionsContainer[\s\S]{0,300}createPortal\([\s\S]{0,100}renderDatabaseTitleActionsControl\(\),[\s\S]{0,100}databaseTitleActionsContainer/,
@@ -1607,9 +1641,10 @@ assert.match(
 );
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
-  /const renderServerTitleActionsControl = \(\) => \{[\s\S]{0,3000}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,500}React\.createElement\(PlatformResourceActionsMenu[\s\S]{0,700}resourceLabel: serverResourceLabel[\s\S]{0,2200}React\.createElement\(PlatformResourceActionsInformation[\s\S]{0,2600}isSourceDeployableResource[\s\S]{0,500}React\.createElement\(PlatformResourceVersionHistoryMenuItem[\s\S]{0,5000}label: "Copy " \+ serverResourceLabel \+ " ID"[\s\S]{0,1800}shortcut: "rename"[\s\S]{0,1000}shortcut: "delete"/,
+  /const renderServerTitleActionsControl = \(\) => \{[\s\S]{0,3000}React\.createElement\(PlatformResourceHeaderActions[\s\S]{0,500}React\.createElement\(PlatformResourceActionsMenu[\s\S]{0,700}resourceLabel: serverResourceLabel[\s\S]{0,2200}React\.createElement\(PlatformResourceActionsInformation[\s\S]{0,2600}isSourceDeployableResource[\s\S]{0,500}React\.createElement\(PlatformResourceVersionHistoryMenuItem[\s\S]{0,5000}label: "Documentation"[\s\S]{0,1800}shortcut: "rename"[\s\S]{0,1000}shortcut: "delete"/,
   "Every managed server detail type must reuse the same centralized resource-actions composite as Test details.",
 );
+assert.doesNotMatch(COMPUTE_RESOURCES_PAGE_SCRIPT, /label: "Copy " \+ serverResourceLabel \+ " ID"/);
 assert.match(
   COMPUTE_RESOURCES_PAGE_SCRIPT,
   /const serverTitleActions = serverTitleActionsContainer[\s\S]{0,400}createPortal\([\s\S]{0,100}renderServerTitleActionsControl\(\),[\s\S]{0,100}serverTitleActionsContainer/,

@@ -1044,8 +1044,7 @@ export function InferenceEndpointDetailPage({
           accessDetailOpen,
           detailsSidebarCollapsed: versionsOpen,
           detailsSidebarAriaLabel: "Inference endpoint settings",
-          detailsSidebarClassName:
-            "playground-evaluations-detail-sidebar inference-endpoint-detail__sidebar",
+          detailsSidebarClassName: "inference-endpoint-detail__sidebar",
         }
       : undefined;
   const draftSnapshot = buildVersionSnapshot(settings);

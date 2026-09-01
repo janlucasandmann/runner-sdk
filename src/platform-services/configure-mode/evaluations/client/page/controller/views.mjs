@@ -415,7 +415,7 @@ export const EVALUATIONS_PAGE_CONTROLLER_VIEWS_SCRIPT = String.raw`        funct
                 accessDetailOpen: Boolean(evaluationAccessTeamId),
                 detailsSidebarCollapsed: Boolean(evaluationVersionsSidebarOpen),
                 detailsSidebarAriaLabel: "Evaluation information",
-                detailsSidebarClassName: "playground-evaluations-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+                detailsSidebarClassName: "playground-evaluations-detail-sidebar",
               }
             : undefined;
           const detailContent = activeDetailTab === "settings"

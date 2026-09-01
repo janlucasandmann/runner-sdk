@@ -20,6 +20,14 @@ The resource page retains domain state, persistence, connector implementations,
 and permission adapters. It passes those behaviors into this composition rather
 than recreating the Settings layout.
 
+The page also owns the details-sidebar positioning shell and width. On desktop,
+every Settings details sidebar occupies the same 340px grid track; below the
+shared responsive breakpoint it becomes a full-width row. Its single 42px top
+inset aligns the sidebar with the identity header and remains sticky while the
+Settings content scrolls. `detailsSidebarClassName` decorates only the nested
+sidebar content; resource adapters must not attach project, ticket, or other
+layout classes to the sticky shell.
+
 The same contract is used by Knowledge, Prompts, Skills, Tests, Evaluations,
 Agent Optimization, Assurance, Guardrails, Inference, Agents, Computers,
 Workflows, Voice Agents, Security repositories, Databases, Functions, Web Apps,

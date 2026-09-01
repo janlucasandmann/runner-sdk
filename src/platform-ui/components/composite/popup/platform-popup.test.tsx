@@ -192,6 +192,70 @@ describe("PlatformPopup", () => {
     expect(surface?.style.visibility).toBe("");
   });
 
+  it("centers a portaled surface on its anchor", () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains("platform-popup-anchor")) {
+        return {
+          x: 300,
+          y: 120,
+          width: 20,
+          height: 20,
+          top: 120,
+          right: 320,
+          bottom: 140,
+          left: 300,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      if (this.classList.contains("platform-popup-surface")) {
+        return {
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 80,
+          top: 0,
+          right: 200,
+          bottom: 80,
+          left: 0,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        toJSON: () => ({}),
+      } as DOMRect;
+    });
+
+    render(
+      <PlatformPopup
+        open
+        portal
+        placement="bottom-center"
+        trigger={<button type="button">Open centered popup</button>}
+      >
+        Centered content
+      </PlatformPopup>,
+    );
+
+    const surface = document.body.querySelector<HTMLElement>(
+      ".platform-popup-surface.is-portaled",
+    );
+    expect(surface?.getAttribute("data-platform-popup-placement")).toBe(
+      "bottom-center",
+    );
+    expect(surface?.style.left).toBe("210px");
+    expect(surface?.style.top).toBe("148px");
+  });
+
   it("anchors context menus to an explicit viewport point", () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
       function (this: HTMLElement) {

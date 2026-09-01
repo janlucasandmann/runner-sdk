@@ -45,8 +45,6 @@ export const METRONOME_APP_TOP_NAV_ACTIONS_SCRIPT = `
 	                  value: workflowId,
 	                  title: workflowId,
 	                  monospace: true,
-	                  copyValue: workflowId,
-	                  copyAriaLabel: "Copy Metronome workflow ID",
 	                }
 	              : null,
 	            state.createdAt

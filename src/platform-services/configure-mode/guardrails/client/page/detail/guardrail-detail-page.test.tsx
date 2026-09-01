@@ -24,7 +24,7 @@ describe("GuardrailDetailPage", () => {
       primaryActions: [{ id: "evaluate", label: "Run Evaluation", onSelect: () => undefined }] as const,
     },
     access: <div>Access settings</div>,
-    detailsSidebarClassName: "guardrail-detail-page__sidebar playground-agents-detail-sidebar",
+    detailsSidebarClassName: "guardrail-detail-page__sidebar",
   };
 
   it("uses the file-resource detail shell for the General workspace", () => {
@@ -76,7 +76,7 @@ describe("GuardrailDetailPage", () => {
     expect(
       container.querySelector(".platform-resource-settings-page__main"),
     ).not.toBeNull();
-    expect(sidebar?.classList.contains("playground-agents-detail-sidebar")).toBe(true);
+    expect(sidebar?.classList.contains("playground-agents-detail-sidebar")).toBe(false);
     expect(page?.contains(sidebar)).toBe(true);
   });
 

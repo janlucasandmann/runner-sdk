@@ -763,12 +763,6 @@
                         promptNameInputRef.current?.select?.();
                       });
                     },
-                    onCopyId: () => {
-                      setPromptActionsOpen(false);
-                      if (selectedPromptId && selectedPromptId !== PROMPT_DRAFT_ID) {
-                        void navigator.clipboard?.writeText?.(selectedPromptId);
-                      }
-                    },
                     onDelete: () => {
                       setPromptActionsOpen(false);
                       void deletePrompts([{ id: selectedPromptId }]);
@@ -1664,7 +1658,8 @@
               React.createElement("div", {
                 className: "prompt-detail-page__icon",
                 "aria-hidden": "true",
-              }, React.createElement(MessageSquareText, {
+              }, React.createElement(HugeiconsIcon, {
+                icon: Chat01Icon,
                 width: 24,
                 height: 24,
                 strokeWidth: 1.7,
@@ -1745,12 +1740,47 @@
               className: "prompt-detail-page__settings-sidebar",
               propertiesClassName: "prompt-detail-page__settings-sidebar-properties",
             };
+            const promptConnectorSettings = !isDraft && selectedPrompt?.id
+              ? React.createElement(PlatformDocumentConnectorSettings, {
+                  library: selectedPrompt,
+                  api: {
+                    updateLibrary: async (_promptId, input = {}) => {
+                      const response = await requestJson(
+                        "/api/real/prompts/" + encodeURIComponent(selectedPrompt.id),
+                        {
+                          method: "PATCH",
+                          body: JSON.stringify({
+                            metadata: input.metadata || {},
+                            permissionSet: selectedPrompt.permissionSet || null,
+                          }),
+                        },
+                      );
+                      return normalizePromptRecord(response?.prompt || response);
+                    },
+                  },
+                  requestHeaders,
+                  activeOrganizationId,
+                  promptId: selectedPrompt.id,
+                  resourceLabel: "Prompt",
+                  connectorMetadataKey: "promptConnectors",
+                  onLibraryChange: (nextPrompt) => {
+                    const normalizedPrompt = normalizePromptRecord(nextPrompt);
+                    setSelectedPrompt(normalizedPrompt);
+                    setPromptRows((current) => current.map((row) => (
+                      String(row?.id || "") === normalizedPrompt.id
+                        ? normalizedPrompt
+                        : row
+                    )));
+                  },
+                })
+              : null;
 
             const promptSettings = {
               ariaLabel: "Prompt settings",
               className: "prompt-detail-page__settings-content",
               identity: {
-                icon: React.createElement(MessageSquareText, {
+                icon: React.createElement(HugeiconsIcon, {
+                  icon: Chat01Icon,
                   width: 24,
                   height: 24,
                   strokeWidth: 1.7,
@@ -1773,10 +1803,11 @@
                 title: "Storage region",
                 className: "playground-managed-server-deployment-map playground-source-server-deployment-map playground-function-deployment-map prompt-detail-page__storage-map",
               }),
+              connectors: promptConnectorSettings,
               access: promptAccessSettings,
               accessDetailOpen: Boolean(promptAccessPrincipalId),
               detailsSidebarAriaLabel: "Prompt properties",
-              detailsSidebarClassName: "prompt-detail-page__settings-sidebar-frame playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+              detailsSidebarClassName: "prompt-detail-page__settings-sidebar-frame",
             };
 
             const promptEditor = React.createElement(PlatformCodeEditorWorkspace, {

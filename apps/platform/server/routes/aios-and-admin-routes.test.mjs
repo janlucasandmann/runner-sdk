@@ -79,11 +79,21 @@ for (const [method, pathname, expectedUpstreamPath] of [
         "/api/aios/notion/strategy-sync?libraryId=library-1&databaseId=database-1",
         "/api/notion/strategy-sync?libraryId=library-1&databaseId=database-1",
     ],
+    [
+        "GET",
+        "/api/aios/notion/strategy-sync?promptId=prompt-1&databaseId=database-1",
+        "/api/notion/strategy-sync?promptId=prompt-1&databaseId=database-1",
+    ],
     ["PUT", "/api/aios/notion/strategy-sync", "/api/notion/strategy-sync"],
     [
         "GET",
         "/api/aios/confluence/strategy-sync?libraryId=library-1&spaceId=space-1",
         "/api/confluence/strategy-sync?libraryId=library-1&spaceId=space-1",
+    ],
+    [
+        "GET",
+        "/api/aios/confluence/strategy-sync?promptId=prompt-1&spaceId=space-1",
+        "/api/confluence/strategy-sync?promptId=prompt-1&spaceId=space-1",
     ],
     ["PUT", "/api/aios/confluence/strategy-sync", "/api/confluence/strategy-sync"],
 ]) {

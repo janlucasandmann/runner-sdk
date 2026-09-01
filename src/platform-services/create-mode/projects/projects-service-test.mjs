@@ -124,7 +124,7 @@ await Promise.all([
   assertLegacyBrowserSourceContract({
     label: "Projects views runtime",
     source: PROJECTS_PAGE_VIEWS_SCRIPT,
-    expectedSha256: "33907afd5b51a7c57761438787d2de9ad186b3aa117833051ac0064d7c040d66",
+    expectedSha256: "64c4adae1144c89df689493393c926c7b2328fda06660bb7db72c0486cd54467",
     fragmentGroups: [
       {
         baseUrl: projectsPageUrl,
@@ -1626,8 +1626,9 @@ assert.match(
 );
 assert.match(
   PROJECTS_PAGE_VIEWS_SCRIPT,
-  /document\.getElementById\("playground-ticket-breadcrumb-actions-root"\)[\s\S]*?createPortal\([\s\S]*?React\.createElement\(PlatformResourceHeaderActions, \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?resourceLabel: "Ticket"[\s\S]*?React\.createElement\(PlatformResourceActionsInformation, \{[\s\S]*?copyAriaLabel: "Copy Ticket ID"[\s\S]*?React\.createElement\(PlatformResourceActionMenuItem, \{[\s\S]*?label: "Delete",[\s\S]*?danger: true/,
+  /document\.getElementById\("playground-ticket-breadcrumb-actions-root"\)[\s\S]*?createPortal\([\s\S]*?React\.createElement\(PlatformResourceHeaderActions, \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?resourceLabel: "Ticket"[\s\S]*?React\.createElement\(PlatformResourceActionsInformation, \{[\s\S]*?id: "id"[\s\S]*?React\.createElement\(PlatformResourceActionMenuItem, \{[\s\S]*?label: "Delete",[\s\S]*?danger: true/,
 );
+assert.doesNotMatch(PROJECTS_PAGE_VIEWS_SCRIPT, /Copy Ticket ID/);
 assert.match(
   PROJECTS_VIEWS_04_FRAGMENT,
   /React\.createElement\("div", \{ className: "playground-tasks-detail-fact is-assignee" \},/,
@@ -3554,8 +3555,9 @@ assert.match(
 );
 assert.match(
   platformEntrySource,
-  /const projectBreadcrumbTrailing = isProjectDetailView[\s\S]*?React\.createElement\(PlatformResourceHeaderActions, \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?resourceLabel: "Project"[\s\S]*?React\.createElement\(PlatformResourceActionsInformation, \{[\s\S]*?copyAriaLabel: "Copy Project ID"[\s\S]*?\{ id: "general", label: "Home", Icon: House \}[\s\S]*?\{ id: "resources", label: "Resources", Icon: FolderOpen \}[\s\S]*?\{ id: "permissions", label: "Settings", Icon: Settings2 \}[\s\S]*?label: "Copy Project ID"[\s\S]*?label: "Delete Project",\s*shortcut: "delete",\s*danger: true/,
+  /const projectBreadcrumbTrailing = isProjectDetailView[\s\S]*?React\.createElement\(PlatformResourceHeaderActions, \{[\s\S]*?React\.createElement\(PlatformResourceActionsMenu, \{[\s\S]*?resourceLabel: "Project"[\s\S]*?React\.createElement\(PlatformResourceActionsInformation, \{[\s\S]*?id: "id"[\s\S]*?\{ id: "general", label: "Home", Icon: House \}[\s\S]*?\{ id: "resources", label: "Resources", Icon: FolderOpen \}[\s\S]*?\{ id: "permissions", label: "Settings", Icon: Settings2 \}[\s\S]*?label: "Delete Project",\s*shortcut: "delete",\s*danger: true/,
 );
+assert.doesNotMatch(platformEntrySource, /Copy Project ID/);
 assert.doesNotMatch(
   platformEntrySource,
   /projectBreadcrumbMenuRef|projectBreadcrumbMenuSurfaceRef|playground-project-breadcrumb-menu-id|playground-project-breadcrumb-menu-divider/,

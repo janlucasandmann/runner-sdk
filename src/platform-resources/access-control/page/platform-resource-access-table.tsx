@@ -12,6 +12,7 @@ import {
   type PlatformDataTableSearchConfig,
   type PlatformDataTableSortingConfig,
 } from "../../../platform-ui/components/composite/data-table/index.js";
+import { PlatformSettingsTableSection } from "../../../platform-ui/components/composite/settings-section/index.js";
 import {
   composePlatformAccessPrincipalRows,
   getPlatformAccessPrincipalProfileImageUrl,
@@ -26,8 +27,8 @@ export interface PlatformResourceAccessTableProps<
   teams: readonly TTeam[];
   resourceLabel: string;
   title?: ReactNode;
-  description?: ReactNode;
-  /** @deprecated Use `description`; retained while resource adapters migrate. */
+  description?: string;
+  /** @deprecated Use `description`; retained as a legacy alias. */
   titleTooltip?: string;
   className?: string;
   selectedIds?: ReadonlySet<string>;
@@ -193,28 +194,25 @@ export function PlatformResourceAccessTable<
     `Choose which organization roles and teams can access and manage this ${resourceLabel}.`;
 
   return (
-    <div className="platform-resource-access-table__layout">
-      {resolvedTitle || resolvedDescription ? (
-        <div className="platform-resource-access-table__section-heading">
-          {resolvedTitle ? (
-            <h2 className="platform-resource-access-table__heading">
-              {resolvedTitle}
-            </h2>
-          ) : null}
-          {resolvedDescription ? (
-            <p className="platform-resource-access-table__description">
-              {resolvedDescription}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-      <div className="platform-resource-access-table__container">
+    <PlatformSettingsTableSection
+      title={resolvedTitle}
+      description={resolvedTitle ? resolvedDescription : undefined}
+      titleAriaLabel={
+        typeof resolvedTitle === "string"
+          ? `About ${resolvedTitle}`
+          : `About ${resourceLabel} access`
+      }
+      className="platform-resource-access-table__layout"
+      headingClassName="platform-resource-access-table__section-heading"
+      titleClassName="platform-resource-access-table__heading"
+      surfaceClassName="platform-resource-access-table__container"
+    >
         <PlatformDataTable
           rows={rows}
           columns={columns}
           getRowId={(row) => row.id}
           ariaLabel={`${resourceLabel} access`}
-          className={`platform-resource-access-table${className ? ` ${className}` : ""}`}
+          className={`platform-settings-table-section__table platform-resource-access-table${className ? ` ${className}` : ""}`}
           surface="plain"
           layout="fill"
           variant="minimalistic-ui"
@@ -236,7 +234,7 @@ export function PlatformResourceAccessTable<
               updateSelectedIds(new Set(nextSelectedIds)),
           }}
           toolbar={{
-            className: "platform-resource-access-table__toolbar",
+            className: "platform-settings-table-section__toolbar platform-resource-access-table__toolbar",
             leading,
             trailing,
             search: search || {
@@ -293,7 +291,6 @@ export function PlatformResourceAccessTable<
           emptyState="Default access principals are unavailable."
           noResultsState="No matching access principals found."
         />
-      </div>
-    </div>
+    </PlatformSettingsTableSection>
   );
 }

@@ -32,7 +32,11 @@ export type {
   ResourceOverviewStandardNameCellProps,
 } from "./resource-overview-standard-cells.js";
 export { ResourceOverviewChart } from "./resource-overview-chart.js";
-export { ResourceOverviewMenuButton, ResourceOverviewPage } from "./resource-overview-page.js";
+export {
+  ResourceOverviewAnalyticsCatalogPage,
+  ResourceOverviewMenuButton,
+  ResourceOverviewPage,
+} from "./resource-overview-page.js";
 export type {
   PlatformResourceOverviewIdentity,
   PlatformResourceOverviewScope,
@@ -44,8 +48,10 @@ export {
 } from "./resource-overview-scope.js";
 export type {
   ResourceOverviewAnalyticsModel,
+  ResourceOverviewAnalyticsCatalogPageProps,
   ResourceOverviewMetric,
   ResourceOverviewPageProps,
+  ResourceOverviewPageVariant,
   ResourceOverviewPeriod,
   ResourceOverviewPeriodOption,
   ResourceOverviewRowActionMode,

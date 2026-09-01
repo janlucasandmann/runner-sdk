@@ -3,6 +3,7 @@
           const [skillSendTeamPickerValue, setSkillSendTeamPickerValue] = useState("");
           const [skillSendTeamError, setSkillSendTeamError] = useState("");
           const [skillSendTeamSaving, setSkillSendTeamSaving] = useState(false);
+          const skillShareTeamsRequestRef = useRef(false);
 
           useLayoutEffect(() => {
             if (!titleActionsPortalId || typeof document === "undefined") {
@@ -13,35 +14,118 @@
             setTitleActionsContainer((current) => current === nextContainer ? current : nextContainer);
           });
 
-          const availableSkillShareTeams = useMemo(() => (
-            (Array.isArray(workspaceTeams) ? workspaceTeams : [])
+          const normalizedSkillShareTeams = useMemo(() => {
+            const rawTeams = Array.isArray(workspaceTeams)
+              ? workspaceTeams
+              : Array.isArray(workspaceTeams?.teams)
+                ? workspaceTeams.teams
+                : Array.isArray(workspaceTeams?.data)
+                  ? workspaceTeams.data
+                  : Array.isArray(workspaceTeams?.items)
+                    ? workspaceTeams.items
+                    : [];
+            return rawTeams
               .map((team) => {
                 const source = team && typeof team === "object" && !Array.isArray(team)
                   ? team
                   : {};
-                const id = String(source.id || source.teamId || source.team_id || "").trim();
+                const nestedTeam = source.team && typeof source.team === "object" && !Array.isArray(source.team)
+                  ? source.team
+                  : {};
+                const membership = source.membership && typeof source.membership === "object" && !Array.isArray(source.membership)
+                  ? source.membership
+                  : source.currentMembership && typeof source.currentMembership === "object" && !Array.isArray(source.currentMembership)
+                    ? source.currentMembership
+                    : source.current_membership && typeof source.current_membership === "object" && !Array.isArray(source.current_membership)
+                      ? source.current_membership
+                      : {};
+                const id = String(
+                  source.id
+                  || source.teamId
+                  || source.team_id
+                  || nestedTeam.id
+                  || nestedTeam.teamId
+                  || nestedTeam.team_id
+                  || ""
+                ).trim();
                 if (!id) return null;
                 const roleId = normalizePlaygroundTeamRoleId(
                   source.roleId
+                  || source.role_id
                   || source.role
+                  || source.memberRole
+                  || source.member_role
                   || source.membershipRole
                   || source.membership_role
                   || source.currentUserRole
-                  || source.current_user_role,
-                  "member"
+                  || source.current_user_role
+                  || source.viewerRole
+                  || source.viewer_role
+                  || source.myRole
+                  || source.my_role
+                  || membership.roleId
+                  || membership.role_id
+                  || membership.role
+                  || "admin",
+                  "admin"
                 );
                 return {
                   ...source,
                   id,
-                  name: String(source.name || source.title || source.displayName || "Team").trim() || "Team",
+                  name: String(
+                    source.name
+                    || source.title
+                    || source.displayName
+                    || source.teamName
+                    || source.team_name
+                    || nestedTeam.name
+                    || nestedTeam.title
+                    || "Team"
+                  ).trim() || "Team",
                   roleId,
-                  roleLabel: roleId
-                    ? roleId.charAt(0).toUpperCase() + roleId.slice(1)
-                    : "Team",
+                  roleLabel: String(
+                    source.roleLabel
+                    || source.role_label
+                    || membership.roleLabel
+                    || membership.role_label
+                    || (roleId ? roleId.charAt(0).toUpperCase() + roleId.slice(1) : "Team")
+                  ).trim() || "Team",
                 };
               })
-              .filter((team) => team && ["admin", "owner"].includes(team.roleId))
-          ), [workspaceTeams]);
+              .filter(Boolean);
+          }, [workspaceTeams]);
+
+          const availableSkillShareTeams = useMemo(() => (
+            normalizedSkillShareTeams.filter((team) => ["admin", "owner"].includes(team.roleId))
+          ), [normalizedSkillShareTeams]);
+
+          useEffect(() => {
+            if (!skillSendTeamModalOpen) {
+              skillShareTeamsRequestRef.current = false;
+              return;
+            }
+            if (
+              normalizedSkillShareTeams.length > 0
+              || workspaceTeamsLoading
+              || workspaceTeamsRequiresPlan
+              || skillShareTeamsRequestRef.current
+              || typeof onWorkspaceTeamsRequest !== "function"
+            ) {
+              return;
+            }
+            skillShareTeamsRequestRef.current = true;
+            try {
+              Promise.resolve(onWorkspaceTeamsRequest({ selectedTeamId: "" })).catch(() => {});
+            } catch {
+              skillShareTeamsRequestRef.current = false;
+            }
+          }, [
+            normalizedSkillShareTeams.length,
+            onWorkspaceTeamsRequest,
+            skillSendTeamModalOpen,
+            workspaceTeamsLoading,
+            workspaceTeamsRequiresPlan,
+          ]);
 
           useEffect(() => {
             if (!skillSendTeamModalOpen) return;
@@ -274,8 +358,6 @@
                       value: selectedSkill.isDraft ? "Unsaved skill" : selectedSkill.id,
                       title: selectedSkill.isDraft ? "Unsaved skill" : selectedSkill.id,
                       monospace: true,
-                      copyValue: selectedSkill.isDraft ? undefined : selectedSkill.id,
-                      copyAriaLabel: selectedSkill.isDraft ? undefined : "Copy Skill ID",
                     },
                     {
                       id: "created",
@@ -295,25 +377,13 @@
                     })
                   : null,
                 React.createElement(PlatformResourceActionsDivider),
-                React.createElement(PlatformResourceActionMenuItem, {
-                  icon: React.createElement(UsersRound, {
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                    "aria-hidden": "true",
-                  }),
+                React.createElement(PlatformResourceShareMenuItem, {
                   label: "Send to Team",
                   shortcut: "share",
                   onClick: openSkillSendToTeamModal,
                   disabled: shareDisabled,
                 }),
-                React.createElement(PlatformResourceActionMenuItem, {
-                  icon: React.createElement(Split, {
-                    width: 14,
-                    height: 14,
-                    strokeWidth: 1.8,
-                    "aria-hidden": "true",
-                  }),
+                React.createElement(PlatformResourceCopyMenuItem, {
                   label: "Copy Skill",
                   onClick: () => openSelectedSkillCopy(selectedSkill),
                   disabled: skillSaveState.isSaving,
@@ -341,6 +411,7 @@
             const selectedTeam = availableSkillShareTeams.find(
               (team) => team.id === skillSendTeamPickerValue
             ) || null;
+            const showTeamsLoading = workspaceTeamsLoading && availableSkillShareTeams.length === 0;
             const selectedTeamAlreadyShared = Boolean(
               selectedTeam
               && getPlatformSharedTeamIds(selectedSkill?.metadata).includes(selectedTeam.id)
@@ -377,16 +448,26 @@
                 }, skillSendTeamSaving ? "Sharing..." : "Share")
               ),
               children: React.createElement(React.Fragment, null,
-                availableSkillShareTeams.length
-                  ? React.createElement("div", {
-                      className: "playground-agents-send-team-list",
-                      role: "radiogroup",
-                      "aria-label": "Teams",
-                    },
-                      availableSkillShareTeams.map((team) => {
-                        const isSelected = team.id === skillSendTeamPickerValue;
-                        const isShared = getPlatformSharedTeamIds(selectedSkill?.metadata).includes(team.id);
-                        return React.createElement("button", {
+                showTeamsLoading
+                  ? React.createElement(PlatformLoadingState, {
+                      centered: true,
+                      message: "Loading teams...",
+                      className: "playground-agents-send-team-empty",
+                    })
+                  : workspaceTeamsRequiresPlan
+                    ? React.createElement("div", {
+                        className: "playground-agents-send-team-empty",
+                      }, "Teams are not available on this workspace plan.")
+                    : availableSkillShareTeams.length
+                      ? React.createElement("div", {
+                          className: "playground-agents-send-team-list",
+                          role: "radiogroup",
+                          "aria-label": "Teams",
+                        },
+                        availableSkillShareTeams.map((team) => {
+                          const isSelected = team.id === skillSendTeamPickerValue;
+                          const isShared = getPlatformSharedTeamIds(selectedSkill?.metadata).includes(team.id);
+                          return React.createElement("button", {
                             key: team.id,
                             type: "button",
                             className: "playground-agents-send-team-option"
@@ -424,12 +505,14 @@
                                 strokeWidth: 1.8,
                               })
                             : null
-                        );
-                      })
-                    )
-                  : React.createElement("div", {
-                      className: "playground-agents-send-team-empty",
-                    }, "No teams are available yet."),
+                          );
+                        })
+                        )
+                      : React.createElement("div", {
+                          className: "playground-agents-send-team-empty",
+                        }, normalizedSkillShareTeams.length > 0
+                          ? "No teams you can manage are available."
+                          : "No teams are available yet."),
                 skillSendTeamError
                   ? React.createElement("div", {
                       className: "playground-tasks-project-modal-error",

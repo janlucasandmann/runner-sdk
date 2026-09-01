@@ -123,22 +123,11 @@ export const TEAMS_TOP_NAVIGATION_SCRIPT = `        function renderTeamPageNav()
                       value: teamId,
                       title: teamId,
                       monospace: true,
-                      copyValue: teamId,
-                      copyAriaLabel: "Copy Team ID",
                     },
                     { id: "members", label: "Members", value: String(Array.isArray(teamPageMembers) ? teamPageMembers.length : 0) },
                     { id: "created", label: "Created", value: formatTeamDetailDate(selectedTeam.createdAt) },
                     { id: "creator", label: "Creator", value: creatorLabel },
                   ],
-                }),
-                React.createElement(PlatformResourceActionMenuItem, {
-                  icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                  label: "Copy Team ID",
-                  onClick: () => {
-                    setTeamPageActionsOpen(false);
-                    const copyPromise = navigator.clipboard?.writeText?.(teamId);
-                    if (copyPromise) void copyPromise.catch(() => undefined);
-                  },
                 }),
                 React.createElement(PlatformResourceActionsDivider),
                 React.createElement(PlatformResourceActionMenuItem, {

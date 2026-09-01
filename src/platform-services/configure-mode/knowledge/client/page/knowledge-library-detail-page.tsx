@@ -1,4 +1,4 @@
-import { Bookmark, Copy, LibraryBig, SquarePen, Trash2, UsersRound } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
+import { Bookmark, LibraryBig, SquarePen, Trash2, UsersRound } from "../../../../../platform-ui/components/ui/hugeicons-compat.js";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -1189,16 +1189,6 @@ export function KnowledgeLibraryDetailPage({
     }
   }
 
-  async function copyLibraryId() {
-    setTitleActionsOpen(false);
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error("Clipboard access is unavailable.");
-      await navigator.clipboard.writeText(library.id);
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "Failed to copy the Knowledge ID.");
-    }
-  }
-
   const workspaceFiles = useMemo<PlatformCodeEditorFile[]>(
     () =>
       currentDocuments.map((document) => {
@@ -1442,8 +1432,6 @@ export function KnowledgeLibraryDetailPage({
               value: library.id,
               title: library.id,
               monospace: true,
-              copyValue: library.id,
-              copyAriaLabel: "Copy Knowledge Library ID",
             },
             { id: "created", label: "Created", value: formatTimestamp(library.createdAt) },
             { id: "updated", label: "Updated", value: formatTimestamp(library.updatedAt) },
@@ -1469,11 +1457,6 @@ export function KnowledgeLibraryDetailPage({
                 : undefined
           }
           onClick={openShareModal}
-        />
-        <PlatformResourceActionMenuItem
-          icon={<Copy width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
-          label="Copy Knowledge Library ID"
-          onClick={() => void copyLibraryId()}
         />
         <PlatformResourceActionsDivider />
         <PlatformResourceActionMenuItem
@@ -1916,7 +1899,7 @@ export function KnowledgeLibraryDetailPage({
       accessDetailOpen={accessDetailOpen}
       detailsSidebarCollapsed={versionsOpen}
       detailsSidebarAriaLabel="Knowledge library information"
-      detailsSidebarClassName="knowledge-detail-sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar"
+      detailsSidebarClassName="knowledge-detail-sidebar"
     />
   );
   const saveActionPortal = controlsPortal || (!titleActionsPortalId ? actionsPortal : null);

@@ -39,9 +39,7 @@
             setAgentListMode(
               nextMode === "teams"
                 ? "teams"
-                : nextMode === "functional"
-                  ? "functional"
-                  : "agents"
+                : "agents"
             );
           }
   

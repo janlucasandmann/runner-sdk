@@ -1,4 +1,5 @@
 import ChevronsLeftRightIcon from "@hugeicons/core-free-icons/ChevronsLeftRightIcon";
+import ListFilterIcon from "@hugeicons/core-free-icons/ListFilterIcon";
 import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -42,7 +43,6 @@ import {
   GripVertical,
   LayoutGrid,
   List,
-  ListFilter,
   Plus,
   Trash2,
 } from "../../ui/hugeicons-compat.js";
@@ -1524,9 +1524,10 @@ export function PlatformDataTable<TData>({
               "aria-haspopup": "menu",
               "aria-expanded": toolbarMenu ? "true" : "false",
             },
-            createElement(ListFilter, {
-              width: 14,
-              height: 14,
+            createElement(HugeiconsIcon, {
+              icon: ListFilterIcon,
+              className: "hugeicons-list-filter platform-data-table__filter-icon",
+              size: 14,
               strokeWidth: 1.8,
               "aria-hidden": true,
             }),

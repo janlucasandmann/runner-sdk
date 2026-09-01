@@ -1492,8 +1492,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	                          value: draftTask.id,
 	                          title: draftTask.id,
 	                          monospace: true,
-	                          copyValue: draftTask.id,
-	                          copyAriaLabel: "Copy Ticket ID",
 	                        },
 	                        {
 	                          id: "created",
@@ -1538,15 +1536,6 @@ export const PROJECTS_VIEWS_04_FRAGMENT = `          }) {
 	                          },
 	                        })
 	                      : null,
-	                    React.createElement(PlatformResourceActionMenuItem, {
-	                      icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-	                      label: "Copy Ticket ID",
-	                      onClick: () => {
-	                        closeTaskDetailBreadcrumbActions();
-	                        const copyPromise = navigator.clipboard?.writeText(draftTask.id);
-	                        if (copyPromise) void copyPromise.catch(() => undefined);
-	                      },
-	                    }),
 	                    React.createElement(PlatformResourceActionsDivider, null),
 	                    React.createElement(PlatformResourceActionMenuItem, {
 	                      icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),

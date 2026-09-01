@@ -49,8 +49,7 @@ describe("PromptDetailPage", () => {
           location: <div>Storage region</div>,
           access: <div>Prompt access settings</div>,
           detailsSidebarAriaLabel: "Prompt properties",
-          detailsSidebarClassName:
-            "prompt-detail-page__settings-sidebar-frame playground-agents-detail-sidebar",
+          detailsSidebarClassName: "prompt-detail-page__settings-sidebar-frame",
         }}
       />,
     );
@@ -67,7 +66,7 @@ describe("PromptDetailPage", () => {
     ).toBe(true);
     expect(settingsPage).not.toBeNull();
     expect(page?.classList.contains("is-sidebar-empty")).toBe(true);
-    expect(sidebar?.classList.contains("playground-agents-detail-sidebar")).toBe(true);
+    expect(sidebar?.classList.contains("playground-agents-detail-sidebar")).toBe(false);
     expect(settingsPage?.contains(sidebar)).toBe(true);
     expect(
       (screen.getByRole("textbox", { name: "Resource name" }) as HTMLTextAreaElement).value,

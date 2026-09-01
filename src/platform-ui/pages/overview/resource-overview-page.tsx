@@ -19,6 +19,7 @@ import { PlatformPrimaryButton } from "../../components/ui/button/index.js";
 import { PlatformSwitch } from "../../components/ui/switch/index.js";
 import { createResourceOverviewRowActions } from "./resource-overview-actions.js";
 import type {
+  ResourceOverviewAnalyticsCatalogPageProps,
   ResourceOverviewPageProps,
   ResourceOverviewPeriodOption,
 } from "./resource-overview-types.js";
@@ -110,6 +111,7 @@ function renderPrimaryAction(
 }
 
 export function ResourceOverviewPage<TData>({
+  variant = "standard",
   period = "day",
   onPeriodChange = () => undefined,
   analytics,
@@ -123,6 +125,7 @@ export function ResourceOverviewPage<TData>({
   className = "",
   rowActionMode = "resource",
 }: ResourceOverviewPageProps<TData>) {
+  const usesAnalyticsCatalog = variant === "analytics-catalog";
   const primaryAction = table.toolbar?.primaryAction;
   const tableWithoutPrimaryAction = primaryAction
     ? { ...table, toolbar: { ...table.toolbar, primaryAction: undefined } }
@@ -144,6 +147,15 @@ export function ResourceOverviewPage<TData>({
             disabled: Boolean(tableWithoutPrimaryAction.isRowDisabled?.(row)),
           }),
       };
+  const resolvedTableVariant =
+    resolvedTable.variant ||
+    (usesAnalyticsCatalog ? "catalog-ui" : "minimalistic-ui");
+  const resolvedPagination =
+    resolvedTable.pagination === undefined
+      ? resolvedTableVariant === "catalog-ui"
+        ? false
+        : {}
+      : resolvedTable.pagination;
   const hasDedicatedPeriodPortal = Boolean(periodPortalId);
   const hasHeaderControls =
     (showPeriodSelector && !hasDedicatedPeriodPortal) ||
@@ -200,9 +212,19 @@ export function ResourceOverviewPage<TData>({
       {overviewControls}
       {overviewPeriodControl}
       <div
-        className={`resource-overview-page${className ? ` ${className}` : ""}`}
+        className={`resource-overview-page${
+          usesAnalyticsCatalog ? " is-analytics-catalog" : ""
+        }${className ? ` ${className}` : ""}`}
+        data-resource-overview-page-variant={variant}
       >
-        {heroContent === undefined ? (
+        {usesAnalyticsCatalog ? (
+          <header
+            className="resource-overview-page__analytics-header"
+            data-resource-overview-header="analytics"
+          >
+            <PlatformAnalyticsSection analytics={analytics!} chartType="line" />
+          </header>
+        ) : heroContent === undefined ? (
           <PlatformAnalyticsSection analytics={analytics!} chartType="line" />
         ) : (
           heroContent
@@ -210,7 +232,7 @@ export function ResourceOverviewPage<TData>({
 
         <section
           className={`resource-overview-page__table-section${
-            resolvedTable.variant === "catalog-ui"
+            resolvedTableVariant === "catalog-ui"
               ? " has-full-bleed-table"
               : ""
           }`}
@@ -219,18 +241,33 @@ export function ResourceOverviewPage<TData>({
             {...resolvedTable}
             surface={resolvedTable.surface || "plain"}
             layout={resolvedTable.layout || "fill"}
-            variant={resolvedTable.variant || "minimalistic-ui"}
-            pagination={
-              resolvedTable.pagination === undefined
-                ? resolvedTable.variant === "catalog-ui"
-                  ? false
-                  : {}
-                : resolvedTable.pagination
-            }
+            variant={resolvedTableVariant}
+            pagination={resolvedPagination}
           />
         </section>
       </div>
     </>
+  );
+}
+
+/**
+ * Full-width resource catalog with a KPI/chart header. The table toolbar stays
+ * responsible for resource navigation, filtering, and search, so all header
+ * controls share the same state as the table they operate on.
+ */
+export function ResourceOverviewAnalyticsCatalogPage<TData>(
+  { table, ...props }: ResourceOverviewAnalyticsCatalogPageProps<TData>,
+) {
+  return (
+    <ResourceOverviewPage<TData>
+      {...props}
+      variant="analytics-catalog"
+      table={{
+        ...table,
+        variant: "catalog-ui",
+        pagination: table.pagination ?? false,
+      }}
+    />
   );
 }
 

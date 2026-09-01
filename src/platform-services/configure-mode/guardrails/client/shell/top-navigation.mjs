@@ -65,12 +65,6 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
             setGuardrailDetailActionsMenuOpen(false);
             void handleDeleteGuardrailSet(activeGuardrailSet?.id);
           };
-          const copyGuardrailIdFromHeader = () => {
-            setGuardrailDetailActionsMenuOpen(false);
-            const guardrailId = String(activeGuardrailSet?.id || "");
-            const copyPromise = navigator.clipboard?.writeText?.(guardrailId);
-            if (copyPromise) void copyPromise.catch(() => undefined);
-          };
           const guardrailBreadcrumbActions = isCustomGuardrailDetail
             ? React.createElement(PlatformResourceHeaderActions, {
                 className: "playground-guardrails-detail-breadcrumb-actions",
@@ -114,8 +108,6 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
                             value: String(activeGuardrailSet.id || "Unknown"),
                             title: String(activeGuardrailSet.id || ""),
                             monospace: true,
-                            copyValue: String(activeGuardrailSet.id || ""),
-                            copyAriaLabel: "Copy Guardrail ID",
                           },
                           {
                             id: "created",
@@ -143,16 +135,6 @@ export const GUARDRAILS_APP_TOP_NAVIGATION_SCRIPT = `        function renderGuar
                         label: "Share",
                         shortcut: "share",
                         onClick: openGuardrailHeaderShareModal,
-                      }),
-                      React.createElement(PlatformResourceActionMenuItem, {
-                        icon: React.createElement(Copy, {
-                          width: 14,
-                          height: 14,
-                          strokeWidth: 1.8,
-                          "aria-hidden": "true",
-                        }),
-                        label: "Copy Guardrail ID",
-                        onClick: copyGuardrailIdFromHeader,
                       }),
                       React.createElement(PlatformResourceActionsDivider),
                       React.createElement(PlatformResourceActionMenuItem, {

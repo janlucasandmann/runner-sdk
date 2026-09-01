@@ -20,7 +20,7 @@ assert.deepEqual(
 );
 assert.equal(
   createHash("sha256").update(SKILLS_PAGE_SCRIPT).digest("hex"),
-  "5a408567660b95bab234e0cede1c2f30fc54c7fa8c4008aea74e83e04fb1d72f",
+  "93214d5272194f8e2e1926dcea53cca6166fb846c0a72e097de1c5454c68164f",
   "The Skills fragment composition must remain byte-compatible with the reviewed controller.",
 );
 
@@ -240,6 +240,33 @@ assert.match(
   SKILLS_PAGE_SCRIPT,
   /onViewTeam: onViewTeam[\s\S]{0,180}onViewTeam\(String\(team\?\.id/,
   "Skill team access must expose the centralized View Team handoff.",
+);
+for (const expectedSkillShareTeamNormalization of [
+  /const normalizedSkillShareTeams = useMemo[\s\S]{0,500}workspaceTeams\?\.teams/,
+  /source\.current_user_role[\s\S]{0,160}source\.viewerRole/,
+  /source\.my_role[\s\S]{0,180}membership\.role/,
+  /membership\.role[\s\S]{0,100}"admin",[\s\S]{0,40}"admin"/,
+]) {
+  assert.match(
+    SKILLS_PAGE_SCRIPT,
+    expectedSkillShareTeamNormalization,
+    "Skill sharing must normalize current and legacy workspace-team response shapes before applying eligibility rules.",
+  );
+}
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /const availableSkillShareTeams = useMemo[\s\S]{0,220}\["admin", "owner"\]\.includes\(team\.roleId\)/,
+  "Skill sharing must only offer teams the current viewer can manage.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /skillShareTeamsRequestRef\.current = true;[\s\S]{0,180}onWorkspaceTeamsRequest\(\{ selectedTeamId: "" \}\)/,
+  "Opening Skill sharing must request the authoritative workspace-team collection when it is not loaded yet.",
+);
+assert.match(
+  SKILLS_PAGE_SCRIPT,
+  /showTeamsLoading[\s\S]{0,700}React\.createElement\(PlatformLoadingState,[\s\S]{0,500}Teams are not available on this workspace plan\./,
+  "Skill sharing must distinguish team loading and plan-gated states from a completed empty result.",
 );
 
 console.log("Legacy Skills controller composition passed.");

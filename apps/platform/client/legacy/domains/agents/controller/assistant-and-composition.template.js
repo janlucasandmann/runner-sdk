@@ -1046,7 +1046,13 @@
               const avatarUrl = String(nested?.avatarUrl || nested?.photoUrl || nested?.photoURL || agent?.creatorAvatarUrl || agent?.createdByAvatarUrl || metadata?.creatorAvatarUrl || metadata?.createdByAvatarUrl || currentUserAvatarUrl || "").trim();
               return { name, avatarUrl: canRenderAvatarImage(avatarUrl) ? avatarUrl : "", isSystem: false };
             };
-            const agentRows = displayAgents
+            const overviewAgentListMode = agentListMode === "teams" ? "teams" : "agents";
+            const agentRows = allOverviewAgents
+              .filter((agent) => (
+                getPlaygroundAgentListMode(agent) === overviewAgentListMode
+                && !isPlaygroundAgentCreatorAgent(agent)
+                && !isPlaygroundFunctionalAgent(agent)
+              ))
               .filter((agent) => agent?.id && agent.id !== PLAYGROUND_AGENT_DRAFT_ID)
               .map((agent) => {
                 const name = String(agent?.name || (isPlaygroundTeamAgent(agent) ? "Untitled Squad" : "Untitled Agent")).trim();
@@ -1081,20 +1087,14 @@
                   lastUsedTitle: lastUsed ? formatPlaygroundExactDate(lastUsed) : "",
                 };
               });
-            const resolveSourceAgent = (row) => displayAgents.find((agent) => String(agent?.id || "") === row.id) || null;
+            const resolveSourceAgent = (row) => allOverviewAgents.find((agent) => String(agent?.id || "") === row.id) || null;
             return React.createElement(AgentsOverviewPage, {
               rows: agentRows,
-              mode: agentListMode === "teams"
-                ? "squads"
-                : agentListMode === "functional"
-                  ? "functional"
-                  : "agents",
+              mode: overviewAgentListMode === "teams" ? "squads" : "agents",
               onModeChange: (mode) => handleAgentListModeChange(
                 mode === "squads"
                   ? "teams"
-                  : mode === "functional"
-                    ? "functional"
-                    : "agents"
+                  : "agents"
               ),
               period: agentsHomeChartTimescale,
               onPeriodChange: setAgentsHomeChartTimescale,
@@ -1334,13 +1334,7 @@
                         className: "content-mode-button" + (agentListMode === "teams" ? " is-active" : ""),
                         onClick: () => handleAgentListModeChange("teams"),
                         "aria-pressed": agentListMode === "teams",
-                      }, "Squads"),
-                      React.createElement("button", {
-                        type: "button",
-                        className: "content-mode-button" + (agentListMode === "functional" ? " is-active" : ""),
-                        onClick: () => handleAgentListModeChange("functional"),
-                        "aria-pressed": agentListMode === "functional",
-                      }, "Functional Agents")
+                      }, "Squads")
                     )
                   )
                 ),

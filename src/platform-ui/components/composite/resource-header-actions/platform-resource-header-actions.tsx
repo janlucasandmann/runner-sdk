@@ -1,4 +1,7 @@
-import { Check, ChevronRight, Copy, Ellipsis, History, Info } from "../../ui/hugeicons-compat.js";
+import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
+import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
+import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   type ButtonHTMLAttributes,
   createContext,
@@ -11,6 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Check, ChevronRight, Copy, Ellipsis, Info } from "../../ui/hugeicons-compat.js";
 import { PlatformIconButton } from "../../ui/icon-button/index.js";
 import {
   normalizePlatformVersionNumber,
@@ -507,7 +511,72 @@ export function PlatformResourceVersionHistoryMenuItem({
   return (
     <PlatformResourceActionMenuItem
       {...props}
-      icon={<History width={14} height={14} strokeWidth={1.8} aria-hidden="true" />}
+      icon={
+        <HugeiconsIcon
+          icon={HistoryIcon}
+          width={14}
+          height={14}
+          strokeWidth={1.8}
+          aria-hidden="true"
+          data-platform-resource-action-icon="history"
+        />
+      }
+      label={label}
+    />
+  );
+}
+
+export interface PlatformResourceShareMenuItemProps
+  extends Omit<PlatformResourceActionMenuItemProps, "icon" | "label"> {
+  label?: ReactNode;
+}
+
+export function PlatformResourceShareMenuItem({
+  label = "Send to Team",
+  shortcut = "share",
+  ...props
+}: PlatformResourceShareMenuItemProps) {
+  return (
+    <PlatformResourceActionMenuItem
+      {...props}
+      shortcut={shortcut}
+      icon={
+        <HugeiconsIcon
+          icon={Share01Icon}
+          width={14}
+          height={14}
+          strokeWidth={1.8}
+          aria-hidden="true"
+          data-platform-resource-action-icon="share"
+        />
+      }
+      label={label}
+    />
+  );
+}
+
+export interface PlatformResourceCopyMenuItemProps
+  extends Omit<PlatformResourceActionMenuItemProps, "icon" | "label"> {
+  label?: ReactNode;
+}
+
+export function PlatformResourceCopyMenuItem({
+  label = "Copy Resource",
+  ...props
+}: PlatformResourceCopyMenuItemProps) {
+  return (
+    <PlatformResourceActionMenuItem
+      {...props}
+      icon={
+        <HugeiconsIcon
+          icon={Copy01Icon}
+          width={14}
+          height={14}
+          strokeWidth={1.8}
+          aria-hidden="true"
+          data-platform-resource-action-icon="copy"
+        />
+      }
       label={label}
     />
   );
@@ -566,6 +635,15 @@ export function PlatformResourceActionsMetadata({
   return (
     <div className={joinClassNames("platform-resource-actions-menu__metadata", className)}>
       {items.map((item) => {
+        const normalizedItemId = String(item.id || "").trim().toLowerCase();
+        const normalizedItemLabel = typeof item.label === "string"
+          ? item.label.trim().toLowerCase()
+          : "";
+        const isResourceIdentifier = normalizedItemId === "id"
+          || /(?:^|[-_:])id$/.test(normalizedItemId)
+          || normalizedItemLabel === "id"
+          || /\bid$/.test(normalizedItemLabel);
+        const isCopyable = Boolean(item.copyValue) && !isResourceIdentifier;
         const copyLabel = item.copyAriaLabel || `Copy ${String(item.label || "value")}`;
         const itemWasCopied = copiedItemId === item.id;
         return (
@@ -573,7 +651,7 @@ export function PlatformResourceActionsMetadata({
             key={item.id}
             className={joinClassNames(
               "platform-resource-actions-menu__metadata-row",
-              String(item.id || "").trim().toLowerCase() === "id" && "is-resource-id",
+              isResourceIdentifier && "is-resource-id",
             )}
           >
             <span className="platform-resource-actions-menu__metadata-label">{item.label}</span>
@@ -582,13 +660,13 @@ export function PlatformResourceActionsMetadata({
                 className={joinClassNames(
                   "platform-resource-actions-menu__metadata-value",
                   item.monospace && "is-monospace",
-                  item.copyValue && "is-copyable",
+                  isCopyable && "is-copyable",
                 )}
                 title={item.title}
               >
                 {item.value}
               </span>
-              {item.copyValue ? (
+              {isCopyable ? (
                 <PlatformIconButton
                   type="button"
                   size="compact"

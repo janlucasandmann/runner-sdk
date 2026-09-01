@@ -157,7 +157,6 @@
           const [agentDetailThreadSorting, setAgentDetailThreadSorting] = useState(() => ({ id: "date", direction: "desc" }));
           const [agentDetailThreadFilterMode, setAgentDetailThreadFilterMode] = useState("all");
           const [agentDetailInsightsTableMode, setAgentDetailInsightsTableMode] = useState("threads");
-          const [agentDetailSettingsTableMode, setAgentDetailSettingsTableMode] = useState("access");
   ${EVALUATIONS_AGENT_SCRIPT_FRAGMENTS.state}${GUARDRAILS_AGENT_SCRIPT_FRAGMENTS.state}        const [selectedAgentsObservabilityThreadId, setSelectedAgentsObservabilityThreadId] = useState("");
           const [agentsObservabilityThreadDetailsById, setAgentsObservabilityThreadDetailsById] = useState({});
           const [loadingAgentId, setLoadingAgentId] = useState("");
@@ -2967,6 +2966,7 @@
             setAgentAssistantOpen(false);
             setAgentAssistantCommandRequest(null);
             setAgentsObservabilityToolbarPopover("");
+            setAgentListMode((current) => current === "functional" ? "agents" : current);
             setIsHomeViewActive(true);
           }
   
@@ -3671,7 +3671,6 @@
             setAgentDetailThreadSorting({ id: "date", direction: "desc" });
             setAgentDetailThreadFilterMode("all");
             setAgentDetailInsightsTableMode("threads");
-            setAgentDetailSettingsTableMode("access");
             setAgentDetailEvaluationSelectedSetId("");
             setAgentAccessPrincipalId("");
             setAgentAccessRoleId("member");

@@ -152,7 +152,7 @@ assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /includeSearchDivider: tr
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.statePrimary, /teamPageActionsOpen/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /PlatformResourceActionsMenu/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /PlatformResourceActionsInformation/);
-assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /Copy Team ID/);
+assert.doesNotMatch(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /Copy Team ID/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /shortcut: "rename"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /shortcut: "delete"/);
 assert.match(TEAMS_APP_SCRIPT_FRAGMENTS.topNavigation, /trailing: renderTeamDetailActions\(\)/);

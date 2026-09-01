@@ -212,12 +212,17 @@ export function normalizeComputerOverviewRows(
       options.resolveProfileLabel?.(environment),
     ) || "Standard";
     const name = asString(environment.name) || "Untitled Computer";
+    const description = firstString([
+      environment.description,
+      getComputerMetadata(environment).description,
+    ]);
     const status = asString(environment.status);
     const creator = resolveComputerCreator(environment, options);
     return [{
       id,
       name,
-      searchText: [name, profileLabel, creator.name, status].join(" "),
+      description,
+      searchText: [name, description, profileLabel, creator.name, status].join(" "),
       profileLabel,
       status,
       isRunning: status.toLowerCase() === "running",

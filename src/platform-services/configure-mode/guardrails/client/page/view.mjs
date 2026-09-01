@@ -250,7 +250,7 @@ export const GUARDRAILS_PAGE_VIEW_SCRIPT = `          const listContent = render
             accessDetailOpen: Boolean(guardrailAccessTeamId),
             detailsSidebarCollapsed: guardrailDetailSidebarCollapsed,
             detailsSidebarAriaLabel: "Guardrail properties",
-            detailsSidebarClassName: "guardrail-detail-page__sidebar playground-project-overview-sidebar playground-agents-detail-sidebar playground-ticket-detail-sidebar",
+            detailsSidebarClassName: "guardrail-detail-page__sidebar",
           };
           const guardrailMetadataSection = React.createElement("section", {
               className: "guardrail-detail-page__identity",

@@ -6,6 +6,9 @@ import TaskList from "@tiptap/extension-task-list";
 import { Markdown } from "@tiptap/markdown";
 import { EditorContent, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import ListIcon from "@hugeicons/core-free-icons/ListIcon";
+import TablePropertiesIcon from "@hugeicons/core-free-icons/TablePropertiesIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   AlignCenter,
   AlignJustify,
@@ -21,7 +24,6 @@ import {
   GripVertical,
   Italic,
   Link2,
-  List,
   ListOrdered,
   ListTodo,
   MessageSquareText,
@@ -30,7 +32,6 @@ import {
   Plus,
   Quote,
   SquareCode,
-  Table2,
   TextQuote,
   Underline,
 } from "../../ui/hugeicons-compat.js";
@@ -1784,7 +1785,15 @@ export function PlatformInstructionsEditor({
       group: "Basic blocks",
       menuHint: "-",
       keywords: ["unordered list", "list"],
-      icon: <List width={14} height={14} strokeWidth={1.8} />,
+      icon: (
+        <HugeiconsIcon
+          icon={ListIcon}
+          width={14}
+          height={14}
+          strokeWidth={1.8}
+          data-hugeicons-icon="ListIcon"
+        />
+      ),
       active: toolbarState.bulletList,
       onSelect: () => richTextEditor.chain().focus().toggleBulletList().run(),
     },
@@ -1843,7 +1852,15 @@ export function PlatformInstructionsEditor({
       label: "Table",
       group: "Recommended",
       keywords: ["grid", "rows", "columns", "spreadsheet"],
-      icon: <Table2 width={14} height={14} strokeWidth={1.8} />,
+      icon: (
+        <HugeiconsIcon
+          icon={TablePropertiesIcon}
+          width={14}
+          height={14}
+          strokeWidth={1.8}
+          data-hugeicons-icon="TablePropertiesIcon"
+        />
+      ),
       disabled: toolbarState.table,
       title: toolbarState.table
         ? "Move outside the current table to insert another table"

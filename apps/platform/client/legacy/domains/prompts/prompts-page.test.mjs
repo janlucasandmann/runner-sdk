@@ -40,6 +40,26 @@ assert.doesNotMatch(
   /prompt-detail-page__settings-layout/,
   "Prompt-specific CSS must not recreate the centralized Settings page layout.",
 );
+assert.match(
+  promptPageSource,
+  /detailsSidebarClassName: "prompt-detail-page__settings-sidebar-frame"/,
+  "Prompt Settings may only add its semantic class to the centralized sidebar content.",
+);
+assert.doesNotMatch(
+  promptPageSource,
+  /detailsSidebarClassName: "[^"]*playground-(?:project-overview|agents-detail|ticket-detail)-sidebar/,
+  "Prompt Settings must not inject legacy layout classes into the centralized sidebar.",
+);
+assert.match(
+  promptPageSource,
+  /prompt-detail-page__icon[\s\S]{0,220}HugeiconsIcon[\s\S]{0,120}icon: Chat01Icon/,
+  "Prompt detail headers must use the shared Chat01 Hugeicon.",
+);
+assert.match(
+  promptPageSource,
+  /PlatformDocumentConnectorSettings[\s\S]{0,900}promptId: selectedPrompt\.id[\s\S]{0,180}resourceLabel: "Prompt"[\s\S]{0,180}connectorMetadataKey: "promptConnectors"/,
+  "Prompt Settings must reuse the centralized Notion and Confluence document connector surface.",
+);
 
 assert.match(
   promptPageSource,

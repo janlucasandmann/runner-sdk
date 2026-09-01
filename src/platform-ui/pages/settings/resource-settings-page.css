@@ -13,7 +13,7 @@
 }
 
 .platform-resource-settings-page {
-  --platform-resource-settings-sidebar-width: minmax(280px, 340px);
+  --platform-resource-settings-sidebar-width: 340px;
   --platform-resource-settings-top-inset: 42px;
   box-sizing: border-box;
   width: min(100%, var(--platform-page-content-max-width, 87.5rem));
@@ -102,6 +102,27 @@
   height: 24px;
 }
 
+.platform-resource-settings-page.playground-agent-resource-settings
+  .platform-resource-settings-identity__icon,
+.platform-resource-settings-page.playground-agent-resource-settings
+  .platform-resource-settings-identity__icon
+  .platform-profile-image-picker,
+.platform-resource-settings-page.playground-agent-resource-settings
+  .platform-resource-settings-identity__icon
+  .platform-profile-image-picker__surface,
+.platform-resource-settings-page.playground-agent-resource-settings
+  .platform-resource-settings-identity__icon
+  .platform-profile-image-picker__image {
+  border-radius: 50%;
+}
+
+.playground-agent-settings-additional-sections {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .platform-resource-settings-identity__copy.platform-service-detail-identity__copy {
   gap: 6px;
 }
@@ -141,22 +162,35 @@
 
 .platform-resource-settings-page__sidebar {
   min-width: 0;
+  width: 100%;
 }
 
 /*
- * The Settings page owns the 42px top gutter. Move that gutter from the
- * sticky sidebar itself to its first card: the sidebar can then be sticky at
- * scroll position zero, while the card retains its original visual inset.
+ * The Settings page owns both the initial top gutter and the sticky inset.
+ * Page adapters may decorate the nested content wrapper, but cannot replace
+ * this positioning shell with legacy project, ticket, or service layouts.
  */
 .platform-resource-settings-page > .platform-detail-sidebar.platform-resource-settings-page__sidebar {
   position: sticky;
-  top: 0;
+  top: var(--platform-resource-settings-top-inset);
   align-self: start;
-  margin-top: calc(-1 * var(--platform-resource-settings-top-inset));
+  margin: 0;
+  padding: 0;
 }
 
-.platform-resource-settings-page > .platform-detail-sidebar.platform-resource-settings-page__sidebar > .platform-resource-detail-sidebar:first-child {
-  margin-top: var(--platform-resource-settings-top-inset);
+.platform-resource-settings-page__sidebar-content {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.platform-resource-settings-page__sidebar-content > .platform-resource-detail-sidebar {
+  width: 100%;
+  max-width: none;
 }
 
 @media (max-width: 1180px) {
@@ -170,11 +204,6 @@
   .platform-resource-settings-page > .platform-detail-sidebar.platform-resource-settings-page__sidebar {
     position: static;
     top: auto;
-    margin-top: 0;
-  }
-
-  .platform-resource-settings-page > .platform-detail-sidebar.platform-resource-settings-page__sidebar > .platform-resource-detail-sidebar:first-child {
-    margin-top: 0;
   }
 }
 

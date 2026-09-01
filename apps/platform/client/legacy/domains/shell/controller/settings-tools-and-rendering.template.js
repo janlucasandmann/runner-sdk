@@ -4575,8 +4575,6 @@
                         value: toolsPromptsHeaderState.promptId || "Unsaved prompt",
                         title: toolsPromptsHeaderState.promptId || "Unsaved prompt",
                         monospace: true,
-                        copyValue: toolsPromptsHeaderState.promptId || undefined,
-                        copyAriaLabel: "Copy Prompt ID",
                       },
                       { id: "created", label: "Created", value: toolsPromptsHeaderState.createdAt || "—" },
                       { id: "updated", label: "Updated", value: toolsPromptsHeaderState.updatedAt || "—" },
@@ -4596,12 +4594,6 @@
                     disabled: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges),
                     title: toolsPromptsHeaderState.versionQualifier === "Draft" || Boolean(toolsPromptsHeaderState.hasUnsavedChanges) ? "Save the prompt before sharing it." : undefined,
                     onClick: () => toolsPromptsHeaderState.onShare?.(),
-                  }),
-                  React.createElement(PlatformResourceActionMenuItem, {
-                    icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                    label: "Copy Prompt ID",
-                    disabled: !toolsPromptsHeaderState.promptId,
-                    onClick: () => toolsPromptsHeaderState.onCopyId?.(),
                   }),
                   React.createElement(PlatformResourceActionsDivider),
                   React.createElement(PlatformResourceActionMenuItem, {

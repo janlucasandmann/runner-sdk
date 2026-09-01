@@ -2,6 +2,7 @@ import { Check, GitBranch, Plus } from "../../platform-ui/components/ui/hugeicon
 import { useEffect, useMemo, useState } from "react";
 import {
   PlatformConnectorPreviewCard,
+  PlatformConnectorSettingsSectionHeading,
   PlatformConnectorSettingsModal,
 } from "../../platform-ui/components/composite/connector-settings/index.js";
 import { PlatformEmptyState } from "../../platform-ui/components/composite/empty-state/index.js";
@@ -327,12 +328,10 @@ export function RunnerSourceGithubConnectorSettings({
       aria-labelledby={connectorTitleId}
       data-source-connector-kind={resourceKind}
     >
-      <div className="playground-source-connector-settings__heading">
-        <h2 id={connectorTitleId}>Connectors</h2>
-        <p>
-          Synchronize this {resourceLabel} with a GitHub or GitLab repository and automate exact-revision {exactRevisionAction}.
-        </p>
-      </div>
+      <PlatformConnectorSettingsSectionHeading
+        titleId={connectorTitleId}
+        description={`Synchronize this ${resourceLabel} with a GitHub or GitLab repository and automate exact-revision ${exactRevisionAction}.`}
+      />
 
       <div className="playground-source-connector-settings__previews">
         <PlatformConnectorPreviewCard

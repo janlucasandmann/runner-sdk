@@ -2075,8 +2075,6 @@
                     value: threadId,
                     title: threadId,
                     monospace: true,
-                    copyValue: threadId,
-                    copyAriaLabel: "Copy Thread ID",
                   },
                   { id: "project", label: "Project", value: selectedThreadProjectName || "None", title: selectedThreadProjectName || "None" },
                   { id: "task", label: "Task", value: selectedThreadTaskTitle || "None", title: selectedThreadTaskTitle || "None" },
@@ -2424,8 +2422,6 @@
                         value: projectId,
                         title: projectId,
                         monospace: true,
-                        copyValue: projectId,
-                        copyAriaLabel: "Copy Project ID",
                       },
                       {
                         id: "created",
@@ -2459,24 +2455,17 @@
                       active: activeProjectView === item.id,
                       onClick: () => navigateToProjectSection(item.id),
                     })),
-                  React.createElement(PlatformResourceActionsDivider, null),
-                  React.createElement(PlatformResourceActionMenuItem, {
-                    icon: React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                    label: "Copy Project ID",
-                    onClick: () => {
-                      setProjectBreadcrumbMenuOpen(false);
-                      const copyPromise = navigator.clipboard?.writeText(projectId);
-                      if (copyPromise) void copyPromise.catch(() => undefined);
-                    },
-                  }),
                   canDeleteProject
-                    ? React.createElement(PlatformResourceActionMenuItem, {
-                        icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
-                        label: "Delete Project",
-                        shortcut: "delete",
-                        danger: true,
-                        onClick: requestProjectDelete,
-                      })
+                    ? React.createElement(React.Fragment, null,
+                        React.createElement(PlatformResourceActionsDivider, null),
+                        React.createElement(PlatformResourceActionMenuItem, {
+                          icon: React.createElement(Trash2, { width: 14, height: 14, strokeWidth: 1.8, "aria-hidden": "true" }),
+                          label: "Delete Project",
+                          shortcut: "delete",
+                          danger: true,
+                          onClick: requestProjectDelete,
+                        })
+                      )
                     : null
                 )
               )
@@ -3388,7 +3377,7 @@
                                         "aria-pressed": threadExecutionWorkbenchOpen,
                                         title: "Execution details",
                                         onClick: () => setThreadExecutionWorkbenchOpen((current) => !current),
-                                      }, React.createElement(ClipboardList, { strokeWidth: 1.75 }))
+                                      }, React.createElement(HugeiconsIcon, { icon: Note01Icon, strokeWidth: 1.75 }))
                                     : null,
                                 )
                               : null,

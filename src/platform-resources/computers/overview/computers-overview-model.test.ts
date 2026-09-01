@@ -12,6 +12,7 @@ describe("computers overview model", () => {
       {
         id: "computer-1",
         name: "Build machine",
+        description: "Runs release builds",
         status: "running",
         creatorId: "agent-1",
         createdAt: "2026-07-01T10:00:00.000Z",
@@ -36,6 +37,7 @@ describe("computers overview model", () => {
     expect(rows[0]).toMatchObject({
       id: "computer-1",
       name: "Build machine",
+      description: "Runs release builds",
       profileLabel: "Power",
       isRunning: true,
       creatorName: "Forge",

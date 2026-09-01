@@ -15,13 +15,13 @@ import type {
 import { PlatformDetailTabBar } from "../../../platform-ui/components/composite/detail-tab-bar/index.js";
 import {
   ResourceOverviewIdentityCell,
-  ResourceOverviewPage,
+  ResourceOverviewAnalyticsCatalogPage,
   ResourceOverviewValue,
   type ResourceOverviewAnalyticsModel,
   type ResourceOverviewPeriod,
 } from "../../../platform-ui/pages/overview/index.js";
 
-export type AgentOverviewMode = "agents" | "squads" | "functional";
+export type AgentOverviewMode = "agents" | "squads";
 
 export interface AgentOverviewRow {
   id: string;
@@ -92,7 +92,7 @@ export function AgentsOverviewPage({
   const filteredRows = useMemo(
     () =>
       rows.filter((row) => {
-        if (mode === "functional") return true;
+        if (row.isFunctional) return false;
         if (typeFilter === "system") return row.isSystem;
         if (typeFilter === "custom") return !row.isSystem;
         return true;
@@ -192,7 +192,7 @@ export function AgentsOverviewPage({
     row: AgentOverviewRow,
     state: { targetRows: readonly AgentOverviewRow[] },
   ): readonly PlatformDataTableAction<AgentOverviewRow>[] => {
-    if (mode === "functional" || row.isFunctional) return [];
+    if (row.isFunctional) return [];
     const targets = state.targetRows.length ? state.targetRows : [row];
     const bulk = targets.length > 1;
     const deletable = targets.filter((target) => !target.isSystem);
@@ -275,7 +275,6 @@ export function AgentsOverviewPage({
       tabs={[
         { id: "agents", label: "Agents" },
         { id: "squads", label: "Squads" },
-        { id: "functional", label: "Functional Agents" },
       ]}
       onValueChange={onModeChange}
       variant="minimal"
@@ -283,15 +282,9 @@ export function AgentsOverviewPage({
     />
   );
 
-  const isFunctionalMode = mode === "functional";
-  const entity =
-    mode === "squads"
-      ? "Squads"
-      : isFunctionalMode
-        ? "Functional Agents"
-        : "Agents";
+  const entity = mode === "squads" ? "Squads" : "Agents";
   return (
-    <ResourceOverviewPage<AgentOverviewRow>
+    <ResourceOverviewAnalyticsCatalogPage<AgentOverviewRow>
       period={period}
       onPeriodChange={onPeriodChange}
       analytics={analytics}
@@ -306,55 +299,46 @@ export function AgentsOverviewPage({
         ariaLabel: entity,
         className: "resource-overview-table is-agents",
         sorting: { defaultValue: { id: "usage", direction: "desc" } },
-        selection: isFunctionalMode
-          ? undefined
-          : { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
+        pagination: false,
+        selection: { enabled: true, ariaLabel: (row) => `Select ${row.name}` },
         toolbar: {
           leading: modeTabs,
           search: {
             placeholder:
               mode === "squads"
                 ? "Search squads"
-                : isFunctionalMode
-                  ? "Search functional agents"
-                  : "Search agents",
+                : "Search agents",
             getSearchText: (row) =>
               row.searchText ||
               `${row.name} ${row.modelLabel} ${row.creatorName}`,
           },
-          filters: isFunctionalMode
-            ? undefined
-            : [
-                {
-                  id: "type",
-                  label: "Type",
-                  value: typeFilter,
-                  onChange: setTypeFilter,
-                  options: [
-                    { id: "all", label: `All ${entity}` },
-                    { id: "system", label: `System ${entity}` },
-                    { id: "custom", label: `Custom ${entity}` },
-                  ],
-                },
+          filters: [
+            {
+              id: "type",
+              label: "Type",
+              value: typeFilter,
+              onChange: setTypeFilter,
+              options: [
+                { id: "all", label: `All ${entity}` },
+                { id: "system", label: `System ${entity}` },
+                { id: "custom", label: `Custom ${entity}` },
               ],
-          primaryAction: isFunctionalMode
-            ? undefined
-            : {
-                label: mode === "squads" ? "Squad" : "Agent",
-                icon: Plus,
-                onClick: mode === "squads" ? onCreateSquad : onCreateAgent,
-              },
+            },
+          ],
+          primaryAction: {
+            label: mode === "squads" ? "Squad" : "Agent",
+            icon: Plus,
+            onClick: mode === "squads" ? onCreateSquad : onCreateAgent,
+          },
         },
-        getRowActions: isFunctionalMode ? undefined : getRowActions,
+        getRowActions,
         onRowActivate: onOpen,
         getRowAriaLabel: (row) => row.name,
         loading,
         emptyState:
           mode === "squads"
             ? "No squads available."
-            : isFunctionalMode
-              ? "No functional agents available."
-              : "No agents available.",
+            : "No agents available.",
       }}
     />
   );

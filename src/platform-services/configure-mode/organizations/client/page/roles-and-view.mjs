@@ -226,28 +226,13 @@ export const ORGANIZATIONS_PAGE_ROLES_AND_VIEW_SCRIPT = `
 	                    ),
 	                    React.createElement("div", { className: "playground-organization-settings-field" },
 	                      React.createElement("span", { className: "playground-organization-settings-field-label" }, "Organization ID"),
-	                      React.createElement("div", { className: "playground-organization-settings-id-control" },
-	                        React.createElement("input", {
-	                          className: "playground-organization-settings-input is-readonly",
-	                          value: organizationId,
-	                          readOnly: true,
-	                          tabIndex: -1,
-	                          "aria-label": "Organization ID",
-	                        }),
-	                        React.createElement(PlatformIconButton, {
-	                          size: "medium",
-	                          className: "playground-organization-settings-copy-button",
-	                          "aria-label": "Copy organization ID",
-	                          title: "Copy organization ID",
-	                          disabled: !organizationId,
-	                          onClick: async () => {
-	                            const copied = await copyTextToClipboard(organizationId);
-	                            if (!copied) {
-	                              setOrganizationPageError("Could not copy the organization ID.");
-	                            }
-	                          },
-	                        }, React.createElement(Copy, { width: 14, height: 14, strokeWidth: 1.8 }))
-	                      )
+	                      React.createElement("input", {
+	                        className: "playground-organization-settings-input is-readonly",
+	                        value: organizationId,
+	                        readOnly: true,
+	                        tabIndex: -1,
+	                        "aria-label": "Organization ID",
+	                      })
 	                    )
 	                  )
 	                ),

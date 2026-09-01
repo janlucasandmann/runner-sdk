@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -130,12 +130,16 @@ describe("PlatformResourceAccessTable", () => {
     const table = screen.getByRole("table", { name: "Function access" });
 
     expect(title?.textContent).toBe("Manage Function Access");
-    expect(
-      screen.getByText(
-        "Choose which organization roles and teams can access and manage this Function.",
-      ),
-    ).not.toBeNull();
-    expect(screen.queryByRole("button", { name: /About Manage Function Access/i })).toBeNull();
+    const help = screen.getByRole("button", {
+      name: "About Manage Function Access",
+    });
+    fireEvent.mouseEnter(help);
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip.textContent).toBe(
+      "Choose which organization roles and teams can access and manage this Function.",
+    );
+    expect(tooltip.querySelector(".platform-info-tooltip__title")).toBeNull();
+    expect(tooltip.querySelector(".platform-info-tooltip__action")).toBeNull();
     expect(accessContainer?.contains(title)).toBe(false);
     expect(accessContainer?.contains(controls)).toBe(true);
     expect(accessContainer?.contains(table)).toBe(true);
@@ -158,7 +162,7 @@ describe("PlatformResourceAccessTable", () => {
     expect(screen.queryByText("Manage Agent Access")).toBeNull();
   });
 
-  it("renders contextual help as visible section copy without a tooltip", () => {
+  it("renders contextual help in the centralized title tooltip", () => {
     render(
       <PlatformResourceAccessTable
         teams={teams}
@@ -168,10 +172,13 @@ describe("PlatformResourceAccessTable", () => {
       />,
     );
 
-    expect(screen.getByText("Explains who can manage this agent.")).not.toBeNull();
-    expect(
-      screen.queryByRole("button", { name: "About Manage Agent Access" }),
-    ).toBeNull();
+    const help = screen.getByRole("button", {
+      name: "About Manage Agent Access",
+    });
+    fireEvent.mouseEnter(help);
+    expect(screen.getByRole("tooltip").textContent).toBe(
+      "Explains who can manage this agent.",
+    );
   });
 
   it("renders the centralized footer when pagination is enabled", () => {

@@ -27,12 +27,16 @@ export type PlatformPopupMode = "anchored" | "fixed" | "inline";
 export type PlatformPopupVariant = "default" | "minimal";
 export type PlatformPopupPlacement =
   | "bottom-start"
+  | "bottom-center"
   | "bottom-end"
   | "top-start"
+  | "top-center"
   | "top-end"
   | "right-start"
+  | "right-center"
   | "right-end"
   | "left-start"
+  | "left-center"
   | "left-end";
 
 export interface PlatformPopupAnchorPoint {
@@ -159,7 +163,11 @@ function getPlatformPopupPortalPosition({
     : Math.max(surfaceRect.width, matchAnchorWidth ? anchorRect.width : 0);
   const surfaceHeight = surfaceRect.height;
   const requestedSide = placement.split("-")[0] as "bottom" | "top" | "right" | "left";
-  const alignment = placement.endsWith("end") ? "end" : "start";
+  const alignment = placement.endsWith("-end")
+    ? "end"
+    : placement.endsWith("-center")
+      ? "center"
+      : "start";
   const roomAbove = anchorRect.top - collisionPadding - offset;
   const roomBelow = viewportHeight - collisionPadding - anchorRect.bottom - offset;
   const roomLeft = anchorRect.left - collisionPadding - offset;
@@ -179,11 +187,15 @@ function getPlatformPopupPortalPosition({
       : anchorRect.right + offset
     : alignment === "end"
       ? anchorRect.right - surfaceWidth
-      : anchorRect.left;
+      : alignment === "center"
+        ? anchorRect.left + (anchorRect.width - surfaceWidth) / 2
+        : anchorRect.left;
   const preferredTop = isHorizontal
     ? alignment === "end"
       ? anchorRect.bottom - surfaceHeight
-      : anchorRect.top
+      : alignment === "center"
+        ? anchorRect.top + (anchorRect.height - surfaceHeight) / 2
+        : anchorRect.top
     : resolvedSide === "top"
       ? anchorRect.top - offset - surfaceHeight
       : anchorRect.bottom + offset;

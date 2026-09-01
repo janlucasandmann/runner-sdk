@@ -74,6 +74,10 @@ export interface PlatformResourceSettingsPageProps<
   className?: string;
   mainClassName?: string;
   sectionsClassName?: string;
+  /**
+   * Applied to the sidebar content wrapper. Sticky positioning and top
+   * alignment are owned exclusively by the centralized Settings layout.
+   */
   detailsSidebarClassName?: string;
 }
 
@@ -277,16 +281,21 @@ export function PlatformResourceSettingsPage<TValue extends string = string, TDa
           <PlatformDetailSidebar
             collapsed={detailsSidebarCollapsed}
             ariaLabel={detailsSidebarAriaLabel}
-            className={joinClassNames(
-              "platform-resource-settings-page__sidebar",
-              detailsSidebarClassName,
-            )}
+            className="platform-resource-settings-page__sidebar"
           >
-            {details.variant === "standard" ? (
-              <PlatformResourceSettingsDetailsSidebar<TValue, TData> {...details} />
-            ) : (
-              <PlatformResourceDetailSidebar<TValue, TData> {...details} />
-            )}
+            <div
+              className={joinClassNames(
+                "platform-resource-settings-page__sidebar-content",
+                detailsSidebarClassName,
+              )}
+              data-platform-resource-settings-sidebar-content="true"
+            >
+              {details.variant === "standard" ? (
+                <PlatformResourceSettingsDetailsSidebar<TValue, TData> {...details} />
+              ) : (
+                <PlatformResourceDetailSidebar<TValue, TData> {...details} />
+              )}
+            </div>
           </PlatformDetailSidebar>
         ) : null}
       </section>

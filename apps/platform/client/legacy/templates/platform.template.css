@@ -10317,6 +10317,12 @@
           max-width: var(--playground-centered-page-max-width);
           min-height: 100%;
         }
+
+        .playground-resources-page.is-develop-server-kind-page .playground-resources-detail-content.is-computer-runtime-tab,
+        .playground-resources-page.is-develop-configure-page .playground-resources-detail-content.is-computer-runtime-tab {
+          width: 100%;
+          max-width: none;
+        }
   
         .playground-resources-page.is-develop-server-kind-page .playground-environments-editor-main.playground-tasks-detail-main,
         .playground-resources-page.is-develop-configure-page .playground-environments-editor-main.playground-tasks-detail-main {
@@ -12417,6 +12423,14 @@
         .playground-resources-page.is-develop-configure-page .playground-computer-detail-content {
           width: min(100%, var(--playground-centered-page-max-width));
           max-width: var(--playground-centered-page-max-width);
+        }
+
+        .playground-resources-page.is-develop-configure-page
+          .playground-resources-detail-content.is-computer-runtime-tab
+          .playground-computer-detail-content.is-computer-runtime-tab {
+          width: 100%;
+          max-width: none;
+          margin: 0;
         }
   
         .playground-server-detail-content {
@@ -26792,6 +26806,11 @@
         .playground-agents-page .playground-agents-detail-main-pane .playground-agents-detail-content,
         .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-agents-detail-content {
           padding-top: 42px;
+        }
+
+        .playground-agents-page .playground-agents-detail-main-pane .playground-agents-detail-content.is-agent-settings,
+        .playground-agents-detail-assistant-page .playground-agents-detail-main-pane .playground-agents-detail-content.is-agent-settings {
+          padding-top: 0;
         }
 
         .playground-agents-detail-assistant-page .playground-agents-detail-layout.has-preview .playground-agents-detail-main-pane .playground-agents-detail-content {

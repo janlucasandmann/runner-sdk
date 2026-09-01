@@ -28,33 +28,101 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                   );
                 });
           }
+          function renderAgentGuardrailFilterControl() {
+            const filterOptions = [
+              { id: "all", label: "All Guardrails", description: "Show every guardrail imported on this agent" },
+              { id: "with-prompts", label: "With Prompts", description: "Only show guardrails containing prompts" },
+              { id: "without-prompts", label: "Without Prompts", description: "Only show guardrails without prompts" },
+            ];
+            return React.createElement(PlatformPopup, {
+                open: agentGuardrailFilterPopoverOpen,
+                rootClassName: "playground-agent-guardrail-filter-shell",
+                surfaceClassName: "platform-data-table__floating-menu is-portaled playground-agent-guardrail-filter-menu",
+                surfaceProps: {
+                  role: "menu",
+                  "aria-label": "Filter guardrails",
+                },
+                animation: "down-in",
+                variant: "minimal",
+                portal: true,
+                placement: "bottom-start",
+                portalOffset: 6,
+                trigger: React.createElement("button", {
+                  type: "button",
+                  className: "platform-data-table__toolbar-button is-icon-only"
+                    + (agentGuardrailFilterPopoverOpen || agentGuardrailFilterMode !== "all" ? " is-open" : ""),
+                  onClick: (event) => {
+                    event.stopPropagation();
+                    setAgentGuardrailImportPopoverOpen(false);
+                    setAgentGuardrailFilterPopoverOpen((current) => !current);
+                  },
+                  title: "Filter guardrails",
+                  "aria-label": "Filter guardrails",
+                  "aria-haspopup": "menu",
+                  "aria-expanded": agentGuardrailFilterPopoverOpen ? "true" : "false",
+                }, React.createElement(HugeiconsIcon, {
+                  icon: ListFilterIcon,
+                  size: 14,
+                  strokeWidth: 1.8,
+                  "aria-hidden": "true",
+                })),
+              },
+              filterOptions.map((option) => {
+                const active = agentGuardrailFilterMode === option.id;
+                return React.createElement("button", {
+                    key: option.id,
+                    type: "button",
+                    role: "menuitemradio",
+                    "aria-checked": active ? "true" : "false",
+                    className: "platform-data-table__menu-item",
+                    onClick: () => {
+                      setAgentGuardrailFilterMode(option.id);
+                      setAgentGuardrailFilterPopoverOpen(false);
+                    },
+                  },
+                  React.createElement("span", { className: "platform-data-table__menu-icon" },
+                    active ? React.createElement(Check, { width: 14, height: 14 }) : null
+                  ),
+                  React.createElement("span", { className: "platform-data-table__menu-copy" },
+                    React.createElement("span", { className: "platform-data-table__menu-label" }, option.label),
+                    React.createElement("span", { className: "platform-data-table__menu-description" }, option.description)
+                  )
+                );
+              })
+            );
+          }
           function renderAgentGuardrailTable(options = {}) {
-            const toolbarLeading = options?.leading || null;
             const emptyGuardrailsState = React.createElement(PlatformEmptyState, {
               icon: Shield,
               title: "No guardrails yet",
               description: "Add a guardrail to define the policies this agent must follow.",
-              primaryAction: {
-                label: "Add first Guardrail",
-                icon: Plus,
-                onClick: () => setAgentGuardrailImportPopoverOpen(true),
-              },
             });
-            return React.createElement(PlatformDataTable, {
+            return React.createElement(PlatformSettingsTableSection, {
+              title: "Guardrails",
+              description: "Choose which guardrail sets this agent must follow when working.",
+              titleAriaLabel: "About Guardrails",
+              titleActions: renderAgentGuardrailFilterControl(),
+              className: "playground-agent-guardrails-table-section",
+              surfaceClassName: "playground-agent-guardrails-table-container",
+            }, React.createElement(PlatformDataTable, {
               rows: filteredAgentGuardrailSets,
               getRowId: (set) => set.id,
               ariaLabel: "Agent guardrails",
-              className: "playground-agent-guardrails-platform-table",
+              className: "platform-settings-table-section__table playground-agent-guardrails-platform-table",
               surface: "plain",
+              layout: "fill",
               variant: "minimalistic-ui",
               sticky: false,
               pagination: {},
               sorting: {
                 defaultValue: { id: "updated", direction: "desc" },
               },
+              selection: {
+                enabled: true,
+                ariaLabel: (set) => "Select " + (set.name || "Untitled Guardrail Set"),
+              },
               toolbar: {
-                leading: toolbarLeading,
-                title: toolbarLeading ? undefined : "Guardrails",
+                className: "platform-settings-table-section__toolbar",
                 search: {
                   value: agentGuardrailSearchQuery,
                   onChange: setAgentGuardrailSearchQuery,
@@ -62,20 +130,7 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                   ariaLabel: "Search agent guardrails",
                   getSearchText: getAgentGuardrailSearchText,
                 },
-                filters: [
-                  {
-                    id: "prompts",
-                    label: "Prompts",
-                    value: agentGuardrailFilterMode,
-                    options: [
-                      { id: "all", label: "All Guardrails", description: "Show every guardrail imported on this agent" },
-                      { id: "with-prompts", label: "With Prompts", description: "Only show guardrails containing prompts" },
-                      { id: "without-prompts", label: "Without Prompts", description: "Only show guardrails without prompts" },
-                    ],
-                    onChange: setAgentGuardrailFilterMode,
-                  },
-                ],
-                controlsLeading: React.createElement(PlatformPopup, {
+                trailing: React.createElement(PlatformPopup, {
                     open: agentGuardrailImportPopoverOpen,
                     rootClassName: "playground-files-toolbar-anchor playground-tasks-toolbar-popup-shell playground-plugins-filter-shell playground-agents-detail-guardrail-import-shell",
                     surfaceClassName: "playground-tasks-toolbar-popup-menu playground-tasks-toolbar-popup-menu-wide playground-agents-detail-guardrail-import-menu",
@@ -85,12 +140,15 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                     },
                     animation: "down-in",
                     portal: true,
-                    placement: "bottom-start",
+                    placement: "bottom-end",
                     portalOffset: 6,
-                    trigger: React.createElement(PlatformSecondaryButton, {
+                    trigger: React.createElement(PlatformPrimaryButton, {
                       size: "small",
                       type: "button",
-                      onClick: () => setAgentGuardrailImportPopoverOpen((current) => !current),
+                      onClick: () => {
+                        setAgentGuardrailFilterPopoverOpen(false);
+                        setAgentGuardrailImportPopoverOpen((current) => !current);
+                      },
                       title: "Add guardrail",
                       "aria-label": "Add guardrail",
                       "aria-haspopup": "menu",
@@ -159,6 +217,6 @@ export const GUARDRAILS_AGENT_PAGE_ACTIONS_SCRIPT = `          function renderAg
                 danger: true,
                 onSelect: () => toggleAgentGuardrailSet(set.id),
               }],
-            });
+            }));
           }
 `;

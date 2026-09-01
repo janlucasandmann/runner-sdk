@@ -267,4 +267,55 @@ describe("RunnerProjectNotionResourceSettings", () => {
       syncFromNotion: false,
     });
   });
+
+  it("targets a versioned Prompt through the shared document settings component", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ sync: { enabled: false, status: "disabled" } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            sync: {
+              enabled: true,
+              syncToNotion: true,
+              syncFromNotion: false,
+              status: "synced",
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+    render(
+      <RunnerKnowledgeNotionResourceSettings
+        promptId="prompt-1"
+        resourceId="database-1"
+        resourceName="Prompt catalog"
+        knowledgeLabel="this Prompt"
+      />,
+    );
+
+    const toggle = await screen.findByRole("switch", {
+      name: "Sync this Prompt to Prompt catalog",
+    });
+    await waitFor(() => expect(toggle.hasAttribute("disabled")).toBe(false));
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain(
+      "promptId=prompt-1&databaseId=database-1",
+    );
+    fireEvent.click(toggle);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))).toEqual({
+      promptId: "prompt-1",
+      databaseId: "database-1",
+      databaseName: "Prompt catalog",
+      enabled: true,
+      syncToNotion: true,
+      syncFromNotion: false,
+    });
+  });
 });

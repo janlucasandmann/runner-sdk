@@ -11,6 +11,10 @@ This directory contains the canonical page layer for resource overview screens. 
 3. Shared `PlatformDataTable` surface
 4. Canonical Edit, Duplicate, Share, and Delete row actions
 
+The `ResourceOverviewAnalyticsCatalogPage` variant combines the full-width
+catalog presentation used by Workflows with a KPI/chart header. Its table
+toolbar remains the single owner of category navigation, filters, and search.
+
 Resource-specific behavior does not belong here. Each resource module under `platform-resources/<resource>/overview` defines its row model, extension columns, filters, actions, data mapping, and resource-specific header controls, then renders `ResourceOverviewPage`. Catalog overviews use the centralized Name, Creator, and Updated column set.
 
 ## Modules
@@ -70,6 +74,7 @@ import "@computer-agents/platform/platform-ui/pages/styles.css";
 - Add reusable visual cells here only when multiple resource pages need them.
 - Keep fetching, mutations, permissions, routing, and domain-specific state in the resource module or application adapter.
 - Use `heroContent` with `showPeriodSelector={false}` when an overview needs a task-oriented introduction instead of analytics.
+- Use `ResourceOverviewAnalyticsCatalogPage` when analytics replace the task-oriented hero but the resource list should otherwise use the canonical catalog layout.
 - Provide a stable app-header target through `controlsPortalId`; timeframe and primary actions must not be rendered in the page body.
 - Set a primary action's `icon` to `null` when the centralized button should be deliberately iconless; omit it to retain the default plus icon.
 - Use `PlatformDataTable` configuration instead of introducing resource-specific table markup.
